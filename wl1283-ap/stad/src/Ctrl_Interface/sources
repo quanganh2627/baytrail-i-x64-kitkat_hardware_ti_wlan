@@ -1,0 +1,51 @@
+!if 0
+**|     Copyright (c)      1998-2007 Texas Instruments Incorporated      |**
+**|                        ALL RIGHTS RESERVED                           |**
+!endif
+
+TARGETNAME=Ctrl_Interface
+TARGETTYPE=LIBRARY
+RELEASETYPE=$(TI_RELEASE)
+
+DK_ROOT=..\..\..
+
+!INCLUDE $(DK_ROOT)\sources.cmn
+
+!IF "$(TI_ZOOM2_PLATFORM)"=="1"
+INCLUDES= \
+	$(_TARGETPLATROOT)\SRC\CSP\INC; \
+	$(_PLATFORMROOT)\COMMON\SRC\INC; \
+	$(_TARGETPLATROOT)\SRC\CSP\OMAP3430\INC; \
+	$(_TARGETPLATROOT)\SRC\CSP\OMAP\INC; \
+	$(_PUBLICROOT)\COMMON\SDK\INC; \
+	$(_PUBLICROOT)\COMMON\DDK\INC; \
+	$(_PUBLICROOT)\COMMON\OAK\INC; \
+	$(_PUBLICROOT)\TI_WLAN\Source\Drivers\TI_WIFI\WiLink\utils; \
+	$(_PUBLICROOT)\TI_WLAN\Source\Drivers\TI_WIFI\WiLink\platforms\os\winmobile\Export_Inc; \
+	$(_PUBLICROOT)\TI_WLAN\Source\Drivers\TI_WIFI\WiLink\Txn; \
+	$(_PUBLICROOT)\TI_WLAN\Source\Drivers\TI_WIFI\WiLink\TWD\TWDriver; \
+	$(_PUBLICROOT)\TI_WLAN\Source\Drivers\TI_WIFI\WiLink\TWD\FirmwareApi; \
+	$(_PUBLICROOT)\TI_WLAN\Source\Drivers\TI_WIFI\WiLink\TWD\FW_Transfer\Export_Inc; \
+	$(_PUBLICROOT)\TI_WLAN\Source\Drivers\TI_WIFI\WiLink\TWD\TwIf; \
+	$(_PUBLICROOT)\TI_WLAN\Source\Drivers\TI_WIFI\WiLink\platforms\os\common\inc; \
+	$(_PUBLICROOT)\TI_WLAN\Source\Drivers\TI_WIFI\WiLink\stad\Export_Inc; \
+	$(_PUBLICROOT)\TI_WLAN\Source\Drivers\TI_WIFI\WiLink\stad\src\Application; \
+	$(_PUBLICROOT)\TI_WLAN\Source\Drivers\TI_WIFI\WiLink\stad\src\Connection_Managment; \
+	$(_PUBLICROOT)\TI_WLAN\Source\Drivers\TI_WIFI\WiLink\stad\src\Ctrl_Interface; \
+	$(_PUBLICROOT)\TI_WLAN\Source\Drivers\TI_WIFI\WiLink\platforms\os\winmobile\src; \
+	$(_PUBLICROOT)\TI_WLAN\Source\Drivers\TI_WIFI\WiLink\stad\src\Sta_Management; \
+	$(_PUBLICROOT)\TI_WLAN\Source\Drivers\TI_WIFI\WiLink\stad\src\Data_link; \
+	$(_PUBLICROOT)\TI_WLAN\Source\Drivers\TI_WIFI\WiLink\stad\src\AirLink_Managment; \
+	$(_PUBLICROOT)\TI_WLAN\Source\Drivers\TI_WIFI\WiLink\Test; \
+	$(_PUBLICROOT)\TI_WLAN\Source\Drivers\TI_WIFI\WiLink\platforms\hw\host_platform_zoom2\winmobile; \
+
+!ENDIF
+
+SOURCES= \
+DrvMain.c \
+EvHandler.c \
+CmdHndlr.c \
+CmdDispatcher.c \
+ApCmd.c
+
+

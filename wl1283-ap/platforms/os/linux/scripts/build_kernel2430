@@ -1,0 +1,77 @@
+#!/bin/bash
+
+#
+# In case you modify the script make sure you run 
+# dos2unix on it before checking it in.
+#
+
+echo ""
+echo "****************************************************************************"
+echo -n "* Hello, "
+echo -n `finger $USER | grep Name | grep Login | sed -e 's/Login: '$USER'//' -e 's/Name: //'`
+echo ". I will now build the Linux kernel for you. "
+echo "****************************************************************************"
+echo ""
+
+if [ "`/usr/atria/bin/cleartool lsactivity -cact | grep blablarandomjunk -v -c`" = "0" ]; then
+    echo "*** "
+    echo "*** Error: You must have some activity in this view set as"
+    echo "*** the current activity!"
+    echo "*** "
+    exit
+fi
+
+
+
+echo "*** Building 2430 boot loader..."
+
+pushd $KERNEL_DIR/../../../u-boot/
+
+echo "*** Checking out mkconfig file..."
+/usr/atria/bin/cleartool co -c "Building the boot loader" $KERNEL_DIR/../../../u-boot/mkconfig
+
+make clean
+
+make omap2430sdp_config
+
+make
+
+echo "*** Undoing check out of mkconfig file..."
+/usr/atria/bin/cleartool unco -rm $KERNEL_DIR/../../../u-boot/mkconfig
+
+echo "*** building boot loader is done. Please check that the file $KERNEL_DIR/../../../u-boot.bin has been created."
+
+echo "*** Going to build 2430 kernel now..."
+
+pushd $KERNEL_DIR
+
+echo "*** Checking out .config file..."
+/usr/atria/bin/cleartool co -c "Building the kernel" $KERNEL_DIR/.config
+
+echo "*** Backing up .config file..."
+rm -f ~/.config
+cp .config ~/
+
+echo "*** Running make mrproper..."
+make mrproper
+
+echo "*** Restoring .config file..."
+mv ~/.config .
+
+echo "*** Running make oldconfig..."
+make oldconfig 
+
+echo "*** Running make uImage..."
+make uImage 
+
+echo "*** Undoing check out of .config file..."
+/usr/atria/bin/cleartool unco -rm $KERNEL_DIR/.config
+
+echo ""
+echo "****************************************************************************"
+echo "* Woot, build process done!                                                *"
+echo "*                                                                          *"
+echo "* You can now use the build_images script or compile the driver            *"
+echo "* manually yourself.                                                       *"
+echo "****************************************************************************"
+echo ""

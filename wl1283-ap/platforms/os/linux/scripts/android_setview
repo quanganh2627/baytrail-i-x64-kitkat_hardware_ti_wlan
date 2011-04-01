@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# Scritp to prepare ClearCase view to work with Android file system
+
+WLAN_TI_PATH=$YOUR_PATH/mydroid/system/wlan/ti
+WLAN_TI_DIR_NAME=WiLink_6.1
+EXT_SUPPL=external_suppl
+ANDROID_EXT_SUPPL=$YOUR_PATH/mydroid/external/wpa_supplicant
+
+if [ $# -ne 1 ]
+then
+  echo "Usage: `basename $0` your_CC_view_path_name"
+  exit 1
+fi
+
+echo "Setting view $1 in Android directory $YOUR_PATH"
+
+if [ -e "$1" ]
+then
+	if [ -e "$WLAN_TI_PATH/$WLAN_TI_DIR_NAME" ]
+	then
+  		echo "$WLAN_TI_DIR file exist, saving it"
+  		mv "$WLAN_TI_PATH/$WLAN_TI_DIR_NAME" "$WLAN_TI_PATH/$WLAN_TI_DIR_NAME".save
+	fi
+
+	echo "$WLAN_TI_PATH/$WLAN_TI_DIR_NAME" is linked to view "$1/WiLink" 
+	ln -s "$1/WiLink" "$WLAN_TI_PATH/$WLAN_TI_DIR_NAME"
+
+	if [ -e "$WLAN_TI_PATH/$WLAN_TI_DIR_NAME/$EXT_SUPPL" ]
+	then
+	   	echo "$WLAN_TI_PATH/$WLAN_TI_DIR_NAME/$EXT_SUPPL" already exist
+	   	exit 1
+	fi
+	echo Creating directory "$WLAN_TI_PATH/$WLAN_TI_DIR_NAME/$EXT_SUPPL"
+	mkdir "$WLAN_TI_PATH/$WLAN_TI_DIR_NAME/$EXT_SUPPL"
+        ln -s "$ANDROID_EXT_SUPPL/wpa_ctrl.c" "$WLAN_TI_PATH/$WLAN_TI_DIR_NAME/$EXT_SUPPL/wpa_ctrl.c"
+	echo "Done!"
+else
+  echo "view $1 does not exist, exiting"
+  exit 1
+fi
+
+

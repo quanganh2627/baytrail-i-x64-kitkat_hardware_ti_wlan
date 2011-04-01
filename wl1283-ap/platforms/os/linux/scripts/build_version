@@ -1,0 +1,192 @@
+#!/bin/bash
+
+#
+# In case you modify the script make sure you run 
+# dos2unix on it before checking it in.
+#
+
+# Current directory to run the script is to be WiLink/platform/os/linux
+
+VERSION="$1_$2_$3_$4_$5"
+
+LINUX_DIR=$PWD
+ROOT_DIR="$LINUX_DIR/../../../../WiLink"
+VERSIONTREE_DIR="$LINUX_DIR/VersionTree"
+
+
+echo "*** Removing existing package remnants..."
+cd "$LINUX_DIR"
+
+make clean
+
+rm -r -f $VERSIONTREE_DIR
+rm -r -f ~/WiLink
+rm -f ~/WiLink62_Linux_noCCX_osa.tar.bz2
+rm -f ~/WiLink62_Linux_noCCX_core.tar.bz2
+rm -f ~/WiLink62_Linux_OpenSource.tar.bz2
+rm -f ~/WiLink62_Linux_CCX_osa.tar.bz2
+rm -f ~/WiLink62_Linux_CCX_core.tar.bz2
+rm -f ~/WiLink62_Linux_Gem_osa.tar.bz2
+rm -f ~/WiLink62_Linux_Gem_core.tar.bz2
+rm -f "$LINUX_DIR"/WiLink62_Linux_CCX_osa.tar.bz2
+rm -f "$LINUX_DIR"/WiLink62_Linux_CCX_core.tar.bz2
+rm -f "$LINUX_DIR"/WiLink62_Linux_noCCX_osa.tar.bz2
+rm -f "$LINUX_DIR"/WiLink62_Linux_noCCX_core.tar.bz2
+rm -f "$LINUX_DIR"/WiLink62_Linux_OpenSource.tar.bz2
+rm -f "$LINUX_DIR"/WiLink62_Linux_Gem_osa.tar.bz2
+rm -f "$LINUX_DIR"/WiLink62_Linux_Gem_core.tar.bz2
+if [ "$1" = "clean" ]; then
+    echo "*** Cleaning up..."
+    exit
+else
+    echo "*** Preparing environment..."
+fi
+
+
+
+echo "*** Removing redundant private files..."
+cd "$ROOT_DIR"
+
+files=`find . -name *.contrib*`
+for file in ${files}; do
+    rm -f ${file}
+done
+
+files=`find . -name *.keep*`
+for file in ${files}; do
+    rm -f ${file}
+done
+
+files=`find . -name *.d`
+for file in ${files}; do
+    rm -f ${file}
+done
+
+files=`find . -name *.*.cmd`
+for file in ${files}; do
+    rm -f ${file}
+done
+
+files=`find . -name *.mod*`
+for file in ${files}; do
+    rm -f ${file}
+done
+
+files=`find . -name *.d`
+for file in ${files}; do
+    rm -f ${file}
+done
+
+
+if [ "$5" = "clean" ]; then
+	echo "*** Done!"
+    exit
+fi
+
+
+cd "$LINUX_DIR"
+
+
+echo "*** Building directory tree..."
+mkdir -p "$VERSIONTREE_DIR/SDIO_CCX"
+mkdir -p "$VERSIONTREE_DIR/GEM"
+mkdir -p "$VERSIONTREE_DIR/SDIO_NOCCX"
+mkdir -p "$VERSIONTREE_DIR/Target Host BSP Images"
+mkdir -p "$VERSIONTREE_DIR/Sources"
+echo "*** Done!"
+echo "*** "
+echo "*** "
+
+echo "*** Starting to create packages..."
+
+
+# echo "*** Creating Driver No-CCX Non-Open Source package..."
+# perl scripts/wl_pkg_linux.pl
+echo "*** Creating Driver No-CCX Open Source package..."
+perl scripts/wl_pkg_linux.pl -gpl
+
+exit
+
+echo "*** Processing Driver NO-CCX packages..."
+echo "*** Copying packages to your home directory..."
+cp "$LINUX_DIR"/WiLink62_Linux_noCCX_osa.tar.bz2 ~/
+cp "$LINUX_DIR"/WiLink62_Linux_noCCX_core.tar.bz2 ~/
+echo "*** Extracting WiLink NO-CCX tar file ..."
+cd ~/
+tar -xvjf WiLink62_Linux_noCCX_osa.tar.bz2
+tar -xvjf WiLink62_Linux_noCCX_core.tar.bz2
+echo "****** Importing Supplicant files (for build purpose only)..."
+cp -rLf "$ROOT_DIR/CUDK/wpa_suppl/ ~/WiLink/CUDK/"
+echo "*** Starting to build NO-CCX extracted package ..."
+cd ~/WiLink/platforms/os/linux
+make CCX=n SUPPL=WPA
+echo "*** copying Driver NO-CCX binaries ..."
+cp ~/WiLink/platforms/os/linux/zoom2Binaries.tar "$VERSIONTREE_DIR/SDIO_NOCCX"
+cp "$LINUX_DIR"/WiLink62_Linux_noCCX_osa.tar.bz2 "$VERSIONTREE_DIR/Sources"
+cp "$LINUX_DIR"/WiLink62_Linux_noCCX_core.tar.bz2 "$VERSIONTREE_DIR/Sources"
+rm -r -f ~/WiLink
+echo "*** Done with Driver NO-CCX ..."
+
+exit
+
+echo "*** Processing Driver GEM packages..."
+echo "*** Copying packages to your home directory..."
+cp "$LINUX_DIR"/WiLink62_Linux_Gem_osa.tar.bz2 ~/
+cp "$LINUX_DIR"/WiLink62_Linux_Gem_core.tar.bz2 ~/
+echo "*** Extracting WiLink GEM tar file ..."
+cd ~/
+tar -xvjf WiLink62_Linux_Gem_osa.tar.bz2
+tar -xvjf WiLink62_Linux_Gem_core.tar.bz2
+echo "****** Importing Supplicant files (for build purpose only)..."
+cp -rLf /vobs/WiLink/CUDK/gem_suppl/ ~/WiLink/CUDK/
+echo "*** Starting to build GEM extracted package ..."
+cd ~/WiLink/platforms/os/linux
+make   GEM=y CCX=n SUPPL=GEM CONFIG_WAPI=y
+echo "*** copying Driver GEM binaries ..."
+cp ~/WiLink/platforms/os/linux/omap2430Binaries.tar "$VERSIONTREE_DIR/GEM"
+cp "$LINUX_DIR"/WiLink62_Linux_Gem_osa.tar.bz2 "$VERSIONTREE_DIR/Sources"
+cp "$LINUX_DIR"/WiLink62_Linux_Gem_core.tar.bz2 "$VERSIONTREE_DIR/Sources"
+rm -r -f ~/WiLink
+echo "*** Done with Driver GEM..."
+
+echo "*** Processing Driver NO-CCX Open Source packages..."
+echo "*** Copying packages to your home directory..."
+cp "$LINUX_DIR"/WiLink62_Linux_OpenSource.tar.bz2 ~/
+echo "*** Extracting WiLink NO-CCX tar file ..."
+cd ~/
+tar -xvjf WiLink62_Linux_OpenSource.tar.bz2
+echo "****** Importing Supplicant files (for build purpose only)..."
+cp -rLf /vobs/WiLink/CUDK/wpa_suppl/ ~/WiLink/CUDK/
+echo "*** Starting to build NO-CCX Open Source extracted package ..."
+cd ~/WiLink/platforms/os/linux
+# due to the fact that in Open Source package all CCX switch to XCC we call XCC=n instaed of CCX=n
+make XCC=n SUPPL=WPA
+echo "NOTE!!:  NO-CCX Open Source package does NOT include images, so IGNORE THE LAST ERROR!!!."
+echo "If we got here then the build process is COMPLETED SUCCESSFULLY!!"
+cp "$LINUX_DIR"/WiLink62_Linux_OpenSource.tar.bz2 "$VERSIONTREE_DIR/Sources"
+rm -r -f ~/WiLink
+echo "*** Finished Validating Driver NO-CCX Open Source..."
+
+rm -f ~/WiLink62_Linux_noCCX_osa.tar.bz2
+rm -f ~/WiLink62_Linux_noCCX_core.tar.bz2
+rm -f ~/WiLink62_Linux_OpenSource.tar.bz2
+rm -f ~/WiLink62_Linux_CCX_osa.tar.bz2
+rm -f ~/WiLink62_Linux_CCX_core.tar.bz2
+rm -f ~/WiLink62_Linux_Gem_osa.tar.bz2
+rm -f ~/WiLink62_Linux_Gem_core.tar.bz2
+rm "$LINUX_DIR"/WiLink62_Linux_CCX_core.tar.bz2
+rm "$LINUX_DIR"/WiLink62_Linux_CCX_osa.tar.bz2
+rm "$LINUX_DIR"/WiLink62_Linux_noCCX_core.tar.bz2
+rm "$LINUX_DIR"/WiLink62_Linux_noCCX_osa.tar.bz2
+rm "$LINUX_DIR"/WiLink62_Linux_OpenSource.tar.bz2
+rm "$LINUX_DIR"/WiLink62_Linux_Gem_osa.tar.bz2
+rm "$LINUX_DIR"/WiLink62_Linux_Gem_core.tar.bz2
+
+echo ""
+echo "****************************************************************************"
+echo "* Build process done! "
+echo "* "
+echo "* Shalom"
+echo "****************************************************************************"
+echo ""
+

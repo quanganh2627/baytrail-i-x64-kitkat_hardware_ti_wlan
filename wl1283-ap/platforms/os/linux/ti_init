@@ -1,0 +1,21 @@
+#!/bin/sh
+cd /voice
+insmod /apps/debug_tools.o
+if [ -f /apps/omap_spi.o ]; then
+    insmod /apps/omap_spi.o
+else
+    insmod /apps/sdio_1710_driver.o
+fi
+
+if [ -f /apps/tiwlan_drv.ko ]; then
+    insmod /apps/tiwlan_drv.ko
+else
+    insmod /apps/gwsi_drv.o
+fi
+/apps/tiwlan_loader -i /voice/tiwlan.ini -f /apps/firmware.bin
+
+#supplicant activation
+rm -f /var/run/tiwlan0
+rm -f /tmp/*
+/suppl/wpa_supplicant -Dwext -itiwlan0 -c /voice/wpa_supplicant.txt &
+

@@ -1,0 +1,14 @@
+rm /dev/socket/tiap*
+insmod ./tiap_drv.ko
+sleep 1
+/system/bin/tiap_loader -f firmware_ap.bin
+ifconfig tiap0 10.1.14.1 netmask 255.255.255.0 up
+sleep 1
+/system/bin/hostap -d ./hostapd.conf &
+killall dnsmasq
+sleep 1
+./udhcpd ./udhcpdWlan.conf
+echo 1 > /proc/sys/net/ipv4/ip_forward
+sleep 2
+tiap_cu -b
+

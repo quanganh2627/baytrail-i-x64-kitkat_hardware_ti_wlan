@@ -1,0 +1,15 @@
+1. Connect with VNC Viewer to workstation with IP 137.167.20.154 (password – sanity)
+
+2. Copy the sta_dk, wlan-ccx, wlan-hal folders from delivered view to drive y:
+
+3. Go to y:\sta_dk\common\build\symbian\group folder and open DOS windows.
+
+4. Preess 'clean' and wait the couple of seconds.
+
+5. Press 'build' and wait couple of tens minutes till finish the compilation of WLAN SDIO, WLAN WSPI, GWSI projects.
+
+6. Check that no warning/errors wasn't appear.
+
+7. Copy an all files from y:\Symbian_results folder to ..\Version_Tree\..\xxx_BaseLine\Symbian.
+
+8. Delete sta_dk, wlan-ccx, wlan-hal folders from y:

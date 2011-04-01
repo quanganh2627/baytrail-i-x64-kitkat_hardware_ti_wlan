@@ -1,0 +1,104 @@
+// cli.mmp
+//
+// Copyright (c) 2000 Symbian Ltd.  All rights reserved.
+
+// using relative paths for sourcepath and user includes
+
+
+
+TARGET        cli.dll
+TARGETTYPE    dll
+UID           0x1000008d 0x10004268
+
+
+
+macro  __BYTE_ORDER_LITTLE_ENDIAN INCLUDE_DEFRAGMENTATION CONFIGURE_BSS_TYPE_STA TNETW1130=1 DOT11_A_G=1 ELP_NO_PDA_SCREEN_VIBRATE
+macro  HOST_COMPILE FIRMWARE_DYNAMIC_LOAD
+
+#define CCX_INCLUDED
+#define CCX_MODULE_INCLUDED
+#define DEBUG
+#define DRV_NAME="tiwlan"
+
+#if defined (DEBUG)
+macro TI_DBG 
+#endif
+
+#if defined (SG)
+macro BTH_COEXISTENCE 
+#endif
+
+
+
+//DK_INCS
+
+USERINCLUDE   ..\..\..\..\common\inc
+USERINCLUDE   ..\..\..\..\common\src\inc
+USERINCLUDE   ..\..\..\..\common\src\utils
+USERINCLUDE   ..\..\..\..\common\src\hal\inc
+USERINCLUDE   ..\..\..\..\common\src\hal\hl_data
+USERINCLUDE   ..\..\..\..\common\src\hal\hl_ctrl
+//USERINCLUDE   ..\..\..\..\common\src\hal\hw_data
+USERINCLUDE   ..\..\..\..\common\src\hal\hw_ctrl
+USERINCLUDE   ..\..\..\..\common\src\hal\security
+USERINCLUDE   ..\..\..\..\common\src\hal\FirmwareApi
+USERINCLUDE   ..\..\..\..\common\src\core\inc
+USERINCLUDE   ..\..\..\..\common\src\core\data_ctrl\Tx 
+USERINCLUDE   ..\..\..\..\common\src\core\data_ctrl\Ctrl 
+USERINCLUDE   ..\..\..\..\common\src\core\data_ctrl\Ctrl\4X 
+USERINCLUDE   ..\..\..\..\common\src\core\sme\Inc 
+USERINCLUDE   ..\..\..\..\common\src\core\sme\siteMgr 
+USERINCLUDE   ..\..\..\..\common\src\core\sme\configMgr 
+USERINCLUDE   ..\..\..\..\common\src\core\sme\conn 
+USERINCLUDE   ..\..\..\..\common\src\core\rsn 
+USERINCLUDE   ..\..\..\..\common\src\core\rsn\mainKeysSm 
+USERINCLUDE   ..\..\..\..\common\src\core\rsn\mainKeysSm\keyDerive 
+USERINCLUDE   ..\..\..\..\common\src\core\rsn\inc 
+USERINCLUDE   ..\..\..\..\common\src\core\mlme 
+USERINCLUDE   ..\..\..\..\common\src\core\NetworkCtrl\inc 
+//USERINCLUDE   ..\..\..\..\common\src\core\NetworkCtrl\Measurement 
+USERINCLUDE   ..\..\..\..\common\src\core\NetworkCtrl\RegulatoryDomain 
+//USERINCLUDE   ..\..\..\..\common\src\core\NetworkCtrl\QOS 
+USERINCLUDE   ..\..\..\..\CUDK\CLI
+USERINCLUDE   ..\..\..\..\CUDK\Inc
+USERINCLUDE   ..\..\..\..\pform\Symbian\inc
+USERINCLUDE   ..\..\..\..\pform\common\inc
+
+
+
+#if defined (CCX_INCLUDED)
+USERINCLUDE   ..\..\..\..\common\inc\CCX
+USERINCLUDE   ..\..\..\..\CUDK\inc\CCX
+USERINCLUDE   ..\..\..\..\CUDK\CLI\CCX
+#endif
+
+
+#if defined (SG)
+USERINCLUDE   ..\..\..\..\common\src\core\NetworkCtrl\BThWlanCombo 
+#endif
+
+SYSTEMINCLUDE \Epoc32\include \Epoc32\include\libc
+
+
+SOURCEPATH    ..\..\..\..\CUDK\CLI
+SOURCE        ticon.c console.c cu_cmd.c eth_utils.c wipp_ctrl.c dbg_module.c ipc.c g_tester.c 
+
+#if defined (CCX_MODULE_INCLUDED)
+SOURCEPATH    ..\..\..\..\CUDK\CLI\CCX
+SOURCE        cu_cmd_ccx.c
+#endif
+
+
+LIBRARY     estlib.lib euser.lib 
+
+#if defined(WINS)
+
+    deffile ..\bwins\cli.def
+
+#elif defined(ARMV5)
+
+    deffile ..\eabi\cli.def
+
+#endif
+
+EPOCALLOWDLLDATA
