@@ -1,33 +1,38 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * PowerMgrKeepAlive.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
-/** 
+
+/**
  * \file  PowerMgrKeepAlive.c
  * \brief implement user keep-alive messages
  */
@@ -53,14 +58,14 @@ typedef struct
 
 TI_STATUS powerMgrKLConfigureMessage (TI_HANDLE hPowerMgrKL, TI_UINT32 uMessageIndex);
 
-/** 
- * \fn     powerMgrKL_create 
+/**
+ * \fn     powerMgrKL_create
  * \brief  Creates the power manager keep-alive sub-module
- * 
+ *
  * Allocates memory for the keep-alive object
- * 
+ *
  * \param  hOS - handle to the os object
- * \return A handle to the power manager keep-alive sub-module 
+ * \return A handle to the power manager keep-alive sub-module
  * \sa     powerMgrKL_destroy, powerMgrKL_init
  */
 TI_HANDLE powerMgrKL_create (TI_HANDLE hOS)
@@ -80,12 +85,12 @@ TI_HANDLE powerMgrKL_create (TI_HANDLE hOS)
     return (TI_HANDLE)pPowerMgrKL;
 }
 
-/** 
- * \fn     powerMgrKL_destroy 
+/**
+ * \fn     powerMgrKL_destroy
  * \brief  Destroys the power manager keep-alive sub-module
- * 
+ *
  * De-allocates keep-alive object memory
- * 
+ *
  * \param  hPowerMgrKL - handle to the power-manager keep-alive object
  * \return None
  * \sa     powerMgrKL_create, powerMgrKL_init
@@ -97,12 +102,12 @@ void powerMgrKL_destroy (TI_HANDLE hPowerMgrKL)
     os_memoryFree (pPowerMgrKL->hOs, hPowerMgrKL, sizeof(TPowerMgrKL));
 }
 
-/** 
- * \fn     powerMgrKL_init 
+/**
+ * \fn     powerMgrKL_init
  * \brief  Initailize the power manager keep-alive sub-module
- * 
+ *
  * Stores handles to other modules
- * 
+ *
  * \param  hPowerMgrKL - handle to the power-manager keep-alive object
  * \param  hReport - handle to the report object
  * \param  hTWD - handle to the TWD object
@@ -121,12 +126,12 @@ void powerMgrKL_init (TI_HANDLE hPowerMgrKL,
     pPowerMgrKL->hTxCtrl    = pStadHandles->hTxCtrl;
 }
 
-/** 
+/**
  * \fn     powerMgrKL_setDefaults
  * \brief  Set powr-manager keep-aive default initialization values
- * 
+ *
  * Set powr-manager keep-aive default initialization values
- * 
+ *
  * \param  hPowerMgrKL - handle to the power-manager keep-alive object
  * \return None
  * \sa     powerMgrKL_init
@@ -149,14 +154,14 @@ void powerMgrKL_setDefaults (TI_HANDLE hPowerMgrKL)
     pPowerMgrKL->bConnected = TI_FALSE;
 }
 
-/** 
+/**
  * \fn     powerMgrKL_start
  * \brief  Notifies the power-manager keep-alive upon connection to a BSS
- * 
+ *
  * Set all configured templates to the FW
- * 
+ *
  * \param  hPowerMgrKL - handle to the power-manager keep-alive object
- * \return TI_OK if succesful, TI_NOK otherwise 
+ * \return TI_OK if succesful, TI_NOK otherwise
  * \sa     powerMgrKL_stop, powerMgrKL_setParam
  */
 TI_STATUS powerMgrKL_start (TI_HANDLE hPowerMgrKL)
@@ -174,8 +179,8 @@ TI_STATUS powerMgrKL_start (TI_HANDLE hPowerMgrKL)
     /* download all enabled templates to the FW (through TWD)*/
     for (uIndex = 0; uIndex < KEEP_ALIVE_MAX_USER_MESSAGES; uIndex++)
     {
-        /* 
-         * if the message is enabled (disabled messages shouldn't be configured on connection, 
+        /*
+         * if the message is enabled (disabled messages shouldn't be configured on connection,
          * as they are disabled by default in the FW) */
 
         if (TI_TRUE == pPowerMgrKL->tCurrentConfig.templates[ uIndex ].keepAliveParams.enaDisFlag)
@@ -191,14 +196,14 @@ TI_STATUS powerMgrKL_start (TI_HANDLE hPowerMgrKL)
     return status;
 }
 
-/** 
- * \fn     powerMgrKL_stop 
+/**
+ * \fn     powerMgrKL_stop
  * \brief  Notifies the power-manager keep-alive upon disconnection from a BSS
- * 
+ *
  * Delete all configured templates from the FW and internal storage
- * 
+ *
  * \param  hPowerMgrKL - handle to the power-manager keep-alive object
- * \return TI_OK if succesful, TI_NOK otherwise 
+ * \return TI_OK if succesful, TI_NOK otherwise
  * \sa     powerMgrKL_start, powerMgrKL_setParam
  */
 void powerMgrKL_stop (TI_HANDLE hPowerMgrKL, TI_BOOL bDisconnect)
@@ -222,15 +227,15 @@ void powerMgrKL_stop (TI_HANDLE hPowerMgrKL, TI_BOOL bDisconnect)
     /* for roaming, don't do anything */
 }
 
-/** 
- * \fn     powerMgrKL_setParam 
+/**
+ * \fn     powerMgrKL_setParam
  * \brief  Handles a parametr change from user-mode
- * 
+ *
  * Handles addition / removal of a template and global enable / disable flag
- * 
+ *
  * \param  hPowerMgrKL - handle to the power-manager keep-alive object
  * \param  pParam - A pointer to the paramter being set
- * \return TI_OK if succesful, TI_NOK otherwise 
+ * \return TI_OK if succesful, TI_NOK otherwise
  * \sa     powerMgrKL_start, powerMgrKL_stop
  */
 TI_STATUS powerMgrKL_setParam (TI_HANDLE hPowerMgrKL, paramInfo_t *pParam)
@@ -248,7 +253,7 @@ TI_STATUS powerMgrKL_setParam (TI_HANDLE hPowerMgrKL, paramInfo_t *pParam)
     case POWER_MGR_KEEP_ALIVE_ENA_DIS:
 
         pPowerMgrKL->tCurrentConfig.enaDisFlag = pParam->content.powerMgrKeepAliveEnaDis;
-        return TWD_CfgKeepAliveEnaDis(pPowerMgrKL->hTWD, 
+        return TWD_CfgKeepAliveEnaDis(pPowerMgrKL->hTWD,
                                       (TI_UINT8)pParam->content.powerMgrKeepAliveEnaDis);
         break;
 
@@ -298,15 +303,15 @@ TI_STATUS powerMgrKL_setParam (TI_HANDLE hPowerMgrKL, paramInfo_t *pParam)
     }
 }
 
-/** 
- * \fn     powerMgrKL_getParam 
+/**
+ * \fn     powerMgrKL_getParam
  * \brief  Handles a parametr request from user-mode
- * 
+ *
  * Retrieves configuration
- * 
+ *
  * \param  hPowerMgrKL - handle to the power-manager keep-alive object
  * \param  pParam - A pointer to the paramter being retrieved
- * \return TI_OK if succesful, TI_NOK otherwise 
+ * \return TI_OK if succesful, TI_NOK otherwise
  * \sa     powerMgrKL_start, powerMgrKL_stop
  */
 TI_STATUS powerMgrKL_getParam (TI_HANDLE hPowerMgrKL, paramInfo_t *pParam)
@@ -333,15 +338,15 @@ TI_STATUS powerMgrKL_getParam (TI_HANDLE hPowerMgrKL, paramInfo_t *pParam)
     }
 }
 
-/** 
- * \fn     powerMgrKLConfigureMessage 
+/**
+ * \fn     powerMgrKLConfigureMessage
  * \brief  Configures keep-alive message (template and parameters)
- * 
+ *
  * Configures a keepa-live message from internal database.
- * 
+ *
  * \param  hPowerMgrKL - handle to the power-manager keep-alive object
  * \param  uMessageIndex - index of message to configure (from internal database)
- * \return TI_OK if succesful, TI_NOK otherwise 
+ * \return TI_OK if succesful, TI_NOK otherwise
  * \sa     powerMgrKL_start, powerMgrKL_setParam
  */
 TI_STATUS powerMgrKLConfigureMessage (TI_HANDLE hPowerMgrKL, TI_UINT32 uMessageIndex)
@@ -362,7 +367,7 @@ TI_STATUS powerMgrKLConfigureMessage (TI_HANDLE hPowerMgrKL, TI_UINT32 uMessageI
         os_memoryCopy (pPowerMgrKL->hOs, &(pPowerMgrKL->tempBuffer[ pPowerMgrKL->wlanHeaderLength ]),
                        &(pPowerMgrKL->tCurrentConfig.templates[ uMessageIndex ].msgBuffer[ 0 ]),
                        pPowerMgrKL->tCurrentConfig.templates[ uMessageIndex ].msgBufferLength); /* copy template data */
-        tTemplate.ptr = &(pPowerMgrKL->tempBuffer[ 0 ]);                                                                     
+        tTemplate.ptr = &(pPowerMgrKL->tempBuffer[ 0 ]);
         tTemplate.len = pPowerMgrKL->tCurrentConfig.templates[ uMessageIndex ].msgBufferLength + pPowerMgrKL->wlanHeaderLength;
         tTemplate.uRateMask = RATE_MASK_UNSPECIFIED;
         status = TWD_CmdTemplate (pPowerMgrKL->hTWD, &tTemplate, NULL, NULL);

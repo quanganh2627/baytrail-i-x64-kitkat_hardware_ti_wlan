@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * ScanCncn.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file ScanCncn.c
  *  \brief Scan concentartor implementation
  *
@@ -57,20 +62,20 @@ static void scanCncn_Mix1ShotScanChannels (TScanChannelEntry *pChannelArray, TI_
 static void scanCncn_MixPeriodicScanChannels (TPeriodicChannelEntry *pChannelArray, TI_UINT32 uValidChannelsCount);
 
 #define SCAN_CLIENT_FROM_TAG( tag )  tag2Client[ tag ];
-static EScanCncnClient tag2Client[ SCAN_RESULT_TAG_MAX_NUMBER ] = 
+static EScanCncnClient tag2Client[ SCAN_RESULT_TAG_MAX_NUMBER ] =
     { SCAN_SCC_NO_CLIENT, SCAN_SCC_APP_ONE_SHOT, SCAN_SCC_DRIVER, SCAN_SCC_APP_PERIODIC, SCAN_SCC_NO_CLIENT,
       SCAN_SCC_ROAMING_IMMED, SCAN_SCC_ROAMING_CONT };
 
-/** 
- * \fn     scanCncn_Create 
+/**
+ * \fn     scanCncn_Create
  * \brief  Create the scan concentrator object
- * 
+ *
  * Create the scan concentrator object. Allocates system resources and creates the client modules.
- * 
+ *
  * \param  hOS - handle to the OS object
  * \return hanlde to the new scan concentrator object
  * \sa     scanCncn_Destroy, scanCncn_Init, scanCncn_SetDefaults
- */ 
+ */
 TI_HANDLE scanCncn_Create (TI_HANDLE hOS)
 {
     TScanCncn   *pScanCncn;
@@ -110,7 +115,7 @@ TI_HANDLE scanCncn_Create (TI_HANDLE hOS)
         WLAN_OS_REPORT (("scanCncn_Create: Unable to create OS scan SM\n"));
         /* free all resources allocated so far */
         scanCncn_Destroy ((TI_HANDLE)pScanCncn);
-        return NULL;        
+        return NULL;
     }
 
     /* create the app scan result table */
@@ -120,23 +125,23 @@ TI_HANDLE scanCncn_Create (TI_HANDLE hOS)
         WLAN_OS_REPORT (("scanCncn_Create: Unable to create application scan result table\n"));
         /* free all resources allocated so far */
         scanCncn_Destroy ((TI_HANDLE)pScanCncn);
-        return NULL;        
+        return NULL;
     }
 
     /* return handle to the new object */
     return (TI_HANDLE)pScanCncn;
 }
 
-/** 
+/**
  * \fn     scanCncn_Destroy
  * \brief  Destroys the scan concentrator object
- * 
+ *
  * Destroys the scan concentrator object. Destroys the cleint modules and frees system resources.
- * 
+ *
  * \param  hScanCncn - handle to the scan concentrator object
  * \return None
  * \sa     scanCncn_Create
- */ 
+ */
 void scanCncn_Destroy (TI_HANDLE hScanCncn)
 {
     TScanCncn   *pScanCncn = (TScanCncn*)hScanCncn;
@@ -158,20 +163,20 @@ void scanCncn_Destroy (TI_HANDLE hScanCncn)
     os_memoryFree (pScanCncn->hOS, hScanCncn, sizeof (TScanCncn));
 }
 
-/** 
+/**
  * \fn     scanCncn_Init
- * \brief  Initializes the scan concentartor module 
- * 
+ * \brief  Initializes the scan concentartor module
+ *
  * Copy handles, register callbacks and initialize client modules
- * 
+ *
  * \param  pStadHandles - modules handles structure
  * \return None
  * \sa     scanCncn_Create, scanCncn_SetDefaults
- */ 
+ */
 void scanCncn_Init (TStadHandlesList *pStadHandles)
 {
     TScanCncn   *pScanCncn = (TScanCncn*)pStadHandles->hScanCncn;
-    
+
     /* store handles */
     pScanCncn->hTWD = pStadHandles->hTWD;
     pScanCncn->hReport = pStadHandles->hReport;
@@ -201,7 +206,7 @@ void scanCncn_Init (TStadHandlesList *pStadHandles)
                      scanCncnSmCont1Shot_ScrRequest, scanCncnSmCont1Shot_ScrRelease, scanCncnSmCont1Shot_StartScan,
                      scanCncnSmCont1Shot_StopScan, scanCncnSmCont1Shot_Recovery, "Continuous scan SM");
     scanCncnSm_Init (pScanCncn->pScanClients[ SCAN_SCC_DRIVER ], pScanCncn->hReport, pScanCncn->hTWD,
-                     pScanCncn->hSCR, pScanCncn->hAPConn, pScanCncn->hMlme, (TI_HANDLE)pScanCncn, 
+                     pScanCncn->hSCR, pScanCncn->hAPConn, pScanCncn->hMlme, (TI_HANDLE)pScanCncn,
                      scanCncnSmDrvP_ScrRequest, scanCncnSmDrvP_ScrRelease, scanCncnSmDrvP_StartScan,
                      scanCncnSmDrvP_StopScan, scanCncnSmDrvP_Recovery, "Driver scan SM");
     scanCncnSm_Init (pScanCncn->pScanClients[ SCAN_SCC_APP_PERIODIC ], pScanCncn->hReport, pScanCncn->hTWD,
@@ -220,24 +225,24 @@ void scanCncn_Init (TStadHandlesList *pStadHandles)
     scanResultTable_Init (pScanCncn->hScanResultTable, pStadHandles);
 }
 
-/** 
- * \fn     scanCncn_SetDefaults 
+/**
+ * \fn     scanCncn_SetDefaults
  * \brief  Set registry values to scan concentrator
- * 
+ *
  * Set registry values to scan concentrator
- * 
+ *
  * \param  hScanCncn - handle to the scan concentrator object
  * \param  pScanConcentratorInitParams - pointer to the registry parameters struct
  * \return None
  * \sa     scanCncn_Create, scanCncn_Init
- */ 
+ */
 void scanCncn_SetDefaults (TI_HANDLE hScanCncn, TScanCncnInitParams *pScanCncnInitParams)
 {
     TScanCncn   *pScanCncn = (TScanCncn*)hScanCncn;
 
     /* copy registry values */
-    os_memoryCopy (pScanCncn->hOS, 
-                   &pScanCncn->tInitParams, 
+    os_memoryCopy (pScanCncn->hOS,
+                   &pScanCncn->tInitParams,
                    pScanCncnInitParams,
                    sizeof (TScanCncnInitParams));
 
@@ -265,38 +270,38 @@ void scanCncn_SetDefaults (TI_HANDLE hScanCncn, TScanCncnInitParams *pScanCncnIn
     scanCncn_RegisterScanResultCB ((TI_HANDLE)pScanCncn, SCAN_SCC_APP_PERIODIC, scanCncn_AppScanResultCB, (TI_HANDLE)pScanCncn);
 }
 
-/** 
+/**
  * \fn     scanCncn_SwitchToConnected
  * \brief  Notifies the scan concentratoe the STA has connected to an infrastructure BSS
- * 
+ *
  * Notifies the scan concentratoe the STA has connected to an infrastructure BSS
- * 
+ *
  * \param  hScanCncn - handle to the scan concentrator object
  * \return None
- * \sa     scanCncn_SwitchToNotConnected, scanCncn_SwitchToIBSS 
- */ 
+ * \sa     scanCncn_SwitchToNotConnected, scanCncn_SwitchToIBSS
+ */
 void scanCncn_SwitchToConnected (TI_HANDLE hScanCncn)
 {
     TScanCncn   *pScanCncn = (TScanCncn*)hScanCncn;
 
     TRACE0(pScanCncn->hReport, REPORT_SEVERITY_INFORMATION , "scanCncn_SwitchToConnected: Switching to connected state.\n");
-    
+
     /* change connection status to connected */
     pScanCncn->eConnectionStatus = STA_CONNECTED;
 
     /* Any running scans in other modes will be aborted (if needed) by the SCR (or have already been) */
 }
 
-/** 
+/**
  * \fn     scanCncn_SwitchToNotConnected
  * \brief  Notifies the scan concentratoe the STA has disconnected from a BSS
- * 
+ *
  * Notifies the scan concentratoe the STA has disconnected from a BSS
- * 
+ *
  * \param  hScanCncn - handle to the scan concentrator object
  * \return None
  * \sa     scanCncn_SwitchToConnected, scanCncn_SwitchToIBSS
- */ 
+ */
 void scanCncn_SwitchToNotConnected (TI_HANDLE hScanCncn)
 {
     TScanCncn   *pScanCncn = (TScanCncn*)hScanCncn;
@@ -309,16 +314,16 @@ void scanCncn_SwitchToNotConnected (TI_HANDLE hScanCncn)
     /* Any running scans in other modes will be aborted (if needed) by the SCR (or have already been) */
 }
 
-/** 
+/**
  * \fn     scanCncn_SwitchToIBSS
  * \brief  Notifies the scan concentratoe the STA has connected to an independent BSS
- * 
+ *
  * Notifies the scan concentratoe the STA has connected to an independent BSS
- * 
+ *
  * \param  hScanCncn - handle to the scan concentrator object
  * \return None
  * \sa     scanCncn_SwitchToConnected, scanCncn_SwitchToNotConnected
- */ 
+ */
 void scanCncn_SwitchToIBSS (TI_HANDLE hScanCncn)
 {
     TScanCncn   *pScanCncn = (TScanCncn*)hScanCncn;
@@ -331,7 +336,7 @@ void scanCncn_SwitchToIBSS (TI_HANDLE hScanCncn)
     /* Any running scans in other modes will be aborted (if needed) by the SCR (or have already been) */
 }
 
-EScanCncnResultStatus scanCncn_Start1ShotScan (TI_HANDLE hScanCncn, 
+EScanCncnResultStatus scanCncn_Start1ShotScan (TI_HANDLE hScanCncn,
                                           EScanCncnClient eClient,
                                           TScanParams* pScanParams)
 {
@@ -346,10 +351,10 @@ EScanCncnResultStatus scanCncn_Start1ShotScan (TI_HANDLE hScanCncn,
     }
 
     /* copy scan parameters to local buffer */
-    os_memoryCopy (pScanCncn->hOS, &(pScanCncn->pScanClients[ eClient ]->uScanParams.tOneShotScanParams), 
+    os_memoryCopy (pScanCncn->hOS, &(pScanCncn->pScanClients[ eClient ]->uScanParams.tOneShotScanParams),
                    pScanParams, sizeof(TScanParams));
 
-    /* 
+    /*
      * roaming scans (continuous and immediate) require to set the current SSID, to keep the scan manager
      * unaware of it, unless the SSID is broadcast (to allow customers to request broadcast scan)
      */
@@ -360,7 +365,7 @@ EScanCncnResultStatus scanCncn_Start1ShotScan (TI_HANDLE hScanCncn,
             /* set the SSID of the current AP */
             pParam->paramType = SME_DESIRED_SSID_ACT_PARAM;
             sme_GetParam (pScanCncn->hSme, pParam);
-            os_memoryCopy (pScanCncn->hOS, 
+            os_memoryCopy (pScanCncn->hOS,
                            &(pScanCncn->pScanClients[ eClient ]->uScanParams.tOneShotScanParams.desiredSsid),
                            &(pParam->content.smeDesiredSSID),
                            sizeof(TSsid));
@@ -379,14 +384,14 @@ EScanCncnResultStatus scanCncn_Start1ShotScan (TI_HANDLE hScanCncn,
     }
 
     /* Mix the channel order in the 1 Shot Scan channel array */
-    scanCncn_Mix1ShotScanChannels (pScanCncn->pScanClients[ eClient ]->uScanParams.tOneShotScanParams.channelEntry, 
+    scanCncn_Mix1ShotScanChannels (pScanCncn->pScanClients[ eClient ]->uScanParams.tOneShotScanParams.channelEntry,
                                    pScanCncn->pScanClients[ eClient ]->uScanParams.tOneShotScanParams.numOfChannels);
 
     if (TI_TRUE == pScanCncn->bUseSGParams)
     {
         scanCncn_SGupdateScanParams (hScanCncn, &(pScanCncn->pScanClients[ eClient ]->uScanParams), TI_FALSE);
     }
-    
+
     /* mark that a scan request is in progress (to avoid client re-entrance if the scan fail) */
     pScanCncn->pScanClients[ eClient ]->bInRequest = TI_TRUE;
 
@@ -394,13 +399,13 @@ EScanCncnResultStatus scanCncn_Start1ShotScan (TI_HANDLE hScanCncn,
     pScanCncn->pScanClients[ eClient ]->eScanResult = SCAN_CRS_SCAN_COMPLETE_OK;
 
     /* send a start scan event to the SM */
-    genSM_Event (pScanCncn->pScanClients[ eClient ]->hGenSM, SCAN_CNCN_SM_EVENT_START, 
+    genSM_Event (pScanCncn->pScanClients[ eClient ]->hGenSM, SCAN_CNCN_SM_EVENT_START,
                  (TI_HANDLE)pScanCncn->pScanClients[ eClient ]);
 
     /* mark that the scan request is no longer in progress */
     pScanCncn->pScanClients[ eClient ]->bInRequest = TI_FALSE;
 
-    /* 
+    /*
      * return scan result - if an error occured return the error, otherwise return running
      * (complete_ok is set to be returned when scan is complete)
      */
@@ -417,7 +422,7 @@ void scanCncn_StopScan (TI_HANDLE hScanCncn, EScanCncnClient eClient)
 
     TRACE1( pScanCncn->hReport, REPORT_SEVERITY_INFORMATION, "scanCncn_StopScan: Received stop scan request from client %d\n", eClient);
 
-    /* 
+    /*
      * mark that null data should be sent (different from abort, where null dats is not sent
      * to reduce abort time)
      */
@@ -430,20 +435,20 @@ void scanCncn_StopScan (TI_HANDLE hScanCncn, EScanCncnClient eClient)
     }
 
     /* send a stop scan event to the SM */
-    genSM_Event (pScanCncn->pScanClients[ eClient ]->hGenSM, SCAN_CNCN_SM_EVENT_STOP, 
+    genSM_Event (pScanCncn->pScanClients[ eClient ]->hGenSM, SCAN_CNCN_SM_EVENT_STOP,
                  (TI_HANDLE)pScanCncn->pScanClients[ eClient ]);
 }
 
-/** 
+/**
  * \fn     scanCncn_StartPeriodicScan
  * \brief  Starts a periodic scan operation
- * 
+ *
  * Starts a periodic scan operation:
  *  - copies scan params to scan concentrator object
  *  - verifies the requested channels with the reg doamin
  *  - if needed, adjust to SG compensation values
  *  - send an event to the client SM
- * 
+ *
  * \param  hScanCncn - handle to the scan concentrator object
  * \param  eClient - the client requesting the scan operation
  * \param  pScanParams - scan parameters
@@ -461,7 +466,7 @@ EScanCncnResultStatus scanCncn_StartPeriodicScan (TI_HANDLE hScanCncn,
     TRACE1(pScanCncn->hReport, REPORT_SEVERITY_INFORMATION , "scanCncn_startPeriodicScan: Received scan request from client %d\n", eClient);
 
     /* copy scan parameters to local buffer */
-    os_memoryCopy (pScanCncn->hOS, &(pScanCncn->pScanClients[ eClient ]->uScanParams.tPeriodicScanParams), 
+    os_memoryCopy (pScanCncn->hOS, &(pScanCncn->pScanClients[ eClient ]->uScanParams.tPeriodicScanParams),
                    pScanParams, sizeof(TPeriodicScanParams));
 
     /* ask the reg domain which channels are allowed for the requested scan type */
@@ -475,14 +480,14 @@ EScanCncnResultStatus scanCncn_StartPeriodicScan (TI_HANDLE hScanCncn,
     }
 
     /* Mix the channel order in the Periodic Scan channel array */
-    scanCncn_MixPeriodicScanChannels (pScanCncn->pScanClients[ eClient ]->uScanParams.tPeriodicScanParams.tChannels, 
+    scanCncn_MixPeriodicScanChannels (pScanCncn->pScanClients[ eClient ]->uScanParams.tPeriodicScanParams.tChannels,
                                       pScanCncn->pScanClients[ eClient ]->uScanParams.tPeriodicScanParams.uChannelNum);
 
     if (TI_TRUE == pScanCncn->bUseSGParams)
     {
         scanCncn_SGupdateScanParams (hScanCncn, &(pScanCncn->pScanClients[ eClient ]->uScanParams), TI_TRUE);
     }
-    
+
     /* mark that a scan request is in progress (to avoid client re-entrance if the scan fail) */
     pScanCncn->pScanClients[ eClient ]->bInRequest = TI_TRUE;
 
@@ -490,13 +495,13 @@ EScanCncnResultStatus scanCncn_StartPeriodicScan (TI_HANDLE hScanCncn,
     pScanCncn->pScanClients[ eClient ]->eScanResult = SCAN_CRS_SCAN_COMPLETE_OK;
 
     /* send a start scan event to the SM */
-    genSM_Event (pScanCncn->pScanClients[ eClient ]->hGenSM, SCAN_CNCN_SM_EVENT_START, 
+    genSM_Event (pScanCncn->pScanClients[ eClient ]->hGenSM, SCAN_CNCN_SM_EVENT_START,
                  (TI_HANDLE)pScanCncn->pScanClients[ eClient ]);
 
     /* mark that the scan request is no longer in progress */
     pScanCncn->pScanClients[ eClient ]->bInRequest = TI_FALSE;
 
-    /* 
+    /*
      * return scan result - if an error occured return the error, otherwise return running
      * (complete_ok is set to be returned when scan is complete)
      */
@@ -507,17 +512,17 @@ EScanCncnResultStatus scanCncn_StartPeriodicScan (TI_HANDLE hScanCncn,
     return SCAN_CRS_SCAN_RUNNING;
 }
 
-/** 
- * \fn     scanCncn_StopPeriodicScan 
+/**
+ * \fn     scanCncn_StopPeriodicScan
  * \brief  Stop an on-going periodic scan operation
- * 
- * Set necessary flags and send a stop scan event to the client SM 
- * 
+ *
+ * Set necessary flags and send a stop scan event to the client SM
+ *
  * \param  hScanCncn - handle to the scan concentrator object
  * \param  eClient - the client requesting to stop the scan operation
- * \return None 
+ * \return None
  * \sa     scanCncn_StartPeriodicScan
- */ 
+ */
 void scanCncn_StopPeriodicScan (TI_HANDLE hScanCncn, EScanCncnClient eClient)
 {
     TScanCncn           *pScanCncn = (TScanCncn*)hScanCncn;
@@ -531,7 +536,7 @@ void scanCncn_StopPeriodicScan (TI_HANDLE hScanCncn, EScanCncnClient eClient)
     }
 
     /* send a stop scan event to the SM */
-    genSM_Event (pScanCncn->pScanClients[ eClient ]->hGenSM, SCAN_CNCN_SM_EVENT_STOP, 
+    genSM_Event (pScanCncn->pScanClients[ eClient ]->hGenSM, SCAN_CNCN_SM_EVENT_STOP,
                  (TI_HANDLE)pScanCncn->pScanClients[ eClient ]);
 }
 
@@ -548,9 +553,9 @@ void scanCncn_RegisterScanResultCB (TI_HANDLE hScanCncn, EScanCncnClient eClient
 /**
  * \fn     scanCncn_ScanCompleteNotificationCB
  * \brief  Called when a scan is complete
- * 
+ *
  * Update scan status and send a complete event to the SM
- * 
+ *
  * \note   Must wait for all results to be received before the scan is actually completed
  * \param  hScanCncn - handle to the scan concentrator object
  * \param  eTag - the scan type tag
@@ -559,7 +564,7 @@ void scanCncn_RegisterScanResultCB (TI_HANDLE hScanCncn, EScanCncnClient eClient
  * \param  bTSFError - whether a TSF error occurred (if this is an SPS scan)
  * \param  scanStatus - scan SRV status (OK / NOK)
  * \return None
- */ 
+ */
 void scanCncn_ScanCompleteNotificationCB (TI_HANDLE hScanCncn, EScanResultTag eTag,
                                           TI_UINT32 uResultCount, TI_UINT16 SPSStatus,
                                           TI_BOOL bTSFError, TI_STATUS scanStatus,
@@ -598,7 +603,7 @@ void scanCncn_ScanCompleteNotificationCB (TI_HANDLE hScanCncn, EScanResultTag eT
         TRACE2(pScanCncn->hReport, REPORT_SEVERITY_INFORMATION , "scanCncn_ScanCompleteNotificationCB: client %d received %d results, matching scan complete FW indication, sending scan complete event\n", eClient, pScanCncn->pScanClients[ eClient ]->uResultCounter);
 
         /* all frames had been received, send a scan complete event to the client SM */
-        genSM_Event (pScanCncn->pScanClients[ eClient ]->hGenSM, SCAN_CNCN_SM_EVENT_SCAN_COMPLETE, 
+        genSM_Event (pScanCncn->pScanClients[ eClient ]->hGenSM, SCAN_CNCN_SM_EVENT_SCAN_COMPLETE,
                      (TI_HANDLE)pScanCncn->pScanClients[ eClient ]);
     }
     else
@@ -610,18 +615,18 @@ void scanCncn_ScanCompleteNotificationCB (TI_HANDLE hScanCncn, EScanResultTag eT
     }
 }
 
-/** 
+/**
  * \fn     scanCncn_PeriodicScanReportCB
  * \brief  Called when results are available but periodic scan is not yet complete
- * 
+ *
  * Called when results are available but periodic scan is not yet complete
- * 
+ *
  * \param  hScanCncn - handle to the scan concentrator object
  * \param  str - event data
  * \param  strLen - data length
  * \return None
  * \sa     scanCncn_PeriodicScanCompleteCB
- */ 
+ */
 void scanCncn_PeriodicScanReportCB (TI_HANDLE hScanCncn, char* str, TI_UINT32 strLen)
 {
     TScanCncn           *pScanCncn = (TScanCncn*)hScanCncn;
@@ -637,12 +642,12 @@ void scanCncn_PeriodicScanReportCB (TI_HANDLE hScanCncn, char* str, TI_UINT32 st
     /* update number of frames expected */
     pScanCncn->pScanClients[ eClient ]->uResultExpectedNumber += uResultCount;
 }
-/** 
+/**
  * \fn     scanCncn_PeriodicScanReportCB
  * \brief  Called when results are available but the scan is bot yet complete
- * 
+ *
  * Called when results are available but the scan is bot yet complete
- * 
+ *
  * \param  hScanCncn - handle to the scan concentrator object
  * \param  str - event data
  * \param  strLen - data length
@@ -669,7 +674,7 @@ void scanCncn_PeriodicScanCompleteCB (TI_HANDLE hScanCncn, char* str, TI_UINT32 
     {
         TRACE2(pScanCncn->hReport, REPORT_SEVERITY_INFORMATION , "scanCncn_PeriodicScanCompleteCB: client %d received %d results, matching scan complete FW indication, sending scan complete event\n", eClient, pScanCncn->pScanClients[ eClient ]->uResultCounter);
         /* all frames had been received, send a scan complete event to the client SM */
-        genSM_Event (pScanCncn->pScanClients[ eClient ]->hGenSM, SCAN_CNCN_SM_EVENT_SCAN_COMPLETE, 
+        genSM_Event (pScanCncn->pScanClients[ eClient ]->hGenSM, SCAN_CNCN_SM_EVENT_SCAN_COMPLETE,
                      (TI_HANDLE)pScanCncn->pScanClients[ eClient ]);
     }
     else
@@ -680,12 +685,12 @@ void scanCncn_PeriodicScanCompleteCB (TI_HANDLE hScanCncn, char* str, TI_UINT32 
     }
 }
 
-/** 
+/**
  * \fn     scanCncn_MlmeResultCB
  * \brief  Handles an MLME result (received frame)
- * 
+ *
  * Filters the frame for roaming scans and passes it to the appropriate client
- * 
+ *
  * \param  hScanCncn - handle to the scan concentrator object
  * \param  bssid - a pointer to the address of the AP sending this frame
  * \param  frameInfo - the IE in the frame
@@ -693,8 +698,8 @@ void scanCncn_PeriodicScanCompleteCB (TI_HANDLE hScanCncn, char* str, TI_UINT32 
  * \param  buffer - a pointer to the frame body
  * \param  bufferLength - the frame body length
  * \return None
- */ 
-void scanCncn_MlmeResultCB (TI_HANDLE hScanCncn, TMacAddr* bssid, mlmeFrameInfo_t* frameInfo, 
+ */
+void scanCncn_MlmeResultCB (TI_HANDLE hScanCncn, TMacAddr* bssid, mlmeFrameInfo_t* frameInfo,
                             TRxAttr* pRxAttr, TI_UINT8* buffer, TI_UINT16 bufferLength)
 {
     TScanCncn           *pScanCncn = (TScanCncn*)hScanCncn;
@@ -708,9 +713,9 @@ void scanCncn_MlmeResultCB (TI_HANDLE hScanCncn, TMacAddr* bssid, mlmeFrameInfo_
     /* increase scan result counter */
     pScanCncn->pScanClients[ eClient ]->uResultCounter++;
 
-    /* 
-     * erroneous results are signaled by NULL pointers and are notified to the scan concentrator to 
-     * update the counter only! 
+    /*
+     * erroneous results are signaled by NULL pointers and are notified to the scan concentrator to
+     * update the counter only!
      */
     if (NULL == bssid)
     {
@@ -736,8 +741,8 @@ void scanCncn_MlmeResultCB (TI_HANDLE hScanCncn, TMacAddr* bssid, mlmeFrameInfo_
 			}
         }
 
-       /* 
-        * for roaming continuous and immediate, discard frames from current AP, 
+       /*
+        * for roaming continuous and immediate, discard frames from current AP,
         * or frames with SSID different than desired when the scan is NOT SPS
         */
         else if ((SCAN_SCC_ROAMING_CONT == eClient) || (SCAN_SCC_ROAMING_IMMED == eClient))
@@ -747,8 +752,8 @@ void scanCncn_MlmeResultCB (TI_HANDLE hScanCncn, TMacAddr* bssid, mlmeFrameInfo_
             pCurrentAP = apConn_getBSSParams(pScanCncn->hAPConn);
             if(MAC_EQUAL(*bssid, pCurrentAP->BSSID) ||
                ((os_memoryCompare (pScanCncn->hOS,
-                                   (TI_UINT8*)frameInfo->content.iePacket.pSsid->serviceSetId, 
-                                   (TI_UINT8*)pScanCncn->pScanClients[ eClient ]->uScanParams.tOneShotScanParams.desiredSsid.str, 
+                                   (TI_UINT8*)frameInfo->content.iePacket.pSsid->serviceSetId,
+                                   (TI_UINT8*)pScanCncn->pScanClients[ eClient ]->uScanParams.tOneShotScanParams.desiredSsid.str,
                                    pScanCncn->pScanClients[ eClient ]->uScanParams.tOneShotScanParams.desiredSsid.len)) &&
                 pScanCncn->pScanClients[ eClient ]->uScanParams.tOneShotScanParams.scanType != SCAN_TYPE_SPS))
             {
@@ -777,8 +782,8 @@ void scanCncn_MlmeResultCB (TI_HANDLE hScanCncn, TMacAddr* bssid, mlmeFrameInfo_
 
             if (TI_TRUE == pScanCncn->tInitParams.bPushMode)
             {
-               /* 
-                * The scan found result, send a scan report event to the use with the frame 	parameters without save the result in the scan table 
+               /*
+                * The scan found result, send a scan report event to the use with the frame 	parameters without save the result in the scan table
                 */
                 EvHandlerSendEvent (pScanCncn->hEvHandler, IPC_EVENT_SCAN_REPORT, (TI_UINT8*)&tScanFrameInfo, sizeof(TScanFrameInfo));
             }
@@ -798,23 +803,23 @@ void scanCncn_MlmeResultCB (TI_HANDLE hScanCncn, TMacAddr* bssid, mlmeFrameInfo_
         TRACE1(pScanCncn->hReport, REPORT_SEVERITY_INFORMATION , "scanCncn_MlmeResultCB: received frame number %d, scan complete pending, sending scan complet event\n", pScanCncn->pScanClients[ eClient ]->uResultCounter);
 
         /* send a scan complete event to the client SM */
-        genSM_Event (pScanCncn->pScanClients[ eClient ]->hGenSM, SCAN_CNCN_SM_EVENT_SCAN_COMPLETE, 
+        genSM_Event (pScanCncn->pScanClients[ eClient ]->hGenSM, SCAN_CNCN_SM_EVENT_SCAN_COMPLETE,
                      (TI_HANDLE)pScanCncn->pScanClients[ eClient ]);
     }
 }
 
-/** 
+/**
  * \fn     scanCncn_ScrRoamingImmedCB
  * \brief  Called by SCR for immediate roaming client status change notification
- * 
+ *
  * Handles status change by sending the appropriate SM event
- * 
+ *
  * \param  hScanCncn - handle to the scan concentrator object
  * \param  eRrequestStatus - the immediate scan for roaming client status
  * \param  eResource - the resource for which the CB is issued
  * \param  ePendreason - The reason for pend status, if the status is pend
  * \return None
- */ 
+ */
 void scanCncn_ScrRoamingImmedCB (TI_HANDLE hScanCncn, EScrClientRequestStatus eRequestStatus,
                                  EScrResourceId eResource, EScePendReason ePendReason)
 {
@@ -827,18 +832,18 @@ void scanCncn_ScrRoamingImmedCB (TI_HANDLE hScanCncn, EScrClientRequestStatus eR
     {
     case SCR_CRS_RUN:
         /* send an SCR run event to the SM */
-        genSM_Event (pScanCncn->pScanClients[ SCAN_SCC_ROAMING_IMMED ]->hGenSM, SCAN_CNCN_SM_EVENT_RUN, 
+        genSM_Event (pScanCncn->pScanClients[ SCAN_SCC_ROAMING_IMMED ]->hGenSM, SCAN_CNCN_SM_EVENT_RUN,
                      (TI_HANDLE)pScanCncn->pScanClients[ SCAN_SCC_ROAMING_IMMED ]);
         break;
 
     case SCR_CRS_PEND:
-        /* if pending reason has changed to different group - send a reject event 
+        /* if pending reason has changed to different group - send a reject event
            (should only happen when pending) */
         if ( SCR_PR_DIFFERENT_GROUP_RUNNING == ePendReason )
         {
             /* send an SCR reject event to the SM - would not scan when not performing roaming */
             pScanCncn->pScanClients[ SCAN_SCC_ROAMING_IMMED ]->eScanResult = SCAN_CRS_SCAN_FAILED;
-            genSM_Event (pScanCncn->pScanClients[ SCAN_SCC_ROAMING_IMMED ]->hGenSM, SCAN_CNCN_SM_EVENT_REJECT, 
+            genSM_Event (pScanCncn->pScanClients[ SCAN_SCC_ROAMING_IMMED ]->hGenSM, SCAN_CNCN_SM_EVENT_REJECT,
                          (TI_HANDLE)pScanCncn->pScanClients[ SCAN_SCC_ROAMING_IMMED ]);
         }
         break;
@@ -851,7 +856,7 @@ void scanCncn_ScrRoamingImmedCB (TI_HANDLE hScanCncn, EScrClientRequestStatus eR
         }
 
         /* send a recovery event to the SM */
-        genSM_Event (pScanCncn->pScanClients[ SCAN_SCC_ROAMING_IMMED ]->hGenSM, SCAN_CNCN_SM_EVENT_RECOVERY, 
+        genSM_Event (pScanCncn->pScanClients[ SCAN_SCC_ROAMING_IMMED ]->hGenSM, SCAN_CNCN_SM_EVENT_RECOVERY,
                      (TI_HANDLE)pScanCncn->pScanClients[ SCAN_SCC_ROAMING_IMMED ]);
         break;
 
@@ -863,18 +868,18 @@ void scanCncn_ScrRoamingImmedCB (TI_HANDLE hScanCncn, EScrClientRequestStatus eR
     }
 }
 
-/** 
+/**
  * \fn     scanCncn_ScrRoamingContCB
  * \brief  Called by SCR for continuous roaming client status change notification
- * 
+ *
  * Handles status change by sending the appropriate SM event
- * 
+ *
  * \param  hScanCncn - handle to the scan concentrator object
  * \param  eRrequestStatus - the continuous scan for roaming client status
  * \param  eResource - the resource for which the CB is issued
  * \param  ePendreason - The reason for pend status, if the status is pend
  * \return None
- */ 
+ */
 void scanCncn_ScrRoamingContCB (TI_HANDLE hScanCncn, EScrClientRequestStatus eRequestStatus,
                                 EScrResourceId eResource, EScePendReason ePendReason)
 {
@@ -887,7 +892,7 @@ void scanCncn_ScrRoamingContCB (TI_HANDLE hScanCncn, EScrClientRequestStatus eRe
     {
     case SCR_CRS_RUN:
         /* send an SCR run event to the SM */
-        genSM_Event (pScanCncn->pScanClients[ SCAN_SCC_ROAMING_CONT ]->hGenSM, SCAN_CNCN_SM_EVENT_RUN, 
+        genSM_Event (pScanCncn->pScanClients[ SCAN_SCC_ROAMING_CONT ]->hGenSM, SCAN_CNCN_SM_EVENT_RUN,
                      (TI_HANDLE)pScanCncn->pScanClients[ SCAN_SCC_ROAMING_CONT ]);
         break;
 
@@ -896,7 +901,7 @@ void scanCncn_ScrRoamingContCB (TI_HANDLE hScanCncn, EScrClientRequestStatus eRe
         if ( SCR_PR_DIFFERENT_GROUP_RUNNING == ePendReason )
         {
             pScanCncn->pScanClients[ SCAN_SCC_ROAMING_CONT ]->eScanResult = SCAN_CRS_SCAN_FAILED;
-            genSM_Event (pScanCncn->pScanClients[ SCAN_SCC_ROAMING_CONT ]->hGenSM, SCAN_CNCN_SM_EVENT_REJECT, 
+            genSM_Event (pScanCncn->pScanClients[ SCAN_SCC_ROAMING_CONT ]->hGenSM, SCAN_CNCN_SM_EVENT_REJECT,
                          (TI_HANDLE)pScanCncn->pScanClients[ SCAN_SCC_ROAMING_CONT ]);
         }
         break;
@@ -909,7 +914,7 @@ void scanCncn_ScrRoamingContCB (TI_HANDLE hScanCncn, EScrClientRequestStatus eRe
         }
 
         /* send a recovery event to the SM */
-        genSM_Event (pScanCncn->pScanClients[ SCAN_SCC_ROAMING_CONT ]->hGenSM, SCAN_CNCN_SM_EVENT_RECOVERY, 
+        genSM_Event (pScanCncn->pScanClients[ SCAN_SCC_ROAMING_CONT ]->hGenSM, SCAN_CNCN_SM_EVENT_RECOVERY,
                      (TI_HANDLE)pScanCncn->pScanClients[ SCAN_SCC_ROAMING_CONT ]);
         break;
 
@@ -925,7 +930,7 @@ void scanCncn_ScrRoamingContCB (TI_HANDLE hScanCncn, EScrClientRequestStatus eRe
         }
 
         /* send an abort scan event to the SM */
-        genSM_Event (pScanCncn->pScanClients[ SCAN_SCC_ROAMING_CONT ]->hGenSM, SCAN_CNCN_SM_EVENT_ABORT, 
+        genSM_Event (pScanCncn->pScanClients[ SCAN_SCC_ROAMING_CONT ]->hGenSM, SCAN_CNCN_SM_EVENT_ABORT,
                      (TI_HANDLE)pScanCncn->pScanClients[ SCAN_SCC_ROAMING_CONT ]);
         break;
 
@@ -935,19 +940,19 @@ void scanCncn_ScrRoamingContCB (TI_HANDLE hScanCncn, EScrClientRequestStatus eRe
     }
 }
 
-/** 
+/**
  * \fn     scanCncn_ScrAppCB
  * \brief  Called by SCR for application scan client status change notification
- * 
+ *
  * Handles status change by sending the appropriate SM event
- * 
+ *
  * \note   this function is used by the SCR for both one-shot and periodic application scan
  * \param  hScanCncn - handle to the scan concentrator object
  * \param  eRrequestStatus - the application scan client status
  * \param  eResource - the resource for which the CB is issued
  * \param  ePendreason - The reason for pend status, if the status is pend
  * \return None
- */ 
+ */
 void scanCncn_ScrAppCB (TI_HANDLE hScanCncn, EScrClientRequestStatus eRequestStatus,
                         EScrResourceId eResource, EScePendReason ePendReason )
 {
@@ -969,14 +974,14 @@ void scanCncn_ScrAppCB (TI_HANDLE hScanCncn, EScrClientRequestStatus eRequestSta
     /* act according to the request staus */
     switch (eRequestStatus)
     {
-    /* 
+    /*
      * Note: pend is not handled because application scan cancel its scan request when it receives pend
      * as the SCR request result, and thus it is assumed that the application scan request will never be
      * pending
      */
     case SCR_CRS_RUN:
         /* send an SCR run event to the SM */
-        genSM_Event (pScanCncn->pScanClients[ eClient ]->hGenSM, SCAN_CNCN_SM_EVENT_RUN, 
+        genSM_Event (pScanCncn->pScanClients[ eClient ]->hGenSM, SCAN_CNCN_SM_EVENT_RUN,
                      (TI_HANDLE)pScanCncn->pScanClients[ eClient ]);
         break;
 
@@ -988,11 +993,11 @@ void scanCncn_ScrAppCB (TI_HANDLE hScanCncn, EScrClientRequestStatus eRequestSta
         }
 
         /* send a recovery event to the SM */
-        genSM_Event (pScanCncn->pScanClients[ eClient ]->hGenSM, SCAN_CNCN_SM_EVENT_RECOVERY, 
+        genSM_Event (pScanCncn->pScanClients[ eClient ]->hGenSM, SCAN_CNCN_SM_EVENT_RECOVERY,
                      (TI_HANDLE)pScanCncn->pScanClients[ eClient ]);
         break;
 
-    case SCR_CRS_ABORT:  
+    case SCR_CRS_ABORT:
         /* mark not to send NULL data when scan is stopped */
         pScanCncn->pScanClients[ eClient ]->bSendNullDataOnStop = TI_FALSE;
 
@@ -1003,7 +1008,7 @@ void scanCncn_ScrAppCB (TI_HANDLE hScanCncn, EScrClientRequestStatus eRequestSta
         }
 
         /* send an abort scan event to the SM */
-        genSM_Event (pScanCncn->pScanClients[ eClient ]->hGenSM, SCAN_CNCN_SM_EVENT_ABORT, 
+        genSM_Event (pScanCncn->pScanClients[ eClient ]->hGenSM, SCAN_CNCN_SM_EVENT_ABORT,
                      (TI_HANDLE)pScanCncn->pScanClients[ eClient ]);
         break;
 
@@ -1013,18 +1018,18 @@ void scanCncn_ScrAppCB (TI_HANDLE hScanCncn, EScrClientRequestStatus eRequestSta
     }
 }
 
-/** 
+/**
  * \fn     scanCncn_ScrDriverCB
  * \brief  Called by SCR for driver scan client status change notification
- * 
+ *
  * Handles status change by sending the appropriate SM event
- * 
+ *
  * \param  hScanCncn - handle to the scan concentrator object
  * \param  eRrequestStatus - the driver scan client status
  * \param  eResource - the resource for which the CB is issued
  * \param  ePendreason - The reason for pend status, if the status is pend
  * \return None
- */ 
+ */
 void scanCncn_ScrDriverCB (TI_HANDLE hScanCncn, EScrClientRequestStatus eRequestStatus,
                            EScrResourceId eResource, EScePendReason ePendReason)
 {
@@ -1037,7 +1042,7 @@ void scanCncn_ScrDriverCB (TI_HANDLE hScanCncn, EScrClientRequestStatus eRequest
     {
     case SCR_CRS_RUN:
         /* send the next event to the SM */
-        genSM_Event (pScanCncn->pScanClients[ SCAN_SCC_DRIVER ]->hGenSM, SCAN_CNCN_SM_EVENT_RUN, 
+        genSM_Event (pScanCncn->pScanClients[ SCAN_SCC_DRIVER ]->hGenSM, SCAN_CNCN_SM_EVENT_RUN,
                      (TI_HANDLE)pScanCncn->pScanClients[ SCAN_SCC_DRIVER ]);
         break;
 
@@ -1046,7 +1051,7 @@ void scanCncn_ScrDriverCB (TI_HANDLE hScanCncn, EScrClientRequestStatus eRequest
         if ( SCR_PR_DIFFERENT_GROUP_RUNNING == ePendReason )
         {
             pScanCncn->pScanClients[ SCAN_SCC_DRIVER ]->eScanResult = SCAN_CRS_SCAN_FAILED;
-            genSM_Event (pScanCncn->pScanClients[ SCAN_SCC_DRIVER ]->hGenSM, SCAN_CNCN_SM_EVENT_REJECT, 
+            genSM_Event (pScanCncn->pScanClients[ SCAN_SCC_DRIVER ]->hGenSM, SCAN_CNCN_SM_EVENT_REJECT,
                          (TI_HANDLE)pScanCncn->pScanClients[ SCAN_SCC_DRIVER ]);
         }
         break;
@@ -1059,10 +1064,10 @@ void scanCncn_ScrDriverCB (TI_HANDLE hScanCncn, EScrClientRequestStatus eRequest
         }
 
         /* send a recovery event to the SM */
-        genSM_Event (pScanCncn->pScanClients[ SCAN_SCC_DRIVER ]->hGenSM, SCAN_CNCN_SM_EVENT_RECOVERY, 
+        genSM_Event (pScanCncn->pScanClients[ SCAN_SCC_DRIVER ]->hGenSM, SCAN_CNCN_SM_EVENT_RECOVERY,
                      (TI_HANDLE)pScanCncn->pScanClients[ SCAN_SCC_DRIVER ]);
         break;
-    
+
     case SCR_CRS_ABORT:
     /* This should never happen, report error */
     default:
@@ -1071,17 +1076,17 @@ void scanCncn_ScrDriverCB (TI_HANDLE hScanCncn, EScrClientRequestStatus eRequest
     }
 }
 
-/** 
+/**
  * \fn     scanCncn_VerifyChannelsWithRegDomain
  * \brief  Verifies channel validity and TX power with the reg. domain
- * 
+ *
  * Verifies channel validity and TX power with the reg. domain. Removes invalid channels.
- * 
+ *
  * \param  hScanCncn - handle to the scan concentrator object
  * \param  puScanParams - a pointer to the scan parmeters union
  * \param  bPeriodicScan - TRUE if the parameters are for periodic scan, FALSE if for one-shot scan
  * \return None
- */ 
+ */
 void scanCncn_VerifyChannelsWithRegDomain (TI_HANDLE hScanCncn, UScanParams *puScanParams, TI_BOOL bPeriodicScan)
 {
     TScanCncn           *pScanCncn = (TScanCncn*)hScanCncn;
@@ -1106,7 +1111,7 @@ void scanCncn_VerifyChannelsWithRegDomain (TI_HANDLE hScanCncn, UScanParams *puS
 
         /* check channels */
     for (i = 0; i < uChannelNum; )
-        { /* Note that i is only increased when channel is valid - if channel is invalid, another 
+        { /* Note that i is only increased when channel is valid - if channel is invalid, another
              channel is copied in its place, and thus the same index should be checked again. However,
              since the number of channels is decreased, the loop end condition is getting nearer! */
         pParam->paramType = REGULATORY_DOMAIN_GET_SCAN_CAPABILITIES;
@@ -1129,7 +1134,7 @@ void scanCncn_VerifyChannelsWithRegDomain (TI_HANDLE hScanCncn, UScanParams *puS
                 /* if this is a DFS channel */
                 if (TI_TRUE == tDfsParam.content.tDfsChannel.bDfsChannel)
                 {
-                    /* 
+                    /*
                      * DFS channels are first scanned passive and than active, so reg. domain can only validate
                      * these channels for pasiive scanning at the moment
                      */
@@ -1160,9 +1165,9 @@ void scanCncn_VerifyChannelsWithRegDomain (TI_HANDLE hScanCncn, UScanParams *puS
             else
             {
                 /* also set the power level to the minimumm between requested power and allowed power */
-                puScanParams->tPeriodicScanParams.tChannels[ i ].uTxPowerLevelDbm = 
-                        TI_MIN( pParam->content.channelCapabilityRet.maxTxPowerDbm, 
-                                puScanParams->tPeriodicScanParams.tChannels[ i ].uTxPowerLevelDbm ); 
+                puScanParams->tPeriodicScanParams.tChannels[ i ].uTxPowerLevelDbm =
+                        TI_MIN( pParam->content.channelCapabilityRet.maxTxPowerDbm,
+                                puScanParams->tPeriodicScanParams.tChannels[ i ].uTxPowerLevelDbm );
 
                 i += 1;
             }
@@ -1181,17 +1186,17 @@ void scanCncn_VerifyChannelsWithRegDomain (TI_HANDLE hScanCncn, UScanParams *puS
             {
                 pParam->content.channelCapabilityReq.scanOption = ACTIVE_SCANNING;
             }
-        
+
             /* set channel for one-shot scan - SPS */
             if (SCAN_TYPE_SPS == puScanParams->tOneShotScanParams.scanType)
             {
-                pParam->content.channelCapabilityReq.channelNum = 
+                pParam->content.channelCapabilityReq.channelNum =
                     puScanParams->tOneShotScanParams.channelEntry[ i ].SPSChannelEntry.channel;
                 regulatoryDomain_getParam (pScanCncn->hRegulatoryDomain, pParam);
                 if (TI_FALSE == pParam->content.channelCapabilityRet.channelValidity)
                 {   /* channel not allowed - copy the rest of the channel in its place */
                     os_memoryCopy (pScanCncn->hOS, &(puScanParams->tOneShotScanParams.channelEntry[ i ]),
-                                   &(puScanParams->tOneShotScanParams.channelEntry[ i + 1 ]), 
+                                   &(puScanParams->tOneShotScanParams.channelEntry[ i + 1 ]),
                                    sizeof(TScanSpsChannelEntry) * (puScanParams->tOneShotScanParams.numOfChannels - i - 1));
                     puScanParams->tOneShotScanParams.numOfChannels--;
                     uChannelNum--;
@@ -1200,39 +1205,39 @@ void scanCncn_VerifyChannelsWithRegDomain (TI_HANDLE hScanCncn, UScanParams *puS
                 {
                     i += 1;
                 }
-                
+
             }
             /* set channel for one-shot scan - all other scan types */
             else
             {
-                pParam->content.channelCapabilityReq.channelNum = 
+                pParam->content.channelCapabilityReq.channelNum =
                     puScanParams->tOneShotScanParams.channelEntry[ i ].normalChannelEntry.channel;
                 regulatoryDomain_getParam (pScanCncn->hRegulatoryDomain, pParam);
                 if (TI_FALSE == pParam->content.channelCapabilityRet.channelValidity)
                 {   /* channel not allowed - copy the rest of the channel in its place */
                     os_memoryCopy (pScanCncn->hOS, &(puScanParams->tOneShotScanParams.channelEntry[ i ]),
-                                   &(puScanParams->tOneShotScanParams.channelEntry[ i + 1 ]), 
+                                   &(puScanParams->tOneShotScanParams.channelEntry[ i + 1 ]),
                                    sizeof(TScanNormalChannelEntry) * (puScanParams->tOneShotScanParams.numOfChannels - i - 1));
                     puScanParams->tOneShotScanParams.numOfChannels--;
                     uChannelNum--;
                 }
                 else
                 {
-                    puScanParams->tOneShotScanParams.channelEntry[i].normalChannelEntry.txPowerDbm = 
-                            TI_MIN (pParam->content.channelCapabilityRet.maxTxPowerDbm, 
+                    puScanParams->tOneShotScanParams.channelEntry[i].normalChannelEntry.txPowerDbm =
+                            TI_MIN (pParam->content.channelCapabilityRet.maxTxPowerDbm,
                                     puScanParams->tOneShotScanParams.channelEntry[i].normalChannelEntry.txPowerDbm);
                     i += 1;
                 }
             }
         }
-    }    
+    }
     os_memoryFree(pScanCncn->hOS, pParam, sizeof(paramInfo_t));
 }
 
-/** 
+/**
  * \fn     scanCncn_SGconfigureScanParams
  * \brief  Configures Bluetooth coexistence compensation paramters
- * 
+ *
  * Configures Bluetooth coexistence compensation paramters.
  * This function is called when SG is enabled or disabled from the SoftGemini module.
  *          The compensation is needed since BT Activity holds the antenna and over-ride Scan activity
@@ -1244,10 +1249,10 @@ void scanCncn_VerifyChannelsWithRegDomain (TI_HANDLE hScanCncn, UScanParams *puS
  * \param SGcompensationPercent - increasing dwell time in that percentage
  * \return None
  * \sa     scanCncn_SGupdateScanParams
- */ 
+ */
 void scanCncn_SGconfigureScanParams (TI_HANDLE hScanCncn, TI_BOOL bUseSGParams,
-                                     TI_UINT8 probeReqPercent, TI_UINT32 SGcompensationMaxTime, 
-                                             TI_UINT32 SGcompensationPercent) 
+                                     TI_UINT8 probeReqPercent, TI_UINT32 SGcompensationMaxTime,
+                                             TI_UINT32 SGcompensationPercent)
 {
     TScanCncn           *pScanCncn = (TScanCncn*)hScanCncn;
 
@@ -1259,19 +1264,19 @@ void scanCncn_SGconfigureScanParams (TI_HANDLE hScanCncn, TI_BOOL bUseSGParams,
     TRACE4(pScanCncn->hReport, REPORT_SEVERITY_INFORMATION , "scanCncn_SGconfigureScanParams: bUseSGParams=%d, numOfProbeRequest=%d, compensationMaxTime=%d, SGcompensationPercent=%d\n", pScanCncn->bUseSGParams, pScanCncn->uSGprobeRequestPercent, pScanCncn->uSGcompensationMaxTime, pScanCncn->uSGcompensationPercent);
 }
 
-/** 
+/**
  * \fn     scanCncn_SGupdateScanParams
  * \brief  Updates dwell times and probe request number to compensate for bluetooth transmissions
- * 
+ *
  * Updates dwell times and probe request number to compensate for bluetooth transmissions
- * 
+ *
  * \param  hScanCncn - handle to the scan concentrator object
  * \param  puScanParams - a pointer to the scan parmeters union
  * \param  bPeriodicScan - TRUE if the parameters are for periodic scan, FALSE if for one-shot scan
  * \return None
  * \sa     scanCncn_SGconfigureScanParams
- */ 
-void scanCncn_SGupdateScanParams (TI_HANDLE hScanCncn, UScanParams *puScanParams, TI_BOOL bPeriodicScan) 
+ */
+void scanCncn_SGupdateScanParams (TI_HANDLE hScanCncn, UScanParams *puScanParams, TI_BOOL bPeriodicScan)
 {
     TScanCncn           *pScanCncn = (TScanCncn*)hScanCncn;
     TI_UINT32           i, uTempTime;
@@ -1284,14 +1289,14 @@ void scanCncn_SGupdateScanParams (TI_HANDLE hScanCncn, UScanParams *puScanParams
 
         /* for each channel increase the min and max dwell time */
         for (i = 0; i < pScanParams->numOfChannels; i++)
-        {   
+        {
             /* SPS scan */
             if (SCAN_TYPE_SPS == pScanParams->scanType)
             {
                 if (pScanCncn->uSGcompensationMaxTime >
                     pScanParams->channelEntry[i].SPSChannelEntry.scanDuration)
                 {
-                    uTempTime = ((pScanParams->channelEntry[i].SPSChannelEntry.scanDuration) * 
+                    uTempTime = ((pScanParams->channelEntry[i].SPSChannelEntry.scanDuration) *
                         (100 + pScanCncn->uSGcompensationPercent)) / 100 ;
 
                     if (uTempTime > pScanCncn->uSGcompensationMaxTime)
@@ -1307,7 +1312,7 @@ void scanCncn_SGupdateScanParams (TI_HANDLE hScanCncn, UScanParams *puScanParams
                 if (pScanCncn->uSGcompensationMaxTime >
             pScanParams->channelEntry[i].normalChannelEntry.minChannelDwellTime)
                 {
-                    uTempTime = ((pScanParams->channelEntry[i].normalChannelEntry.minChannelDwellTime) * 
+                    uTempTime = ((pScanParams->channelEntry[i].normalChannelEntry.minChannelDwellTime) *
                         (100 + pScanCncn->uSGcompensationPercent)) / 100 ;
 
                     if (uTempTime > pScanCncn->uSGcompensationMaxTime)
@@ -1317,12 +1322,12 @@ void scanCncn_SGupdateScanParams (TI_HANDLE hScanCncn, UScanParams *puScanParams
                     pScanParams->channelEntry[i].normalChannelEntry.minChannelDwellTime = uTempTime;
                 }
 
-                if (pScanCncn->uSGcompensationMaxTime > 
+                if (pScanCncn->uSGcompensationMaxTime >
                 pScanParams->channelEntry[i].normalChannelEntry.maxChannelDwellTime)
                 {
-                    uTempTime = ((pScanParams->channelEntry[i].normalChannelEntry.maxChannelDwellTime) * 
+                    uTempTime = ((pScanParams->channelEntry[i].normalChannelEntry.maxChannelDwellTime) *
                         (100 + pScanCncn->uSGcompensationPercent)) / 100 ;
-                    
+
                     if (uTempTime > pScanCncn->uSGcompensationMaxTime)
                     {
                         uTempTime = pScanCncn->uSGcompensationMaxTime;
@@ -1335,7 +1340,7 @@ void scanCncn_SGupdateScanParams (TI_HANDLE hScanCncn, UScanParams *puScanParams
         /* update ProbeReqNumber by SG percantage */
         if (pScanParams->probeReqNumber > 0)
         {
-            pScanParams->probeReqNumber = ((pScanParams->probeReqNumber) * 
+            pScanParams->probeReqNumber = ((pScanParams->probeReqNumber) *
                     (100 + pScanCncn->uSGprobeRequestPercent)) / 100 ;
         }
     }
@@ -1346,11 +1351,11 @@ void scanCncn_SGupdateScanParams (TI_HANDLE hScanCncn, UScanParams *puScanParams
 
         /* for each channel increase the min and max dwell time */
         for (i = 0; i < pPeriodicScanParams->uChannelNum; i++)
-        {   
+        {
             if (pScanCncn->uSGcompensationMaxTime >
                 pPeriodicScanParams->tChannels[ i ].uMinDwellTimeMs)
             {
-                uTempTime = ((pPeriodicScanParams->tChannels[ i ].uMinDwellTimeMs) * 
+                uTempTime = ((pPeriodicScanParams->tChannels[ i ].uMinDwellTimeMs) *
                     (100 + pScanCncn->uSGcompensationPercent)) / 100 ;
 
                 if (uTempTime > pScanCncn->uSGcompensationMaxTime)
@@ -1363,7 +1368,7 @@ void scanCncn_SGupdateScanParams (TI_HANDLE hScanCncn, UScanParams *puScanParams
             if (pScanCncn->uSGcompensationMaxTime >
                 pPeriodicScanParams->tChannels[ i ].uMaxDwellTimeMs)
             {
-                uTempTime = ((pPeriodicScanParams->tChannels[ i ].uMaxDwellTimeMs) * 
+                uTempTime = ((pPeriodicScanParams->tChannels[ i ].uMaxDwellTimeMs) *
                     (100 + pScanCncn->uSGcompensationPercent)) / 100 ;
 
                 if (uTempTime > pScanCncn->uSGcompensationMaxTime)
@@ -1377,26 +1382,26 @@ void scanCncn_SGupdateScanParams (TI_HANDLE hScanCncn, UScanParams *puScanParams
         /* update ProbeReqNumber by SG percantage */
         if (pPeriodicScanParams->uProbeRequestNum > 0)
         {
-            pPeriodicScanParams->uProbeRequestNum = ((pPeriodicScanParams->uProbeRequestNum) * 
+            pPeriodicScanParams->uProbeRequestNum = ((pPeriodicScanParams->uProbeRequestNum) *
                     (100 + pScanCncn->uSGprobeRequestPercent)) / 100 ;
         }
     }
 }
 
-/** 
+/**
  * \fn     scanCncn_Mix1ShotScanChannels
  * \brief  Mix the channel order in a 1 Shot Scan channel array.
- * 
+ *
  * Mix the channel order in a 1 Shot Scan channel array.
- * 
+ *
  * \param  pChannelArray - where to store allowed channels information
  * \param  uValidChannelsCount - Number of allowed channels (that were placed in the given channels array)
  * \return None
- */ 
+ */
 static void scanCncn_Mix1ShotScanChannels (TScanChannelEntry *pChannelArray, TI_UINT32 uValidChannelsCount)
 {
     TI_UINT32 i;
-    TScanChannelEntry tTempArray[MAX_CHANNEL_IN_BAND_2_4];   
+    TScanChannelEntry tTempArray[MAX_CHANNEL_IN_BAND_2_4];
 
     if (uValidChannelsCount <= MIN_CHANNEL_IN_BAND_2_4)
     {
@@ -1434,21 +1439,21 @@ static void scanCncn_Mix1ShotScanChannels (TScanChannelEntry *pChannelArray, TI_
 }
 
 
-/** 
+/**
  * \fn     scanCncn_MixPeriodicScanChannels
  * \brief  Mix the channel order in a Periodic Scan channel
  * array.
- * 
+ *
  * Mix the channel order in a Periodic Scan channel array.
- * 
+ *
  * \param  pChannelArray - where to store allowed channels information
  * \param  uValidChannelsCount - Number of allowed channels (that were placed in the given channels array)
  * \return None
- */ 
+ */
 static void scanCncn_MixPeriodicScanChannels (TPeriodicChannelEntry *pChannelArray, TI_UINT32 uValidChannelsCount)
 {
     TI_UINT32 i;
-    TPeriodicChannelEntry tTempArray[MAX_CHANNEL_IN_BAND_2_4];  
+    TPeriodicChannelEntry tTempArray[MAX_CHANNEL_IN_BAND_2_4];
 
     if (uValidChannelsCount <= MIN_CHANNEL_IN_BAND_2_4)
     {

@@ -1,35 +1,40 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * ScanSrvSM.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file ScanSrvSM.c
  *  \brief This file include the scan SRV Sm implementation
  *  \
- *  \date 10-Jan-2005 
+ *  \date 10-Jan-2005
  */
 
 #define __FILE_ID__  FILE_ID_116
@@ -72,7 +77,7 @@ TI_STATUS scanSRVSM_init( TI_HANDLE hScanSrv )
     fsm_actionCell_t    smMatrix[ SCAN_SRV_NUM_OF_STATES ][ SCAN_SRV_NUM_OF_EVENTS ] =
     {
         /* next state and actions for IDLE state */
-        {   
+        {
             {SCAN_SRV_STATE_PS_WAIT, scanSRVSM_requestPS},                                /*"REQUEST_PS",*/
             {SCAN_SRV_STATE_IDLE, actionUnexpected},                                      /*"PS_FAIL",*/
             {SCAN_SRV_STATE_SCANNING, scanSRVSM_startActualScan},                         /*"PS_SUCCESS",  */
@@ -85,7 +90,7 @@ TI_STATUS scanSRVSM_init( TI_HANDLE hScanSrv )
 
 
         /* next state and actions for PS_WAIT state */
-        {   
+        {
             {SCAN_SRV_STATE_PS_WAIT, actionUnexpected},                                   /*"REQUEST_PS",*/
             {SCAN_SRV_STATE_PS_EXIT, scanSRVSM_releasePS},                                /*"PS_FAIL",*/
             {SCAN_SRV_STATE_SCANNING, scanSRVSM_startActualScan},                         /*"PS_SUCCESS",  */
@@ -97,7 +102,7 @@ TI_STATUS scanSRVSM_init( TI_HANDLE hScanSrv )
         },
 
         /* next state and actions for SCANNING state */
-        {    
+        {
             {SCAN_SRV_STATE_SCANNING, actionUnexpected},                                  /*"REQUEST_PS",*/
             {SCAN_SRV_STATE_SCANNING, scanSRVSM_PsFailWhileScanning},                     /*"PS_FAIL",*/
             {SCAN_SRV_STATE_SCANNING, actionUnexpected},                                  /*"PS_SUCCESS",  */
@@ -110,7 +115,7 @@ TI_STATUS scanSRVSM_init( TI_HANDLE hScanSrv )
         },
 
         /* next state and actions for STOPPING state */
-        {   
+        {
             {SCAN_SRV_STATE_STOPPING, actionUnexpected},                                  /*"REQUEST_PS",*/
             {SCAN_SRV_STATE_PS_EXIT, scanSRVSM_releasePS},                                /*"PS_FAIL",*/
             {SCAN_SRV_STATE_PS_EXIT, scanSRVSM_releasePS},                                /*"PS_SUCCESS",  */
@@ -123,7 +128,7 @@ TI_STATUS scanSRVSM_init( TI_HANDLE hScanSrv )
         } ,
 
         /* next state and actions for PS_EXIT state */
-        {   
+        {
             {SCAN_SRV_STATE_PS_EXIT, actionUnexpected},                                   /*"REQUEST_PS",*/
             {SCAN_SRV_STATE_IDLE, scanSRVSM_notifyScanComplete},                          /*"PS_FAIL",*/
             {SCAN_SRV_STATE_IDLE, scanSRVSM_notifyScanComplete},                          /*"PS_SUCCESS",  */
@@ -139,8 +144,8 @@ TI_STATUS scanSRVSM_init( TI_HANDLE hScanSrv )
     pScanSRV->SMState = SCAN_SRV_STATE_IDLE;
 
     /* configure the state machine */
-    return fsm_Config( pScanSRV->SM, (fsm_Matrix_t)smMatrix, 
-                       (TI_UINT8)SCAN_SRV_NUM_OF_STATES, (TI_UINT8)SCAN_SRV_NUM_OF_EVENTS, 
+    return fsm_Config( pScanSRV->SM, (fsm_Matrix_t)smMatrix,
+                       (TI_UINT8)SCAN_SRV_NUM_OF_STATES, (TI_UINT8)SCAN_SRV_NUM_OF_EVENTS,
                        (fsm_eventActivation_t)scanSRVSM_SMEvent, pScanSRV->hOS );
 }
 
@@ -155,7 +160,7 @@ TI_STATUS scanSRVSM_init( TI_HANDLE hScanSrv )
  * \param event - the event to handle.\n
  * \return TI_OK if successful, TI_NOK otherwise.\n
  */
-TI_STATUS scanSRVSM_SMEvent( TI_HANDLE hScanSrv, scan_SRVSMStates_e* currentState, 
+TI_STATUS scanSRVSM_SMEvent( TI_HANDLE hScanSrv, scan_SRVSMStates_e* currentState,
                              scan_SRVSMEvents_e event )
 {
     scanSRV_t *pScanSRV = (scanSRV_t *)hScanSrv;
@@ -191,7 +196,7 @@ TI_STATUS scanSRVSM_requestPS( TI_HANDLE hScanSrv )
     TI_STATUS psStatus;
 
     TRACE0( pScanSRV->hReport, REPORT_SEVERITY_INFORMATION, "Requesting Driver mode from PowerSave Srv.\n");
-   
+
     psStatus = powerSrv_ReservePS(  pScanSRV->hPowerSrv,
                                     pScanSRV->psRequest,
                                     pScanSRV->bSendNullData,
@@ -255,20 +260,20 @@ TI_STATUS scanSRVSM_releasePS( TI_HANDLE hScanSrv )
 {
       scanSRV_t *pScanSRV = (scanSRV_t*)hScanSrv;
       TI_STATUS psStatus;
-    
+
      /* stop timer */
     if ( TI_TRUE == pScanSRV->bTimerRunning )
     {
         tmr_StopTimer (pScanSRV->hScanSrvTimer);
         pScanSRV->bTimerRunning = TI_FALSE;
     }
-  
+
     /* if exit from driver mode requested, do so */
     if ( TI_TRUE == pScanSRV->bExitFromDriverMode )
     {
         /* here we need to get an answer if we succeeded to exit driver mode */
         TRACE0( pScanSRV->hReport, REPORT_SEVERITY_INFORMATION, ": Releasing Driver mode from Power Srv.\n");
- 
+
         psStatus = powerSrv_ReleasePS(  pScanSRV->hPowerSrv,
                                 pScanSRV->bSendNullData,
                                 hScanSrv,
@@ -289,17 +294,17 @@ TI_STATUS scanSRVSM_releasePS( TI_HANDLE hScanSrv )
         /* send a PS_SUCCESS event */
         TRACE0( pScanSRV->hReport, REPORT_SEVERITY_INFORMATION, ": Driver mode exit successful, scan done.\n");
         return scanSRVSM_SMEvent( hScanSrv, (scan_SRVSMStates_e*)&pScanSRV->SMState, SCAN_SRV_EVENT_PS_SUCCESS );
-        
+
         /* if pending */
     case POWER_SAVE_802_11_PENDING:
     case TI_OK:
         /* stay in the PS_EXIT state */
         TRACE0( pScanSRV->hReport, REPORT_SEVERITY_INFORMATION, ": Driver mode exit pending, Waiting.\n");
-        break; 
-        
+        break;
+
         /* if not successful */
     default:
-        
+
         /* send a PS_FAIL event */
         TRACE0( pScanSRV->hReport, REPORT_SEVERITY_INFORMATION, ": Driver mode exit failed, scan done.");
         return scanSRVSM_SMEvent( hScanSrv, (scan_SRVSMStates_e*)&pScanSRV->SMState, SCAN_SRV_EVENT_PS_FAIL );
@@ -319,20 +324,20 @@ TI_STATUS scanSRVSM_releasePS( TI_HANDLE hScanSrv )
  * \return TI_OK if successful, TI_NOK otherwise.\n
  */
 TI_STATUS scanSRVSM_startActualScan( TI_HANDLE hScanSrv )
-{ 
+{
     scanSRV_t *pScanSRV = (scanSRV_t*)hScanSrv;
 
- 
+
     /* start the timer */
     pScanSRV->bTimerRunning = TI_TRUE;
     tmr_StartTimer (pScanSRV->hScanSrvTimer,
                     MacServices_scanSRV_scanTimerExpired,
                     (TI_HANDLE)pScanSRV,
-                    MacServices_scanSRVcalculateScanTimeout (hScanSrv, pScanSRV->scanParams, !pScanSRV->bDtimOverlapping), 
+                    MacServices_scanSRVcalculateScanTimeout (hScanSrv, pScanSRV->scanParams, !pScanSRV->bDtimOverlapping),
                     TI_FALSE);
-    
+
     TRACE1( pScanSRV->hReport, REPORT_SEVERITY_INFORMATION, "Sending scan , type: %x to HAL.\n",pScanSRV->scanParams->scanType);
-    
+
     /* start the scan */
             /* we send the MacServices_scanSRVCommandMailBoxCB to be called when this command is recieved */
     if ( SCAN_TYPE_SPS == pScanSRV->scanParams->scanType )
@@ -341,9 +346,9 @@ TI_STATUS scanSRVSM_startActualScan( TI_HANDLE hScanSrv )
                                                          (void *)MacServices_scanSRVCommandMailBoxCB, hScanSrv);
     }
     else
-    {    
-        pScanSRV->returnStatus = cmdBld_CmdStartScan (pScanSRV->hCmdBld, pScanSRV->scanParams, pScanSRV->eScanTag, 
-                                                      pScanSRV->bHighPriority , (void *)MacServices_scanSRVCommandMailBoxCB, 
+    {
+        pScanSRV->returnStatus = cmdBld_CmdStartScan (pScanSRV->hCmdBld, pScanSRV->scanParams, pScanSRV->eScanTag,
+                                                      pScanSRV->bHighPriority , (void *)MacServices_scanSRVCommandMailBoxCB,
                                                       hScanSrv);
     }
     /* if scan request failed */
@@ -354,7 +359,7 @@ TI_STATUS scanSRVSM_startActualScan( TI_HANDLE hScanSrv )
         /* send a scan complete event. This will do all necessary clean-up (timer, power manager, notifying scan complete) */
         scanSRVSM_SMEvent( hScanSrv, (scan_SRVSMStates_e*)&pScanSRV->SMState, SCAN_SRV_EVENT_SCAN_COMPLETE );
     }
-    
+
     return TI_OK;
 }
 
@@ -377,9 +382,9 @@ TI_STATUS scanSRVSM_notifyScanComplete( TI_HANDLE hScanSrv )
 
     /* call the scan complete CB - only if not currently running from within a request context! */
     if ( TI_FALSE == pScanSRV->bInRequest )
-    {   
+    {
         /* this means that ResponseFunc was not called yet , so we call it before ScanComplete */
-        if (pScanSRV->commandResponseFunc) 
+        if (pScanSRV->commandResponseFunc)
         {
             /* must erase CB function before calling it to enable nested scans */
             CB_Func = pScanSRV->commandResponseFunc;
@@ -387,10 +392,10 @@ TI_STATUS scanSRVSM_notifyScanComplete( TI_HANDLE hScanSrv )
 
             pScanSRV->commandResponseFunc = NULL;
             pScanSRV->commandResponseObj = NULL;
-            
+
             /* if we reached here than response status was TI_OK */
             CB_Func(CB_Handle, TI_OK);
-             
+
         }
         /* if function returns TI_TRUE than we are in PS mode , else - not */
         PSMode = powerSrv_getPsStatus(pScanSRV->hPowerSrv) ? POWER_SAVE_802_11_SUCCESS : POWER_SAVE_802_11_FAIL;
@@ -403,9 +408,9 @@ TI_STATUS scanSRVSM_notifyScanComplete( TI_HANDLE hScanSrv )
         pScanSRV->scanCompleteNotificationFunc( pScanSRV->scanCompleteNotificationObj,
                                     pScanSRV->eScanTag,
                                     pScanSRV->uResultCount,
-                                    pScanSRV->SPSScanResult, 
+                                    pScanSRV->SPSScanResult,
                                     pScanSRV->bTSFError,
-                                    pScanSRV->returnStatus, 
+                                    pScanSRV->returnStatus,
                                     PSMode );
     }
 
@@ -426,13 +431,13 @@ TI_STATUS scanSRVSM_handleTimerExpiry( TI_HANDLE hScanSrv )
 {
     scanSRV_t *pScanSRV = (scanSRV_t*)hScanSrv;
 
-    /* 
-     No scan complete event will trigger recovery only after a consecutive configurable number of 
+    /*
+     No scan complete event will trigger recovery only after a consecutive configurable number of
 	 no scan complete events occurred.
      */
     pScanSRV->currentNumberOfConsecutiveNoScanCompleteEvents++;
 
-    if ( pScanSRV->currentNumberOfConsecutiveNoScanCompleteEvents >= 
+    if ( pScanSRV->currentNumberOfConsecutiveNoScanCompleteEvents >=
          pScanSRV->numberOfNoScanCompleteToRecovery )
     {
         TRACE0( pScanSRV->hReport, REPORT_SEVERITY_ERROR, ": Timer expired. Starting recovery process.\n");
@@ -508,8 +513,8 @@ TI_STATUS scanSRVSM_handleRecovery( TI_HANDLE hScanSrv )
     scanSRV_t *pScanSRV = (scanSRV_t*)hScanSrv;
 
     TRACE0( pScanSRV->hReport, REPORT_SEVERITY_INFORMATION, "FW reset event from outside.\n");
- 
-    /* The Power Manager is responsible to exit PS mode in recovery. Also, the scan CB is not called - 
+
+    /* The Power Manager is responsible to exit PS mode in recovery. Also, the scan CB is not called -
        The SCR is responsible to notify scan concentrator of the event (which actually notifies scan SRV */
 
     /* if timer is running - stop it */
@@ -536,7 +541,7 @@ TI_STATUS scanSRVSM_handleRecovery( TI_HANDLE hScanSrv )
  * \param hScanSrv - handle to the scan SRV object.\n
  * \return always TI_OK.\n
  */
-static TI_STATUS actionUnexpected( TI_HANDLE hScanSrv ) 
+static TI_STATUS actionUnexpected( TI_HANDLE hScanSrv )
 {
     scanSRV_t *pScanSRV = (scanSRV_t*)hScanSrv;
 
@@ -548,14 +553,14 @@ static TI_STATUS actionUnexpected( TI_HANDLE hScanSrv )
         pScanSRV->bTimerRunning = TI_FALSE;
     }
 
-    /* we must clean the old command response CB since they are no longer relevant 
+    /* we must clean the old command response CB since they are no longer relevant
       since the state machine may be corrupted */
     pScanSRV->commandResponseFunc = NULL;
     pScanSRV->commandResponseObj = NULL;
 
     /* indicate the unexpected event in the return status */
     pScanSRV->returnStatus = TI_NOK;
-    
+
     return TI_OK;
 }
 
@@ -569,7 +574,7 @@ static TI_STATUS actionUnexpected( TI_HANDLE hScanSrv )
  * \return always TI_OK.\n
  */
 static TI_STATUS actionNop( TI_HANDLE hScanSrv )
-{   
+{
     return TI_OK;
 }
 

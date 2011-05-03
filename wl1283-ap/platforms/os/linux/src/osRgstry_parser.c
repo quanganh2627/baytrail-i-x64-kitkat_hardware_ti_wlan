@@ -1,34 +1,39 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * osRgstry_parser.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 /*
- * src/osRgstry_parser.c 
+ * src/osRgstry_parser.c
  *
  */
 
@@ -43,18 +48,18 @@ static PNDIS_CONFIGURATION_PARAMETER pNdisParm;
 int osInitTable_IniFile (TI_HANDLE hOs, TInitTable *InitTable, char *file_buf, int file_length)
 {
     TWlanDrvIfObjPtr drv = (TWlanDrvIfObjPtr)hOs;
-    
+
     static NDIS_CONFIGURATION_PARAMETER vNdisParm;
-    
+
     init_file         = file_buf;
     init_file_length  = file_length;
     pNdisParm = &vNdisParm;
-    
+
     regFillInitTable (drv, InitTable);
 #ifdef TI_DBG
     regReadLastDbgState(drv);
 #endif
-   
+
     return 0;
 }
 
@@ -153,19 +158,19 @@ void NdisReadConfiguration( OUT PNDIS_STATUS  status, OUT PNDIS_CONFIGURATION_PA
             s = strchr(buf, '\n');
             if( !s )
                 s = buf+strlen(buf);
-            
+
             remark = memchr(buf, '#', s - buf);        /* skip remarks */
             if( remark )
             {
                 do {        /* remove whitespace  */
                     remark--;
-                } while( *remark == ' ' || *remark == '\t' );    
-                
+                } while( *remark == ' ' || *remark == '\t' );
+
                 pNdisParm->ParameterData.StringData.Length = remark - buf + 1;
             }
             else
                 pNdisParm->ParameterData.StringData.Length = s - buf;
-                   
+
             pNdisParm->ParameterData.StringData.Buffer = (TI_UINT8*)&pNdisParm->StringBuffer[0];
             pNdisParm->ParameterData.StringData.MaximumLength = NDIS_MAX_STRING_LEN;
             if( !pNdisParm->ParameterData.StringData.Length > NDIS_MAX_STRING_LEN )
@@ -201,9 +206,9 @@ void NdisReadConfiguration( OUT PNDIS_STATUS  status, OUT PNDIS_CONFIGURATION_PA
     return ;
 }
 
-void NdisWriteConfiguration( OUT PNDIS_STATUS  Status, 
+void NdisWriteConfiguration( OUT PNDIS_STATUS  Status,
                 IN NDIS_HANDLE  ConfigurationHandle,
-                IN PNDIS_STRING  Keyword, 
+                IN PNDIS_STRING  Keyword,
                 IN PNDIS_CONFIGURATION_PARAMETER  ParameterValue )
 {
     print_err(" NdisWriteConfiguration(): ** not implemented yet ...\n");

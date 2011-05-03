@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * rx.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /***************************************************************************/
 /*                                                                         */
 /*      MODULE: Rx.c                                                       */
@@ -34,29 +39,29 @@
 /***************************************************************************/
 #define __FILE_ID__  FILE_ID_54
 #include "tidef.h"
-#include "paramOut.h" 
+#include "paramOut.h"
 #include "rx.h"
 #include "osApi.h"
 #include "timer.h"
 #include "DataCtrl_Api.h"
 #include "802_11Defs.h"
-#include "Ethernet.h" 
+#include "Ethernet.h"
 #include "report.h"
 #include "rate.h"
 #include "mlmeApi.h"
 #include "rsnApi.h"
 #include "smeApi.h"
 #include "siteMgrApi.h"
-#include "GeneralUtil.h"   
+#include "GeneralUtil.h"
 #include "EvHandler.h"
-#ifdef CCX_MODULE_INCLUDED
-#include "ccxMngr.h"
+#ifdef XCC_MODULE_INCLUDED
+#include "XCCMngr.h"
 #endif
 #include "TWDriver.h"
 #include "RxBuf.h"
-#include "DrvMainModules.h" 
+#include "DrvMainModules.h"
 #include "bmtrace_api.h"
-#include "PowerMgr_API.h" 
+#include "PowerMgr_API.h"
 #include "APExternalIf.h"
 #include "txDataQueue_Api.h"
 #include "WlanDrvIf.h"
@@ -83,9 +88,9 @@ static void rxData_ReceivePacket (TI_HANDLE   hRxData,  void  *pBuffer);
 static ERxBufferStatus rxData_RequestForBuffer (TI_HANDLE   hRxData, void **pBuf, TI_UINT16 aLength, TI_UINT32 uEncryptionFlag,PacketClassTag_e ePacketClassTag);
 
 #if 0
-static TI_STATUS rxData_checkBssIdAndBssType(TI_HANDLE hRxData, 
+static TI_STATUS rxData_checkBssIdAndBssType(TI_HANDLE hRxData,
 											 dot11_header_t* dot11_header,
-											 TMacAddr **rxBssid, 
+											 TMacAddr **rxBssid,
 											 ScanBssType_e  *currBssType,
 											 TMacAddr  *currBssId);
 #endif
@@ -103,14 +108,14 @@ static TI_STATUS rxData_addRxDataFilter(TI_HANDLE hRxData, TRxDataFilterRequest*
 static TI_STATUS rxData_removeRxDataFilter(TI_HANDLE hRxData, TRxDataFilterRequest* request);
 
 
-#ifdef CCX_MODULE_INCLUDED
+#ifdef XCC_MODULE_INCLUDED
 static void rxData_rcvPacketIapp(TI_HANDLE hRxData, void *pBuffer, TRxAttr* pRxAttr);
 #endif
 #ifdef TI_DBG
 static void rxData_printRxThroughput(TI_HANDLE hRxData, TI_BOOL bTwdInitOccured);
 #endif
 
-static void rxData_StartReAuthActiveTimer(TI_HANDLE hRxData);		
+static void rxData_StartReAuthActiveTimer(TI_HANDLE hRxData);
 static void reAuthTimeout(TI_HANDLE hRxData, TI_BOOL bTwdInitOccured);
 static void rxData_ReauthEnablePriority(TI_HANDLE hRxData);
 static TI_STATUS rxData_mgmtPacketDisptcher (TI_HANDLE hRxData, void *pBuffer, TRxAttr* pRxAttr);
@@ -120,11 +125,11 @@ static TI_STATUS rxData_mgmtPacketDisptcher (TI_HANDLE hRxData, void *pBuffer, T
 /*************************************************************************
 *                        rxData_create                                   *
 **************************************************************************
-* DESCRIPTION:  This function initializes the Rx data module.                 
-*                                                      
+* DESCRIPTION:  This function initializes the Rx data module.
+*
 * INPUT:        hOs - handle to Os Abstraction Layer
 *
-* OUTPUT:      
+* OUTPUT:
 *
 * RETURN:       Handle to the allocated Rx data control block
 ************************************************************************/
@@ -138,7 +143,7 @@ TI_HANDLE rxData_create (TI_HANDLE hOs)
         WLAN_OS_REPORT(("FATAL ERROR: rxData_create(): OS handle Error - Aborting\n"));
         return NULL;
     }
-    
+
 
     /* alocate Rx module control block */
     pRxData = os_memoryAlloc(hOs, (sizeof(rxData_t)));
@@ -162,12 +167,12 @@ TI_HANDLE rxData_create (TI_HANDLE hOs)
 /***************************************************************************
 *                           rxData_config                                  *
 ****************************************************************************
-* DESCRIPTION:  This function configures the Rx Data module     
-* 
+* DESCRIPTION:  This function configures the Rx Data module
+*
 * INPUTS:       pStadHandles  - The driver modules handles
 *
-* OUTPUT:       
-* 
+* OUTPUT:
+*
 * RETURNS:      void
 ***************************************************************************/
 void rxData_init (TStadHandlesList *pStadHandles)
@@ -176,14 +181,14 @@ void rxData_init (TStadHandlesList *pStadHandles)
     TRxLinkInfo *pLinkInfo;
     TI_UINT32 uHlid;
 
-    pRxData->hCtrlData  = pStadHandles->hCtrlData; 
+    pRxData->hCtrlData  = pStadHandles->hCtrlData;
     pRxData->hTWD       = pStadHandles->hTWD;
-    pRxData->hMlme      = pStadHandles->hMlmeSm; 
+    pRxData->hMlme      = pStadHandles->hMlmeSm;
     pRxData->hRsn       = pStadHandles->hRsn;
     pRxData->hSiteMgr   = pStadHandles->hSiteMgr;
     pRxData->hOs        = pStadHandles->hOs;
     pRxData->hReport    = pStadHandles->hReport;
-    pRxData->hCcxMgr    = pStadHandles->hCcxMngr;
+    pRxData->hXCCMgr    = pStadHandles->hXCCMngr;
     pRxData->hEvHandler = pStadHandles->hEvHandler;
     pRxData->hTimer     = pStadHandles->hTimer;
     pRxData->hPowerMgr  = pStadHandles->hPowerMgr;
@@ -191,15 +196,15 @@ void rxData_init (TStadHandlesList *pStadHandles)
 #ifdef AP_MODE_ENABLED
     pRxData->hRoleAp      = pStadHandles->hRoleAP;
 #endif
-    
-    pRxData->rxDataExcludeUnencrypted = DEF_EXCLUDE_UNENCYPTED; 
+
+    pRxData->rxDataExcludeUnencrypted = DEF_EXCLUDE_UNENCYPTED;
     pRxData->rxDataExludeBroadcastUnencrypted = DEF_EXCLUDE_UNENCYPTED;
     pRxData->rxDataEapolDestination = DEF_EAPOL_DESTINATION;
     pRxData->rxDataPortStatus = DEF_RX_PORT_STATUS;
 	pRxData->genericEthertype = EAPOL_PACKET;
 
     /*
-     * configure rx data dispatcher 
+     * configure rx data dispatcher
      */
 
     /* port status close */
@@ -209,34 +214,34 @@ void rxData_init (TStadHandlesList *pStadHandles)
     pRxData->rxData_dispatchBuffer[CLOSE][DATA_VLAN_PACKET]  = &rxData_discardPacketVlan;   /* VLAN  */
 
     /* port status open notify */
-    pRxData->rxData_dispatchBuffer[OPEN_NOTIFY][DATA_DATA_PACKET]  = &rxData_rcvPacketInOpenNotify; /* data  */ 
-    pRxData->rxData_dispatchBuffer[OPEN_NOTIFY][DATA_EAPOL_PACKET] = &rxData_rcvPacketInOpenNotify; /* eapol */ 
-    pRxData->rxData_dispatchBuffer[OPEN_NOTIFY][DATA_IAPP_PACKET]  = &rxData_rcvPacketInOpenNotify; /* Iapp  */ 
+    pRxData->rxData_dispatchBuffer[OPEN_NOTIFY][DATA_DATA_PACKET]  = &rxData_rcvPacketInOpenNotify; /* data  */
+    pRxData->rxData_dispatchBuffer[OPEN_NOTIFY][DATA_EAPOL_PACKET] = &rxData_rcvPacketInOpenNotify; /* eapol */
+    pRxData->rxData_dispatchBuffer[OPEN_NOTIFY][DATA_IAPP_PACKET]  = &rxData_rcvPacketInOpenNotify; /* Iapp  */
     pRxData->rxData_dispatchBuffer[OPEN_NOTIFY][DATA_VLAN_PACKET]  = &rxData_discardPacketVlan;     /* VLAN  */
 
     /* port status open eapol */
-    pRxData->rxData_dispatchBuffer[OPEN_EAPOL][DATA_DATA_PACKET]  = &rxData_discardPacket;      /* data  */ 
-    pRxData->rxData_dispatchBuffer[OPEN_EAPOL][DATA_EAPOL_PACKET] = &rxData_rcvPacketEapol;     /* eapol */ 
-    pRxData->rxData_dispatchBuffer[OPEN_EAPOL][DATA_IAPP_PACKET]  = &rxData_discardPacket;      /* Iapp  */ 
+    pRxData->rxData_dispatchBuffer[OPEN_EAPOL][DATA_DATA_PACKET]  = &rxData_discardPacket;      /* data  */
+    pRxData->rxData_dispatchBuffer[OPEN_EAPOL][DATA_EAPOL_PACKET] = &rxData_rcvPacketEapol;     /* eapol */
+    pRxData->rxData_dispatchBuffer[OPEN_EAPOL][DATA_IAPP_PACKET]  = &rxData_discardPacket;      /* Iapp  */
     pRxData->rxData_dispatchBuffer[OPEN_EAPOL][DATA_VLAN_PACKET]  = &rxData_discardPacketVlan;  /* VLAN  */
 
     /* port status open */
-    pRxData->rxData_dispatchBuffer[OPEN][DATA_DATA_PACKET]  = &rxData_rcvPacketData;    /* data  */ 
-    pRxData->rxData_dispatchBuffer[OPEN][DATA_EAPOL_PACKET] = &rxData_rcvPacketEapol;   /* eapol */ 
-#ifdef CCX_MODULE_INCLUDED
-    pRxData->rxData_dispatchBuffer[OPEN][DATA_IAPP_PACKET]  = &rxData_rcvPacketIapp;    /* Iapp  */ 
+    pRxData->rxData_dispatchBuffer[OPEN][DATA_DATA_PACKET]  = &rxData_rcvPacketData;    /* data  */
+    pRxData->rxData_dispatchBuffer[OPEN][DATA_EAPOL_PACKET] = &rxData_rcvPacketEapol;   /* eapol */
+#ifdef XCC_MODULE_INCLUDED
+    pRxData->rxData_dispatchBuffer[OPEN][DATA_IAPP_PACKET]  = &rxData_rcvPacketIapp;    /* Iapp  */
 #else
-    pRxData->rxData_dispatchBuffer[OPEN][DATA_IAPP_PACKET]  = &rxData_rcvPacketData;    /* Iapp  */ 
+    pRxData->rxData_dispatchBuffer[OPEN][DATA_IAPP_PACKET]  = &rxData_rcvPacketData;    /* Iapp  */
 #endif
     pRxData->rxData_dispatchBuffer[OPEN][DATA_VLAN_PACKET]  = &rxData_discardPacketVlan;/* VLAN  */
 
 
     pRxData->bssBridgeEnable = TI_FALSE;
-    /* 
-     * init information per link 
+    /*
+     * init information per link
      */
     for (uHlid = 0; uHlid < WLANLINKS_MAX_LINKS; uHlid++)
-    {       
+    {
         pLinkInfo = &pRxData->aRxLinkInfo[uHlid];
         pLinkInfo->eState = RX_CONN_STATE_CLOSE; /* default is link closed */
     }
@@ -244,12 +249,12 @@ void rxData_init (TStadHandlesList *pStadHandles)
     /* register CB's for request buffer and receive CB to the lower layers */
     TWD_RegisterCb (pRxData->hTWD,
                     TWD_EVENT_RX_RECEIVE_PACKET,
-                    (void *)rxData_ReceivePacket, 
+                    (void *)rxData_ReceivePacket,
                     pStadHandles->hRxData);
 
     TWD_RegisterCb (pRxData->hTWD,
                     TWD_EVENT_RX_REQUEST_FOR_BUFFER,
-                    (void*)rxData_RequestForBuffer, 
+                    (void*)rxData_RequestForBuffer,
                     pStadHandles->hRxData);
 }
 
@@ -258,7 +263,7 @@ TI_STATUS rxData_SetDefaults (TI_HANDLE hRxData, rxDataInitParams_t * rxDataInit
 {
     rxData_t *pRxData = (rxData_t *)hRxData;
     int i;
-    
+
     /* init rx data filters */
     pRxData->filteringEnabled = rxDataInitParams->rxDataFiltersEnabled;
     pRxData->filteringDefaultAction = rxDataInitParams->rxDataFiltersDefaultAction;
@@ -310,12 +315,12 @@ TI_STATUS rxData_SetDefaults (TI_HANDLE hRxData, rxDataInitParams_t * rxDataInit
 /***************************************************************************
 *                           rxData_unLoad                                  *
 ****************************************************************************
-* DESCRIPTION:  This function unload the Rx data module. 
-* 
+* DESCRIPTION:  This function unload the Rx data module.
+*
 * INPUTS:       hRxData - the object
-*       
-* OUTPUT:       
-* 
+*
+* OUTPUT:
+*
 * RETURNS:      TI_OK - Unload succesfull
 *               TI_NOK - Unload unsuccesfull
 ***************************************************************************/
@@ -354,12 +359,12 @@ TI_STATUS rxData_unLoad(TI_HANDLE hRxData)
 /***************************************************************************
 *                           rxData_stop                                    *
 ****************************************************************************
-* DESCRIPTION:  this function stop the rx data. 
-* 
+* DESCRIPTION:  this function stop the rx data.
+*
 * INPUTS:       hRxData - the object
-*       
-* OUTPUT:       
-* 
+*
+* OUTPUT:
+*
 * RETURNS:      TI_OK - stop succesfull
 *               TI_NOK - stop unsuccesfull
 ***************************************************************************/
@@ -373,7 +378,7 @@ TI_STATUS rxData_stop (TI_HANDLE hRxData)
         return TI_NOK;
     }
 
-    pRxData->rxDataExcludeUnencrypted = DEF_EXCLUDE_UNENCYPTED; 
+    pRxData->rxDataExcludeUnencrypted = DEF_EXCLUDE_UNENCYPTED;
     pRxData->rxDataExludeBroadcastUnencrypted = DEF_EXCLUDE_UNENCYPTED;
     pRxData->rxDataEapolDestination = DEF_EAPOL_DESTINATION;
     pRxData->rxDataPortStatus = DEF_RX_PORT_STATUS;
@@ -401,12 +406,12 @@ TI_STATUS rxData_stop (TI_HANDLE hRxData)
 *                           rxData_getParam                                *
 ****************************************************************************
 * DESCRIPTION:  get a specific parameter
-* 
+*
 * INPUTS:       hRxData - the object
-*               
-* OUTPUT:       pParamInfo - structure which include the value of 
+*
+* OUTPUT:       pParamInfo - structure which include the value of
 *               the requested parameter
-* 
+*
 * RETURNS:      TI_OK
 *               TI_NOK
 ***************************************************************************/
@@ -435,19 +440,19 @@ TI_STATUS rxData_getParam(TI_HANDLE hRxData, paramInfo_t *pParamInfo)
             break;
 
         case RX_DATA_COUNTERS_PARAM:
-            pParamInfo->content.siteMgrTiWlanCounters.RecvOk = pRxData->rxDataCounters.RecvOk;              
-            pParamInfo->content.siteMgrTiWlanCounters.DirectedBytesRecv = pRxData->rxDataCounters.DirectedBytesRecv;        
-            pParamInfo->content.siteMgrTiWlanCounters.DirectedFramesRecv = pRxData->rxDataCounters.DirectedFramesRecv;      
-            pParamInfo->content.siteMgrTiWlanCounters.MulticastBytesRecv = pRxData->rxDataCounters.MulticastBytesRecv;      
-            pParamInfo->content.siteMgrTiWlanCounters.MulticastFramesRecv = pRxData->rxDataCounters.MulticastFramesRecv;    
-            pParamInfo->content.siteMgrTiWlanCounters.BroadcastBytesRecv = pRxData->rxDataCounters.BroadcastBytesRecv;      
-            pParamInfo->content.siteMgrTiWlanCounters.BroadcastFramesRecv = pRxData->rxDataCounters.BroadcastFramesRecv;    
+            pParamInfo->content.siteMgrTiWlanCounters.RecvOk = pRxData->rxDataCounters.RecvOk;
+            pParamInfo->content.siteMgrTiWlanCounters.DirectedBytesRecv = pRxData->rxDataCounters.DirectedBytesRecv;
+            pParamInfo->content.siteMgrTiWlanCounters.DirectedFramesRecv = pRxData->rxDataCounters.DirectedFramesRecv;
+            pParamInfo->content.siteMgrTiWlanCounters.MulticastBytesRecv = pRxData->rxDataCounters.MulticastBytesRecv;
+            pParamInfo->content.siteMgrTiWlanCounters.MulticastFramesRecv = pRxData->rxDataCounters.MulticastFramesRecv;
+            pParamInfo->content.siteMgrTiWlanCounters.BroadcastBytesRecv = pRxData->rxDataCounters.BroadcastBytesRecv;
+            pParamInfo->content.siteMgrTiWlanCounters.BroadcastFramesRecv = pRxData->rxDataCounters.BroadcastFramesRecv;
             break;
 
         case RX_DATA_GET_RX_DATA_FILTERS_STATISTICS:
-            TWD_ItrDataFilterStatistics (pRxData->hTWD, 
+            TWD_ItrDataFilterStatistics (pRxData->hTWD,
                                          pParamInfo->content.interogateCmdCBParams.fCb,
-                                         pParamInfo->content.interogateCmdCBParams.hCb, 
+                                         pParamInfo->content.interogateCmdCBParams.hCb,
                                          pParamInfo->content.interogateCmdCBParams.pCb);
             break;
 
@@ -478,13 +483,13 @@ TI_STATUS rxData_getParam(TI_HANDLE hRxData, paramInfo_t *pParamInfo)
 *                           rxData_setParam                                *
 ****************************************************************************
 * DESCRIPTION:  set a specific parameter
-* 
+*
 * INPUTS:       hRxData - the object
-*               pParamInfo - structure which include the value to set for 
+*               pParamInfo - structure which include the value to set for
 *               the requested parameter
-*       
-* OUTPUT:       
-* 
+*
+* OUTPUT:
+*
 * RETURNS:      TI_OK
 *               TI_NOK
 ***************************************************************************/
@@ -519,7 +524,7 @@ TI_STATUS rxData_setParam(TI_HANDLE hRxData, paramInfo_t *pParamInfo)
 
         case RX_DATA_ADD_RX_DATA_FILTER:
         {
-            TRxDataFilterRequest* pRequest = &pParamInfo->content.rxDataFilterRequest;            
+            TRxDataFilterRequest* pRequest = &pParamInfo->content.rxDataFilterRequest;
 
             return rxData_addRxDataFilter(hRxData, pRequest);
         }
@@ -527,7 +532,7 @@ TI_STATUS rxData_setParam(TI_HANDLE hRxData, paramInfo_t *pParamInfo)
         case RX_DATA_REMOVE_RX_DATA_FILTER:
         {
             TRxDataFilterRequest* pRequest = &pParamInfo->content.rxDataFilterRequest;
-            
+
             return rxData_removeRxDataFilter(hRxData, pRequest);
         }
 
@@ -546,12 +551,12 @@ TI_STATUS rxData_setParam(TI_HANDLE hRxData, paramInfo_t *pParamInfo)
 *                           rxData_IntraBssBridge_Enable                                *
 ****************************************************************************
 * DESCRIPTION:  Enable Intra Bss Bridge in Rx path
-* 
+*
 * INPUTS:       hRxData - the object
-*               
-*       
-* OUTPUT:       
-* 
+*
+*
+* OUTPUT:
+*
 * RETURNS:      N/A
 ***************************************************************************/
 void rxData_IntraBssBridge_Enable(TI_HANDLE hRxData)
@@ -565,12 +570,12 @@ void rxData_IntraBssBridge_Enable(TI_HANDLE hRxData)
 *                           rxData_IntraBssBridge_Disable                                *
 ****************************************************************************
 * DESCRIPTION:  Disable Intra Bss Bridge in Rx path
-* 
+*
 * INPUTS:       hRxData - the object
-*               
-*       
-* OUTPUT:       
-* 
+*
+*
+* OUTPUT:
+*
 * RETURNS:      N/A
 ***************************************************************************/
 void rxData_IntraBssBridge_Disable(TI_HANDLE hRxData)
@@ -585,17 +590,17 @@ void rxData_IntraBssBridge_Disable(TI_HANDLE hRxData)
 /***************************************************************************
 *                     rxData_enableDisableRxDataFilters                    *
 ****************************************************************************
-* DESCRIPTION:  
-*               
-* 
-* INPUTS:       
-*               
-*               
-*       
-* OUTPUT:       
-* 
-* RETURNS:      
-*               
+* DESCRIPTION:
+*
+*
+* INPUTS:
+*
+*
+*
+* OUTPUT:
+*
+* RETURNS:
+*
 ***************************************************************************/
 static TI_STATUS rxData_enableDisableRxDataFilters(TI_HANDLE hRxData, TI_BOOL enabled)
 {
@@ -616,23 +621,23 @@ static TI_STATUS rxData_enableDisableRxDataFilters(TI_HANDLE hRxData, TI_BOOL en
 /***************************************************************************
 *                          findFilterRequest                               *
 ****************************************************************************
-* DESCRIPTION:  
-*               
-* 
-* INPUTS:       
-*               
-*               
-*       
-* OUTPUT:       
-* 
-* RETURNS:      
-*               
+* DESCRIPTION:
+*
+*
+* INPUTS:
+*
+*
+*
+* OUTPUT:
+*
+* RETURNS:
+*
 ***************************************************************************/
 static int findFilterRequest(TI_HANDLE hRxData, TRxDataFilterRequest* request)
 {
     rxData_t * pRxData = (rxData_t *) hRxData;
     int i;
-    
+
     for (i = 0; i < MAX_DATA_FILTERS; ++i)
     {
         if (pRxData->isFilterSet[i])
@@ -654,17 +659,17 @@ static int findFilterRequest(TI_HANDLE hRxData, TRxDataFilterRequest* request)
 /***************************************************************************
 *                            closeFieldPattern                             *
 ****************************************************************************
-* DESCRIPTION:  
-*               
-* 
-* INPUTS:       
-*               
-*               
-*       
-* OUTPUT:       
-* 
-* RETURNS:      
-*               
+* DESCRIPTION:
+*
+*
+* INPUTS:
+*
+*
+*
+* OUTPUT:
+*
+* RETURNS:
+*
 ***************************************************************************/
 static void closeFieldPattern (rxData_t * pRxData, rxDataFilterFieldPattern_t * fieldPattern, TI_UINT8 * fieldPatterns, TI_UINT8 * lenFieldPatterns)
 {
@@ -695,17 +700,17 @@ static void closeFieldPattern (rxData_t * pRxData, rxDataFilterFieldPattern_t * 
 /***************************************************************************
 *                         parseRxDataFilterRequest                         *
 ****************************************************************************
-* DESCRIPTION:  
-*               
-* 
-* INPUTS:       
-*               
-*               
-*       
-* OUTPUT:       
-* 
-* RETURNS:      
-*               
+* DESCRIPTION:
+*
+*
+* INPUTS:
+*
+*
+*
+* OUTPUT:
+*
+* RETURNS:
+*
 ***************************************************************************/
 static int parseRxDataFilterRequest(TI_HANDLE hRxData, TRxDataFilterRequest* request, TI_UINT8 * numFieldPatterns, TI_UINT8 * lenFieldPatterns, TI_UINT8 * fieldPatterns)
 {
@@ -821,17 +826,17 @@ static int parseRxDataFilterRequest(TI_HANDLE hRxData, TRxDataFilterRequest* req
 /***************************************************************************
 *                           rxData_setRxDataFilter                         *
 ****************************************************************************
-* DESCRIPTION:  
-*               
-* 
-* INPUTS:       
-*               
-*               
-*       
-* OUTPUT:       
-* 
-* RETURNS:      
-*               
+* DESCRIPTION:
+*
+*
+* INPUTS:
+*
+*
+*
+* OUTPUT:
+*
+* RETURNS:
+*
 ***************************************************************************/
 static TI_STATUS rxData_addRxDataFilter (TI_HANDLE hRxData, TRxDataFilterRequest* request)
 {
@@ -880,12 +885,12 @@ static TI_STATUS rxData_addRxDataFilter (TI_HANDLE hRxData, TRxDataFilterRequest
     os_memoryCopy(pRxData->hOs, &pRxData->filterRequests[index], request, sizeof(pRxData->filterRequests[index]));
 
     /* Send configuration to firmware */
-    return TWD_CfgRxDataFilter (pRxData->hTWD, 
-                                index, 
-                                ADD_FILTER, 
-                                FILTER_SIGNAL, 
-                                numFieldPatterns, 
-                                lenFieldPatterns, 
+    return TWD_CfgRxDataFilter (pRxData->hTWD,
+                                index,
+                                ADD_FILTER,
+                                FILTER_SIGNAL,
+                                numFieldPatterns,
+                                lenFieldPatterns,
                                 fieldPatterns);
 
     return TI_OK;
@@ -894,17 +899,17 @@ static TI_STATUS rxData_addRxDataFilter (TI_HANDLE hRxData, TRxDataFilterRequest
 /***************************************************************************
 *                         rxData_removeRxDataFilter                        *
 ****************************************************************************
-* DESCRIPTION:  
-*               
-* 
-* INPUTS:       
-*               
-*               
-*       
-* OUTPUT:       
-* 
-* RETURNS:      
-*               
+* DESCRIPTION:
+*
+*
+* INPUTS:
+*
+*
+*
+* OUTPUT:
+*
+* RETURNS:
+*
 ***************************************************************************/
 static TI_STATUS rxData_removeRxDataFilter (TI_HANDLE hRxData, TRxDataFilterRequest* request)
 {
@@ -924,29 +929,29 @@ static TI_STATUS rxData_removeRxDataFilter (TI_HANDLE hRxData, TRxDataFilterRequ
 
     pRxData->isFilterSet[index] = TI_FALSE;
 
-    return TWD_CfgRxDataFilter (pRxData->hTWD, 
-                                index, 
-                                REMOVE_FILTER, 
-                                FILTER_SIGNAL, 
-                                0, 
-                                0, 
+    return TWD_CfgRxDataFilter (pRxData->hTWD,
+                                index,
+                                REMOVE_FILTER,
+                                FILTER_SIGNAL,
+                                0,
+                                0,
                                 NULL);
 }
 
 /***************************************************************************
 *                       rxData_DistributorRxEvent                          *
 ****************************************************************************
-* DESCRIPTION:  
-*               
-* 
-* INPUTS:       
-*               
-*               
-*       
-* OUTPUT:       
-* 
-* RETURNS:      
-*               
+* DESCRIPTION:
+*
+*
+* INPUTS:
+*
+*
+*
+* OUTPUT:
+*
+* RETURNS:
+*
 ***************************************************************************/
 static void rxData_DistributorRxEvent (rxData_t *pRxData, TI_UINT16 Mask, int DataLen)
 {
@@ -986,7 +991,7 @@ TI_STATUS rxData_AddToNotifMask (TI_HANDLE hRxData, TI_HANDLE Notifh, TI_UINT16 
 TI_STATUS rxData_UnRegNotif(TI_HANDLE hRxData,TI_HANDLE RegEventHandle)
 {
     rxData_t *pRxData = (rxData_t *)hRxData;
-    
+
     if (!hRxData)
         return TI_NOK;
 
@@ -998,15 +1003,15 @@ TI_STATUS rxData_UnRegNotif(TI_HANDLE hRxData,TI_HANDLE RegEventHandle)
 *                       rxData_receivePacketFromWlan                       *
 ****************************************************************************
 * DESCRIPTION:  this function is called by the GWSI for each received Buffer.
-*               It filter and distribute the received Buffer. 
-* 
+*               It filter and distribute the received Buffer.
+*
 * INPUTS:       hRxData - the object
 *               pBuffer - the received Buffer.
 *               pRxAttr - Rx attributes
-*       
-* OUTPUT:       
-* 
-* RETURNS:      
+*
+* OUTPUT:
+*
+* RETURNS:
 ***************************************************************************/
 void rxData_receivePacketFromWlan (TI_HANDLE hRxData, void *pBuffer, TRxAttr* pRxAttr)
 {
@@ -1046,11 +1051,11 @@ void rxData_receivePacketFromWlan (TI_HANDLE hRxData, void *pBuffer, TRxAttr* pR
 
         TRACE1(pRxData->hReport, REPORT_SEVERITY_INFORMATION, "rxData_receivePacketFromWlan(): Received management Buffer len = %d\n", RX_BUF_LEN(pBuffer));
 
-        /* 
+        /*
          * Management packets
-         *    on ROLE_AP - sent to hostapd via rxData_mgmtPacketDisptcher 
+         *    on ROLE_AP - sent to hostapd via rxData_mgmtPacketDisptcher
          *    on ROLE_STA - send to MLME parser
-         */  
+         */
         if (eLinkRole == WLANLINK_ROLE_AP)
         {
 			pRxData->rxDataLinkCounters[uHlid].sendToHostapd++;
@@ -1086,7 +1091,7 @@ void rxData_receivePacketFromWlan (TI_HANDLE hRxData, void *pBuffer, TRxAttr* pR
     default:
         TRACE0(pRxData->hReport, REPORT_SEVERITY_ERROR, " rxData_receivePacketFromWlan(): Received unspecified packet type !!! \n");
         pRxData->rxDataLinkCounters[uHlid].discardUnknownClass++;
-        RxBufFree(pRxData->hOs, pBuffer); 
+        RxBufFree(pRxData->hOs, pBuffer);
         break;
     }
 }
@@ -1095,16 +1100,16 @@ void rxData_receivePacketFromWlan (TI_HANDLE hRxData, void *pBuffer, TRxAttr* pR
 *                       rxData_dataPacketDisptcher                         *
 ****************************************************************************
 * DESCRIPTION:  this function is called upon receving data Buffer,
-*               it dispatches the packet to the approciate function according to 
-*               data packet type and rx port status. 
-* 
+*               it dispatches the packet to the approciate function according to
+*               data packet type and rx port status.
+*
 * INPUTS:       hRxData - the object
 *               pBuffer - the received Buffer.
 *               pRxAttr - Rx attributes
-*       
-* OUTPUT:       
-* 
-* RETURNS:      
+*
+* OUTPUT:
+*
+* RETURNS:
 ***************************************************************************/
 
 static void rxData_dataPacketDisptcher (TI_HANDLE hRxData, void *pBuffer, TRxAttr* pRxAttr)
@@ -1129,8 +1134,8 @@ static void rxData_dataPacketDisptcher (TI_HANDLE hRxData, void *pBuffer, TRxAtt
 
     pRxData->uLastDataPktRate = pRxAttr->Rate;  /* save Rx packet rate for statistics */
 
-#ifdef CCX_MODULE_INCLUDED
-    if (ccxMngr_isIappPacket (pRxData->hCcxMgr, pBuffer) == TI_TRUE)
+#ifdef XCC_MODULE_INCLUDED
+    if (XCCMngr_isIappPacket (pRxData->hXCCMgr, pBuffer) == TI_TRUE)
     {
         TRACE0(pRxData->hReport, REPORT_SEVERITY_INFORMATION, " rxData_dataPacketDisptcher() : Received Iapp Buffer  \n");
 
@@ -1151,8 +1156,8 @@ static void rxData_dataPacketDisptcher (TI_HANDLE hRxData, void *pBuffer, TRxAtt
         {
            TI_UINT16 etherType = 0;
            TEthernetHeader * pEthernetHeader;
- 
-		   /* 
+
+		   /*
             * if Host processes received packets, the header translation
             * from WLAN to ETH is done here. The conversion has been moved
             * here so that IAPP packets aren't converted.
@@ -1212,14 +1217,14 @@ static void rxData_dataPacketDisptcher (TI_HANDLE hRxData, void *pBuffer, TRxAtt
 *                       rxData_mgmtPacketDisptcher                         *
 ****************************************************************************
 * DESCRIPTION:  this function is called upon receving mgmt Buffer in ROLE AP,
-* 
+*
 * INPUTS:       hRxData - the object
 *               pBuffer - the received Buffer.
 *               pRxAttr - Rx attributes
-*       
-* OUTPUT:       
-* 
-* RETURNS:      
+*
+* OUTPUT:
+*
+* RETURNS:
 ***************************************************************************/
 static TI_STATUS rxData_mgmtPacketDisptcher (TI_HANDLE hRxData, void *pBuffer, TRxAttr* pRxAttr)
 {
@@ -1249,15 +1254,15 @@ static TI_STATUS rxData_mgmtPacketDisptcher (TI_HANDLE hRxData, void *pBuffer, T
 *                       rxData_mgmtPacketComplete                         *
 ****************************************************************************
 * DESCRIPTION:  this function is called upon receving Tx complete for mgmt packet from AP
-* 
+*
 * INPUTS:       hRxData - the object
 *               pBuffer - the received Buffer.
 *               BufLen  - buffer length
 *               bTxSuccess - TRUE if Tx complete was success
-*       
-* OUTPUT:       
-* 
-* RETURNS:      
+*
+* OUTPUT:
+*
+* RETURNS:
 ***************************************************************************/
 TI_STATUS rxData_mgmtPacketComplete (TI_HANDLE hRxData, void *pBuf1, TI_UINT32 uBufferLen, TI_BOOL bTxSuccess)
 {
@@ -1273,7 +1278,7 @@ TI_STATUS rxData_mgmtPacketComplete (TI_HANDLE hRxData, void *pBuf1, TI_UINT32 u
     /* Extract the start of the OS packet */
     pBuffer = pBuf1 - (ETHERNET_HDR_LEN + WLAN_HDR_LEN);
 
-    /* 
+    /*
      * Allocate a new buffer in order to add Ethernet header on top of WLAN header
      */
     rxData_RequestForBuffer (hRxData, &pDataBuf,  uRawLen + 24 + 24, 0, TAG_CLASS_MANAGEMENT);
@@ -1293,7 +1298,7 @@ TI_STATUS rxData_mgmtPacketComplete (TI_HANDLE hRxData, void *pBuf1, TI_UINT32 u
      *  - WLAN header       - copy from original packet
      *  - MGMT data         - copy from original packet
      */
-    
+
     /* Prepare the RxIfDescriptor */
     os_memoryZero (pRxData->hOs, pDataBuf, sizeof(RxIfDescriptor_t));
     ((RxIfDescriptor_t *)pDataBuf)->length = (uRawLen) >> 2;
@@ -1302,12 +1307,12 @@ TI_STATUS rxData_mgmtPacketComplete (TI_HANDLE hRxData, void *pBuf1, TI_UINT32 u
     /* Copy Ethernet header, Swap Dest/Src addresses */
     pEthHeader = (TEthernetHeader *)((TI_UINT8 *)(RX_BUF_DATA(pDataBuf)) + WLAN_SNAP_HDR_LEN + PADDING_ETH_PACKET_SIZE);
     pTxEthHeader = (TEthernetHeader *)(pBuffer);
-    MAC_COPY (pEthHeader->src, pTxEthHeader->dst); 
-    MAC_COPY (pEthHeader->dst, pTxEthHeader->src); 
+    MAC_COPY (pEthHeader->src, pTxEthHeader->dst);
+    MAC_COPY (pEthHeader->dst, pTxEthHeader->src);
     pEthHeader->type = pTxEthHeader->type;
 
     /* Prepare control field */
-    if (bTxSuccess) 
+    if (bTxSuccess)
         uHostApdControl = AP_CTRL_HDR_TX_SUCCESS;
     else
         uHostApdControl = AP_CTRL_HDR_TX_FAIL;
@@ -1330,14 +1335,14 @@ TI_STATUS rxData_mgmtPacketComplete (TI_HANDLE hRxData, void *pBuf1, TI_UINT32 u
 *                       rxData_discardPacket                                   *
 ****************************************************************************
 * DESCRIPTION:  this function is called to discard Buffer
-* 
+*
 * INPUTS:       hRxData - the object
 *               pBuffer - the received Buffer.
 *               pRxAttr - Rx attributes
-*       
-* OUTPUT:       
-* 
-* RETURNS:      
+*
+* OUTPUT:
+*
+* RETURNS:
 ***************************************************************************/
 static void rxData_discardPacket (TI_HANDLE hRxData, void *pBuffer, TRxAttr* pRxAttr)
 {
@@ -1348,7 +1353,7 @@ static void rxData_discardPacket (TI_HANDLE hRxData, void *pBuffer, TRxAttr* pRx
     pRxData->rxDataDbgCounters.excludedFrameCounter++;
 
     /* free Buffer */
-    RxBufFree(pRxData->hOs, pBuffer); 
+    RxBufFree(pRxData->hOs, pBuffer);
 
 }
 
@@ -1356,14 +1361,14 @@ static void rxData_discardPacket (TI_HANDLE hRxData, void *pBuffer, TRxAttr* pRx
 *                       rxData_discardPacketVlan                                   *
 ****************************************************************************
 * DESCRIPTION:  this function is called to discard Buffer
-* 
+*
 * INPUTS:       hRxData - the object
 *               pBuffer - the received Buffer.
 *               pRxAttr - Rx attributes
-*       
-* OUTPUT:       
-* 
-* RETURNS:      
+*
+* OUTPUT:
+*
+* RETURNS:
 ***************************************************************************/
 static void rxData_discardPacketVlan (TI_HANDLE hRxData, void *pBuffer, TRxAttr* pRxAttr)
 {
@@ -1374,23 +1379,23 @@ static void rxData_discardPacketVlan (TI_HANDLE hRxData, void *pBuffer, TRxAttr*
     pRxData->rxDataDbgCounters.rxDroppedDueToVLANIncludedCnt++;
 
     /* free Buffer */
-    RxBufFree(pRxData->hOs, pBuffer); 
+    RxBufFree(pRxData->hOs, pBuffer);
 }
 
 
 /***************************************************************************
 *                       rxData_rcvPacketInOpenNotify                         *
 ****************************************************************************
-* DESCRIPTION:  this function is called upon receving data Eapol packet type 
+* DESCRIPTION:  this function is called upon receving data Eapol packet type
 *               while rx port status is "open notify"
-* 
+*
 * INPUTS:       hRxData - the object
 *               pBuffer - the received Buffer.
 *               pRxAttr - Rx attributes
-*       
-* OUTPUT:       
-* 
-* RETURNS:      
+*
+* OUTPUT:
+*
+* RETURNS:
 ***************************************************************************/
 static void rxData_rcvPacketInOpenNotify (TI_HANDLE hRxData, void *pBuffer, TRxAttr* pRxAttr)
 {
@@ -1399,27 +1404,27 @@ static void rxData_rcvPacketInOpenNotify (TI_HANDLE hRxData, void *pBuffer, TRxA
     TRACE0(pRxData->hReport, REPORT_SEVERITY_ERROR, " rxData_rcvPacketInOpenNotify: receiving data packet while in rx port status is open notify\n");
 
     TRACE0(pRxData->hReport, REPORT_SEVERITY_INFORMATION, "rxData_rcvPacketInOpenNotify: ERROR !!! receiving data packet while in rx port status is open notify\n");
-    
+
     pRxData->rxDataDbgCounters.rcvUnicastFrameInOpenNotify++;
 
     /* free Buffer */
-    RxBufFree(pRxData->hOs, pBuffer); 
+    RxBufFree(pRxData->hOs, pBuffer);
 }
 
 
 /***************************************************************************
 *                       rxData_rcvPacketEapol                               *
 ****************************************************************************
-* DESCRIPTION:  this function is called upon receving data Eapol packet type 
+* DESCRIPTION:  this function is called upon receving data Eapol packet type
 *               while rx port status is "open  eapol"
-* 
+*
 * INPUTS:       hRxData - the object
 *               pBuffer - the received Buffer.
 *               pRxAttr - Rx attributes
-*       
-* OUTPUT:       
-* 
-* RETURNS:      
+*
+* OUTPUT:
+*
+* RETURNS:
 ***************************************************************************/
 static void rxData_rcvPacketEapol(TI_HANDLE hRxData, void *pBuffer, TRxAttr* pRxAttr)
 {
@@ -1437,22 +1442,22 @@ static void rxData_rcvPacketEapol(TI_HANDLE hRxData, void *pBuffer, TRxAttr* pRx
 /***************************************************************************
 *                       rxData_rcvPacketData                                 *
 ****************************************************************************
-* DESCRIPTION:  this function is called upon receving data "data" packet type 
+* DESCRIPTION:  this function is called upon receving data "data" packet type
 *               while rx port status is "open"
-* 
+*
 * INPUTS:       hRxData - the object
 *               pBuffer - the received Buffer.
 *               pRxAttr - Rx attributes
-*       
-* OUTPUT:       
-* 
-* RETURNS:      
+*
+* OUTPUT:
+*
+* RETURNS:
 ***************************************************************************/
 static void rxData_rcvPacketData(TI_HANDLE hRxData, void *pBuffer, TRxAttr* pRxAttr)
 {
     rxData_t *pRxData = (rxData_t *)hRxData;
     TEthernetHeader *pEthernetHeader;
-    TI_UINT16 EventMask = 0;        
+    TI_UINT16 EventMask = 0;
     TIntraBssBridge bssBridgeParam = {INTRA_BSS_BRIDGE_NO_BRIDGE, WLANLINKS_INVALID_HLID};
     TIntraBssBridge *pBssBridgeParam = &bssBridgeParam;
 
@@ -1488,7 +1493,7 @@ static void rxData_rcvPacketData(TI_HANDLE hRxData, void *pBuffer, TRxAttr* pRxA
     pRxData->rxDataCounters.RecvOk++;
     EventMask |= RECV_OK;
 
-    if (!MAC_MULTICAST (pEthernetHeader->dst)) 
+    if (!MAC_MULTICAST (pEthernetHeader->dst))
     {
         /* Directed frame */
         if(pRxData->bssBridgeEnable == TI_TRUE)
@@ -1496,7 +1501,7 @@ static void rxData_rcvPacketData(TI_HANDLE hRxData, void *pBuffer, TRxAttr* pRxA
             TI_UINT8 *pTemp = (TI_UINT8*)pEthernetHeader->dst;
             if(txDataQ_LinkMacFind (pRxData->hTxDataQueue, &pBssBridgeParam->uParam, pEthernetHeader->dst) != TI_OK)
             {
-                    pBssBridgeParam = NULL;                
+                    pBssBridgeParam = NULL;
             }
             else
             {
@@ -1510,16 +1515,16 @@ static void rxData_rcvPacketData(TI_HANDLE hRxData, void *pBuffer, TRxAttr* pRxA
         }
         pRxData->rxDataCounters.DirectedFramesRecv++;
         pRxData->rxDataCounters.DirectedBytesRecv += RX_ETH_PKT_LEN(pBuffer);
-        EventMask |= DIRECTED_BYTES_RECV;  
+        EventMask |= DIRECTED_BYTES_RECV;
         EventMask |= DIRECTED_FRAMES_RECV;
     }
-    else if (MAC_BROADCAST (pEthernetHeader->dst)) 
+    else if (MAC_BROADCAST (pEthernetHeader->dst))
     {
         if(pRxData->bssBridgeEnable == TI_TRUE)
         {
             pBssBridgeParam->eDecision = INTRA_BSS_BRIDGE_BROADCAST;
             txDataQ_GetBcastLink(pRxData->hTxDataQueue, &pBssBridgeParam->uParam);
-            
+
         }
         else
         {
@@ -1528,10 +1533,10 @@ static void rxData_rcvPacketData(TI_HANDLE hRxData, void *pBuffer, TRxAttr* pRxA
         /* Broadcast frame */
         pRxData->rxDataCounters.BroadcastFramesRecv++;
         pRxData->rxDataCounters.BroadcastBytesRecv += RX_ETH_PKT_LEN(pBuffer);
-        EventMask |= BROADCAST_BYTES_RECV;  
+        EventMask |= BROADCAST_BYTES_RECV;
         EventMask |= BROADCAST_FRAMES_RECV;
     }
-    else 
+    else
     {
         if(pRxData->bssBridgeEnable == TI_TRUE)
         {
@@ -1545,7 +1550,7 @@ static void rxData_rcvPacketData(TI_HANDLE hRxData, void *pBuffer, TRxAttr* pRxA
         /* Multicast Address */
         pRxData->rxDataCounters.MulticastFramesRecv++;
         pRxData->rxDataCounters.MulticastBytesRecv += RX_ETH_PKT_LEN(pBuffer);
-        EventMask |= MULTICAST_BYTES_RECV;  
+        EventMask |= MULTICAST_BYTES_RECV;
         EventMask |= MULTICAST_FRAMES_RECV;
     }
     pRxData->rxDataCounters.LastSecBytesRecv += RX_ETH_PKT_LEN(pBuffer);
@@ -1565,32 +1570,32 @@ static void rxData_rcvPacketData(TI_HANDLE hRxData, void *pBuffer, TRxAttr* pRxA
 /***************************************************************************
 *                       rxData_rcvPacketIapp                                 *
 ****************************************************************************
-* DESCRIPTION:  this function is called upon receving data IAPP packet type 
+* DESCRIPTION:  this function is called upon receving data IAPP packet type
 *               while rx port status is "open"
-* 
+*
 * INPUTS:       hRxData - the object
 *               pBuffer - the received Buffer.
 *               pRxAttr - Rx attributes
-*       
-* OUTPUT:       
-* 
-* RETURNS:      
+*
+* OUTPUT:
+*
+* RETURNS:
 ***************************************************************************/
-#ifdef CCX_MODULE_INCLUDED
+#ifdef XCC_MODULE_INCLUDED
 
 static void rxData_rcvPacketIapp(TI_HANDLE hRxData, void *pBuffer, TRxAttr* pRxAttr)
 {
     rxData_t *pRxData = (rxData_t *)hRxData;
 
-    TRACE0(pRxData->hReport, REPORT_SEVERITY_INFORMATION, " rxData_rcvPacketIapp() : Received IAPP frame tranferred to ccxMgr\n");
+    TRACE0(pRxData->hReport, REPORT_SEVERITY_INFORMATION, " rxData_rcvPacketIapp() : Received IAPP frame tranferred to XCCMgr\n");
 
-    TRACE0(pRxData->hReport, REPORT_SEVERITY_INFORMATION, " rxData_rcvPacketIapp() : Received IAPP frame tranferred to ccxMgr\n");
+    TRACE0(pRxData->hReport, REPORT_SEVERITY_INFORMATION, " rxData_rcvPacketIapp() : Received IAPP frame tranferred to XCCMgr\n");
 
-    /* tranfer packet to ccxMgr */
-    ccxMngr_recvIAPPPacket (pRxData->hCcxMgr, pBuffer, pRxAttr);
+    /* tranfer packet to XCCMgr */
+    XCCMngr_recvIAPPPacket (pRxData->hXCCMgr, pBuffer, pRxAttr);
 
     /* free Buffer */
-    RxBufFree(pRxData->hOs, pBuffer); 
+    RxBufFree(pRxData->hOs, pBuffer);
 }
 
 #endif
@@ -1599,22 +1604,22 @@ static void rxData_rcvPacketIapp(TI_HANDLE hRxData, void *pBuffer, TRxAttr* pRxA
 /****************************************************************************
 *                       rxData_convertWlanToEthHeader                       *
 *****************************************************************************
-* DESCRIPTION:  this function convert the Packet header from 802.11 header 
+* DESCRIPTION:  this function convert the Packet header from 802.11 header
 *               format to ethernet format
-* 
+*
 * INPUTS:       hRxData - the object
 *               pBuffer - the received pBuffer in 802.11 format
-*       
+*
 * OUTPUT:       pEthPacket  - pointer to the received pBuffer in ethernet format
 *               uEthLength - ethernet packet length
-* 
+*
 * RETURNS:      TI_OK/TI_NOK
 ***************************************************************************/
 
 static TI_STATUS rxData_convertWlanToEthHeader (TI_HANDLE hRxData, void *pBuffer, TI_UINT16 * etherType)
 {
     TEthernetHeader      EthHeader;
-    Wlan_LlcHeader_T    *pWlanSnapHeader;   
+    Wlan_LlcHeader_T    *pWlanSnapHeader;
     TI_UINT8            *dataBuf;
     dot11_header_t      *pDot11Header;
     TI_UINT32            lengthDelta;
@@ -1628,10 +1633,10 @@ static TI_STATUS rxData_convertWlanToEthHeader (TI_HANDLE hRxData, void *pBuffer
     GET_MAX_HEADER_SIZE (dataBuf, &headerLength);
     pDot11Header = (dot11_header_t*) dataBuf;
     pWlanSnapHeader = (Wlan_LlcHeader_T*)((TI_UINT32)dataBuf + (TI_UINT32)headerLength);
-    
+
     swapedTypeLength = WLANTOHS (pWlanSnapHeader->Type);
     *etherType = swapedTypeLength;
- 
+
     /* Prepare the Ethernet header. */
     if( ENDIAN_HANDLE_WORD(pDot11Header->fc) & DOT11_FC_FROM_DS)
     {   /* Infrastructure  bss */
@@ -1654,25 +1659,25 @@ static TI_STATUS rxData_convertWlanToEthHeader (TI_HANDLE hRxData, void *pBuffer
         MAC_COPY (EthHeader.src, pDot11Header->address2);
     }
     }
-    
+
     createEtherIIHeader = TI_FALSE;
 	/* See if the LLC header in the frame shows the SAP SNAP... */
 	if((SNAP_CHANNEL_ID == pWlanSnapHeader->DSAP) &&
 	   (SNAP_CHANNEL_ID == pWlanSnapHeader->SSAP) &&
-	   (LLC_CONTROL_UNNUMBERED_INFORMATION == pWlanSnapHeader->Control)) 
+	   (LLC_CONTROL_UNNUMBERED_INFORMATION == pWlanSnapHeader->Control))
 	{
 		/* Check for the Bridge Tunnel OUI in the SNAP Header... */
 		if((SNAP_OUI_802_1H_BYTE0 == pWlanSnapHeader->OUI[ 0 ]) &&
 		   (SNAP_OUI_802_1H_BYTE1 == pWlanSnapHeader->OUI[ 1 ]) &&
-		   (SNAP_OUI_802_1H_BYTE2 == pWlanSnapHeader->OUI[ 2 ])) 
+		   (SNAP_OUI_802_1H_BYTE2 == pWlanSnapHeader->OUI[ 2 ]))
 		{
 			/* Strip the SNAP header by skipping over it.                  */
 			/* Start moving data from the Ethertype field in the SNAP      */
 			/* header.  Move to the TypeLength field in the 802.3 header.  */
-			createEtherIIHeader = TI_TRUE;        
+			createEtherIIHeader = TI_TRUE;
 		}
 		/* Check for the RFC 1042 OUI in the SNAP Header   */
-		else 
+		else
 		{
 			/* Check for the RFC 1042 OUI in the SNAP Header   */
 			if(	(SNAP_OUI_RFC1042_BYTE0 == pWlanSnapHeader->OUI[ 0 ]) &&
@@ -1683,7 +1688,7 @@ static TI_STATUS rxData_convertWlanToEthHeader (TI_HANDLE hRxData, void *pBuffer
 			/* (Appletalk AARP and DIX II IPX are the two protocols in     */
 			/* our 'table')                                                */
 				if((ETHERTYPE_APPLE_AARP != swapedTypeLength) &&
-					(ETHERTYPE_DIX_II_IPX != swapedTypeLength)) 
+					(ETHERTYPE_DIX_II_IPX != swapedTypeLength))
 			{
 				/* Strip the SNAP header by skipping over it. */
 				createEtherIIHeader = TI_TRUE;
@@ -1691,7 +1696,7 @@ static TI_STATUS rxData_convertWlanToEthHeader (TI_HANDLE hRxData, void *pBuffer
 		}
 	}
     }
-    
+
     if( createEtherIIHeader == TI_TRUE )
     {
     /* The LEN/TYPE bytes are set to TYPE, the entire WLAN+SNAP is removed.*/
@@ -1705,7 +1710,7 @@ static TI_STATUS rxData_convertWlanToEthHeader (TI_HANDLE hRxData, void *pBuffer
 	lengthDelta = headerLength - ETHERNET_HDR_LEN;
 	EthHeader.type = WLANTOHS((TI_UINT16)(RX_BUF_LEN(pBuffer) - headerLength));
     }
-    
+
     /* Replace the 802.11 header and the LLC with Ethernet packet. */
     dataBuf += lengthDelta;
     os_memoryCopy (pRxData->hOs, dataBuf, (void*)&EthHeader, ETHERNET_HDR_LEN);
@@ -1718,25 +1723,25 @@ static TI_STATUS rxData_convertWlanToEthHeader (TI_HANDLE hRxData, void *pBuffer
 
 /**
  * \brief convert A-MSDU to several ethernet packets
- * 
+ *
  * \param hRxData - the object
  * \param pBuffer - the received Buffer in A-MSDU 802.11n format
  * \param pRxAttr - Rx attributes
- * \return TI_OK on success or TI_NOK on failure 
- * 
+ * \return TI_OK on success or TI_NOK on failure
+ *
  * \par Description
  * Static function
  * This function convert the A-MSDU Packet from A-MSDU 802.11n packet
  * format to several ethernet packets format and pass them to the OS layer
  *
  * \sa
- */ 
+ */
 static TI_STATUS rxData_ConvertAmsduToEthPackets (TI_HANDLE hRxData, void *pBuffer, TRxAttr* pRxAttr)
 {
 
     TEthernetHeader     *pMsduEthHeader;
     TEthernetHeader     *pEthHeader;
-    Wlan_LlcHeader_T    *pWlanSnapHeader;   
+    Wlan_LlcHeader_T    *pWlanSnapHeader;
     TI_UINT8            *pAmsduDataBuf;
     TI_UINT16            uAmsduDataLen;
     void                *pDataBuf;
@@ -1751,9 +1756,9 @@ static TI_STATUS rxData_ConvertAmsduToEthPackets (TI_HANDLE hRxData, void *pBuff
     pAmsduDataBuf = (TI_UINT8 *)RX_BUF_DATA(pBuffer);
     /* Setting the mac header len according to the received FrameControl field in the Mac Header */
     GET_MAX_HEADER_SIZE (pAmsduDataBuf, &headerLength);
-    
-    /* 
-     * init loop setting 
+
+    /*
+     * init loop setting
      */
     /* total AMPDU size */
     uAmsduDataLen = (TI_UINT16)(RX_BUF_LEN(pBuffer) - headerLength);
@@ -1765,7 +1770,7 @@ static TI_STATUS rxData_ConvertAmsduToEthPackets (TI_HANDLE hRxData, void *pBuff
     TRACE1(pRxData->hReport, REPORT_SEVERITY_INFORMATION, "rxData_ConvertAmsduToEthPackets(): A-MSDU received in length %d \n",uAmsduDataLen);
 
     /* if we have another packet at the AMSDU */
-    while((uDataLen < uAmsduDataLen) && (uAmsduDataLen > ETHERNET_HDR_LEN + FCS_SIZE))  
+    while((uDataLen < uAmsduDataLen) && (uAmsduDataLen > ETHERNET_HDR_LEN + FCS_SIZE))
     {
         /* allocate a new buffer */
         /* RxBufAlloc() add an extra word for alignment the MAC payload */
@@ -1788,10 +1793,10 @@ static TI_STATUS rxData_ConvertAmsduToEthPackets (TI_HANDLE hRxData, void *pBuff
         ((RxIfDescriptor_t *)pDataBuf)->length = (sizeof(RxIfDescriptor_t) + WLAN_SNAP_HDR_LEN + ETHERNET_HDR_LEN + uDataLen) >> 2;
         ((RxIfDescriptor_t *)pDataBuf)->extraBytes = 4 - ((sizeof(RxIfDescriptor_t) + WLAN_SNAP_HDR_LEN + ETHERNET_HDR_LEN + uDataLen) & 0x3);
 
-        /* Prepare the Ethernet header pointer. */ 
+        /* Prepare the Ethernet header pointer. */
         /* add padding in the start of the buffer in order to align ETH payload */
-        pEthHeader = (TEthernetHeader *)((TI_UINT8 *)(RX_BUF_DATA(pDataBuf)) + 
-                                         WLAN_SNAP_HDR_LEN + 
+        pEthHeader = (TEthernetHeader *)((TI_UINT8 *)(RX_BUF_DATA(pDataBuf)) +
+                                         WLAN_SNAP_HDR_LEN +
                                          PADDING_ETH_PACKET_SIZE);
 
         /* copy the Ethernet header */
@@ -1804,9 +1809,9 @@ static TI_STATUS rxData_ConvertAmsduToEthPackets (TI_HANDLE hRxData, void *pBuff
         lengthDelta = ETHERNET_HDR_LEN + uDataLen;
 
         /* copy the packet payload */
-        os_memoryCopy (pRxData->hOs, 
-                       (((TI_UINT8*)pEthHeader) + ETHERNET_HDR_LEN), 
-                       ((TI_UINT8*)pMsduEthHeader) + ETHERNET_HDR_LEN + WLAN_SNAP_HDR_LEN, 
+        os_memoryCopy (pRxData->hOs,
+                       (((TI_UINT8*)pEthHeader) + ETHERNET_HDR_LEN),
+                       ((TI_UINT8*)pMsduEthHeader) + ETHERNET_HDR_LEN + WLAN_SNAP_HDR_LEN,
                        uDataLen - WLAN_SNAP_HDR_LEN);
 
         /* set the packet type */
@@ -1876,14 +1881,14 @@ static TI_STATUS rxData_ConvertAmsduToEthPackets (TI_HANDLE hRxData, void *pBuff
  *                        rxData_ReceivePacket                                              *
  ****************************************************************************************
 DESCRIPTION:    receive packet CB from RxXfer.
-                parse the status and other parameters and forward the frame to  
+                parse the status and other parameters and forward the frame to
                 rxData_receivePacketFromWlan()
-                
-INPUT:          Rx frame with its parameters    
+
+INPUT:          Rx frame with its parameters
 
 OUTPUT:
 
-RETURN:         
+RETURN:
 
 ************************************************************************/
 static void rxData_ReceivePacket (TI_HANDLE   hRxData,
@@ -1896,13 +1901,13 @@ static void rxData_ReceivePacket (TI_HANDLE   hRxData,
     if (pBuffer)
     {
         RxIfDescriptor_t    *pRxParams  = (RxIfDescriptor_t*)pBuffer;
-        TRxAttr             RxAttr; 
+        TRxAttr             RxAttr;
         ERate               appRate;
         dot11_header_t      *pHdr;
-       
+
         /*
          * First thing we do is getting the dot11_header, and than we check the status, since the header is
-         * needed for RX_MIC_FAILURE_ERROR 
+         * needed for RX_MIC_FAILURE_ERROR
          */
 
         pHdr = (dot11_header_t *)RX_BUF_DATA(pBuffer);
@@ -1912,34 +1917,34 @@ static void rxData_ReceivePacket (TI_HANDLE   hRxData,
         {
             case RX_DESC_STATUS_SUCCESS:
                 break;
-            
+
             case RX_DESC_STATUS_DECRYPT_FAIL:
             {
                 /* This error is not important before the Connection, so we ignore it when portStatus is not OPEN */
-                if (pRxData->rxDataPortStatus == OPEN) 
+                if (pRxData->rxDataPortStatus == OPEN)
                 {
                     TRACE0(pRxData->hReport, REPORT_SEVERITY_WARNING, "rxData_ReceivePacket: Received Packet with RX_DESC_DECRYPT_FAIL\n");
                 }
-            
-                RxBufFree(pRxData->hOs, pBuffer); 
+
+                RxBufFree(pRxData->hOs, pBuffer);
                 return;
             }
             case RX_DESC_STATUS_MIC_FAIL:
             {
-                   
+
 #ifdef AP_MODE_ENABLED
                 TMacAddr* pMac = &pHdr->address2; /* hold the first mac address */
                 roleAP_reportMicFailure(pRxData->hRoleAp,(TI_UINT8*)pMac);
                 return;
-#else  
-                TI_UINT8 uKeyType; 
-                paramInfo_t Param;           
+#else
+                TI_UINT8 uKeyType;
+                paramInfo_t Param;
                 TMacAddr* pMac = &pHdr->address1; /* hold the first mac address */
 
                 /* Get BSS type */
                 Param.paramType = SITE_MGR_CURRENT_BSS_TYPE_PARAM;
                 siteMgr_getParam (pRxData->hSiteMgr, &Param);
-     
+
                 /* For multicast/broadcast frames or in IBSS the key used is GROUP, else - it's Pairwise */
                 if (MAC_MULTICAST(*pMac) || Param.content.siteMgrCurrentBSSType == BSS_INDEPENDENT)
                 {
@@ -1947,47 +1952,47 @@ static void rxData_ReceivePacket (TI_HANDLE   hRxData,
 	                TRACE0(pRxData->hReport, REPORT_SEVERITY_ERROR, "rxData_ReceivePacket: Received Packet MIC failure. Type = Group\n");
                 }
                 /* Unicast on infrastructure */
-                else 
+                else
                 {
                     uKeyType = (TI_UINT8)KEY_TKIP_MIC_PAIRWISE;
 	                TRACE0(pRxData->hReport, REPORT_SEVERITY_ERROR, "rxData_ReceivePacket: Received Packet MIC failure. Type = Pairwise\n");
                 }
-    
-    
+
+
                 rsn_reportMicFailure (pRxData->hRsn, &uKeyType, sizeof(uKeyType));
-                RxBufFree(pRxData->hOs, pBuffer); 
+                RxBufFree(pRxData->hOs, pBuffer);
                 return;
 #endif
             }
 
-    
+
             case RX_DESC_STATUS_DRIVER_RX_Q_FAIL:
             {
                 /* Rx queue error - free packet and return */
                 TRACE0(pRxData->hReport, REPORT_SEVERITY_ERROR, "rxData_ReceivePacket: Received Packet with Rx queue error \n");
-  
-                RxBufFree(pRxData->hOs, pBuffer); 
+
+                RxBufFree(pRxData->hOs, pBuffer);
                 return;
             }
 
-            default:    
+            default:
                     /* Unknown error - free packet and return */
                     TRACE1(pRxData->hReport, REPORT_SEVERITY_ERROR, "rxData_ReceivePacket: Received Packet with unknown status = %d\n", (pRxParams->status & RX_DESC_STATUS_MASK));
-    
-                    RxBufFree(pRxData->hOs, pBuffer); 
+
+                    RxBufFree(pRxData->hOs, pBuffer);
                     return;
             }
 
         TRACE0(pRxData->hReport, REPORT_SEVERITY_INFORMATION , "Receive good Packet\n");
-        
+
         if (rate_PolicyToDrv (pRxParams->rate, &appRate) != TI_OK)
         {
             TRACE1(pRxData->hReport, REPORT_SEVERITY_ERROR , "rxData_ReceivePacket: can't convert hwRate=0x%x\n", pRxParams->rate);
         }
-        
+
         /*
-         * Set rx attributes 
-         */ 
+         * Set rx attributes
+         */
         RxAttr.hlid       = pRxParams->hlid;
         RxAttr.channel    = pRxParams->channel;
         RxAttr.packetInfo = pRxParams->flags;
@@ -1997,15 +2002,15 @@ static void rxData_ReceivePacket (TI_HANDLE   hRxData,
         RxAttr.SNR        = pRxParams->rx_snr;
         RxAttr.status     = pRxParams->status & RX_DESC_STATUS_MASK;
         /* for now J band not implemented */
-        RxAttr.band       = ((pRxParams->flags & RX_DESC_BAND_MASK) == RX_DESC_BAND_A) ? 
+        RxAttr.band       = ((pRxParams->flags & RX_DESC_BAND_MASK) == RX_DESC_BAND_A) ?
                             RADIO_BAND_5_0_GHZ : RADIO_BAND_2_4_GHZ ;
         /* Add hlid: process_id_tag field moved into status fileds bits [3..5] */
         RxAttr.eScanTag   = (pRxParams->status << RX_DESC_STATUS_PROC_ID_TAG_SHFT ) & RX_DESC_STATUS_PROC_ID_TAG_MASK;
 
         /* timestamp is 32 bit so do bytes copy to avoid exception in case the RxInfo is in 2 bytes offset */
-        os_memoryCopy (pRxData->hOs, 
-                       (void *)&(RxAttr.TimeStamp), 
-                       (void *)&(pRxParams->timestamp), 
+        os_memoryCopy (pRxData->hOs,
+                       (void *)&(RxAttr.TimeStamp),
+                       (void *)&(pRxParams->timestamp),
                        sizeof(pRxParams->timestamp) );
         RxAttr.TimeStamp = ENDIAN_HANDLE_LONG(RxAttr.TimeStamp);
 
@@ -2013,8 +2018,8 @@ static void rxData_ReceivePacket (TI_HANDLE   hRxData,
 
         rxData_receivePacketFromWlan (hRxData, pBuffer, &RxAttr);
 
-        /* 
-         *  Buffer MUST be freed until now 
+        /*
+         *  Buffer MUST be freed until now
          */
     }
     else
@@ -2029,16 +2034,16 @@ static void rxData_ReceivePacket (TI_HANDLE   hRxData,
  ****************************************************************************************
 DESCRIPTION:     RX request for buffer
                 uEncryptionflag API are for GWSI use.
-INPUT:          
+INPUT:
 
 OUTPUT:
 
-RETURN:         
+RETURN:
 
 ************************************************************************/
 static ERxBufferStatus rxData_RequestForBuffer (TI_HANDLE   hRxData,
                                       void **pBuf,
-                                      TI_UINT16 aLength, 
+                                      TI_UINT16 aLength,
                                       TI_UINT32 uEncryptionflag,
                                       PacketClassTag_e ePacketClassTag)
 {
@@ -2052,7 +2057,7 @@ static ERxBufferStatus rxData_RequestForBuffer (TI_HANDLE   hRxData,
     {
         return RX_BUF_ALLOC_COMPLETE;
     }
-    else 
+    else
     {
         return RX_BUF_ALLOC_OUT_OF_MEM;
     }
@@ -2072,8 +2077,8 @@ static ERxBufferStatus rxData_RequestForBuffer (TI_HANDLE   hRxData,
 *
 * INPUTS:       hRxData - the object
 *
-* OUTPUT:       
-* 
+* OUTPUT:
+*
 * RETURNS:      void
 ***************************************************************************/
 void rxData_resetCounters(TI_HANDLE hRxData)
@@ -2090,8 +2095,8 @@ void rxData_resetCounters(TI_HANDLE hRxData)
 *
 * INPUTS:       hRxData - the object
 *
-* OUTPUT:       
-* 
+* OUTPUT:
+*
 * RETURNS:      void
 ***************************************************************************/
 void rxData_resetDbgCounters(TI_HANDLE hRxData)
@@ -2108,10 +2113,10 @@ void rxData_resetDbgCounters(TI_HANDLE hRxData)
 * DESCRIPTION:  This function reset the Rx Link counters
 *
 * INPUTS:       hRxData - the object
-*				uHlid   - Link Id to reset			
+*				uHlid   - Link Id to reset
 *
-* OUTPUT:       
-* 
+* OUTPUT:
+*
 * RETURNS:      void
 ***************************************************************************/
 void rxData_resetLinkCounters(TI_HANDLE hRxData, TI_UINT32 uHlid)
@@ -2133,7 +2138,7 @@ void rxData_printRxCounters (TI_HANDLE hRxData)
     rxData_t *pRxData = (rxData_t *)hRxData;
     TI_UINT32 uHlid;
 
-    if (pRxData) 
+    if (pRxData)
     {
         WLAN_OS_REPORT(("RecvOk = %d\n", pRxData->rxDataCounters.RecvOk));
         WLAN_OS_REPORT(("DirectedBytesRecv = %d\n", pRxData->rxDataCounters.DirectedBytesRecv));
@@ -2142,18 +2147,18 @@ void rxData_printRxCounters (TI_HANDLE hRxData)
         WLAN_OS_REPORT(("MulticastFramesRecv = %d\n", pRxData->rxDataCounters.MulticastFramesRecv));
         WLAN_OS_REPORT(("BroadcastBytesRecv = %d\n", pRxData->rxDataCounters.BroadcastBytesRecv));
         WLAN_OS_REPORT(("BroadcastFramesRecv = %d\n", pRxData->rxDataCounters.BroadcastFramesRecv));
-    
+
         /* debug counters */
         WLAN_OS_REPORT(("excludedFrameCounter = %d\n", pRxData->rxDataDbgCounters.excludedFrameCounter));
-        WLAN_OS_REPORT(("rxDroppedDueToVLANIncludedCnt = %d\n", pRxData->rxDataDbgCounters.rxDroppedDueToVLANIncludedCnt));    
+        WLAN_OS_REPORT(("rxDroppedDueToVLANIncludedCnt = %d\n", pRxData->rxDataDbgCounters.rxDroppedDueToVLANIncludedCnt));
         WLAN_OS_REPORT(("rxWrongBssTypeCounter = %d\n", pRxData->rxDataDbgCounters.rxWrongBssTypeCounter));
         WLAN_OS_REPORT(("rxWrongBssIdCounter = %d\n", pRxData->rxDataDbgCounters.rxWrongBssIdCounter));
-        WLAN_OS_REPORT(("rcvUnicastFrameInOpenNotify = %d\n", pRxData->rxDataDbgCounters.rcvUnicastFrameInOpenNotify));        
+        WLAN_OS_REPORT(("rcvUnicastFrameInOpenNotify = %d\n", pRxData->rxDataDbgCounters.rcvUnicastFrameInOpenNotify));
 
         /* link counters */
         WLAN_OS_REPORT(("Links counters ---------\n"));
         for (uHlid = 0; uHlid < WLANLINKS_MAX_LINKS; uHlid++)
-        { 
+        {
             rxDataLinkCounters_t *pCnt = &pRxData->rxDataLinkCounters[uHlid];
             WLAN_OS_REPORT(("---------Link=%01d: eState=%d, eRole=%d \n", uHlid, pRxData->aRxLinkInfo[uHlid].eState, pRxData->aRxLinkInfo[uHlid].eRole));
             WLAN_OS_REPORT(("    recvFromWlan         = %d\n", pCnt->recvFromWlan));
@@ -2185,7 +2190,7 @@ void rxData_printRxBlock(TI_HANDLE hRxData)
     WLAN_OS_REPORT(("rxDataEapolDestination = %d\n", (TI_UINT32)pRxData->rxDataEapolDestination));
 
     for (uHlid = 0; uHlid < WLANLINKS_MAX_LINKS; uHlid++)
-    {       
+    {
         pLinkInfo = &pRxData->aRxLinkInfo[uHlid];
         WLAN_OS_REPORT(("Link=%01d: eState=%d, eRole=%d \n", uHlid, pLinkInfo->eState, pLinkInfo->eRole));
     }
@@ -2222,7 +2227,7 @@ void rxData_stopRxThroughputTimer (TI_HANDLE hRxData)
     {
         tmr_StopTimer (pRxData->hThroughputTimer);
         pRxData->rxThroughputTimerEnable = TI_FALSE;
-    } 
+    }
 }
 
 
@@ -2263,19 +2268,19 @@ void rxData_printRxDataFilter (TI_HANDLE hRxData)
 /****************************************************************************
  *                      rxData_SetReAuthInProgress()
  ****************************************************************************
- * DESCRIPTION:	Sets the ReAuth flag value 
- * 
+ * DESCRIPTION:	Sets the ReAuth flag value
+ *
  * INPUTS: hRxData - the object
  *		   value - value to set the flag to
- * 
+ *
  * OUTPUT:	None
- * 
+ *
  * RETURNS:	OK or NOK
  ****************************************************************************/
 void rxData_SetReAuthInProgress(TI_HANDLE hRxData, TI_BOOL	value)
 {
 	rxData_t *pRxData = (rxData_t *)hRxData;
-	
+
 	TRACE1(pRxData->hReport, REPORT_SEVERITY_INFORMATION , "Set ReAuth flag to %d\n", value);
 
 	pRxData->reAuthInProgress = value;
@@ -2284,12 +2289,12 @@ void rxData_SetReAuthInProgress(TI_HANDLE hRxData, TI_BOOL	value)
 /****************************************************************************
  *                      rxData_IsReAuthInProgress()
  ****************************************************************************
- * DESCRIPTION:	Returns the ReAuth flag value 
- * 
+ * DESCRIPTION:	Returns the ReAuth flag value
+ *
  * INPUTS: hRxData - the object
- * 
+ *
  * OUTPUT:	None
- * 
+ *
  * RETURNS:	ReAuth flag value
  ****************************************************************************/
 TI_BOOL rxData_IsReAuthInProgress(TI_HANDLE hRxData)
@@ -2302,14 +2307,14 @@ TI_BOOL rxData_IsReAuthInProgress(TI_HANDLE hRxData)
 *						rxData_StartReAuthActiveTimer   	                *
 *****************************************************************************
 * DESCRIPTION:	this function starts the ReAuthActive timer
-* 
+*
 * INPUTS:		hRxData - the object
-*		
+*
 * OUTPUT:		None
-* 
+*
 * RETURNS:		None
 ***************************************************************************/
-static void rxData_StartReAuthActiveTimer(TI_HANDLE hRxData)		
+static void rxData_StartReAuthActiveTimer(TI_HANDLE hRxData)
 {
 	rxData_t *pRxData = (rxData_t *)hRxData;
     TRACE0(pRxData->hReport, REPORT_SEVERITY_INFORMATION , "Start ReAuth Active Timer\n");
@@ -2324,14 +2329,14 @@ static void rxData_StartReAuthActiveTimer(TI_HANDLE hRxData)
 *						rxData_StopReAuthActiveTimer   						*
 *****************************************************************************
 * DESCRIPTION:	this function stops the ReAuthActive timer
-* 
+*
 * INPUTS:		hRxData - the object
-*		
+*
 * OUTPUT:		None
-* 
+*
 * RETURNS:		None
 ***************************************************************************/
-void rxData_StopReAuthActiveTimer(TI_HANDLE hRxData)		
+void rxData_StopReAuthActiveTimer(TI_HANDLE hRxData)
 {
 	rxData_t *pRxData = (rxData_t *)hRxData;
     TRACE0(pRxData->hReport, REPORT_SEVERITY_INFORMATION , "Stop ReAuth Active Timer\n");
@@ -2344,11 +2349,11 @@ void rxData_StopReAuthActiveTimer(TI_HANDLE hRxData)
 * DESCRIPTION:	this function ia called when the ReAuthActive timer elapses
 *				It resets the Reauth flag and restore the PS state.
 *				It also sends RE_AUTH_TERMINATED event to upper layer.
-* 
+*
 * INPUTS:		hRxData - the object
-*		
+*
 * OUTPUT:		None
-* 
+*
 * RETURNS:		None
 ***************************************************************************/
 static void reAuthTimeout(TI_HANDLE hRxData, TI_BOOL bTwdInitOccured)
@@ -2379,19 +2384,19 @@ void rxData_ReauthDisablePriority(TI_HANDLE hRxData)
     param.paramType = POWER_MGR_DISABLE_PRIORITY;
     param.content.powerMngPriority = POWER_MANAGER_REAUTH_PRIORITY;
     powerMgr_setParam(pRxData->hPowerMgr,&param);
-} 
+}
 
-/** 
+/**
  * \fn     rxData_SetLinkType
  * \brief  set link type and link role
- * 
- * \note   
- * \param  hRxData      - The module's object                                          
- * \param  uHlid        - link id                                          
- * \param  eLinkType    - link type                                          
- * \param  eLinkRole    - link role type                                          
- * \return void 
- */ 
+ *
+ * \note
+ * \param  hRxData      - The module's object
+ * \param  uHlid        - link id
+ * \param  eLinkType    - link type
+ * \param  eLinkRole    - link role type
+ * \return void
+ */
 void rxData_SetLinkType (TI_HANDLE hRxData, TI_UINT32 uHlid, EWlanLinkType eLinkType, EWlanLinkRole eLinkRole)
 {
 	rxData_t *pRxData = (rxData_t *)hRxData;
@@ -2404,16 +2409,16 @@ void rxData_SetLinkType (TI_HANDLE hRxData, TI_UINT32 uHlid, EWlanLinkType eLink
 	TRACE3(pRxData->hReport, REPORT_SEVERITY_INFORMATION, "rxData_SetLinkType: link %d, LinkType %d, LinkRole=%d\n", uHlid, pLinkInfo->eType, pLinkInfo->eRole);
 }
 
-/** 
+/**
  * \fn     rxData_SetLinkState
  * \brief  set link state (enable/not)
- * 
- * \note   
- * \param  hRxData     - The module's object                                          
- * \param  uHlid        - link id                                          
- * \param  eRxLinkState - The new link state                                          
- * \return void 
- */ 
+ *
+ * \note
+ * \param  hRxData     - The module's object
+ * \param  uHlid        - link id
+ * \param  eRxLinkState - The new link state
+ * \return void
+ */
 void rxData_SetLinkState (TI_HANDLE hRxData, TI_UINT32 uHlid, ERxConnState eRxConnState)
 {
 	rxData_t *pRxData = (rxData_t *)hRxData;
@@ -2425,5 +2430,5 @@ void rxData_SetLinkState (TI_HANDLE hRxData, TI_UINT32 uHlid, ERxConnState eRxCo
 	TRACE2(pRxData->hReport, REPORT_SEVERITY_INFORMATION, "rxData_SetLinkState: link %d, LinkState %d\n", uHlid, pLinkInfo->eState);
 }
 
-		
+
 

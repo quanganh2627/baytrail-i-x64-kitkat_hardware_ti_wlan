@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * siteMgrDebug.h
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 #ifndef __SITE_MGR_DEBUG_H__
 #define __SITE_MGR_DEBUG_H__
 
@@ -77,21 +82,21 @@
 #define PERFORM_HEALTH_TEST									50
 #define PRINT_FAILURE_EVENTS								51
 #define FORCE_HW_RESET_RECOVERY								52
-#define FORCE_SOFT_RECOVERY									53 
+#define FORCE_SOFT_RECOVERY									53
 
 
-#define RESET_ROAMING_EVENTS								55 
+#define RESET_ROAMING_EVENTS								55
 #define SET_DESIRED_CONS_TX_ERRORS_THREH					56
 #define GET_CURRENT_ROAMING_STATUS							57
 #define SET_DESIRED_CHANNEL									58
 
 
-#define TEST_TOGGLE_LNA_ON                                  60 
-#define TEST_TOGGLE_LNA_OFF   								61 
+#define TEST_TOGGLE_LNA_ON                                  60
+#define TEST_TOGGLE_LNA_OFF   								61
 
 
-#define TEST_TOGGLE_LNA_ON                                  60 
-#define TEST_TOGGLE_LNA_OFF   								61 
+#define TEST_TOGGLE_LNA_ON                                  60
+#define TEST_TOGGLE_LNA_OFF   								61
 
 #define PRINT_SITE_TABLE_PER_SSID							70
 
@@ -107,9 +112,9 @@
 #define START_PRE_AUTH										100
 
 
-void siteMgrDebugFunction (TI_HANDLE         hSiteMgr, 
+void siteMgrDebugFunction (TI_HANDLE         hSiteMgr,
                            TStadHandlesList *pStadHandles,
-                           TI_UINT32         funcType, 
+                           TI_UINT32         funcType,
                            void             *pParam);
 
 #endif /* __SITE_MGR_DEBUG_H__ */

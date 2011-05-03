@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * currBss.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file currBss.c
  *  \brief Current BSS info
  *
@@ -36,22 +41,22 @@
  *                                                                          *
  *   MODULE:  Current BSS                                                   *
  *   PURPOSE:                                                               *
- *   Roaming ability of eSTA is implemented by Roaming Manager Component and 
- *   described in "Roaming Manager module LLD" document, and by 
+ *   Roaming ability of eSTA is implemented by Roaming Manager Component and
+ *   described in "Roaming Manager module LLD" document, and by
  *   AP Connection module. AP Connection module implemented as two sub-modules.
- *   The major one is AP Connection, that is responsible for: 
- *   - providing Roaming Manager with access to other parts of WLAN Driver, 
+ *   The major one is AP Connection, that is responsible for:
+ *   - providing Roaming Manager with access to other parts of WLAN Driver,
  *   - implementing low levels of roaming mechanism.
  *   Current BSS sub-module takes care of:
  *   - maintaining database of current AP info,
  *   - providing access to database of current AP info.
- *   The Current BSS represents the BSS we are currently connected to. 
- *   Among other parameters, it holds the capabilities of the current AP, 
+ *   The Current BSS represents the BSS we are currently connected to.
+ *   Among other parameters, it holds the capabilities of the current AP,
  *   its ID and its quality.
  *   When FW indicates 'Out of Sync' event, Current BSS module is responsible
  *   for awaking the device, sending unicast Probe request, waiting for
- *   response and - in case FW comes to the conclusion that there was 
- *   no response - for triggering "Beacon missed" to AP Connection module. 
+ *   response and - in case FW comes to the conclusion that there was
+ *   no response - for triggering "Beacon missed" to AP Connection module.
  *   In eSTA5.0 FW updates and checks the quality of the connection with
  *   current AP. Current BSS module is responsible to handle event of type
  *   'Low RSSI' from FW. Third type of roaming event reported by FW is
@@ -74,7 +79,7 @@
 #include "qosMngr_API.h"
 #include "regulatoryDomainApi.h"
 #include "apConn.h"
-#include "scanMngrApi.h" 
+#include "scanMngrApi.h"
 #include "MacServices_api.h"
 #include "smeApi.h"
 #include "sme.h"
@@ -101,7 +106,7 @@ typedef TI_UINT8 (*currBSS_beaconRxCallb_t) (TI_HANDLE hModule, TI_UINT64 staTSF
 
 /* Structures */
 
- 
+
 /* Internal functions prototypes */
 
 static void currBSS_lowRssiThrCrossed(currBSS_t *hCurrBSS, TI_UINT8 *data, TI_UINT8 dataLength);
@@ -133,19 +138,19 @@ static void currBSS_RssiSnrTrigger7 (TI_HANDLE hCurrBSS, TI_UINT8 *data, TI_UINT
 *
 * currBSS_create
 *
-* \b Description: 
+* \b Description:
 *
 * Create the Current BSS context: allocate memory for internal variables
 *
 * \b ARGS:
 *
 *  I   - hOS - the handle to the OS object
-*  
+*
 * \b RETURNS:
 *
 *  TI_OK on success, TI_NOK on failure.
 *
-* \sa 
+* \sa
 */
 TI_HANDLE currBSS_create(TI_HANDLE hOs)
 {
@@ -154,7 +159,7 @@ TI_HANDLE currBSS_create(TI_HANDLE hOs)
     if ((pCurrBss = os_memoryAlloc(hOs, sizeof(currBSS_t))) != NULL)
     {
         pCurrBss->hOs = hOs;
-    
+
         return pCurrBss;
     }
     else /* Failed to allocate control block */
@@ -169,23 +174,23 @@ TI_HANDLE currBSS_create(TI_HANDLE hOs)
 *
 * currBSS_unload
 *
-* \b Description: 
+* \b Description:
 *
 * Finish Current BSS module work.
 *
 * \b ARGS:
 *
-*  
+*
 * \b RETURNS:
 *
 *  TI_OK on success, TI_NOK on failure.
 *
-* \sa 
+* \sa
 */
 TI_STATUS currBSS_unload(TI_HANDLE hCurrBSS)
 {
     currBSS_t   *pCurrBSS;
-    
+
     if (hCurrBSS != NULL)
     {
         pCurrBSS = (currBSS_t *)hCurrBSS;
@@ -201,19 +206,19 @@ TI_STATUS currBSS_unload(TI_HANDLE hCurrBSS)
 *
 * currBSS_init
 *
-* \b Description: 
+* \b Description:
 *
 * Get other modules handles.
 *
 * \b ARGS:
 *
 *  I   pStadHandles - The driver modules handles
-*  
+*
 * \b RETURNS:
 *
 *  void
 *
-* \sa 
+* \sa
 */
 void currBSS_init (TStadHandlesList *pStadHandles)
 {
@@ -246,19 +251,19 @@ void currBSS_init (TStadHandlesList *pStadHandles)
 *
 * currBSS_SetDefaults
 *
-* \b Description: 
+* \b Description:
 *
 * Prepare Current BSS module to work
 *
 * \b ARGS:
 *
 *  I   - hCurrBSS - Current BSS handle \n
-*  
+*
 * \b RETURNS:
 *
 *  TI_OK on success, TI_NOK on failure.
 *
-* \sa 
+* \sa
 */
 TI_STATUS currBSS_SetDefaults (TI_HANDLE hCurrBSS, TCurrBssInitParams *pInitParams)
 {
@@ -278,16 +283,16 @@ TI_STATUS currBSS_SetDefaults (TI_HANDLE hCurrBSS, TCurrBssInitParams *pInitPara
     pCurrBSS->type = BSS_ANY;
     pCurrBSS->currAPInfo.RSSI = 0;
     pCurrBSS->bUseSGParams = TI_FALSE;
-    pCurrBSS->uDefaultKeepAlivePeriod = pInitParams->uNullDataKeepAlivePeriod; 
+    pCurrBSS->uDefaultKeepAlivePeriod = pInitParams->uNullDataKeepAlivePeriod;
 
 
     /* register the static callbacks */
-    TWD_RegisterEvent(pCurrBSS->hTWD,TWD_OWN_EVENT_RSSI_SNR_TRIGGER_0,(void*) currBSS_RssiSnrTrigger0, pCurrBSS); 
-    TWD_RegisterEvent(pCurrBSS->hTWD,TWD_OWN_EVENT_RSSI_SNR_TRIGGER_1,(void*) currBSS_RssiSnrTrigger1, pCurrBSS); 
-    TWD_RegisterEvent(pCurrBSS->hTWD,TWD_OWN_EVENT_RSSI_SNR_TRIGGER_2,(void*) currBSS_RssiSnrTrigger2, pCurrBSS); 
-    TWD_RegisterEvent(pCurrBSS->hTWD,TWD_OWN_EVENT_RSSI_SNR_TRIGGER_3,(void*) currBSS_RssiSnrTrigger3, pCurrBSS); 
-    TWD_RegisterEvent(pCurrBSS->hTWD,TWD_OWN_EVENT_RSSI_SNR_TRIGGER_4,(void*) currBSS_RssiSnrTrigger4, pCurrBSS); 
-    TWD_RegisterEvent(pCurrBSS->hTWD,TWD_OWN_EVENT_RSSI_SNR_TRIGGER_5,(void*) currBSS_RssiSnrTrigger5, pCurrBSS); 
+    TWD_RegisterEvent(pCurrBSS->hTWD,TWD_OWN_EVENT_RSSI_SNR_TRIGGER_0,(void*) currBSS_RssiSnrTrigger0, pCurrBSS);
+    TWD_RegisterEvent(pCurrBSS->hTWD,TWD_OWN_EVENT_RSSI_SNR_TRIGGER_1,(void*) currBSS_RssiSnrTrigger1, pCurrBSS);
+    TWD_RegisterEvent(pCurrBSS->hTWD,TWD_OWN_EVENT_RSSI_SNR_TRIGGER_2,(void*) currBSS_RssiSnrTrigger2, pCurrBSS);
+    TWD_RegisterEvent(pCurrBSS->hTWD,TWD_OWN_EVENT_RSSI_SNR_TRIGGER_3,(void*) currBSS_RssiSnrTrigger3, pCurrBSS);
+    TWD_RegisterEvent(pCurrBSS->hTWD,TWD_OWN_EVENT_RSSI_SNR_TRIGGER_4,(void*) currBSS_RssiSnrTrigger4, pCurrBSS);
+    TWD_RegisterEvent(pCurrBSS->hTWD,TWD_OWN_EVENT_RSSI_SNR_TRIGGER_5,(void*) currBSS_RssiSnrTrigger5, pCurrBSS);
     TWD_RegisterEvent(pCurrBSS->hTWD,TWD_OWN_EVENT_RSSI_SNR_TRIGGER_6,(void*) currBSS_RssiSnrTrigger6, pCurrBSS);
     TWD_RegisterEvent(pCurrBSS->hTWD,TWD_OWN_EVENT_RSSI_SNR_TRIGGER_7,(void*) currBSS_RssiSnrTrigger7, pCurrBSS);
 
@@ -298,7 +303,7 @@ TI_STATUS currBSS_SetDefaults (TI_HANDLE hCurrBSS, TCurrBssInitParams *pInitPara
         currBSS_RegisterTriggerEvent(hCurrBSS, TWD_OWN_EVENT_RSSI_SNR_TRIGGER_1, 0, (void*)currBSS_lowSnrThrCrossed, hCurrBSS);
         currBSS_RegisterTriggerEvent(hCurrBSS, TWD_OWN_EVENT_RSSI_SNR_TRIGGER_4, 0, (void*)currBSS_BackgroundScanQuality, hCurrBSS);
 
-#ifndef AP_MODE_ENABLED   
+#ifndef AP_MODE_ENABLED
         pCurrBSS->lowRssiThreshold = RSSI_DEFAULT_THRESHOLD;
         tTriggerCfg.index     = TRIGGER_EVENT_LOW_RSSI;
         tTriggerCfg.threshold = pCurrBSS->lowRssiThreshold;
@@ -309,7 +314,7 @@ TI_STATUS currBSS_SetDefaults (TI_HANDLE hCurrBSS, TCurrBssInitParams *pInitPara
         tTriggerCfg.hystersis = 0;
         tTriggerCfg.enable    = TI_TRUE;
         TWD_CfgRssiSnrTrigger (pCurrBSS->hTWD, &tTriggerCfg);
-    
+
         pCurrBSS->lowSnrThreshold = SNR_DEFAULT_THRESHOLD;
         tTriggerCfg.index     = TRIGGER_EVENT_LOW_SNR;
         tTriggerCfg.threshold = pCurrBSS->lowSnrThreshold;
@@ -320,7 +325,7 @@ TI_STATUS currBSS_SetDefaults (TI_HANDLE hCurrBSS, TCurrBssInitParams *pInitPara
         tTriggerCfg.hystersis = 0;
         tTriggerCfg.enable    = TI_TRUE;
         TWD_CfgRssiSnrTrigger (pCurrBSS->hTWD, &tTriggerCfg);
-    
+
         pCurrBSS->highQualityForBkgrdScan = RSSI_DEFAULT_THRESHOLD;
         pCurrBSS->lowQualityForBkgrdScan = RSSI_DEFAULT_THRESHOLD;
         tTriggerCfg.index     = TRIGGER_EVENT_BG_SCAN;
@@ -337,11 +342,11 @@ TI_STATUS currBSS_SetDefaults (TI_HANDLE hCurrBSS, TCurrBssInitParams *pInitPara
          /* Register for 'BSS-Loss' event */
         TWD_RegisterEvent (pCurrBSS->hTWD, TWD_OWN_EVENT_BSS_LOSE, (void *)currBSS_BssLost, pCurrBSS);
         TWD_EnableEvent (pCurrBSS->hTWD, TWD_OWN_EVENT_BSS_LOSE);
-    
-        /* save last configured value for handling Soft Gemini changes */ 
+
+        /* save last configured value for handling Soft Gemini changes */
         pCurrBSS->numExpectedTbttForBSSLoss = OUT_OF_SYNC_DEFAULT_THRESHOLD;
         params.TsfMissThreshold = OUT_OF_SYNC_DEFAULT_THRESHOLD;
-#ifndef AP_MODE_ENABLED 
+#ifndef AP_MODE_ENABLED
         params.BssLossTimeout = NO_BEACON_DEFAULT_TIMEOUT;
         TWD_CfgConnMonitParams (pCurrBSS->hTWD, &params);
 
@@ -362,7 +367,7 @@ TI_STATUS currBSS_SetDefaults (TI_HANDLE hCurrBSS, TCurrBssInitParams *pInitPara
 *
 * currBSS_updateRoamingTriggers
 *
-* \b Description: 
+* \b Description:
 *
 * Configure parameter of Current BSS
 *
@@ -370,12 +375,12 @@ TI_STATUS currBSS_SetDefaults (TI_HANDLE hCurrBSS, TCurrBssInitParams *pInitPara
 *
 *  I   - hCurrBSS - Current BSS handle \n
 *  I   - params - pointer to datablock of roaming threshols \n
-*  
+*
 * \b RETURNS:
 *
 *  TI_OK on success, TI_NOK on failure.
 *
-* \sa 
+* \sa
 */
 TI_STATUS currBSS_updateRoamingTriggers (TI_HANDLE hCurrBSS, roamingMngrThresholdsConfig_t *params)
 {
@@ -383,7 +388,7 @@ TI_STATUS currBSS_updateRoamingTriggers (TI_HANDLE hCurrBSS, roamingMngrThreshol
     TRroamingTriggerParams roamingTriggersParams;
     RssiSnrTriggerCfg_t tTriggerCfg;
 
-    if (pCurrBSS->lowRssiThreshold != params->lowRssiThreshold) 
+    if (pCurrBSS->lowRssiThreshold != params->lowRssiThreshold)
     {
         pCurrBSS->lowRssiThreshold = params->lowRssiThreshold;
 
@@ -399,7 +404,7 @@ TI_STATUS currBSS_updateRoamingTriggers (TI_HANDLE hCurrBSS, roamingMngrThreshol
         TWD_CfgRssiSnrTrigger (pCurrBSS->hTWD, &tTriggerCfg);
     }
 
-    if (pCurrBSS->lowSnrThreshold != params->lowSnrThreshold) 
+    if (pCurrBSS->lowSnrThreshold != params->lowSnrThreshold)
     {
         pCurrBSS->lowSnrThreshold = params->lowSnrThreshold;
 
@@ -411,11 +416,11 @@ TI_STATUS currBSS_updateRoamingTriggers (TI_HANDLE hCurrBSS, roamingMngrThreshol
         tTriggerCfg.direction = RSSI_EVENT_DIR_LOW;
         tTriggerCfg.hystersis = 0;
         tTriggerCfg.enable    = TI_TRUE;
-    
+
         TWD_CfgRssiSnrTrigger (pCurrBSS->hTWD, &tTriggerCfg);
     }
 
-    if (pCurrBSS->lowQualityForBkgrdScan != params->lowQualityForBackgroungScanCondition) 
+    if (pCurrBSS->lowQualityForBkgrdScan != params->lowQualityForBackgroungScanCondition)
     {
         pCurrBSS->lowQualityForBkgrdScan = params->lowQualityForBackgroungScanCondition;
         tTriggerCfg.index     = TRIGGER_EVENT_BG_SCAN;
@@ -430,17 +435,17 @@ TI_STATUS currBSS_updateRoamingTriggers (TI_HANDLE hCurrBSS, roamingMngrThreshol
         TWD_CfgRssiSnrTrigger (pCurrBSS->hTWD, &tTriggerCfg);
     }
 
-    if (pCurrBSS->numExpectedTbttForBSSLoss != params->numExpectedTbttForBSSLoss) 
+    if (pCurrBSS->numExpectedTbttForBSSLoss != params->numExpectedTbttForBSSLoss)
     {
-        /* save last configured value for handling Soft Gemini changes */ 
+        /* save last configured value for handling Soft Gemini changes */
         pCurrBSS->numExpectedTbttForBSSLoss = params->numExpectedTbttForBSSLoss;
         /* Configure TWD with 'No BSS' thresholds (Same as the other parameters but in a special
             function for the Soft Gemini module consideration) */
         currBSS_updateBSSLoss(pCurrBSS);
     }
-    
+
     /* Configure TWD with 'Consecutive NACK' thresholds */
-    if (pCurrBSS->maxTxRetryThreshold != params->dataRetryThreshold) 
+    if (pCurrBSS->maxTxRetryThreshold != params->dataRetryThreshold)
     {
         pCurrBSS->maxTxRetryThreshold = params->dataRetryThreshold;
         roamingTriggersParams.maxTxRetry = pCurrBSS->maxTxRetryThreshold;
@@ -448,7 +453,7 @@ TI_STATUS currBSS_updateRoamingTriggers (TI_HANDLE hCurrBSS, roamingMngrThreshol
     }
 
     pCurrBSS->highQualityForBkgrdScan = params->normalQualityForBackgroungScanCondition;
-    
+
     return TI_OK;
 }
 
@@ -456,7 +461,7 @@ TI_STATUS currBSS_updateRoamingTriggers (TI_HANDLE hCurrBSS, roamingMngrThreshol
 *
 * currBSS_getRoamingParams
 *
-* \b Description: 
+* \b Description:
 *
 * Retrieves the roaming triggers stored in the CurrBSS module.
 *
@@ -466,12 +471,12 @@ TI_STATUS currBSS_updateRoamingTriggers (TI_HANDLE hCurrBSS, roamingMngrThreshol
 *  O   - aNumExpectedTbttForBSSLoss - Current BSS handle \n
 *  O   - aLowQualityForBackgroungScanCondition - Current BSS handle \n
 *  O   - aNormalQualityForBackgroungScanCondition - Current BSS handle \n
-*  
+*
 * \b RETURNS:
 *
 *  TI_OK on success, TI_NOK on failure.
 *
-* \sa 
+* \sa
 */
 TI_STATUS currBSS_getRoamingParams(TI_HANDLE hCurrBSS,
                                    TI_UINT8 * aNumExpectedTbttForBSSLoss,
@@ -483,7 +488,7 @@ TI_STATUS currBSS_getRoamingParams(TI_HANDLE hCurrBSS,
     *aNumExpectedTbttForBSSLoss = pCurrBSS->numExpectedTbttForBSSLoss;
     *aLowQualityForBackgroungScanCondition = pCurrBSS->lowQualityForBkgrdScan;
     *aNormalQualityForBackgroungScanCondition = pCurrBSS->highQualityForBkgrdScan;
-    
+
     return TI_OK;
 }
 
@@ -491,13 +496,13 @@ TI_STATUS currBSS_getRoamingParams(TI_HANDLE hCurrBSS,
 *
 * currBSS_SGconfigureBSSLoss
 *
-* \b Description: 
+* \b Description:
 *
 *   This function is called by the Soft Gemini module in order to enable/disable the use of
 *   the compensation value for the BSSLoss count , and the percent of increasing that value
 *   It also set the new parameter to the FW (with another generic function)
 *   The compensation is needed since BT activity might over-run recieved beacons
-*    
+*
 *
 * \b ARGS:
 *
@@ -509,14 +514,14 @@ TI_STATUS currBSS_getRoamingParams(TI_HANDLE hCurrBSS,
 *
 *  -
 *
-* \sa 
+* \sa
 */
 
 void currBSS_SGconfigureBSSLoss(TI_HANDLE hCurrBSS,
                                         TI_UINT32 SGcompensationPercent , TI_BOOL bUseSGParams)
 {
     currBSS_t   *pCurrBSS = (currBSS_t *)hCurrBSS;
-    
+
     pCurrBSS->bUseSGParams = bUseSGParams;
     pCurrBSS->SGcompensationPercent = SGcompensationPercent;
 
@@ -530,20 +535,20 @@ TRACE1(pCurrBSS->hReport, REPORT_SEVERITY_INFORMATION, "CurrBSS_SGConf: SG =%d\n
 *
 * currBSS_updateBSSLoss
 *
-* \b Description: 
+* \b Description:
 *
 *   This function updates only BSS Loss parameter , we need it to be able to consider the
-*   Soft Gemini status , and change the parameter according to it 
+*   Soft Gemini status , and change the parameter according to it
 *
 * \b ARGS:
 *
 *  I   - pCurrBSS - Current BSS handle \n
-*  
+*
 * \b RETURNS:
 *
 *  -
 *
-* \sa 
+* \sa
 */
 void currBSS_updateBSSLoss(currBSS_t   *pCurrBSS)
 {
@@ -552,21 +557,21 @@ void currBSS_updateBSSLoss(currBSS_t   *pCurrBSS)
     /* In Ad-Hoc we use default parameter */
     if (pCurrBSS->type == BSS_INDEPENDENT)
     {
-       roamingTriggersParams.TsfMissThreshold = OUT_OF_SYNC_IBSS_THRESHOLD; 
+       roamingTriggersParams.TsfMissThreshold = OUT_OF_SYNC_IBSS_THRESHOLD;
     }
     else /* In Infra we use the saved parameter */
     {
         roamingTriggersParams.TsfMissThreshold = pCurrBSS->numExpectedTbttForBSSLoss;
     }
-    
+
     roamingTriggersParams.BssLossTimeout = NO_BEACON_DEFAULT_TIMEOUT;
-    
+
     TRACE2(pCurrBSS->hReport, REPORT_SEVERITY_INFORMATION, ": SG=%d, Band=%d\n", pCurrBSS->bUseSGParams, pCurrBSS->currAPInfo.band);
 
     /* if Soft Gemini is enabled - increase the BSSLoss value (because BT activity might over-run beacons) */
     if ((pCurrBSS->bUseSGParams) && (pCurrBSS->currAPInfo.band == RADIO_BAND_2_4_GHZ))
     {
-        roamingTriggersParams.TsfMissThreshold = (roamingTriggersParams.TsfMissThreshold * 
+        roamingTriggersParams.TsfMissThreshold = (roamingTriggersParams.TsfMissThreshold *
             (100 + pCurrBSS->SGcompensationPercent)) / 100;
 
         TRACE2(pCurrBSS->hReport, REPORT_SEVERITY_INFORMATION, ": old value = %d, new value (for SG compensation) = %d\n", pCurrBSS->numExpectedTbttForBSSLoss,roamingTriggersParams.TsfMissThreshold);
@@ -579,19 +584,19 @@ void currBSS_updateBSSLoss(currBSS_t   *pCurrBSS)
 *
 * currBSS_swChFinished
 *
-* \b Description: 
+* \b Description:
 *
 * Called when switch channel process is complete in order to reset RSSI calculations
 *
 * \b ARGS:
 *
 *  I   - hCurrBSS - Current BSS handle \n
-*  
+*
 * \b RETURNS:
 *
 *  -
 *
-* \sa 
+* \sa
 */
 void currBSS_restartRssiCounting(TI_HANDLE hCurrBSS)
 {
@@ -604,19 +609,19 @@ void currBSS_restartRssiCounting(TI_HANDLE hCurrBSS)
 *
 * currBSS_getBssInfo
 *
-* \b Description: 
+* \b Description:
 *
 * Get parameter of Current BSS
 *
 * \b ARGS:
 *
 *  I   - hCurrBSS - Current BSS handle \n
-*  
+*
 * \b RETURNS:
 *
 *  pointer to current BSS info block.
 *
-* \sa 
+* \sa
 */
 bssEntry_t *currBSS_getBssInfo(TI_HANDLE hCurrBSS)
 {
@@ -631,7 +636,7 @@ bssEntry_t *currBSS_getBssInfo(TI_HANDLE hCurrBSS)
 *
 * currBSS_probRespReceivedCallb
 *
-* \b Description: 
+* \b Description:
 *
 * Callback function, provided to MLME module. Called each time Probe response received.
 * This function verifies that the Probe response was sent by current AP, and then
@@ -640,12 +645,12 @@ bssEntry_t *currBSS_getBssInfo(TI_HANDLE hCurrBSS)
 * \b ARGS:
 *
 *  I   - hCurrBSS - Current BSS handle \n
-*  
+*
 * \b RETURNS:
 *
 *  TI_OK on success, TI_NOK on failure.
 *
-* \sa 
+* \sa
 */
 TI_STATUS currBSS_probRespReceivedCallb(TI_HANDLE hCurrBSS,
                                         TRxAttr *pRxAttr,
@@ -662,16 +667,16 @@ TI_STATUS currBSS_probRespReceivedCallb(TI_HANDLE hCurrBSS,
     {
         return TI_NOK;
     }
-    
+
     pParam->paramType = SITE_MGR_CURRENT_BSSID_PARAM;
-    siteMgr_getParam(pCurrBSS->hSiteMgr, pParam);    
+    siteMgr_getParam(pCurrBSS->hSiteMgr, pParam);
 
     if (pCurrBSS->isConnected && MAC_EQUAL (pParam->content.siteMgrDesiredBSSID, *bssid))
     {
         siteMgr_updateSite(pCurrBSS->hSiteMgr, bssid, pFrameInfo, pRxAttr->channel, (ERadioBand)pRxAttr->band, TI_FALSE);
         /* Save the IE part of the Probe Response buffer in the site table */
         siteMgr_saveProbeRespBuffer(pCurrBSS->hSiteMgr, bssid, (TI_UINT8 *)dataBuffer, bufLength);
-    }    
+    }
     os_memoryFree(pCurrBSS->hOs, pParam, sizeof(paramInfo_t));
     return TI_OK;
 }
@@ -682,7 +687,7 @@ TI_STATUS currBSS_probRespReceivedCallb(TI_HANDLE hCurrBSS,
 *
 * currBSS_beaconReceivedCallb
 *
-* \b Description: 
+* \b Description:
 *
 * Callback function, provided to MLME module. Called each time Beacon received.
 * This function verifies that the Probe response was sent by current AP, and then
@@ -691,12 +696,12 @@ TI_STATUS currBSS_probRespReceivedCallb(TI_HANDLE hCurrBSS,
 * \b ARGS:
 *
 *  I   - hCurrBSS - Current BSS handle \n
-*  
+*
 * \b RETURNS:
 *
 *  TI_OK on success, TI_NOK on failure.
 *
-* \sa 
+* \sa
 */
 TI_STATUS currBSS_beaconReceivedCallb(TI_HANDLE hCurrBSS,
                                       TRxAttr *pRxAttr,
@@ -724,7 +729,7 @@ TI_STATUS currBSS_beaconReceivedCallb(TI_HANDLE hCurrBSS,
 
     /* Get current BSSID */
     pParam->paramType = SITE_MGR_CURRENT_BSSID_PARAM;
-    siteMgr_getParam(pCurrBSS->hSiteMgr, pParam);   
+    siteMgr_getParam(pCurrBSS->hSiteMgr, pParam);
 
     if (pCurrBSS->isConnected && (eCurrentBSSType == eFrameBssType))
     {
@@ -752,7 +757,7 @@ TI_STATUS currBSS_beaconReceivedCallb(TI_HANDLE hCurrBSS,
 *
 * currBSS_updateConnectedState
 *
-* \b Description: 
+* \b Description:
 *
 * This function is called when FW recovery performed.
 *
@@ -761,12 +766,12 @@ TI_STATUS currBSS_beaconReceivedCallb(TI_HANDLE hCurrBSS,
 *  I   - hCurrBSS - Current BSS handle \n
 *  I   - isConnected - TI_TRUE or TI_FALSE \n
 *  I   - type - IBSS or EBSS \n
-*  
+*
 * \b RETURNS:
 *
 *  -
 *
-* \sa 
+* \sa
 */
 void currBSS_updateConnectedState(TI_HANDLE hCurrBSS, TI_BOOL isConnected, ScanBssType_e type)
 {
@@ -775,7 +780,7 @@ void currBSS_updateConnectedState(TI_HANDLE hCurrBSS, TI_BOOL isConnected, ScanB
     pCurrBSS->type = type;
     pCurrBSS->isConnected = isConnected;
 
-    if (isConnected) 
+    if (isConnected)
     {
         /*** Store the info of current AP ***/
         paramInfo_t  *pParam;
@@ -788,33 +793,33 @@ void currBSS_updateConnectedState(TI_HANDLE hCurrBSS, TI_BOOL isConnected, ScanB
 
         /* BSSID */
         pParam->paramType = SITE_MGR_CURRENT_BSSID_PARAM;
-        siteMgr_getParam(pCurrBSS->hSiteMgr, pParam);    
+        siteMgr_getParam(pCurrBSS->hSiteMgr, pParam);
         MAC_COPY (pCurrBSS->currAPInfo.BSSID, pParam->content.siteMgrDesiredBSSID);
 
         /* Rx rate */
         pParam->paramType = SITE_MGR_LAST_RX_RATE_PARAM;
-        siteMgr_getParam(pCurrBSS->hSiteMgr, pParam);               
+        siteMgr_getParam(pCurrBSS->hSiteMgr, pParam);
         pCurrBSS->currAPInfo.rxRate = pParam->content.ctrlDataCurrentBasicRate;
 
         /* Band */
         pParam->paramType = SITE_MGR_RADIO_BAND_PARAM;
-        siteMgr_getParam(pCurrBSS->hSiteMgr, pParam);               
+        siteMgr_getParam(pCurrBSS->hSiteMgr, pParam);
         pCurrBSS->currAPInfo.band = pParam->content.siteMgrRadioBand;
 
         /* Channel */
         pParam->paramType = SITE_MGR_CURRENT_CHANNEL_PARAM;
-        siteMgr_getParam(pCurrBSS->hSiteMgr, pParam);               
+        siteMgr_getParam(pCurrBSS->hSiteMgr, pParam);
         pCurrBSS->currAPInfo.channel = pParam->content.siteMgrCurrentChannel;
 
         /* Last Rx Tsf */
         pParam->paramType = SITE_MGR_CURRENT_TSF_TIME_STAMP;
-        siteMgr_getParam(pCurrBSS->hSiteMgr, pParam);               
-        os_memoryCopy(pCurrBSS->hOs, &pCurrBSS->currAPInfo.lastRxTSF, 
+        siteMgr_getParam(pCurrBSS->hSiteMgr, pParam);
+        os_memoryCopy(pCurrBSS->hOs, &pCurrBSS->currAPInfo.lastRxTSF,
                       pParam->content.siteMgrCurrentTsfTimeStamp, sizeof(pCurrBSS->currAPInfo.lastRxTSF));
 
         /* Beacon interval */
         pParam->paramType = SITE_MGR_BEACON_INTERVAL_PARAM;
-        siteMgr_getParam(pCurrBSS->hSiteMgr, pParam);               
+        siteMgr_getParam(pCurrBSS->hSiteMgr, pParam);
         pCurrBSS->currAPInfo.beaconInterval = pParam->content.beaconInterval;
 
         /* Capability */
@@ -822,13 +827,13 @@ void currBSS_updateConnectedState(TI_HANDLE hCurrBSS, TI_BOOL isConnected, ScanB
         siteMgr_getParam(pCurrBSS->hSiteMgr,pParam);
         pCurrBSS->currAPInfo.capabilities = pParam->content.siteMgrSiteCapability;
         pParam->paramType = SITE_MGR_CURRENT_TSF_TIME_STAMP;
-        siteMgr_getParam(pCurrBSS->hSiteMgr, pParam);    
+        siteMgr_getParam(pCurrBSS->hSiteMgr, pParam);
 
         /* pCurrBSS->currAPInfo.lastRxHostTimestamp = *((TI_UINT64 *)(pIEs->TimeStamp));*/ /* TBD*/
         os_memoryCopy(pCurrBSS->hOs, &pCurrBSS->currAPInfo.lastRxHostTimestamp, pParam->content.siteMgrCurrentTsfTimeStamp, sizeof(TI_UINT32));
 
         pParam->paramType = SITE_MGR_LAST_BEACON_BUF_PARAM;
-        siteMgr_getParam(pCurrBSS->hSiteMgr, pParam);               
+        siteMgr_getParam(pCurrBSS->hSiteMgr, pParam);
         pCurrBSS->currAPInfo.pBuffer = pParam->content.siteMgrLastBeacon.buffer;
         pCurrBSS->currAPInfo.bufferLength = pParam->content.siteMgrLastBeacon.bufLength;
         pCurrBSS->currAPInfo.resultType = (pParam->content.siteMgrLastBeacon.isBeacon) ? SCAN_RFT_BEACON : SCAN_RFT_PROBE_RESPONSE;
@@ -844,27 +849,27 @@ void currBSS_updateConnectedState(TI_HANDLE hCurrBSS, TI_BOOL isConnected, ScanB
 
             /*
              * only configure the null-data keepa-live message if the interval is valid
-             * (either the default interval or the one from teh CCX IE)
+             * (either the default interval or the one from teh XCC IE)
              */
             if (0 != uKeepAlivePreiod)
             {
                 TRACE0(pCurrBSS->hReport, REPORT_SEVERITY_INFORMATION , "currBSS_updateConnectedState: Configuring null-data keep-alive");
-    
+
                 /* build null-data template */
                 tKeepAliveTemplate.ptr = &(pCurrBSS->keepAliveBuffer[ 0 ]);
-                if ( TI_OK != txCtrlServ_buildNullFrame (pCurrBSS->hTxCtrl, 
+                if ( TI_OK != txCtrlServ_buildNullFrame (pCurrBSS->hTxCtrl,
                                                          tKeepAliveTemplate.ptr, &(tKeepAliveTemplate.len)))
                 {
                     TRACE0(pCurrBSS->hReport, REPORT_SEVERITY_ERROR , "currBSS_updateConnectedState: error building null data frame\n");
-    
+
                 }
-    
+
                 /* configure null-data template */
                 tKeepAliveTemplate.type = KEEP_ALIVE_TEMPLATE;
                 tKeepAliveTemplate.index = KEEP_ALIVE_NULL_DATA_INDEX;
                 tKeepAliveTemplate.uRateMask = RATE_MASK_UNSPECIFIED;
                 TWD_CmdTemplate (pCurrBSS->hTWD, &tKeepAliveTemplate, NULL, NULL);
-    
+
                 /* configure paramters */
                 tKeepAliveParams.index = KEEP_ALIVE_NULL_DATA_INDEX;
                 tKeepAliveParams.enaDisFlag = TI_TRUE; /* enabled */
@@ -872,7 +877,7 @@ void currBSS_updateConnectedState(TI_HANDLE hCurrBSS, TI_BOOL isConnected, ScanB
                 tKeepAliveParams.interval = uKeepAlivePreiod;
                 TWD_CfgKeepAlive (pCurrBSS->hTWD, &tKeepAliveParams);
             }
-        }        
+        }
         os_memoryFree(pCurrBSS->hOs, pParam, sizeof(paramInfo_t));
     }
     else
@@ -888,7 +893,7 @@ void currBSS_updateConnectedState(TI_HANDLE hCurrBSS, TI_BOOL isConnected, ScanB
             tKeepAliveParams.trigType = KEEP_ALIVE_TRIG_TYPE_NO_TX;
             TWD_CfgKeepAlive (pCurrBSS->hTWD, &tKeepAliveParams);
 
-        }        
+        }
     }
 }
 
@@ -897,19 +902,19 @@ void currBSS_updateConnectedState(TI_HANDLE hCurrBSS, TI_BOOL isConnected, ScanB
 *
 * currBSS_BssLost
 *
-* \b Description: 
+* \b Description:
 *
 * Callback function, called upon BSS-Loss event from FW.
 *
 * \b ARGS:
 *
 *  I   - hCurrBSS - Current BSS handle \n
-*  
+*
 * \b RETURNS:
 *
 *  void
 *
-* \sa 
+* \sa
 */
 static void currBSS_BssLost (currBSS_t *hCurrBSS,
                              TI_UINT8  *data,
@@ -923,19 +928,19 @@ static void currBSS_BssLost (currBSS_t *hCurrBSS,
 *
 * currBSS_consecTxErrors
 *
-* \b Description: 
+* \b Description:
 *
 * Callback function, provided to HAL module.
 *
 * \b ARGS:
 *
 *  I   - pCurrBSS - Current BSS handle \n
-*  
+*
 * \b RETURNS:
 *
 *  TI_OK on success, TI_NOK on failure.
 *
-* \sa 
+* \sa
 */
 #ifndef AP_MODE_ENABLED
 static void currBSS_consecTxErrors(currBSS_t *hCurrBSS,
@@ -950,19 +955,19 @@ static void currBSS_consecTxErrors(currBSS_t *hCurrBSS,
 *
 * currBSS_lowRssiThrCrossed
 *
-* \b Description: 
+* \b Description:
 *
 * Callback function, provided to HAL module.
 *
 * \b ARGS:
 *
 *  I   - pCurrBSS - Current BSS handle \n
-*  
+*
 * \b RETURNS:
 *
 *  TI_OK on success, TI_NOK on failure.
 *
-* \sa 
+* \sa
 */
 static void currBSS_lowRssiThrCrossed(currBSS_t *hCurrBSS,
                                       TI_UINT8     *data,
@@ -976,19 +981,19 @@ static void currBSS_lowRssiThrCrossed(currBSS_t *hCurrBSS,
 *
 * currBSS_lowSnrThrCrossed
 *
-* \b Description: 
+* \b Description:
 *
 * Callback function, provided to HAL module.
 *
 * \b ARGS:
 *
 *  I   - pCurrBSS - Current BSS handle \n
-*  
+*
 * \b RETURNS:
 *
 *  TI_OK on success, TI_NOK on failure.
 *
-* \sa 
+* \sa
 */
 static void currBSS_lowSnrThrCrossed(currBSS_t *hCurrBSS,
                                       TI_UINT8     *data,
@@ -1001,23 +1006,23 @@ static void currBSS_lowSnrThrCrossed(currBSS_t *hCurrBSS,
 *
 * currBSS_reportRoamingEvent
 *
-* \b Description: 
+* \b Description:
 *
-* This function checks the mode of Current BSS module. 
+* This function checks the mode of Current BSS module.
 * If connected to EBSS, it reports roaming event to AP Connection.
 *
 * \b ARGS:
 *
 *  I   - pCurrBSS - Current BSS handle \n
 *  I   - roamingEventType - Roaming trigger to report \n
-*  
+*
 * \b RETURNS:
 *
 *  TI_OK on success, TI_NOK on failure.
 *
-* \sa 
+* \sa
 */
-static void currBSS_reportRoamingEvent(currBSS_t *pCurrBSS, 
+static void currBSS_reportRoamingEvent(currBSS_t *pCurrBSS,
                                        apConn_roamingTrigger_e roamingEventType,
                                        roamingEventData_u *pRoamingEventData)
 {
@@ -1025,15 +1030,15 @@ static void currBSS_reportRoamingEvent(currBSS_t *pCurrBSS,
 
     if (pCurrBSS->isConnected)
     {
-        if (pCurrBSS->type == BSS_INFRASTRUCTURE) 
+        if (pCurrBSS->type == BSS_INFRASTRUCTURE)
         {
             apConn_reportRoamingEvent(pCurrBSS->hAPConn, roamingEventType, pRoamingEventData);
         }
         else /* IBSS */
-        { 
+        {
             if( roamingEventType == ROAMING_TRIGGER_BSS_LOSS )
             {
-                /* If in IBSS call the SME restart function, this logic issues a DISCONNECT 
+                /* If in IBSS call the SME restart function, this logic issues a DISCONNECT
                  * event and tries to connect to other STA or establish self connection.
                  */
                 sme_Restart (pCurrBSS->hSme);
@@ -1047,7 +1052,7 @@ static void currBSS_reportRoamingEvent(currBSS_t *pCurrBSS,
 *
 * currBSS_GetDefaultKeepAlivePeriod
 *
-* \b Description: 
+* \b Description:
 *
 * Get DefaultKeepAlivePeriod parameter value.
 *
@@ -1055,15 +1060,15 @@ static void currBSS_reportRoamingEvent(currBSS_t *pCurrBSS,
 *
 *  I   - hCurrBSS           - Current BSS handle \n
 *  I   - uDefaultKeepAlivePeriod - The  value \n
-*  
+*
 * \b RETURNS:
 *
 *  None.
 *
-* \sa 
+* \sa
 */
 void currBSS_GetDefaultKeepAlivePeriod (TI_HANDLE hCurrBSS, TI_UINT8* uKeepAlivePeriod)
-{ 
+{
     currBSS_t *pCurrBSS = (currBSS_t *)hCurrBSS;
 
     *uKeepAlivePeriod = pCurrBSS->uDefaultKeepAlivePeriod;
@@ -1074,19 +1079,19 @@ void currBSS_GetDefaultKeepAlivePeriod (TI_HANDLE hCurrBSS, TI_UINT8* uKeepAlive
 *
 * currBSS_BackgroundScanQuality
 *
-* \b Description: 
+* \b Description:
 *
 * Called be EventMBox upon Background Scan Quality Trigger.
 *
 * \b ARGS:
 *
 *  I   - hCurrBSS - Current BSS handle \n
-*  
+*
 * \b RETURNS:
 *
 *  None.
 *
-* \sa 
+* \sa
 */
 static void currBSS_BackgroundScanQuality(TI_HANDLE hCurrBSS,
                                       TI_UINT8     *data,
@@ -1105,7 +1110,7 @@ static void currBSS_BackgroundScanQuality(TI_HANDLE hCurrBSS,
     }
     else
     {
-        apConn_reportRoamingEvent(pCurrBSS->hAPConn, ROAMING_TRIGGER_NORMAL_QUALITY_FOR_BG_SCAN, NULL); 
+        apConn_reportRoamingEvent(pCurrBSS->hAPConn, ROAMING_TRIGGER_NORMAL_QUALITY_FOR_BG_SCAN, NULL);
     }
 
     /* Update RSSI: */
@@ -1129,19 +1134,19 @@ static void currBSS_BackgroundScanQuality(TI_HANDLE hCurrBSS,
 *
 * currBss_findEmptyUserTrigger
 *
-* \b Description: 
+* \b Description:
 *
 * Called be EventMBox upon Background Scan Quality Trigger.
 *
 * \b ARGS:
 *
 *  I   - hCurrBSS - Current BSS handle \n
-*  
+*
 * \b RETURNS:
 *
 *  None.
 *
-* \sa 
+* \sa
 */
 static triggerDesc_t* currBss_findEmptyUserTrigger(TI_HANDLE hCurrBSS, TI_UINT16 clientID, TI_UINT8* triggerIdx)
 {
@@ -1151,7 +1156,7 @@ static triggerDesc_t* currBss_findEmptyUserTrigger(TI_HANDLE hCurrBSS, TI_UINT16
     for (i=0; i< MAX_NUM_OF_RSSI_SNR_TRIGGERS ; i++)
     {
         if (clientID == pCurrBSS->aTriggersDesc[i].clientID || /* if the same client ID found, overwrite this trigger*/
-            (pCurrBSS->aTriggersDesc[i].WasRegisteredByApp == TI_FALSE && pCurrBSS->aTriggersDesc[i].fCB == NULL)) 
+            (pCurrBSS->aTriggersDesc[i].WasRegisteredByApp == TI_FALSE && pCurrBSS->aTriggersDesc[i].fCB == NULL))
         {
             *triggerIdx = i;
             return &pCurrBSS->aTriggersDesc[i];
@@ -1162,18 +1167,18 @@ static triggerDesc_t* currBss_findEmptyUserTrigger(TI_HANDLE hCurrBSS, TI_UINT16
 }
 
 
-/** 
- * \fn     currBSS_RegisterTriggerEvent 
- * \brief  register the event in the currBss static table. 
- * 
- * \Args: 
+/**
+ * \fn     currBSS_RegisterTriggerEvent
+ * \brief  register the event in the currBss static table.
+ *
+ * \Args:
  * \param  hCurrBSS   - Current BSS handle
  * \param  triggerID  - The RSSI/SNR trigger ID as defined in the TWD. this arg is the table index.
  * \param  clientID - The client ID, '0' value means internal driver module client
- * \param  fCB - the trigger event handler. NULL value will be set for external app registration. 
+ * \param  fCB - the trigger event handler. NULL value will be set for external app registration.
  * \return >= 0 if the empty Trigger event ID (index table) has been found and occupied
     else -1 to signal an error
-* \sa 
+* \sa
 */
 TI_INT8 currBSS_RegisterTriggerEvent (TI_HANDLE hCurrBSS, TI_UINT8 triggerID,TI_UINT16 clientID, void* fCB, TI_HANDLE hCB)
 {
@@ -1220,17 +1225,17 @@ TI_INT8 currBSS_RegisterTriggerEvent (TI_HANDLE hCurrBSS, TI_UINT8 triggerID,TI_
 
 
 
-/** 
- * \fn     currBss_HandleTriggerEvent 
+/**
+ * \fn     currBss_HandleTriggerEvent
  * \brief  called by the user trigger event callbcack.
- * 
- * \Args: 
+ *
+ * \Args:
  * \param  hCurrBSS   - Current BSS handle
  * \param  data       - The event data
  * \param  dataLength - The event data length
  * \param  eventID -    The event ID
- * \return TI_STATUS  
-* \sa 
+ * \return TI_STATUS
+* \sa
 */
 static TI_STATUS currBss_HandleTriggerEvent(TI_HANDLE hCurrBSS, TI_UINT8 *data, TI_UINT8 dataLength, TI_UINT8 eventID)
 {
@@ -1241,14 +1246,14 @@ static TI_STATUS currBss_HandleTriggerEvent(TI_HANDLE hCurrBSS, TI_UINT8 *data, 
     TRACE1(pCurrBSS->hReport ,REPORT_SEVERITY_INFORMATION,  "currBss_HandleTriggerEvent(). eventID =%d \n",eventID);
 
 
-   
-    if (eventID < MAX_NUM_OF_RSSI_SNR_TRIGGERS) 
+
+    if (eventID < MAX_NUM_OF_RSSI_SNR_TRIGGERS)
     {
         pTrigger = &pCurrBSS->aTriggersDesc[eventID];
     }
     else
     {
-       return TI_NOK; 
+       return TI_NOK;
     }
 
     if (TI_FALSE == pTrigger->WasRegisteredByApp)
@@ -1265,18 +1270,18 @@ static TI_STATUS currBss_HandleTriggerEvent(TI_HANDLE hCurrBSS, TI_UINT8 *data, 
     return TI_OK;
 }
 
-/** 
- * \fn     currBSS_RssiSnrTrigger0-7 
+/**
+ * \fn     currBSS_RssiSnrTrigger0-7
  * \brief  User Defined Trigger 0-7 callbacks
- * 
+ *
  * Called by EventMBox upon User Defined Trigger 0 - 7.
- * 
- * \note    
+ *
+ * \note
  * \param  hCurrBSS   - Current BSS handle
  * \param  data       - The event data
  * \param  dataLength - The event data length
- * \return void  
-* \sa 
+ * \return void
+* \sa
 */
 
 static void currBSS_RssiSnrTrigger0 (TI_HANDLE hCurrBSS, TI_UINT8 *data, TI_UINT8 dataLength)
@@ -1324,7 +1329,7 @@ static void currBSS_RssiSnrTrigger7 (TI_HANDLE hCurrBSS, TI_UINT8 *data, TI_UINT
 static TI_STATUS currBSS_BssLossThresholdCrossed(TI_HANDLE hCurrBSS, TI_UINT8 *data, TI_UINT8 dataLength)
 {
 	currBSS_t *pCurrBSS = (currBSS_t *)hCurrBSS;
-	
+
 	EvHandlerSendEvent(pCurrBSS->hEvHandler, IPC_EVENT_BSS_LOSS, data, dataLength);
 
     currBSS_reportRoamingEvent(hCurrBSS, ROAMING_TRIGGER_BSS_LOSS, NULL);
@@ -1334,7 +1339,7 @@ static TI_STATUS currBSS_BssLossThresholdCrossed(TI_HANDLE hCurrBSS, TI_UINT8 *d
 static TI_STATUS currBSS_MaxTxRetryThresholdCrossed(TI_HANDLE hCurrBSS, TI_UINT8 *data, TI_UINT8 dataLength)
 {
 	currBSS_t *pCurrBSS = (currBSS_t *)hCurrBSS;
- 
+
 	EvHandlerSendEvent(pCurrBSS->hEvHandler, IPC_EVENT_TX_RETRY_FALIURE, data, dataLength);
 
     currBSS_reportRoamingEvent(hCurrBSS, ROAMING_TRIGGER_BSS_LOSS, NULL);
@@ -1354,7 +1359,7 @@ TI_STATUS currBss_registerBssLossEvent(TI_HANDLE hCurrBSS,TI_UINT32  uNumOfBeaco
     TWD_RegisterEvent (pCurrBSS->hTWD, TWD_OWN_EVENT_BSS_LOSE, (void *)currBSS_BssLossThresholdCrossed, pCurrBSS);
     TWD_EnableEvent (pCurrBSS->hTWD, TWD_OWN_EVENT_BSS_LOSE);
 
-    pCurrBSS->numExpectedTbttForBSSLoss = uNumOfBeacons; 
+    pCurrBSS->numExpectedTbttForBSSLoss = uNumOfBeacons;
     params.TsfMissThreshold = uNumOfBeacons; /* number of missing beacon allowed before out-of-sync event is issued*/
     params.BssLossTimeout = NO_BEACON_DEFAULT_TIMEOUT;
     TWD_CfgConnMonitParams (pCurrBSS->hTWD, &params);
@@ -1368,7 +1373,7 @@ TI_STATUS currBss_registerTxRetryEvent(TI_HANDLE hCurrBSS,TI_UINT8 uMaxTxRetryTh
     currBSS_t *pCurrBSS = (currBSS_t *)hCurrBSS;
 
     TRACE2(pCurrBSS->hReport,REPORT_SEVERITY_INFORMATION , "currBss_registerTxRetryEvent() uMaxTxRetryThreshold=%d,uClientID =%d \n", uMaxTxRetryThreshold,uClientID );
-  
+
    /* Register for 'Consec. Tx error' */
     TWD_RegisterEvent (pCurrBSS->hTWD, TWD_OWN_EVENT_MAX_TX_RETRY, (void *)currBSS_MaxTxRetryThresholdCrossed, pCurrBSS);
     TWD_EnableEvent (pCurrBSS->hTWD, TWD_OWN_EVENT_MAX_TX_RETRY);
@@ -1394,8 +1399,8 @@ TI_STATUS currBSS_setParam(TI_HANDLE hCurrBSS, paramInfo_t *pParam)
         TRACE0(pCurrBSS->hReport, REPORT_SEVERITY_ERROR , " currBSS_setParam(): pParam is NULL!\n");
         return TI_NOK;
     }
-	
-    TRACE1(pCurrBSS->hReport,REPORT_SEVERITY_INFORMATION , "currBSS_setParam() %X \n", pParam->paramType);    
+
+    TRACE1(pCurrBSS->hReport,REPORT_SEVERITY_INFORMATION , "currBSS_setParam() %X \n", pParam->paramType);
 
     switch (pParam->paramType)
     {
@@ -1418,14 +1423,14 @@ TI_STATUS currBSS_setParam(TI_HANDLE hCurrBSS, paramInfo_t *pParam)
 
                 /* the registration request is not from EMP (clientID must be greater than 0)
                    so it is probably external user mode application like the CLI that sends always '0' as client ID*/
-                if (pUserTrigger->uClientID == 0) 
+                if (pUserTrigger->uClientID == 0)
                 {
                     pUserTrigger->uClientID = pUserTrigger->uIndex + 1; /* use the index (starting from '0') as positive client ID*/
                 }
                 /* Register the event and enable it before configuration.  */
                 triggerID = currBSS_RegisterTriggerEvent(hCurrBSS, (TI_UINT8)0, pUserTrigger->uClientID, (void*)0, hCurrBSS);
 
-               
+
 
                 if (triggerID < 0)
                 {
@@ -1440,7 +1445,7 @@ TI_STATUS currBSS_setParam(TI_HANDLE hCurrBSS, paramInfo_t *pParam)
                 /* Send user defined trigger to FW (the related FW events are handled by the currBSS) */
                 status = TWD_CfgRssiSnrTrigger (pCurrBSS->hTWD, &tTriggerCfg);
 
-                
+
             }
             break;
 

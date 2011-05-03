@@ -1,34 +1,39 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * bmtrace_api.h
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
-/** \file   bmtrace_api.h 
- *  \brief  bmtrace performance tracing module API definition                                  
+
+/** \file   bmtrace_api.h
+ *  \brief  bmtrace performance tracing module API definition
  *
  *  \see    bmtrace.c
  */
@@ -74,16 +79,16 @@ int             print_out_buffer(char *buf);
     #define CL_TRACE_DISABLE()  bm_disable()
     #define CL_TRACE_PRINT(buf) print_out_buffer(buf)
 	#define CL_TRACE_START_L1() CL_TRACE_START()
-	#define CL_TRACE_START_L2() 
-	#define CL_TRACE_START_L3() 
-	#define CL_TRACE_START_L4() 
-	#define CL_TRACE_START_L5() 
+	#define CL_TRACE_START_L2()
+	#define CL_TRACE_START_L3()
+	#define CL_TRACE_START_L4()
+	#define CL_TRACE_START_L5()
     #define CL_TRACE_RESTART()  CL_TRACE_RESTART_Lx()
 	#define CL_TRACE_END_L1(MODULE, CONTEXT, GROUP, SUFFIX) CL_TRACE_END(MODULE, CONTEXT, GROUP, 1, SUFFIX)
-	#define CL_TRACE_END_L2(MODULE, CONTEXT, GROUP, SUFFIX) 
-	#define CL_TRACE_END_L3(MODULE, CONTEXT, GROUP, SUFFIX) 
-	#define CL_TRACE_END_L4(MODULE, CONTEXT, GROUP, SUFFIX) 
-	#define CL_TRACE_END_L5(MODULE, CONTEXT, GROUP, SUFFIX) 
+	#define CL_TRACE_END_L2(MODULE, CONTEXT, GROUP, SUFFIX)
+	#define CL_TRACE_END_L3(MODULE, CONTEXT, GROUP, SUFFIX)
+	#define CL_TRACE_END_L4(MODULE, CONTEXT, GROUP, SUFFIX)
+	#define CL_TRACE_END_L5(MODULE, CONTEXT, GROUP, SUFFIX)
 #elif TIWLAN_CLT_LEVEL == 2
     #define CL_TRACE_INIT()     bm_init()
     #define CL_TRACE_ENABLE()   bm_enable()
@@ -91,15 +96,15 @@ int             print_out_buffer(char *buf);
     #define CL_TRACE_PRINT(buf) print_out_buffer(buf)
 	#define CL_TRACE_START_L1() CL_TRACE_START()
 	#define CL_TRACE_START_L2() CL_TRACE_START()
-	#define CL_TRACE_START_L3() 
-	#define CL_TRACE_START_L4() 
-	#define CL_TRACE_START_L5() 
+	#define CL_TRACE_START_L3()
+	#define CL_TRACE_START_L4()
+	#define CL_TRACE_START_L5()
     #define CL_TRACE_RESTART()  CL_TRACE_RESTART_Lx()
 	#define CL_TRACE_END_L1(MODULE, CONTEXT, GROUP, SUFFIX) CL_TRACE_END(MODULE, CONTEXT, GROUP, 1, SUFFIX)
 	#define CL_TRACE_END_L2(MODULE, CONTEXT, GROUP, SUFFIX) CL_TRACE_END(MODULE, CONTEXT, GROUP, 2, SUFFIX)
-	#define CL_TRACE_END_L3(MODULE, CONTEXT, GROUP, SUFFIX) 
-	#define CL_TRACE_END_L4(MODULE, CONTEXT, GROUP, SUFFIX) 
-	#define CL_TRACE_END_L5(MODULE, CONTEXT, GROUP, SUFFIX) 
+	#define CL_TRACE_END_L3(MODULE, CONTEXT, GROUP, SUFFIX)
+	#define CL_TRACE_END_L4(MODULE, CONTEXT, GROUP, SUFFIX)
+	#define CL_TRACE_END_L5(MODULE, CONTEXT, GROUP, SUFFIX)
 #elif TIWLAN_CLT_LEVEL == 3
     #define CL_TRACE_INIT()     bm_init()
     #define CL_TRACE_ENABLE()   bm_enable()
@@ -108,14 +113,14 @@ int             print_out_buffer(char *buf);
 	#define CL_TRACE_START_L1() CL_TRACE_START()
 	#define CL_TRACE_START_L2() CL_TRACE_START()
 	#define CL_TRACE_START_L3() CL_TRACE_START()
-	#define CL_TRACE_START_L4() 
-	#define CL_TRACE_START_L5() 
+	#define CL_TRACE_START_L4()
+	#define CL_TRACE_START_L5()
     #define CL_TRACE_RESTART()  CL_TRACE_RESTART_Lx()
 	#define CL_TRACE_END_L1(MODULE, CONTEXT, GROUP, SUFFIX) CL_TRACE_END(MODULE, CONTEXT, GROUP, 1, SUFFIX)
 	#define CL_TRACE_END_L2(MODULE, CONTEXT, GROUP, SUFFIX) CL_TRACE_END(MODULE, CONTEXT, GROUP, 2, SUFFIX)
 	#define CL_TRACE_END_L3(MODULE, CONTEXT, GROUP, SUFFIX) CL_TRACE_END(MODULE, CONTEXT, GROUP, 3, SUFFIX)
-	#define CL_TRACE_END_L4(MODULE, CONTEXT, GROUP, SUFFIX) 
-	#define CL_TRACE_END_L5(MODULE, CONTEXT, GROUP, SUFFIX) 
+	#define CL_TRACE_END_L4(MODULE, CONTEXT, GROUP, SUFFIX)
+	#define CL_TRACE_END_L5(MODULE, CONTEXT, GROUP, SUFFIX)
 #elif TIWLAN_CLT_LEVEL == 4
     #define CL_TRACE_INIT()     bm_init()
     #define CL_TRACE_ENABLE()   bm_enable()
@@ -125,13 +130,13 @@ int             print_out_buffer(char *buf);
 	#define CL_TRACE_START_L2() CL_TRACE_START()
 	#define CL_TRACE_START_L3() CL_TRACE_START()
 	#define CL_TRACE_START_L4() CL_TRACE_START()
-	#define CL_TRACE_START_L5() 
+	#define CL_TRACE_START_L5()
     #define CL_TRACE_RESTART()  CL_TRACE_RESTART_Lx()
 	#define CL_TRACE_END_L1(MODULE, CONTEXT, GROUP, SUFFIX) CL_TRACE_END(MODULE, CONTEXT, GROUP, 1, SUFFIX)
 	#define CL_TRACE_END_L2(MODULE, CONTEXT, GROUP, SUFFIX) CL_TRACE_END(MODULE, CONTEXT, GROUP, 2, SUFFIX)
 	#define CL_TRACE_END_L3(MODULE, CONTEXT, GROUP, SUFFIX) CL_TRACE_END(MODULE, CONTEXT, GROUP, 3, SUFFIX)
 	#define CL_TRACE_END_L4(MODULE, CONTEXT, GROUP, SUFFIX) CL_TRACE_END(MODULE, CONTEXT, GROUP, 4, SUFFIX)
-	#define CL_TRACE_END_L5(MODULE, CONTEXT, GROUP, SUFFIX) 
+	#define CL_TRACE_END_L5(MODULE, CONTEXT, GROUP, SUFFIX)
 #elif TIWLAN_CLT_LEVEL == 5
     #define CL_TRACE_INIT()     bm_init()
     #define CL_TRACE_ENABLE()   bm_enable()
@@ -150,22 +155,22 @@ int             print_out_buffer(char *buf);
 	#define CL_TRACE_END_L4(MODULE, CONTEXT, GROUP, SUFFIX) CL_TRACE_END(MODULE, CONTEXT, GROUP, 4, SUFFIX)
 	#define CL_TRACE_END_L5(MODULE, CONTEXT, GROUP, SUFFIX) CL_TRACE_END(MODULE, CONTEXT, GROUP, 5, SUFFIX)
 #else
-    #define CL_TRACE_INIT()   
-    #define CL_TRACE_ENABLE() 
+    #define CL_TRACE_INIT()
+    #define CL_TRACE_ENABLE()
     #define CL_TRACE_DISABLE()
-    #define CL_TRACE_RESTART() 
-    #define CL_TRACE_PRINT(buf)  
-	#define CL_TRACE_START_L1() 
-	#define CL_TRACE_START_L1() 
-	#define CL_TRACE_START_L2() 
-	#define CL_TRACE_START_L3() 
-	#define CL_TRACE_START_L4() 
-	#define CL_TRACE_START_L5() 
-	#define CL_TRACE_END_L1(MODULE, CONTEXT, GROUP, SUFFIX) 
-	#define CL_TRACE_END_L2(MODULE, CONTEXT, GROUP, SUFFIX) 
-	#define CL_TRACE_END_L3(MODULE, CONTEXT, GROUP, SUFFIX) 
-	#define CL_TRACE_END_L4(MODULE, CONTEXT, GROUP, SUFFIX) 
-	#define CL_TRACE_END_L5(MODULE, CONTEXT, GROUP, SUFFIX) 
+    #define CL_TRACE_RESTART()
+    #define CL_TRACE_PRINT(buf)
+	#define CL_TRACE_START_L1()
+	#define CL_TRACE_START_L1()
+	#define CL_TRACE_START_L2()
+	#define CL_TRACE_START_L3()
+	#define CL_TRACE_START_L4()
+	#define CL_TRACE_START_L5()
+	#define CL_TRACE_END_L1(MODULE, CONTEXT, GROUP, SUFFIX)
+	#define CL_TRACE_END_L2(MODULE, CONTEXT, GROUP, SUFFIX)
+	#define CL_TRACE_END_L3(MODULE, CONTEXT, GROUP, SUFFIX)
+	#define CL_TRACE_END_L4(MODULE, CONTEXT, GROUP, SUFFIX)
+	#define CL_TRACE_END_L5(MODULE, CONTEXT, GROUP, SUFFIX)
 #endif
 
 

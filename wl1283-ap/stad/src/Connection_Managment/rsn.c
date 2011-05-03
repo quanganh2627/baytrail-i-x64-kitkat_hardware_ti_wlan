@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * rsn.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 /** \file rsn.c
  *  \brief 802.11 rsniation SM source
@@ -61,14 +66,14 @@
 #include "802_11Defs.h"
 #include "externalSec.h"
 #include "connApi.h"
-#ifdef CCX_MODULE_INCLUDED
+#ifdef XCC_MODULE_INCLUDED
 #include "admCtrlWpa.h"
-#include "ccxMngr.h"
-#include "admCtrlCcx.h"
+#include "XCCMngr.h"
+#include "admCtrlXCC.h"
 #endif
 #include "TWDriver.h"
 #include "DrvMainModules.h"
-#include "PowerMgr_API.h" 
+#include "PowerMgr_API.h"
 
 /* Constants */
 
@@ -98,7 +103,7 @@ static rsn_siteBanEntry_t * findBannedSiteAndCleanup(TI_HANDLE hRsn, TMacAddr si
 *
 * rsn_Create - allocate memory for rsniation SM
 *
-* \b Description: 
+* \b Description:
 *
 * Allocate memory for rsniation SM. \n
 *       Allocates memory for Rsniation context. \n
@@ -127,7 +132,7 @@ TI_HANDLE rsn_create(TI_HANDLE hOs)
     }
 
     os_memoryZero (hOs, pRsn, sizeof(rsn_t));
-    
+
     /* create admission control */
     pRsn->pAdmCtrl = admCtrl_create (hOs);
     if (pRsn->pAdmCtrl == NULL)
@@ -146,9 +151,9 @@ TI_HANDLE rsn_create(TI_HANDLE hOs)
     }
 
     pRsn->pKeyParser = pRsn->pMainSecSm->pKeyParser;
-    
+
     pRsn->hOs = hOs;
-    
+
     return pRsn;
 }
 
@@ -157,7 +162,7 @@ TI_HANDLE rsn_create(TI_HANDLE hOs)
 *
 * rsn_Unload - unload rsniation SM from memory
 *
-* \b Description: 
+* \b Description:
 *
 * Unload rsniation SM from memory
 *
@@ -169,7 +174,7 @@ TI_HANDLE rsn_create(TI_HANDLE hOs)
 *
 *  TI_OK if successful, TI_NOK otherwise.
 *
-* \sa rsn_mainSecKeysOnlyStop() 
+* \sa rsn_mainSecKeysOnlyStop()
 */
 TI_STATUS rsn_unload (TI_HANDLE hRsn)
 {
@@ -185,7 +190,7 @@ TI_STATUS rsn_unload (TI_HANDLE hRsn)
 
 	if (pRsn->hMicFailureReportWaitTimer)
 	{
-		tmr_DestroyTimer (pRsn->hMicFailureReportWaitTimer);    
+		tmr_DestroyTimer (pRsn->hMicFailureReportWaitTimer);
 	}
 	if (pRsn->hMicFailureGroupReKeyTimer)
 	{
@@ -195,10 +200,10 @@ TI_STATUS rsn_unload (TI_HANDLE hRsn)
 	{
 		tmr_DestroyTimer (pRsn->hMicFailurePairwiseReKeyTimer);
 	}
-    
+
     status = admCtrl_unload (pRsn->pAdmCtrl);
     status = mainSec_unload (pRsn->pMainSecSm);
-    
+
     os_memoryFree (pRsn->hOs, hRsn, sizeof(rsn_t));
 
     return status;
@@ -209,7 +214,7 @@ TI_STATUS rsn_unload (TI_HANDLE hRsn)
 *
 * rsn_init - Init module
 *
-* \b Description: 
+* \b Description:
 *
 * Init module handles and variables.
 *
@@ -226,7 +231,7 @@ void rsn_init (TStadHandlesList *pStadHandles)
     pRsn->eGroupKeyUpdate = GROUP_KEY_UPDATE_FALSE;
     pRsn->ePairwiseKeyUpdate = PAIRWISE_KEY_UPDATE_FALSE;
     pRsn->PrivacyOptionImplemented = TI_TRUE;
-    
+
 	pRsn->hTxCtrl   = pStadHandles->hTxCtrl;
     pRsn->hRx       = pStadHandles->hRxData;
     pRsn->hConn     = pStadHandles->hConn;
@@ -235,7 +240,7 @@ void rsn_init (TStadHandlesList *pStadHandles)
     pRsn->hSiteMgr  = pStadHandles->hSiteMgr;
     pRsn->hReport   = pStadHandles->hReport;
     pRsn->hOs       = pStadHandles->hOs;
-    pRsn->hCcxMngr  = pStadHandles->hCcxMngr;
+    pRsn->hXCCMngr  = pStadHandles->hXCCMngr;
     pRsn->hEvHandler= pStadHandles->hEvHandler;
     pRsn->hSmeSm    = pStadHandles->hSme;
     pRsn->hAPConn   = pStadHandles->hAPConnection;
@@ -294,15 +299,15 @@ TI_STATUS rsn_SetDefaults (TI_HANDLE hRsn, TRsnInitParams *pInitParam)
 	pRsn->bPairwiseMicFailureFilter = pInitParam->bPairwiseMicFailureFilter;
     /* config the admission control with the authentication suite selected.
        Admission control will configure the main security SM. */
-    status = admCtrl_config (pRsn->pAdmCtrl, 
-                             pRsn->hMlme, 
-                             pRsn->hRx, 
-                             pRsn->hReport, 
-                             pRsn->hOs, 
-                             pRsn, 
-                             pRsn->hCcxMngr, 
-                             pRsn->hPowerMgr, 
-                             pRsn->hEvHandler, 
+    status = admCtrl_config (pRsn->pAdmCtrl,
+                             pRsn->hMlme,
+                             pRsn->hRx,
+                             pRsn->hReport,
+                             pRsn->hOs,
+                             pRsn,
+                             pRsn->hXCCMngr,
+                             pRsn->hPowerMgr,
+                             pRsn->hEvHandler,
                              pRsn->hTimer,
                              pRsn->hCurrBss,
                              pInitParam);
@@ -310,7 +315,7 @@ TI_STATUS rsn_SetDefaults (TI_HANDLE hRsn, TRsnInitParams *pInitParam)
     if (status != TI_OK)
     {
         return status;
-    }            
+    }
 
     /* Configure keys from registry */
     if (pInitParam->privacyOn)
@@ -337,9 +342,9 @@ TI_STATUS rsn_SetDefaults (TI_HANDLE hRsn, TRsnInitParams *pInitParam)
 *
 * rsn_reconfig - re-configure a rsniation
 *
-* \b Description: 
+* \b Description:
 *
-* Re-configure rsniation 
+* Re-configure rsniation
 *
 * \b ARGS:
 *
@@ -358,19 +363,19 @@ TI_STATUS rsn_reconfig (TI_HANDLE hRsn)
 
     /* Mark all keys as removed */
     for (keyIndex = 0; keyIndex < MAX_KEYS_NUM; keyIndex++)
-        pRsn->keys_en [keyIndex] = TI_FALSE;       
+        pRsn->keys_en [keyIndex] = TI_FALSE;
 
     return TI_OK;
 }
 
 
-/** 
+/**
 *
-* rsn_setDefaultKeys - 
+* rsn_setDefaultKeys -
 *
-* \b Description: 
+* \b Description:
 *
-* 
+*
 *
 * \b ARGS:
 *
@@ -413,7 +418,7 @@ TI_STATUS rsn_setDefaultKeys(rsn_t *pRsn)
         tTwdParam.content.configureCmdCBParams.pCb = &pRsn->defaultKeyId;
         tTwdParam.content.configureCmdCBParams.fCb = NULL;
         tTwdParam.content.configureCmdCBParams.hCb = NULL;
-        status = TWD_SetParam (pRsn->hTWD, &tTwdParam); 
+        status = TWD_SetParam (pRsn->hTWD, &tTwdParam);
 
         TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: default key ID =%d \n", pRsn->defaultKeyId);
     }
@@ -422,11 +427,11 @@ TI_STATUS rsn_setDefaultKeys(rsn_t *pRsn)
 }
 
 
-/** 
+/**
 *
 * rsn_Start - Start event for the rsniation SM
 *
-* \b Description: 
+* \b Description:
 *
 * Start event for the rsniation SM
 *
@@ -495,7 +500,7 @@ TI_STATUS rsn_sendKeysNotSet(rsn_t *pRsn)
     TI_UINT8           keyIndex;
     OS_802_11_KEY   rsnOsKey;
     TI_STATUS       status = TI_OK;
-    
+
     for (keyIndex = 0; keyIndex < MAX_KEYS_NUM; keyIndex++)
     {
         if (pRsn->wepDefaultKeys[keyIndex])
@@ -508,13 +513,13 @@ TI_STATUS rsn_sendKeysNotSet(rsn_t *pRsn)
             pRsn->keys[keyIndex].keyType = KEY_WEP;
 
             MAC_COPY (rsnOsKey.BSSID, pRsn->keys[keyIndex].macAddress);
-            os_memoryCopy (pRsn->hOs, &rsnOsKey.KeyRSC, 
-                           (void *)pRsn->keys[keyIndex].keyRsc, 
+            os_memoryCopy (pRsn->hOs, &rsnOsKey.KeyRSC,
+                           (void *)pRsn->keys[keyIndex].keyRsc,
                            KEY_RSC_LEN);
-            os_memoryCopy (pRsn->hOs, rsnOsKey.KeyMaterial, 
-                           (void *)pRsn->keys[keyIndex].encKey, 
+            os_memoryCopy (pRsn->hOs, rsnOsKey.KeyMaterial,
+                           (void *)pRsn->keys[keyIndex].encKey,
                            MAX_KEY_LEN /*pRsn->keys[keyIndex].encLen*/);
-           
+
             /* Set WEP transmit key mask on the default key */
             if (keyIndex == pRsn->defaultKeyId)
             {
@@ -533,19 +538,19 @@ TI_STATUS rsn_removedDefKeys (TI_HANDLE hRsn)
 {
     TI_UINT8  keyIndex;
     rsn_t  *pRsn = (rsn_t*)hRsn;
-    
+
     TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "rsn_removedDefKeys Enter \n");
-    
+
     for (keyIndex = 0; keyIndex < MAX_KEYS_NUM; keyIndex++)
     {
         TSecurityKeys   key;
 
         TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "rsn_removedDefKeys, Remove keyId=%d\n", keyIndex);
-       
+
         pRsn->wepDefaultKeys[keyIndex] = TI_FALSE;
         os_memoryCopy (pRsn->hOs, &key, &pRsn->keys[keyIndex], sizeof(TSecurityKeys));
         pRsn->removeKey (pRsn, &key);
-       
+
         /* Set WEP transmit key mask on the default key */
         if (keyIndex == pRsn->defaultKeyId)
         {
@@ -561,7 +566,7 @@ TI_STATUS rsn_removedDefKeys (TI_HANDLE hRsn)
 *
 * rsn_Stop - Stop event for the rsniation SM
 *
-* \b Description: 
+* \b Description:
 *
 * Stop event for the rsniation SM
 *
@@ -588,7 +593,7 @@ TI_STATUS rsn_stop (TI_HANDLE hRsn, TI_BOOL removeKeys)
     {
         return TI_NOK;
     }
-    
+
     TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: calling STOP... removeKeys=%d\n", removeKeys);
 
     for (keyIndex = 0; keyIndex < MAX_KEYS_NUM; keyIndex++)
@@ -599,7 +604,7 @@ TI_STATUS rsn_stop (TI_HANDLE hRsn, TI_BOOL removeKeys)
         if (!pRsn->wepDefaultKeys[keyIndex])
         {	/* Remove only dynamic keys. Default keys are removed by calling: rsn_removedDefKeys() */
             TRACE2(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "rsn_stop, Remove keyIndex=%d, key.keyIndex=%d\n",keyIndex, key.keyIndex);
-            
+
             TRACE_INFO_HEX(pRsn->hReport, (TI_UINT8 *)key.macAddress, 6);
 
             pRsn->removeKey (pRsn, &key);
@@ -618,8 +623,8 @@ TI_STATUS rsn_stop (TI_HANDLE hRsn, TI_BOOL removeKeys)
     pRsn->ePairwiseKeyUpdate = PAIRWISE_KEY_UPDATE_FALSE;
     pRsn->defaultKeysOn = TI_TRUE;
 
-#ifdef CCX_MODULE_INCLUDED
-	pRsn->pAdmCtrl->networkEapMode = OS_CCX_NETWORK_EAP_OFF;
+#ifdef XCC_MODULE_INCLUDED
+	pRsn->pAdmCtrl->networkEapMode = OS_XCC_NETWORK_EAP_OFF;
 #endif
 
     if (removeKeys)
@@ -647,7 +652,7 @@ TI_STATUS rsn_getParamEncryptionStatus(TI_HANDLE hRsn, ECipherSuite *rsnStatus)
 *
 * rsn_GetParam - Get a specific parameter from the rsniation SM
 *
-* \b Description: 
+* \b Description:
 *
 * Get a specific parameter from the rsniation SM.
 *
@@ -692,7 +697,7 @@ TI_STATUS rsn_getParam(TI_HANDLE hRsn, void *param)
         status = pRsn->pMainSecSm->getAuthState (pRsn->pMainSecSm, (TIWLN_SECURITY_STATE*)&(pParam->content.rsnAuthState));
         break;
 
-    case RSN_ENCRYPTION_STATUS_PARAM: 
+    case RSN_ENCRYPTION_STATUS_PARAM:
         status = pRsn->pAdmCtrl->getCipherSuite (pRsn->pAdmCtrl, &pParam->content.rsnEncryptionStatus);
         break;
 
@@ -717,7 +722,7 @@ TI_STATUS rsn_getParam(TI_HANDLE hRsn, void *param)
     case RSN_PRE_AUTH_STATUS:
         {
             TI_UINT8 cacheIndex;
-        
+
             pParam->content.rsnPreAuthStatus = pRsn->pAdmCtrl->getPreAuthStatus (pRsn->pAdmCtrl, &pParam->content.rsnApMac, &cacheIndex);
         }
         break;
@@ -728,14 +733,14 @@ TI_STATUS rsn_getParam(TI_HANDLE hRsn, void *param)
         break;
 
     case RSN_WPA_PROMOTE_OPTIONS:
-        status = pRsn->pAdmCtrl->getPromoteFlags (pRsn->pAdmCtrl, 
+        status = pRsn->pAdmCtrl->getPromoteFlags (pRsn->pAdmCtrl,
                                                   &pParam->content.rsnWPAPromoteFlags);
                 TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: Get WPA promote flags  %d \n",pParam->content.rsnWPAPromoteFlags);
-        
+
         break;
 
-#ifdef CCX_MODULE_INCLUDED
-    case RSN_CCX_NETWORK_EAP:
+#ifdef XCC_MODULE_INCLUDED
+    case RSN_XCC_NETWORK_EAP:
         status = pRsn->pAdmCtrl->getNetworkEap (pRsn->pAdmCtrl, &pParam->content.networkEap);
         break;
 #endif
@@ -774,7 +779,7 @@ TI_STATUS rsn_getParam(TI_HANDLE hRsn, void *param)
     default:
         return TI_NOK;
     }
-    
+
     return status;
 }
 
@@ -783,7 +788,7 @@ TI_STATUS rsn_getParam(TI_HANDLE hRsn, void *param)
 *
 * rsn_SetParam - Set a specific parameter to the rsniation SM
 *
-* \b Description: 
+* \b Description:
 *
 * Set a specific parameter to the rsniation SM.
 *
@@ -822,7 +827,7 @@ TI_STATUS rsn_setParam (TI_HANDLE hRsn, void *param)
         TI_UINT8  defKeyId, i;
 
         defKeyId = pParam->content.rsnDefaultKeyID;
-        
+
         if(defKeyId >= MAX_KEYS_NUM)
         {
             TRACE0(pRsn->hReport, REPORT_SEVERITY_ERROR, "RSN: Error - the value of the default Key Id  is incorrect \n");
@@ -835,7 +840,7 @@ TI_STATUS rsn_setParam (TI_HANDLE hRsn, void *param)
             pRsn->keys[i].keyIndex &= 0x7FFFFFFF;
         }
 
-        /* Set the default key ID value in the RSN data structure */ 
+        /* Set the default key ID value in the RSN data structure */
         pRsn->defaultKeyId = defKeyId;
 
         /* Set the default key ID in the HAL */
@@ -843,7 +848,7 @@ TI_STATUS rsn_setParam (TI_HANDLE hRsn, void *param)
         tTwdParam.content.configureCmdCBParams.pCb = &pRsn->defaultKeyId;
         tTwdParam.content.configureCmdCBParams.fCb = NULL;
         tTwdParam.content.configureCmdCBParams.hCb = NULL;
-        status = TWD_SetParam (pRsn->hTWD, &tTwdParam); 
+        status = TWD_SetParam (pRsn->hTWD, &tTwdParam);
 
         TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: default key ID =%d \n", pRsn->defaultKeyId);
 
@@ -861,14 +866,14 @@ TI_STATUS rsn_setParam (TI_HANDLE hRsn, void *param)
         {
             return status;
         }
-        
+
         TRACE2(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: Set RSN_ADD_KEY_PARAM KeyIndex  %x , keyLength=%d\n", pParam->content.rsnOsKey.KeyIndex,pParam->content.rsnOsKey.KeyLength);
         keyIndex = (TI_UINT8)pParam->content.rsnOsKey.KeyIndex;
         if (keyIndex >= MAX_KEYS_NUM)
         {
 			return TI_NOK;
         }
-       
+
 		status = pRsn->pKeyParser->recv (pRsn->pKeyParser, (TI_UINT8*)&pParam->content.rsnOsKey, sizeof(pParam->content.rsnOsKey));
 
         if (status != TI_OK)
@@ -877,17 +882,17 @@ TRACE1(pRsn->hReport, REPORT_SEVERITY_WARNING, ": pRsn->pKeyParser->recv satus r
             return TI_NOK;
         }
 
-        /* If the Key is not BAD, it may be that WEP key is sent before WEP status is set, 
+        /* If the Key is not BAD, it may be that WEP key is sent before WEP status is set,
             save the key, and set it later at rsn_start */
 
 		/* If default Key not cleaned by calling rsn_removedDefKeys for keyIndex, Clean it */
-		if (pRsn->wepDefaultKeys[keyIndex] == TI_TRUE) 
+		if (pRsn->wepDefaultKeys[keyIndex] == TI_TRUE)
 		{
 			TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "Set RSN_ADD_KEY_PARAM KeyIndex  %x\n", keyIndex);
 			TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "Set RSN_ADD_KEY_PARAM wepDefaultKeys=%d\n", pRsn->wepDefaultKeys[keyIndex]);
-             
+
 			pRsn->wepDefaultKeys[keyIndex] = TI_FALSE;
-			
+
 		}
 
 		pRsn->keys[keyIndex].keyIndex = pParam->content.rsnOsKey.KeyIndex;
@@ -895,7 +900,7 @@ TRACE1(pRsn->hReport, REPORT_SEVERITY_WARNING, ": pRsn->pKeyParser->recv satus r
 		MAC_COPY (pRsn->keys[keyIndex].macAddress, pParam->content.rsnOsKey.BSSID);
 		os_memoryCopy (pRsn->hOs, (void *)pRsn->keys[keyIndex].keyRsc, (TI_UINT8*)&(pParam->content.rsnOsKey.KeyRSC), KEY_RSC_LEN);
 		os_memoryCopy (pRsn->hOs, (void *)pRsn->keys[keyIndex].encKey, pParam->content.rsnOsKey.KeyMaterial, MAX_KEY_LEN);
-           
+
         /* Process the transmit flag (31-st bit of keyIndex).        */
         /* If the added key has the TX bit set to TI_TRUE (i.e. the key */
         /* is the new transmit key (default key), update             */
@@ -903,7 +908,7 @@ TRACE1(pRsn->hReport, REPORT_SEVERITY_WARNING, ": pRsn->pKeyParser->recv satus r
         if (pParam->content.rsnOsKey.KeyIndex & 0x80000000)
         {
             pRsn->defaultKeyId = keyIndex;
-            
+
             for (i = 0; i < MAX_KEYS_NUM; i ++)
             {
                 if (i != keyIndex)
@@ -912,7 +917,7 @@ TRACE1(pRsn->hReport, REPORT_SEVERITY_WARNING, ": pRsn->pKeyParser->recv satus r
                 }
             }
         }
-        
+
         if (pRsn->defaultKeysOn)
         {   /* This is a WEP default key */
             TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN_ADD_KEY_PARAM, Default key configured - keyIndex=%d-TI_TRUE\n", keyIndex);
@@ -945,9 +950,9 @@ TRACE1(pRsn->hReport, REPORT_SEVERITY_WARNING, ": pRsn->pKeyParser->recv satus r
         {
             return TI_NOK;
         }
-        
-        status = pRsn->pKeyParser->remove (pRsn->pKeyParser, 
-                                           (TI_UINT8*)&pParam->content.rsnOsKey, 
+
+        status = pRsn->pKeyParser->remove (pRsn->pKeyParser,
+                                           (TI_UINT8*)&pParam->content.rsnOsKey,
                                            sizeof(pParam->content.rsnOsKey));
 
         if (status == TI_OK)
@@ -958,8 +963,8 @@ TRACE1(pRsn->hReport, REPORT_SEVERITY_WARNING, ": pRsn->pKeyParser->recv satus r
 
         break;
     }
-    
-    case RSN_ENCRYPTION_STATUS_PARAM: 
+
+    case RSN_ENCRYPTION_STATUS_PARAM:
         {
             ECipherSuite   cipherSuite;
 
@@ -984,7 +989,7 @@ TRACE1(pRsn->hReport, REPORT_SEVERITY_WARNING, ": pRsn->pKeyParser->recv satus r
             if (pParam->content.rsnExtAuthneticationMode!=extAuthMode)
             {
                 TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: Set RSN_EXT_AUTHENTICATION_MODE rsnExtAuthneticationMode  %d \n", pParam->content.rsnExtAuthneticationMode);
-                
+
                 /*
 TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: remove all Keys\n");
 
@@ -1001,18 +1006,18 @@ TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: remove all Keys\n");
         }
         break;
 
-#ifdef CCX_MODULE_INCLUDED
-    case RSN_CCX_NETWORK_EAP:
+#ifdef XCC_MODULE_INCLUDED
+    case RSN_XCC_NETWORK_EAP:
         {
-            OS_CCX_NETWORK_EAP      networkEap;
+            OS_XCC_NETWORK_EAP      networkEap;
 
             pRsn->pAdmCtrl->getNetworkEap (pRsn->pAdmCtrl, &networkEap);
             if (networkEap != pParam->content.networkEap)
             {
-                TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: Set RSN_CCX_NETWORK_EAP networkEap  %d \n", pParam->content.networkEap);
-                
+                TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: Set RSN_XCC_NETWORK_EAP networkEap  %d \n", pParam->content.networkEap);
+
                 status = pRsn->pAdmCtrl->setNetworkEap (pRsn->pAdmCtrl, pParam->content.networkEap);
-                if (status == TI_OK) 
+                if (status == TI_OK)
                 {
                     /*status = RE_SCAN_NEEDED;*/
                 }
@@ -1023,12 +1028,12 @@ TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: remove all Keys\n");
     case RSN_MIXED_MODE:
         {
             TI_BOOL mixedMode;
-        
+
             pRsn->pAdmCtrl->getMixedMode (pRsn->pAdmCtrl, &mixedMode);
             if (mixedMode!=pParam->content.rsnMixedMode)
             {
                 status = pRsn->pAdmCtrl->setMixedMode (pRsn->pAdmCtrl, pParam->content.rsnMixedMode);
-                
+
                 TRACE2(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: Set RSN_MIXED_MODE mixedMode  %d, status=%d \n", pParam->content.rsnMixedMode, status);
             }
             break;
@@ -1038,7 +1043,7 @@ TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: remove all Keys\n");
         TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: Set RSN_PMKID_LIST \n");
 
         TRACE_INFO_HEX(pRsn->hReport, (TI_UINT8*)&pParam->content.rsnPMKIDList ,sizeof(OS_802_11_PMKID));
-         status = pRsn->pAdmCtrl->setPmkidList (pRsn->pAdmCtrl, 
+         status = pRsn->pAdmCtrl->setPmkidList (pRsn->pAdmCtrl,
                                                 &pParam->content.rsnPMKIDList);
          if(status == TI_OK)
          {
@@ -1051,7 +1056,7 @@ TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: remove all Keys\n");
         break;
 
     case RSN_WPA_PROMOTE_OPTIONS:
-         status = pRsn->pAdmCtrl->setPromoteFlags (pRsn->pAdmCtrl, 
+         status = pRsn->pAdmCtrl->setPromoteFlags (pRsn->pAdmCtrl,
                                                    pParam->content.rsnWPAPromoteFlags);
          if(status == TI_OK)
          {
@@ -1075,42 +1080,42 @@ TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: remove all Keys\n");
 		    TSecurityKeys *pSecurityKey = pParam->content.pRsnKey;
 		    TI_UINT32     keyIndex;
 		    TI_UINT8      j=0;
-		    
+
 		    TRACE2(pRsn->hReport,REPORT_SEVERITY_INFORMATION,"RSN:Set RSN_SET_KEY_PARAM KeyIndex %x,keyLength=%d\n",pSecurityKey->keyIndex,pSecurityKey->encLen);
-		    
+
 		    if(pSecurityKey->keyIndex >= MAX_KEYS_NUM)
 			    {
 				    return TI_NOK;
 			    }
-		    
+
 		    keyIndex = (TI_UINT8)pSecurityKey->keyIndex;
-		/* Remove the key when the length is 0, or the type is not set */     
-		    if ( (pSecurityKey->keyType == KEY_NULL) || 
-				 (pSecurityKey->encLen == 0)) 
-                    { 
+		/* Remove the key when the length is 0, or the type is not set */
+		    if ( (pSecurityKey->keyType == KEY_NULL) ||
+				 (pSecurityKey->encLen == 0))
+                    {
 					/* Clearing a key */
 					status = rsn_removeKey( pRsn, pSecurityKey );
 					break;
-		    } 
-                    else 
+		    }
+                    else
                     {
 			    status = rsn_setKey (pRsn, pSecurityKey);  /* send key to FW*/
-			    
+
 			    if (status == TI_OK)
 				    {
-					    //os_memoryCopy(pKeyDerive->hOs,&pRsn->pKeyParser->pUcastKey/pBcastKey, pEncodedKey, sizeof(encodedKeyMaterial_t));	
+					    //os_memoryCopy(pKeyDerive->hOs,&pRsn->pKeyParser->pUcastKey/pBcastKey, pEncodedKey, sizeof(encodedKeyMaterial_t));
 				    } /* check this copy */
-			    
-			
-			    /* If the Key is not BAD, it may be that WEP key is sent before WEP status is set, 
+
+
+			    /* If the Key is not BAD, it may be that WEP key is sent before WEP status is set,
 			       save the key, and set it later at rsn_start */
-			    
+
 			    pRsn->keys[keyIndex].keyIndex = pSecurityKey->keyIndex;
 			    pRsn->keys[keyIndex].encLen = pSecurityKey->encLen;
 			    MAC_COPY (pRsn->keys[keyIndex].macAddress, pSecurityKey->macAddress);
 			    os_memoryCopy(pRsn->hOs,(void*)pRsn->keys[keyIndex].keyRsc, (TI_UINT8*)&(pSecurityKey->keyRsc), KEY_RSC_LEN);
 			    os_memoryCopy (pRsn->hOs, (void *)pRsn->keys[keyIndex].encKey, (void*)pSecurityKey->encKey, MAX_KEY_LEN);
-			    
+
 			    /* Process the transmit flag (31-st bit of keyIndex).        */
 			    /* If the added key has the TX bit set to TI_TRUE (i.e. the key */
 			    /* is the new transmit key (default key), update             */
@@ -1118,7 +1123,7 @@ TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: remove all Keys\n");
 			    if (pSecurityKey->keyIndex & 0x80000000)
 				    {
 					    pRsn->defaultKeyId = keyIndex;
-					    
+
 					    for (j = 0; j < MAX_KEYS_NUM; j++)
 						    {
 							    if (j != keyIndex)
@@ -1127,21 +1132,21 @@ TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: remove all Keys\n");
 								    }
 						    }
 				    }
-			    
+
 			    if (pRsn->defaultKeysOn)
 				    {   /* This is a WEP default key */
 					    TRACE1(pRsn->hReport,REPORT_SEVERITY_INFORMATION, "RSN_SET_KEY_PARAM, Default key configured-keyIndex=%d-TI_TRUE\n", keyIndex);
-					    
+
 					    pRsn->wepDefaultKeys[keyIndex] = TI_TRUE;
 					    pRsn->wepStaticKey = TI_TRUE;
 					    status = TI_OK;
-				    } 
+				    }
 			    break;
 		    }
 	    }
 	    break;
 
-	    
+
     case RSN_PORT_STATUS_PARAM:
 	    TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: Set Port Status %d \n", pParam->content.rsnPortStatus);
 
@@ -1151,21 +1156,21 @@ TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: remove all Keys\n");
 		    status = TI_NOK;
 	    }
 	    break;
-	    
+
     case RSN_GENERIC_IE_PARAM:
-	    TRACE4(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: Set Generic IE: length=%d, IE=%02x%02x%02x... \n", 
-		   pParam->content.rsnGenericIE.length, 
+	    TRACE4(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: Set Generic IE: length=%d, IE=%02x%02x%02x... \n",
+		   pParam->content.rsnGenericIE.length,
 	       pParam->content.rsnGenericIE.data[0], pParam->content.rsnGenericIE.data[1],pParam->content.rsnGenericIE.data[2] );
 
 	    status = TI_OK;
 
 	    /* make sure it's a valid IE: datal-ength > 2 AND a matching length field */
-	    if ((pParam->content.rsnGenericIE.length > 2) && 
+	    if ((pParam->content.rsnGenericIE.length > 2) &&
 		((pParam->content.rsnGenericIE.data[1] + 2) == pParam->content.rsnGenericIE.length)) {
 		    /* Setting the IE */
 		    pRsn->genericIE.length = pParam->content.rsnGenericIE.length;
 		    os_memoryCopy(pRsn->hOs,(void*)pRsn->genericIE.data, (TI_UINT8*)pParam->content.rsnGenericIE.data, pParam->content.rsnGenericIE.length);
-	    } else if ( pParam->content.rsnGenericIE.length == 0 ) { 
+	    } else if ( pParam->content.rsnGenericIE.length == 0 ) {
 		    /* Deleting the IE */
 		    pRsn->genericIE.length = pParam->content.rsnGenericIE.length;
 	    } else {
@@ -1192,7 +1197,7 @@ TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: remove all Keys\n");
 *
 * rsn_eventRecv - Set a specific parameter to the rsniation SM
 *
-* \b Description: 
+* \b Description:
 *
 * Set a specific parameter to the rsniation SM.
 *
@@ -1217,13 +1222,13 @@ TI_STATUS rsn_reportStatus (rsn_t *pRsn, TI_STATUS rsnStatus)
     {
         return TI_NOK;
     }
-    
+
 
     if (rsnStatus == TI_OK)
     {
         /* set EAPOL encryption status according to authentication protocol */
         pRsn->rsnCompletedTs = os_timeStampMs (pRsn->hOs);
-        
+
         status = pRsn->pAdmCtrl->getExtAuthMode (pRsn->pAdmCtrl, &extAuthMode);
         if (status != TI_OK)
         {
@@ -1234,14 +1239,14 @@ TI_STATUS rsn_reportStatus (rsn_t *pRsn, TI_STATUS rsnStatus)
 			txCtrlParams_setEapolEncryptionStatus (pRsn->hTxCtrl, TI_TRUE);
 		else
 			txCtrlParams_setEapolEncryptionStatus (pRsn->hTxCtrl, TI_FALSE);
-		
+
         /* set WEP invoked mode according to cipher suite */
         switch (pRsn->paeConfig.unicastSuite)
         {
         case TWD_CIPHER_NONE:
             param.content.txDataCurrentPrivacyInvokedMode = TI_FALSE;
             break;
-        
+
         default:
             param.content.txDataCurrentPrivacyInvokedMode = TI_TRUE;
             break;
@@ -1255,16 +1260,16 @@ TI_STATUS rsn_reportStatus (rsn_t *pRsn, TI_STATUS rsnStatus)
         /* The value of exclude unencrypted should be as privacy invoked */
         param.paramType = RX_DATA_EXCLUDE_UNENCRYPTED_PARAM;
         rxData_setParam (pRsn->hRx, &param);
-        
+
         param.paramType = RX_DATA_EXCLUDE_BROADCAST_UNENCRYPTED_PARAM;
         if (pRsn->pAdmCtrl->mixedMode)
         {   /* do not exclude Broadcast packets */
             param.content.txDataCurrentPrivacyInvokedMode = TI_FALSE;
         }
         rxData_setParam (pRsn->hRx, &param);
-    } 
+    }
 
-    else 
+    else
         rsnStatus = (TI_STATUS)STATUS_SECURITY_FAILURE;
 
     status = conn_reportRsnStatus (pRsn->hConn, (mgmtStatus_e)rsnStatus);
@@ -1273,7 +1278,7 @@ TI_STATUS rsn_reportStatus (rsn_t *pRsn, TI_STATUS rsnStatus)
     {
         return status;
     }
-    
+
     if (rsnStatus == TI_OK)
     {
         EvHandlerSendEvent (pRsn->hEvHandler, IPC_EVENT_AUTH_SUCC, NULL, 0);
@@ -1289,7 +1294,7 @@ TI_STATUS rsn_reportStatus (rsn_t *pRsn, TI_STATUS rsnStatus)
 *
 * rsn_eventRecv - Set a specific parameter to the rsniation SM
 *
-* \b Description: 
+* \b Description:
 *
 * Set a specific parameter to the rsniation SM.
 *
@@ -1315,18 +1320,18 @@ TI_STATUS rsn_setPaeConfig(rsn_t *pRsn, TRsnPaeConfig *pPaeConfig)
     }
 
     TRACE2(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: Calling set PAE config..., unicastSuite = %d, broadcastSuite = %d \n", pPaeConfig->unicastSuite, pPaeConfig->broadcastSuite);
-    
+
     os_memoryCopy(pRsn->hOs, &pRsn->paeConfig, pPaeConfig, sizeof(TRsnPaeConfig));
 
     initData.pPaeConfig = &pRsn->paeConfig;
 
-    status = mainSec_config (pRsn->pMainSecSm, 
-                             &initData, 
-                             pRsn, 
-                             pRsn->hReport, 
-                             pRsn->hOs, 
+    status = mainSec_config (pRsn->pMainSecSm,
+                             &initData,
+                             pRsn,
+                             pRsn->hReport,
+                             pRsn->hOs,
                              pRsn->hCtrlData,
-                             pRsn->hEvHandler, 
+                             pRsn->hEvHandler,
                              pRsn->hConn,
                              pRsn->hTimer);
 
@@ -1338,7 +1343,7 @@ TI_STATUS rsn_setPaeConfig(rsn_t *pRsn, TRsnPaeConfig *pPaeConfig)
 *
 * rsn_eventRecv - Set a specific parameter to the rsniation SM
 *
-* \b Description: 
+* \b Description:
 *
 * Set a specific parameter to the rsniation SM.
 *
@@ -1367,13 +1372,13 @@ TI_STATUS rsn_getNetworkMode(rsn_t *pRsn, ERsnNetworkMode *pNetMode)
         if (param.content.ctrlDataCurrentBssType == BSS_INFRASTRUCTURE)
         {
             *pNetMode = RSN_INFRASTRUCTURE;
-        } 
-        else 
+        }
+        else
         {
             *pNetMode = RSN_IBSS;
         }
     }
-    else 
+    else
     {
         return TI_NOK;
     }
@@ -1386,7 +1391,7 @@ TI_STATUS rsn_getNetworkMode(rsn_t *pRsn, ERsnNetworkMode *pNetMode)
 *
 * rsn_eventRecv - Set a specific parameter to the rsniation SM
 *
-* \b Description: 
+* \b Description:
 *
 * Set a specific parameter to the rsniation SM.
 *
@@ -1437,9 +1442,9 @@ TI_STATUS rsn_evalSite(TI_HANDLE hRsn, TRsnData *pRsnData, TRsnSiteParams *pRsnS
 
 /**
 *
-* rsn_getInfoElement - 
+* rsn_getInfoElement -
 *
-* \b Description: 
+* \b Description:
 *
 * Get the RSN information element.
 *
@@ -1453,7 +1458,7 @@ TI_STATUS rsn_evalSite(TI_HANDLE hRsn, TRsnData *pRsnData, TRsnSiteParams *pRsnS
 *
 *  TI_OK if successful, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 TI_STATUS rsn_getInfoElement(TI_HANDLE hRsn, TI_UINT8 *pRsnIe, TI_UINT32 *pRsnIeLen)
 {
@@ -1468,17 +1473,17 @@ TI_STATUS rsn_getInfoElement(TI_HANDLE hRsn, TI_UINT8 *pRsnIe, TI_UINT32 *pRsnIe
 
     pRsn = (rsn_t*)hRsn;
 
-    if (!pRsn->bRsnExternalMode) 
+    if (!pRsn->bRsnExternalMode)
 		{
 
 			status = pRsn->pAdmCtrl->getInfoElement (pRsn->pAdmCtrl, pRsnIe, &ie_len);
-		
+
 			TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "rsn_getInfoElement pRsnIeLen= %d\n",*pRsnIeLen);
-		
+
 			if ( status != TI_OK ) {
-				return status;   
+				return status;
 			}
-		
+
 			pRsnIe += ie_len;
 		}
 
@@ -1491,12 +1496,12 @@ TI_STATUS rsn_getInfoElement(TI_HANDLE hRsn, TI_UINT8 *pRsnIe, TI_UINT32 *pRsnIe
 }
 
 
-#ifdef CCX_MODULE_INCLUDED
+#ifdef XCC_MODULE_INCLUDED
 /**
 *
-* rsn_getCcxExtendedInfoElement - 
+* rsn_getXCCExtendedInfoElement -
 *
-* \b Description: 
+* \b Description:
 *
 * Get the Aironet information element.
 *
@@ -1510,9 +1515,9 @@ TI_STATUS rsn_getInfoElement(TI_HANDLE hRsn, TI_UINT8 *pRsnIe, TI_UINT32 *pRsnIe
 *
 *  TI_OK if successful, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
-TI_STATUS rsn_getCcxExtendedInfoElement(TI_HANDLE hRsn, TI_UINT8 *pRsnIe, TI_UINT8 *pRsnIeLen)
+TI_STATUS rsn_getXCCExtendedInfoElement(TI_HANDLE hRsn, TI_UINT8 *pRsnIe, TI_UINT8 *pRsnIeLen)
 {
     rsn_t       *pRsn;
     TI_STATUS   status;
@@ -1524,11 +1529,11 @@ TI_STATUS rsn_getCcxExtendedInfoElement(TI_HANDLE hRsn, TI_UINT8 *pRsnIe, TI_UIN
 
     pRsn = (rsn_t*)hRsn;
 
-    status = admCtrlCcx_getInfoElement (pRsn->pAdmCtrl, pRsnIe, pRsnIeLen);
+    status = admCtrlXCC_getInfoElement (pRsn->pAdmCtrl, pRsnIe, pRsnIeLen);
 
-    TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "rsn_getCcxExtendedInfoElement pRsnIeLen= %d\n",*pRsnIeLen);
+    TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "rsn_getXCCExtendedInfoElement pRsnIeLen= %d\n",*pRsnIeLen);
 
-    return status;    
+    return status;
 }
 #endif
 
@@ -1537,7 +1542,7 @@ TI_STATUS rsn_getCcxExtendedInfoElement(TI_HANDLE hRsn, TI_UINT8 *pRsnIe, TI_UIN
 *
 * rsn_eventRecv - Set a specific parameter to the rsniation SM
 *
-* \b Description: 
+* \b Description:
 *
 * Set a specific parameter to the rsniation SM.
 *
@@ -1609,7 +1614,7 @@ TI_STATUS rsn_setKey (rsn_t *pRsn, TSecurityKeys *pKey)
 							tTwdParam.content.rsnEncryptionStatus = (ECipherSuite)TWD_CIPHER_WEP;
 							break;
 					case KEY_NULL:
-					case KEY_CCX:
+					case KEY_XCC:
 					default:
 							tTwdParam.content.rsnEncryptionStatus = (ECipherSuite)TWD_CIPHER_NONE;
 							break;
@@ -1639,7 +1644,7 @@ TI_STATUS rsn_setKey (rsn_t *pRsn, TSecurityKeys *pKey)
 #endif
                 case KEY_WEP:
                 case KEY_NULL:
-                case KEY_CCX:
+                case KEY_XCC:
                 default:
 			        txCtrlParams_setEncryptionFieldSizes (pRsn->hTxCtrl, 0);
                     break;
@@ -1650,11 +1655,11 @@ TI_STATUS rsn_setKey (rsn_t *pRsn, TSecurityKeys *pKey)
         pRsn->keys[keyIndex].keyIndex = keyIndex;
 
 		if (!pRsn->bRsnExternalMode) {
-        
+
         macIsBroadcast = MAC_BROADCAST (pKey->macAddress);
 		if ((pRsn->keys[keyIndex].keyType != KEY_NULL )&&
 			macIsBroadcast && !MAC_BROADCAST((pRsn->keys[keyIndex].macAddress)))
-		{	/* In case a new Group key is set instead of a Unicast key, 
+		{	/* In case a new Group key is set instead of a Unicast key,
 			first remove the UNIcast key from FW */
 			rsn_removeKey(pRsn, &pRsn->keys[keyIndex]);
 		}
@@ -1670,7 +1675,7 @@ TI_STATUS rsn_setKey (rsn_t *pRsn, TSecurityKeys *pKey)
                             TI_FALSE);
             pRsn->eGroupKeyUpdate = GROUP_KEY_UPDATE_TRUE;
         }
-		else 
+		else
         {
 			if (pRsn->bPairwiseMicFailureFilter)	/* the value of this flag is taken from registry */
 			{
@@ -1685,7 +1690,7 @@ TI_STATUS rsn_setKey (rsn_t *pRsn, TSecurityKeys *pKey)
 			}
         }
 		}
- 
+
         /* Mark key as added */
         pRsn->keys_en [keyIndex] = TI_TRUE;
 
@@ -1701,7 +1706,7 @@ TI_STATUS rsn_setKey (rsn_t *pRsn, TSecurityKeys *pKey)
     TRACE_INFO_HEX(pRsn->hReport, (TI_UINT8 *)pKey->encKey, pKey->encLen);
 
     if (pKey->keyType != KEY_WEP)
-    { 
+    {
         TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "\nMac address = ");
         TRACE_INFO_HEX(pRsn->hReport, (TI_UINT8 *)pKey->macAddress, MAC_ADDR_LEN);
         TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "\nRSC = ");
@@ -1713,7 +1718,7 @@ TI_STATUS rsn_setKey (rsn_t *pRsn, TSecurityKeys *pKey)
     }
     }
 
-    return status; 
+    return status;
 }
 
 
@@ -1751,11 +1756,11 @@ TI_STATUS rsn_removeKey (rsn_t *pRsn, TSecurityKeys *pKey)
         {
             pKey->encLen = 16;
             if (keyIndex != 0)
-            {   
+            {
                 const TI_UINT8 broadcast[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-                /* 
-                 * if keyType is TKIP or AES, and the key index is broadcast, overwrite the MAC address as broadcast 
-                 * for removing the Broadcast key from the FW 
+                /*
+                 * if keyType is TKIP or AES, and the key index is broadcast, overwrite the MAC address as broadcast
+                 * for removing the Broadcast key from the FW
                  */
                 MAC_COPY (pKey->macAddress, broadcast);
             }
@@ -1763,25 +1768,25 @@ TI_STATUS rsn_removeKey (rsn_t *pRsn, TSecurityKeys *pKey)
 		else if (pKey->keyType == KEY_WEP)
 		{
 			/* In full driver we use only WEP default keys. To remove it we make sure that the MAC address is NULL */
-			os_memoryZero(pRsn->hOs,(void*)pKey->macAddress,sizeof(TMacAddr)); 
+			os_memoryZero(pRsn->hOs,(void*)pKey->macAddress,sizeof(TMacAddr));
 		}
 
-       
+
         /* Mark key as deleted */
         pRsn->keys_en[keyIndex] = TI_FALSE;
 
         status = TWD_SetParam (pRsn->hTWD, &tTwdParam);
-        
+
         TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "rsn_removeKey in whal, status =%d\n", status);
 
         /* clean the key flags*/
         pRsn->keys[keyIndex].keyIndex &= 0x000000FF;
         pRsn->keys[keyIndex].keyType   = KEY_NULL;
         pRsn->keys[keyIndex].encLen    = 0;
-        pRsn->wepDefaultKeys[keyIndex] = TI_FALSE;        
+        pRsn->wepDefaultKeys[keyIndex] = TI_FALSE;
     }
 
-    return status; 
+    return status;
 }
 
 
@@ -1800,14 +1805,14 @@ TI_STATUS rsn_setDefaultKeyId(rsn_t *pRsn, TI_UINT8 keyId)
     tTwdParam.content.configureCmdCBParams.pCb = &keyId;
     tTwdParam.content.configureCmdCBParams.fCb = NULL;
     tTwdParam.content.configureCmdCBParams.hCb = NULL;
-    status = TWD_SetParam (pRsn->hTWD, &tTwdParam); 
-    
+    status = TWD_SetParam (pRsn->hTWD, &tTwdParam);
+
     TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: rsn_setDefaultKeyId, KeyId = 0x%lx\n", keyId);
     return status;
 }
 
 
-TI_STATUS rsn_reportAuthFailure(TI_HANDLE hRsn, EAuthStatus authStatus) 
+TI_STATUS rsn_reportAuthFailure(TI_HANDLE hRsn, EAuthStatus authStatus)
 {
     TI_STATUS    status = TI_OK;
     rsn_t       *pRsn;
@@ -1834,10 +1839,10 @@ TRACE0(pRsn->hReport, REPORT_SEVERITY_ERROR, "rsn_reportAuthFailure, unable to r
         rsn_banSite(hRsn, param.content.ctrlDataCurrentBSSID, RSN_SITE_BAN_LEVEL_FULL, RSN_AUTH_FAILURE_TIMEOUT);
     }
 
-	
-#ifdef CCX_MODULE_INCLUDED
+
+#ifdef XCC_MODULE_INCLUDED
 TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "CALLING rougeAP, status= %d \n",authStatus);
-    status = ccxMngr_rogueApDetected (pRsn->hCcxMngr, authStatus);
+    status = XCCMngr_rogueApDetected (pRsn->hXCCMngr, authStatus);
 #endif
     TI_VOIDCAST(pRsn);
     return status;
@@ -1845,7 +1850,7 @@ TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "CALLING rougeAP, status= %d 
 
 
 /******
-This is the CB function for mic failure event from the FW 
+This is the CB function for mic failure event from the FW
 *******/
 TI_STATUS rsn_reportMicFailure(TI_HANDLE hRsn, TI_UINT8 *pType, TI_UINT32 Length)
 {
@@ -1874,7 +1879,7 @@ TI_STATUS rsn_reportMicFailure(TI_HANDLE hRsn, TI_UINT8 *pType, TI_UINT32 Length
         /* was performed during the last 3 seconds */
         if ((failureType == KEY_TKIP_MIC_PAIRWISE) &&
             (pRsn->ePairwiseKeyUpdate == PAIRWISE_KEY_UPDATE_TRUE))
-        {	
+        {
             TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, ": Pairwise MIC failure ignored, key update was performed within the last 3 seconds.\n");
             return TI_OK;
         }
@@ -1888,7 +1893,7 @@ TI_STATUS rsn_reportMicFailure(TI_HANDLE hRsn, TI_UINT8 *pType, TI_UINT32 Length
         {
             return TI_NOK;
         }
-        
+
         /* Generate 802 Media specific indication event */
         *(TI_UINT32*)AuthBuf = os802_11StatusType_Authentication;
 
@@ -1903,16 +1908,16 @@ TI_STATUS rsn_reportMicFailure(TI_HANDLE hRsn, TI_UINT8 *pType, TI_UINT32 Length
             request->Flags = OS_802_11_REQUEST_GROUP_ERROR;
         }
 
-		EvHandlerSendEvent (pRsn->hEvHandler, 
-                            IPC_EVENT_MEDIA_SPECIFIC, 
+		EvHandlerSendEvent (pRsn->hEvHandler,
+                            IPC_EVENT_MEDIA_SPECIFIC,
                             (TI_UINT8*)AuthBuf,
                             sizeof(TI_UINT32) + sizeof(OS_802_11_AUTHENTICATION_REQUEST));
-        
-        
+
+
 		if ( pRsn->bRsnExternalMode ) {
 			return TI_OK;
 		}
-                            
+
         /* Update and check the ban level to decide what actions need to take place */
         banLevel = rsn_banSite (hRsn, param.content.ctrlDataCurrentBSSID, RSN_SITE_BAN_LEVEL_HALF, RSN_MIC_FAILURE_TIMEOUT);
         if (banLevel == RSN_SITE_BAN_LEVEL_FULL)
@@ -1992,9 +1997,9 @@ void rsn_micFailureReportTimeout (TI_HANDLE hRsn, TI_BOOL bTwdInitOccured)
 
 /**
 *
-* rsn_resetPMKIDList - 
+* rsn_resetPMKIDList -
 *
-* \b Description: 
+* \b Description:
 *   Cleans up the PMKID cache.
 *   Called when SSID is being changed.
 *
@@ -2029,15 +2034,15 @@ void rsn_debugFunc(TI_HANDLE hRsn)
     pRsn = (rsn_t*)hRsn;
 
     WLAN_OS_REPORT(("rsnStartedTs, ts = %d\n", pRsn->rsnStartedTs));
-    WLAN_OS_REPORT(("rsnCompletedTs, ts = %d\n", pRsn->rsnCompletedTs));  
+    WLAN_OS_REPORT(("rsnCompletedTs, ts = %d\n", pRsn->rsnCompletedTs));
 }
 
 
 /**
 *
-* rsn_startPreAuth - 
+* rsn_startPreAuth -
 *
-* \b Description: 
+* \b Description:
 *
 * Start pre-authentication on a list of given BSSIDs.
 *
@@ -2050,7 +2055,7 @@ void rsn_debugFunc(TI_HANDLE hRsn)
 *
 *  TI_OK if successful, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 TI_STATUS rsn_startPreAuth(TI_HANDLE hRsn, TBssidList4PreAuth *pBssidList)
 {
@@ -2074,11 +2079,11 @@ TI_STATUS rsn_startPreAuth(TI_HANDLE hRsn, TBssidList4PreAuth *pBssidList)
 
 /**
  *
- * isSiteBanned - 
+ * isSiteBanned -
  *
- * \b Description: 
+ * \b Description:
  *
- * Returns whether or not the site with the specified Bssid is banned or not. 
+ * Returns whether or not the site with the specified Bssid is banned or not.
  *
  * \b ARGS:
  *
@@ -2109,11 +2114,11 @@ TI_BOOL rsn_isSiteBanned(TI_HANDLE hRsn, TMacAddr siteBssid)
 
 /**
  *
- * rsn_PortStatus_Set API implementation- 
+ * rsn_PortStatus_Set API implementation-
  *
- * \b Description: 
+ * \b Description:
  *
- * set the status port according to the status flag 
+ * set the status port according to the status flag
  *
  * \b ARGS:
  *
@@ -2140,9 +2145,9 @@ TI_STATUS rsn_setPortStatus(TI_HANDLE hRsn, TI_BOOL state)
 
 /**
  *
- * rsn_banSite - 
+ * rsn_banSite -
  *
- * \b Description: 
+ * \b Description:
  *
  * Bans the specified site from being associated to for the specified duration.
  * If a ban level of WARNING is given and no previous ban was in effect the
@@ -2169,7 +2174,7 @@ ERsnSiteBanLevel rsn_banSite(TI_HANDLE hRsn, TMacAddr siteBssid, ERsnSiteBanLeve
     /* Try finding the site in the list */
     if ((entry = findBannedSiteAndCleanup(hRsn, siteBssid)) != NULL)
     {
-        /* Site found so a previous ban is still in effect */ 
+        /* Site found so a previous ban is still in effect */
         TRACE6(pRsn->hReport, REPORT_SEVERITY_INFORMATION, ": Site %02X-%02X-%02X-%02X-%02X-%02X found and has been set to ban level full!\n", siteBssid[0], siteBssid[1], siteBssid[2], siteBssid[3], siteBssid[4], siteBssid[5]);
 
         entry->banLevel = RSN_SITE_BAN_LEVEL_FULL;
@@ -2196,11 +2201,11 @@ ERsnSiteBanLevel rsn_banSite(TI_HANDLE hRsn, TMacAddr siteBssid, ERsnSiteBanLeve
 
 /**
  *
- * findEntryForInsert - 
+ * findEntryForInsert -
  *
- * \b Description: 
+ * \b Description:
  *
- * Returns a place to insert a new banned site. 
+ * Returns a place to insert a new banned site.
  *
  * \b ARGS:
  *
@@ -2229,14 +2234,14 @@ static rsn_siteBanEntry_t * findEntryForInsert(TI_HANDLE hRsn)
 
 /**
  *
- * findBannedSiteAndCleanup - 
+ * findBannedSiteAndCleanup -
  *
- * \b Description: 
+ * \b Description:
  *
  * Searches the banned sites list for the desired site while cleaning up
  * expired sites found along the way.
- * 
- * Note that this function might change the structure of the banned sites 
+ *
+ * Note that this function might change the structure of the banned sites
  * list so old iterators into the list might be invalidated.
  *
  * \b ARGS:
@@ -2278,7 +2283,7 @@ static rsn_siteBanEntry_t * findBannedSiteAndCleanup(TI_HANDLE hRsn, TMacAddr si
             TRACE7(pRsn->hReport, REPORT_SEVERITY_INFORMATION, ": Site %02X-%02X-%02X-%02X-%02X-%02X found at index %d!\n", siteBssid[0], siteBssid[1], siteBssid[2], siteBssid[3], siteBssid[4], siteBssid[5], iter);
 
             return &pRsn->bannedSites[iter];
-        } 
+        }
     }
 
     /* Entry not found... */
@@ -2314,9 +2319,9 @@ TI_BOOL rsn_getPortStatus(rsn_t *pRsn)
 
 /**
  *
- * rsn_getGenInfoElement - 
+ * rsn_getGenInfoElement -
  *
- * \b Description: 
+ * \b Description:
  *
  * Copies the Generic IE to a given buffer
  *
@@ -2340,16 +2345,16 @@ TI_STATUS rsn_getGenInfoElement(rsn_t *pRsn, TI_UINT8 *out_buff, TI_UINT32 *out_
 	*out_buf_length = pRsn->genericIE.length;
 	if (pRsn->genericIE.length > 0) {
 			os_memoryCopy(pRsn->hOs, out_buff, pRsn->genericIE.data, pRsn->genericIE.length);
-	} 
+	}
 
 	return TI_OK;
 }
 
 /**
  *
- * rsn_clearGenInfoElement - 
+ * rsn_clearGenInfoElement -
  *
- * \b Description: 
+ * \b Description:
  *
  * Clears the Generic IE
  *
@@ -2370,7 +2375,7 @@ static TI_INT16 convertAscii2Unicode(TI_INT8* userPwd, TI_INT16 len)
 {
     TI_INT16 i;
     TI_INT8 unsiiPwd[MAX_PASSWD_LEN];
-    
+
 
     for (i=0; i<len; i++)
     {
@@ -2381,7 +2386,7 @@ static TI_INT16 convertAscii2Unicode(TI_INT8* userPwd, TI_INT16 len)
         userPwd[i*2] = unsiiPwd[i];
         userPwd[i*2+1] = 0;
     }
-    return (TI_INT16)(len*2);     
+    return (TI_INT16)(len*2);
 }
 
 #endif
@@ -2389,20 +2394,20 @@ static TI_INT16 convertAscii2Unicode(TI_INT8* userPwd, TI_INT16 len)
 /***************************************************************************
 *							rsn_reAuth				                   *
 ****************************************************************************
-* DESCRIPTION:	This is a callback function called by the whalWPA module whenever 
-*				a broadcast TKIP key was configured to the FW. 
+* DESCRIPTION:	This is a callback function called by the whalWPA module whenever
+*				a broadcast TKIP key was configured to the FW.
 *				It does the following:
 *					-	resets the ReAuth flag
 *					-	stops the ReAuth timer
 *					-	restore the PS state
 *					-	Send RE_AUTH_COMPLETED event to the upper layer.
-* 
+*
 * INPUTS:		hRsn - the object
-*		
-* OUTPUT:		None		
-* 
+*
+* OUTPUT:		None
+*
 * RETURNS:		None
-*				
+*
 ***************************************************************************/
 void rsn_reAuth(TI_HANDLE hRsn)
 {

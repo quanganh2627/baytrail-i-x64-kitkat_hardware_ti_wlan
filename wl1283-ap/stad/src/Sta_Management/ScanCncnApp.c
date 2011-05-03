@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * ScanCncnApp.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file  ScanCncnApp.c
  *  \brief Scan concentrator application scan module implementation
  *
@@ -45,17 +50,17 @@
 #include "smeApi.h"
 
 
-/** 
+/**
  * \fn     scanCncnApp_SetParam
  * \brief  Parses and executes a set param command
- * 
+ *
  * Parses and executes a set param command (start/stop one-shot/periodic/OS scan)
- * 
+ *
  * \param  hScanCncn - handle to the scan concentrator object
  * \param  pParam - the param to set
  * \return operation status (OK / NOK / PARAM_NOT_SUPPORTED)
- * \sa     scanCncnApp_GetParam 
- */ 
+ * \sa     scanCncnApp_GetParam
+ */
 TI_STATUS scanCncnApp_SetParam (TI_HANDLE hScanCncn, paramInfo_t *pParam)
 {
     TScanCncn   *pScanCncn = (TScanCncn*)hScanCncn;
@@ -79,7 +84,7 @@ TI_STATUS scanCncnApp_SetParam (TI_HANDLE hScanCncn, paramInfo_t *pParam)
         pScanCncn->eCurrentRunningAppScanClient = SCAN_SCC_APP_ONE_SHOT;
 
         /* start the scan */
-        if (SCAN_CRS_SCAN_RUNNING != 
+        if (SCAN_CRS_SCAN_RUNNING !=
             scanCncn_Start1ShotScan (hScanCncn, SCAN_SCC_APP_ONE_SHOT, pParam->content.pScanParams))
         {
             /* Scan was not started successfully, mark that no app scan is running */
@@ -114,7 +119,7 @@ TI_STATUS scanCncnApp_SetParam (TI_HANDLE hScanCncn, paramInfo_t *pParam)
         {
             TRACE0(pScanCncn->hReport, REPORT_SEVERITY_CONSOLE , "Scan was not started. Verify scan parametrs or SME mode\n");
             WLAN_OS_REPORT (("Scan was not started. Verify scan parametrs or SME mode\n"));
-                             
+
             /* Scan was not started successfully, mark that no app scan is running */
             pScanCncn->eCurrentRunningAppScanClient = SCAN_SCC_NO_CLIENT;
             return TI_NOK;
@@ -139,7 +144,7 @@ TI_STATUS scanCncnApp_SetParam (TI_HANDLE hScanCncn, paramInfo_t *pParam)
 
         /* check if the last OID scan didn't start at a shorter duration than the configured minimum */
         uCurrentTimeStamp = os_timeStampMs (pScanCncn->hOS);
-        if ( (uCurrentTimeStamp - pScanCncn->uOSScanLastTimeStamp) < 
+        if ( (uCurrentTimeStamp - pScanCncn->uOSScanLastTimeStamp) <
              (pScanCncn->tInitParams.uMinimumDurationBetweenOsScans * 1000) ) /*converted to ms */
         {
             TRACE3(pScanCncn->hReport, REPORT_SEVERITY_INFORMATION , "scanCncnApp_SetParam: last OID scan performed at: %d, now is: %d, min duration is: %d, too early for another scan!\n", pScanCncn->uOSScanLastTimeStamp, uCurrentTimeStamp, pScanCncn->tInitParams.uMinimumDurationBetweenOsScans);
@@ -187,17 +192,17 @@ TI_STATUS scanCncnApp_SetParam (TI_HANDLE hScanCncn, paramInfo_t *pParam)
     return TI_OK;
 }
 
-/** 
+/**
  * \fn     scanCncnApp_GetParam
  * \brief  Parses and executes a get param command
- * 
+ *
  * Parses and executes a get param command (get BSSID list)
- * 
+ *
  * \param  hScanCncn - handle to the scan concentrator object
  * \param  pParam - the param to get
  * \return operation status (OK / NOK / PARAM_NOT_SUPPORTED)
  * \sa     scanCncnApp_SetParam
- */ 
+ */
 TI_STATUS scanCncnApp_GetParam (TI_HANDLE hScanCncn, paramInfo_t *pParam)
 {
     TScanCncn   *pScanCncn = (TScanCncn*)hScanCncn;
@@ -214,7 +219,7 @@ TI_STATUS scanCncnApp_GetParam (TI_HANDLE hScanCncn, paramInfo_t *pParam)
 
     case SCAN_CNCN_BSSID_LIST_PARAM:
         /* retrieve the app scan result table */
-  		return scanResultTable_GetBssidList (pScanCncn->hScanResultTable, pParam->content.pBssidList, 
+  		return scanResultTable_GetBssidList (pScanCncn->hScanResultTable, pParam->content.pBssidList,
                                              &pParam->paramLength, TI_TRUE);
         break;
 
@@ -226,18 +231,18 @@ TI_STATUS scanCncnApp_GetParam (TI_HANDLE hScanCncn, paramInfo_t *pParam)
     return TI_OK;
 }
 
-/** 
+/**
  * \fn     scanCncn_AppScanResultCB
  * \brief  Scan result callback for application scan
- * 
+ *
  * Scan result callback for application scan
- * 
+ *
  * \param  hScanCncn - handle to the scan concentrator object
  * \param  status - the scan result status (scan complete, result received etc.)
  * \param  frameInfo - a pointer to the structure holding all frame related info (in case a frame was received)
  * \param  SPSStatus - a bitmap indicating on which channels scan was attempted (valid for SPS scan only!)
  * \return None
- */ 
+ */
 void scanCncn_AppScanResultCB (TI_HANDLE hScanCncn, EScanCncnResultStatus status,
                                TScanFrameInfo* frameInfo, TI_UINT16 SPSStatus)
 {
@@ -274,7 +279,7 @@ void scanCncn_AppScanResultCB (TI_HANDLE hScanCncn, EScanCncnResultStatus status
 
             /* mark that no app scan is running */
             pScanCncn->eCurrentRunningAppScanClient = SCAN_SCC_NO_CLIENT;
-            /* 
+            /*
              * The scan was finished, send a scan complete event to the user
              * (regardless of why the scan was completed)
              */
@@ -300,7 +305,7 @@ void scanCncn_AppScanResultCB (TI_HANDLE hScanCncn, EScanCncnResultStatus status
 
             /* mark that no app scan is running */
             pScanCncn->eCurrentRunningAppScanClient = SCAN_SCC_NO_CLIENT;
-            /* 
+            /*
              * The scan was finished, send a scan complete event to the user
              * (regardless of why the scan was completed)
              */
@@ -330,7 +335,7 @@ void scanCncn_AppScanResultCB (TI_HANDLE hScanCncn, EScanCncnResultStatus status
 
             /* mark that no app scan is running */
             pScanCncn->eCurrentRunningAppScanClient = SCAN_SCC_NO_CLIENT;
-            /* 
+            /*
              * The scan was finished, send a scan complete event to the user
              * (regardless of why the scan was completed)
              */

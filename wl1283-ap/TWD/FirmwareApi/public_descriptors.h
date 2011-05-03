@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * public_descriptors.h
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /**********************************************************************************************************************
 
   FILENAME:       public_descriptors.h
@@ -45,7 +50,7 @@
 /******************************************************************************
 
 		TX PATH
-	 
+
 ******************************************************************************/
 
 #define AID_BROADCAST 0x0       /* broadcast frames AID */
@@ -73,14 +78,14 @@
 /* The packet transmission result, written in the status field of TxResultDescriptor_t */
 typedef enum
 {
-    TX_SUCCESS              = 0,     
+    TX_SUCCESS              = 0,
 	TX_HW_ERROR             = 1,
 	TX_DISABLED             = 2,
 	TX_RETRY_EXCEEDED       = 3,
 	TX_TIMEOUT              = 4,
 	TX_KEY_NOT_FOUND        = 5,
 	TX_PEER_NOT_FOUND       = 6,
-    TX_SESSION_MISMATCH     = 7 
+    TX_SESSION_MISMATCH     = 7
 } TxDescStatus_enum;
 
 #ifdef HOST_COMPILE
@@ -93,13 +98,13 @@ typedef TxDescStatus_enum TxDescStatus_e;
 typedef struct TxIfDescriptor_t
 {
     uint16          length;		/* Length of packet in words, including descriptor+header+data */
-    uint8           extraMemBlks; /* Number of extra memory blocks to allocate for this packet in addition 
+    uint8           extraMemBlks; /* Number of extra memory blocks to allocate for this packet in addition
                                        to the number of blocks derived from the packet length */
-    uint8           totalMemBlks;   /* Total number of memory blocks allocated by the host for this packet. 
+    uint8           totalMemBlks;   /* Total number of memory blocks allocated by the host for this packet.
                                     Must be equal or greater than the actual blocks number allocated by HW!! */
     uint32          startTime;  /* Device time (in us) when the packet arrived to the driver */
-    uint16          lifeTime;   /* Max delay in TUs until transmission. The last device time the 
-                                      packet can be transmitted is: startTime+(1024*LifeTime) */ 
+    uint16          lifeTime;   /* Max delay in TUs until transmission. The last device time the
+                                      packet can be transmitted is: startTime+(1024*LifeTime) */
     uint16          txAttr;		/* Bitwise fields - see TX_ATTR... definitions above. */
     uint8           descID;		/* Packet identifier used also in the Tx-Result. */
     uint8           tid;		/* The packet TID value (as User-Priority) */
@@ -121,7 +126,7 @@ typedef struct TxResultDescriptor_t
     uint8  			lsbSecuritySequenceNumber; /* LS-byte of last TKIP seq-num (saved per AC for recovery).*/
     uint8  			ackFailures; /* Retry count - number of transmissions without successful ACK.*/
     TxRateIndex_t	rate;		 /* The rate that succeeded getting ACK (Valid only if status=SUCCESS). */
-    uint8  			spare;       /* for 4-byte alignment. */  
+    uint8  			spare;       /* for 4-byte alignment. */
 } TxResultDescriptor_t;
 
 /* The Host-FW Tx-Result control counters */
@@ -132,7 +137,7 @@ typedef struct
 } TxResultControl_t;
 
 /* The Host-FW Tx-Result Interface */
-typedef struct 
+typedef struct
 {
 	TxResultControl_t TxResultControl;  		   /* See above. */
 	TxResultDescriptor_t TxResultQueue[TRQ_DEPTH];
@@ -160,8 +165,8 @@ typedef struct
 /*           from (0=2.4, 1=4.9, 2=5.0)  */
 /* ------------------------------------- */
 #define    RX_DESC_BAND_MASK        0x03  /* Band is in Bits 0-1 */
-#define    RX_DESC_BAND_BG          0x00  
-#define    RX_DESC_BAND_J           0x01  
+#define    RX_DESC_BAND_BG          0x00
+#define    RX_DESC_BAND_J           0x01
 #define    RX_DESC_BAND_A           0x02
 #define    RX_DESC_STBC             0x04
 #define    RX_DESC_A_MPDU           0x08
@@ -179,10 +184,10 @@ typedef struct
 /*   Bit3-7: reserved (0)                */
 /*   Bit0-2: 0 - Success,                */
 /*           1 - RX_DECRYPT_FAIL,        */
-/*           2 - RX_MIC_FAIL             */ 
+/*           2 - RX_MIC_FAIL             */
 /* ------------------------------------- */
-#define    RX_DESC_STATUS_SUCCESS           0  
-#define    RX_DESC_STATUS_DECRYPT_FAIL      1  
+#define    RX_DESC_STATUS_SUCCESS           0
+#define    RX_DESC_STATUS_DECRYPT_FAIL      1
 #define    RX_DESC_STATUS_MIC_FAIL          2
 #define    RX_DESC_STATUS_DRIVER_RX_Q_FAIL  3
 
@@ -193,7 +198,7 @@ typedef struct
 
 
 /**********************************************
-    clasify tagging 
+    clasify tagging
 ***********************************************/
 typedef enum
 {
@@ -202,7 +207,7 @@ typedef enum
     TAG_CLASS_DATA          = 2,
     TAG_CLASS_QOS_DATA      = 3,
     TAG_CLASS_BCN_PRBRSP    = 4,
-    TAG_CLASS_EAPOL         = 5, 
+    TAG_CLASS_EAPOL         = 5,
     TAG_CLASS_BA_EVENT      = 6,
     TAG_CLASS_AMSDU         = 7
 } PacketClassTag_enum;
@@ -233,9 +238,9 @@ typedef uint8 ProcessIDTag_e;
 
 ******************************************************************************/
 typedef struct
-{    
+{
 	uint16              length;             /* Length of payload (including headers)*/
-    
+
     uint8               status;             /* 05-Oct-2009 - jigal & Inbal - AP support.    */
                                             /*                                              */
                                             /* status is now a bit-field structure:         */
@@ -255,11 +260,11 @@ typedef struct
     TxRateIndex_t       rate;               /* Recevied Rate:at ETxRateClassId format */
 
     uint8               channel;            /* The received channel*/
-    
-    int8                rx_level;           /* The computed RSSI value in db of current frame */  
-    
+
+    int8                rx_level;           /* The computed RSSI value in db of current frame */
+
     uint8               rx_snr;             /* The computed SNR value in db of current frame */
-                                            
+
     uint32              timestamp;          /* Timestamp in microseconds,     */
 
     PacketClassTag_e    packet_class_tag;   /* Packet classification tagging info */
@@ -269,7 +274,7 @@ typedef struct
     uint8               extraBytes;         /* Number of padding bytes added to actual packet length */
 
     uint8               driverFlags;        /* holds the driver flags to be used internally */
-    
+
 } RxIfDescriptor_t;
 
 

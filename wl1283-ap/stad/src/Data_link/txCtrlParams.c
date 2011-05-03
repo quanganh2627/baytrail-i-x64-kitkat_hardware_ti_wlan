@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * txCtrlParams.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /*******************************************************************************/
 /*                                                                             */
 /*      MODULE: txCtrlParams.c                                                 */
@@ -56,7 +61,7 @@ DESCRIPTION:    This function is called when credit calculation timer
 
 
 INPUT:	    hTxCtrl         - handle to the ts data object
-            bTwdInitOccured - Indicates if TWDriver recovery occured since timer started 
+            bTwdInitOccured - Indicates if TWDriver recovery occured since timer started
 
 OUTPUT:     None
 
@@ -74,10 +79,10 @@ static void calcCreditFromTimer(TI_HANDLE hTxCtrl, TI_BOOL bTwdInitOccured)
 	TI_INT32		currUsage;
 	TI_INT32		prevUsage;
 	TI_UINT32		currentTimeStamp = os_timeStampMs(pTxCtrl->hOs);  /* get current time stamp */
-	
-	/* 
+
+	/*
 	 *  For each AC under admission control calculate the new usage and credit time,
-	 *     and send events if a threshold is crossed. 
+	 *     and send events if a threshold is crossed.
 	 */
 	for(ac = 0 ; ac < MAX_NUM_OF_AC ; ac++)
 	{
@@ -85,14 +90,14 @@ static void calcCreditFromTimer(TI_HANDLE hTxCtrl, TI_BOOL bTwdInitOccured)
 		if(pTxCtrl->mediumTime[ac] == 0)
 		{
 TRACE1(pTxCtrl->hReport, REPORT_SEVERITY_INFORMATION, ": ac = %d mediumTime = 0 \n", ac);
-			
+
 			continue;
 		}
 
 		/* in case of wraparound */
 		if(currentTimeStamp < pTxCtrl->lastCreditCalcTimeStamp[ac])
 			pTxCtrl->lastCreditCalcTimeStamp[ac] = 0;
-		
+
 		/* store prev credit */
 		prevCredit = pTxCtrl->credit[ac];
 
@@ -102,7 +107,7 @@ TRACE1(pTxCtrl->hReport, REPORT_SEVERITY_INFORMATION, ": ac = %d mediumTime = 0 
 
 		/* calculate credit */
 		pTxCtrl->credit[ac] += (currentTimeStamp - pTxCtrl->lastCreditCalcTimeStamp[ac]) - usageRatio;
-		
+
 		/* update last time stamp */
 		pTxCtrl->lastCreditCalcTimeStamp[ac] = currentTimeStamp;
 
@@ -119,13 +124,13 @@ TRACE1(pTxCtrl->hReport, REPORT_SEVERITY_INFORMATION, ": ac = %d mediumTime = 0 
 		 * The high threshold triggers event only when crossed upward (traffic increased above threshold).
 		 * The low threshold triggers event only when crossed downward (traffic decreased below threshold).
 		 * Thus, the two thresholds provide hysteresis and prevent multiple triggering.
-		 * The high threshold should be greater than the low threshold. 
-		 * 
+		 * The high threshold should be greater than the low threshold.
+		 *
 		 *   Note:	The driver doesn't delay traffic even if violating the usage limit!
 		 *			It only indicates the user application about the thresholds crossing.
 		 */
 
-		highCreditThreshold = (TI_INT32)((pTxCtrl->mediumTime[ac])*(pTxCtrl->highMediumUsageThreshold[ac])/100); 
+		highCreditThreshold = (TI_INT32)((pTxCtrl->mediumTime[ac])*(pTxCtrl->highMediumUsageThreshold[ac])/100);
 		lowCreditThreshold  = (TI_INT32)((pTxCtrl->mediumTime[ac])*(pTxCtrl->lowMediumUsageThreshold[ac])/100);
 
 		/* The credit is getting more negative as we get closer to the medium usage limit, so we invert
@@ -141,12 +146,12 @@ TRACE1(pTxCtrl->hReport, REPORT_SEVERITY_INFORMATION, ": ac = %d mediumTime = 0 
 			mediumTimeCross.uHighOrLowThresholdFlag = (TI_UINT32)LOW_THRESHOLD_CROSS;
 			mediumTimeCross.uAboveOrBelowFlag = (TI_UINT32)CROSS_BELOW;
 
-			EvHandlerSendEvent(pTxCtrl->hEvHandler, IPC_EVENT_MEDIUM_TIME_CROSS, 
+			EvHandlerSendEvent(pTxCtrl->hEvHandler, IPC_EVENT_MEDIUM_TIME_CROSS,
 				(TI_UINT8 *)&mediumTimeCross, sizeof(OS_802_11_THRESHOLD_CROSS_INDICATION_PARAMS));
 
             TRACE3(pTxCtrl->hReport, REPORT_SEVERITY_INFORMATION, "crossed below low threshold !!! prevUsage = %d, currUsage = %d, lowCreditThreshold = %d\n",				prevUsage, currUsage, lowCreditThreshold);
 		}
-		
+
 		/* crossing above the high threshold */
 		else if ( (currUsage > highCreditThreshold) && (prevUsage <= highCreditThreshold) )
 		{
@@ -155,7 +160,7 @@ TRACE1(pTxCtrl->hReport, REPORT_SEVERITY_INFORMATION, ": ac = %d mediumTime = 0 
 			mediumTimeCross.uHighOrLowThresholdFlag = (TI_UINT32)HIGH_THRESHOLD_CROSS;
 			mediumTimeCross.uAboveOrBelowFlag = (TI_UINT32)CROSS_ABOVE;
 
-			EvHandlerSendEvent(pTxCtrl->hEvHandler, IPC_EVENT_MEDIUM_TIME_CROSS, 
+			EvHandlerSendEvent(pTxCtrl->hEvHandler, IPC_EVENT_MEDIUM_TIME_CROSS,
 				(TI_UINT8 *)&mediumTimeCross, sizeof(OS_802_11_THRESHOLD_CROSS_INDICATION_PARAMS));
 
             TRACE3(pTxCtrl->hReport, REPORT_SEVERITY_INFORMATION, "crossed above high threshold !!! prevUsage = %d, currUsage = %d, highCreditThreshold = %d\n",				prevUsage, currUsage, highCreditThreshold);
@@ -170,8 +175,8 @@ TRACE1(pTxCtrl->hReport, REPORT_SEVERITY_INFORMATION, ": ac = %d mediumTime = 0 
 /****************************************************************************
  *                      updateDataPktPrototype()
  ****************************************************************************
- * DESCRIPTION:	Updates the data packet prototype values according to 
-				changed parameters (e.g. rate policy change). 
+ * DESCRIPTION:	Updates the data packet prototype values according to
+				changed parameters (e.g. rate policy change).
  ****************************************************************************/
 static void updateDataPktPrototype(txCtrl_t *pTxCtrl)
 {
@@ -180,7 +185,7 @@ static void updateDataPktPrototype(txCtrl_t *pTxCtrl)
 
 
 /***************************************************************************
-*                       txCtrlParams_resetCounters                               
+*                       txCtrlParams_resetCounters
 ****************************************************************************
 * DESCRIPTION:  Reset the tx data module counters
 *
@@ -248,21 +253,21 @@ DESCRIPTION:    This function is called for add/delete a tspec in order
 
 INPUT:			hTxCtrl - handale to the ts data object
 				acId - the AC of the tspec
-				mediumTime	- tha alocated medium time for this UP 
+				mediumTime	- tha alocated medium time for this UP
 				minimumPHYRate - the min phy rate to send a packet of this UP
-				admFlag - indicate if the its addition or deletion of tspec 
+				admFlag - indicate if the its addition or deletion of tspec
 
 OUTPUT:     None
 
 RETURN:     void
 ************************************************************************/
-TI_STATUS txCtrlParams_setAdmissionCtrlParams(TI_HANDLE hTxCtrl, TI_UINT8 acId, TI_UINT16 mediumTime, 
+TI_STATUS txCtrlParams_setAdmissionCtrlParams(TI_HANDLE hTxCtrl, TI_UINT8 acId, TI_UINT16 mediumTime,
 											  TI_UINT32 minimumPHYRate, TI_BOOL admFlag)
 {
 	txCtrl_t *pTxCtrl = (txCtrl_t *)hTxCtrl;
 	TI_UINT32	i;
 
-	if(admFlag == TI_TRUE) 
+	if(admFlag == TI_TRUE)
 	{
 		/* tspec added */
 		pTxCtrl->mediumTime[acId] = mediumTime;
@@ -283,7 +288,7 @@ TI_STATUS txCtrlParams_setAdmissionCtrlParams(TI_HANDLE hTxCtrl, TI_UINT8 acId, 
 
 	/* Update the Tx queues mapping after admission change. */
 	txCtrl_UpdateQueuesMapping (hTxCtrl);
-	
+
 	/* If the timer was not enabled in registry than we will never set it */
 	if (pTxCtrl->bCreditCalcTimerEnabled)
 	{
@@ -298,14 +303,14 @@ TI_STATUS txCtrlParams_setAdmissionCtrlParams(TI_HANDLE hTxCtrl, TI_UINT8 acId, 
                     tmr_StartTimer (pTxCtrl->hCreditTimer,
                                     calcCreditFromTimer,
                                     (TI_HANDLE)pTxCtrl,
-                                    pTxCtrl->creditCalculationTimeout, 
+                                    pTxCtrl->creditCalculationTimeout,
                                     TI_TRUE);
     			}
-    			
+
     			return TI_OK;
     		}
     	}
-    
+
     	/* in all queues useAdmissionAlgo is not TRUE, so stop timer if running */
         if (pTxCtrl->bCreditCalcTimerRunning)
         {
@@ -319,7 +324,7 @@ TI_STATUS txCtrlParams_setAdmissionCtrlParams(TI_HANDLE hTxCtrl, TI_UINT8 acId, 
 
 
 /***************************************************************************
-*                           txCtrlParams_getParam                           
+*                           txCtrlParams_getParam
 ****************************************************************************
 * DESCRIPTION:  Get a specific parameter by an external user application.
 *
@@ -344,7 +349,7 @@ TI_STATUS txCtrlParams_getParam(TI_HANDLE hTxCtrl, paramInfo_t *pParamInfo)
 		{
 			pTxCtrl->txDataCounters[ac].SumTotalDelayMs = pTxCtrl->SumTotalDelayUs[ac] / 1000;
 		}
-        os_memoryCopy( pTxCtrl->hOs, pParamInfo->content.pTxDataCounters, &(pTxCtrl->txDataCounters[0]), 
+        os_memoryCopy( pTxCtrl->hOs, pParamInfo->content.pTxDataCounters, &(pTxCtrl->txDataCounters[0]),
                        sizeof(TTxDataCounters) * MAX_NUM_OF_AC);
 		pParamInfo->paramLength = sizeof(TTxDataCounters) * MAX_NUM_OF_AC;
         break;
@@ -352,14 +357,14 @@ TI_STATUS txCtrlParams_getParam(TI_HANDLE hTxCtrl, paramInfo_t *pParamInfo)
 	case TX_CTRL_GET_DATA_FRAME_COUNTER:
 		pParamInfo->content.txPacketsCount = 0;
 		for (ac = 0; ac < MAX_NUM_OF_AC; ac++)
-        	pParamInfo->content.txPacketsCount += pTxCtrl->txDataCounters[ac].XmitOk;				
+        	pParamInfo->content.txPacketsCount += pTxCtrl->txDataCounters[ac].XmitOk;
         break;
 
 	case TX_CTRL_REPORT_TS_STATISTICS:
 		ac = pParamInfo->content.tsMetricsCounters.acID;
-		os_memoryCopy(pTxCtrl->hOs, 
-					  pParamInfo->content.tsMetricsCounters.pTxDataCounters, 
-					  &(pTxCtrl->txDataCounters[ac]), 
+		os_memoryCopy(pTxCtrl->hOs,
+					  pParamInfo->content.tsMetricsCounters.pTxDataCounters,
+					  &(pTxCtrl->txDataCounters[ac]),
 					  sizeof(TTxDataCounters));
 		os_memoryZero(pTxCtrl->hOs, &(pTxCtrl->txDataCounters[ac]), sizeof(TTxDataCounters));
 		break;
@@ -391,7 +396,7 @@ TI_STATUS txCtrlParams_getParam(TI_HANDLE hTxCtrl, paramInfo_t *pParamInfo)
 
 
 /***************************************************************************
-*                           txCtrlParams_setParam                           
+*                           txCtrlParams_setParam
 ****************************************************************************
 * DESCRIPTION:  Set a specific parameter by an external user application.
 *
@@ -408,16 +413,16 @@ TI_STATUS txCtrlParams_setParam(TI_HANDLE hTxCtrl, paramInfo_t *pParamInfo)
     {
         return TI_NOK;
     }
-	
+
     switch (pParamInfo->paramType)
     {
     case TX_CTRL_SET_MEDIUM_USAGE_THRESHOLD:
 		acID = (TI_UINT8)pParamInfo->content.txDataMediumUsageThreshold.uAC;
 		if(acID < MAX_NUM_OF_AC)
 		{
-			pTxCtrl->highMediumUsageThreshold[acID] = 
+			pTxCtrl->highMediumUsageThreshold[acID] =
 				pParamInfo->content.txDataMediumUsageThreshold.uHighThreshold;
-			pTxCtrl->lowMediumUsageThreshold[acID] = 
+			pTxCtrl->lowMediumUsageThreshold[acID] =
 				pParamInfo->content.txDataMediumUsageThreshold.uLowThreshold;
 		}
 		else
@@ -425,7 +430,7 @@ TRACE1(pTxCtrl->hReport, REPORT_SEVERITY_ERROR, ": Wrong AC (AC=%d > 3)\n", acID
 		break;
 
     case TX_CTRL_GET_MEDIUM_USAGE_THRESHOLD:
-		/* Note: SET operation is used for GET, because AC parameter should be supplied from Utility- 
+		/* Note: SET operation is used for GET, because AC parameter should be supplied from Utility-
 	         Adapter to driver (copy of user supplied block of data is only performed in SetParam calls). */
 		acID = (TI_UINT8)pParamInfo->content.txDataMediumUsageThreshold.uAC;
 		pParamInfo->content.txDataMediumUsageThreshold.uHighThreshold = pTxCtrl->highMediumUsageThreshold[acID];
@@ -500,20 +505,20 @@ void txCtrlParams_setQosHeaderConverMode (TI_HANDLE hTxCtrl, EHeaderConvertMode 
 	updateDataPktPrototype(pTxCtrl);  /* Needed due to QoS mode change. */
 }
 
-/** 
- * \fn     txCtrlParams_SetHtControl() 
- * \brief  Update The HT Control Field on txCtrl module. 
- * 
- * \note    
+/**
+ * \fn     txCtrlParams_SetHtControl()
+ * \brief  Update The HT Control Field on txCtrl module.
+ *
+ * \note
  * \param  hTxCtrl - the hTxCtrl handle.
  * \param  pHtCapabilitiesIe - input structure.
- * \return TI_OK on success or TI_NOK on failure  
- * \sa     
- */ 
+ * \return TI_OK on success or TI_NOK on failure
+ * \sa
+ */
 TI_STATUS txCtrlParams_SetHtControl (TI_HANDLE hTxCtrl, TtxCtrlHtControl *pHtControl)
 {
     txCtrl_t *pTxCtrl = (txCtrl_t *)hTxCtrl;
- 
+
     pTxCtrl->tTxCtrlHtControl.bHtEnable = pHtControl->bHtEnable;
 
     return TI_OK;
@@ -563,7 +568,7 @@ void txCtrlParams_setEncryptionFieldSizes (TI_HANDLE hTxCtrl, TI_UINT8 encryptio
  ***********************************************************************
 DESCRIPTION:    Provide the current encryption mode and padding size.
 ************************************************************************/
-void txCtrlParams_getCurrentEncryptionInfo (TI_HANDLE hTxCtrl, 
+void txCtrlParams_getCurrentEncryptionInfo (TI_HANDLE hTxCtrl,
                                             TI_BOOL    *pCurrentPrivacyInvokedMode,
                                             TI_UINT8   *pEncryptionFieldSize)
 {
@@ -593,8 +598,8 @@ ERate txCtrlParams_GetTxRate (TI_HANDLE hTxCtrl)
 DESCRIPTION:    Update the AC admission status - required or not and admitted or not.
 				Update also the queues mapping in case it should change.
 ************************************************************************/
-void txCtrlParams_setAcAdmissionStatus (TI_HANDLE hTxCtrl, 
-                                        TI_UINT8 ac, 
+void txCtrlParams_setAcAdmissionStatus (TI_HANDLE hTxCtrl,
+                                        TI_UINT8 ac,
                                         EAdmissionState admissionRequired,
 										ETrafficAdmState admissionState)
 {
@@ -710,16 +715,16 @@ void txCtrlParams_printInfo(TI_HANDLE hTxCtrl)
 
     WLAN_OS_REPORT(("ACs Mapping:\n"));
     WLAN_OS_REPORT(("------------\n"));
-    WLAN_OS_REPORT(("admissionRequired[3,2,1,0]   =  %d,   %d,   %d,   %d\n", 
+    WLAN_OS_REPORT(("admissionRequired[3,2,1,0]   =  %d,   %d,   %d,   %d\n",
 		pTxCtrl->admissionRequired[3], pTxCtrl->admissionRequired[2],
 		pTxCtrl->admissionRequired[1], pTxCtrl->admissionRequired[0]));
-    WLAN_OS_REPORT(("admissionState[3,2,1,0]      =  %d,   %d,   %d,   %d\n", 
+    WLAN_OS_REPORT(("admissionState[3,2,1,0]      =  %d,   %d,   %d,   %d\n",
 		pTxCtrl->admissionState[3], pTxCtrl->admissionState[2],
 		pTxCtrl->admissionState[1], pTxCtrl->admissionState[0]));
-    WLAN_OS_REPORT(("highestAdmittedAc[3,2,1,0]   =  %d,   %d,   %d,   %d\n", 
+    WLAN_OS_REPORT(("highestAdmittedAc[3,2,1,0]   =  %d,   %d,   %d,   %d\n",
 		pTxCtrl->highestAdmittedAc[3], pTxCtrl->highestAdmittedAc[2],
 		pTxCtrl->highestAdmittedAc[1], pTxCtrl->highestAdmittedAc[0]));
-    WLAN_OS_REPORT(("admittedAcToTidMap[3,2,1,0]  =  0x%x, 0x%x, 0x%x, 0x%x\n", 
+    WLAN_OS_REPORT(("admittedAcToTidMap[3,2,1,0]  =  0x%x, 0x%x, 0x%x, 0x%x\n",
 		pTxCtrl->admittedAcToTidMap[3], pTxCtrl->admittedAcToTidMap[2],
 		pTxCtrl->admittedAcToTidMap[1], pTxCtrl->admittedAcToTidMap[0]));
     WLAN_OS_REPORT(("busyAcBitmap                 = 0x%x\n", pTxCtrl->busyAcBitmap));
@@ -728,14 +733,14 @@ void txCtrlParams_printInfo(TI_HANDLE hTxCtrl)
 
     WLAN_OS_REPORT(("Tx Attributes:\n"));
     WLAN_OS_REPORT(("--------------\n"));
-    WLAN_OS_REPORT(("mgmtRatePolicy[3,2,1,0]      =  %d,   %d,   %d,   %d\n", 
+    WLAN_OS_REPORT(("mgmtRatePolicy[3,2,1,0]      =  %d,   %d,   %d,   %d\n",
 		pTxCtrl->mgmtRatePolicy[3], pTxCtrl->mgmtRatePolicy[2],
 		pTxCtrl->mgmtRatePolicy[1], pTxCtrl->mgmtRatePolicy[0]));
-    WLAN_OS_REPORT(("dataRatePolicy[3,2,1,0]      =  %d,   %d,   %d,   %d\n", 
+    WLAN_OS_REPORT(("dataRatePolicy[3,2,1,0]      =  %d,   %d,   %d,   %d\n",
 		pTxCtrl->dataRatePolicy[3], pTxCtrl->dataRatePolicy[2],
 		pTxCtrl->dataRatePolicy[1], pTxCtrl->dataRatePolicy[0]));
     WLAN_OS_REPORT(("brcstRatePolicy             = %d\n", pTxCtrl->brcstRatePolicy));
-	
+
     WLAN_OS_REPORT(("dataPktDescAttrib            = 0x%x\n", pTxCtrl->dataPktDescAttrib));
     WLAN_OS_REPORT(("--------------------------------------------------------\n"));
 
@@ -798,7 +803,7 @@ void txCtrlParams_printDebugCounters(TI_HANDLE hTxCtrl)
 
 
 /***************************************************************************
-*                       txCtrlParams_resetDbgCounters                       
+*                       txCtrlParams_resetDbgCounters
 ****************************************************************************
 * DESCRIPTION:  Reset the tx data module debug counters
 ***************************************************************************/
@@ -811,7 +816,7 @@ void txCtrlParams_resetDbgCounters(TI_HANDLE hTxCtrl)
 }
 
 /***************************************************************************
-*                       txCtrlParams_resetLinkCounters                       
+*                       txCtrlParams_resetLinkCounters
 ****************************************************************************
 * DESCRIPTION:  Reset the tx data module Link counters
 ***************************************************************************/

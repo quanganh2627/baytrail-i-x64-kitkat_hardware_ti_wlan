@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * keyParser.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file keyParser.c
  * \brief KEY parser module implementation.
  *
@@ -44,7 +49,7 @@
 #include "report.h"
 #include "rsnApi.h"
 
-#include "keyParser.h" 
+#include "keyParser.h"
 #include "keyParserExternal.h"
 #include "keyParserWep.h"
 
@@ -54,17 +59,17 @@ TI_STATUS keyParserNone_config(keyParser_t *pKeyParser);
 *
 * Function  - Init KEY Parser module.
 *
-* \b Description: 
+* \b Description:
 *
-* Called by RSN Manager. 
+* Called by RSN Manager.
 * Registers the function 'rsn_keyParserRecv()' at the distributor to receive KEY frames upon receiving a KEY_RECV event.
 *
 * \b ARGS:
 *
-*  
+*
 * \b RETURNS:
 *
-*  TI_STATUS - 0 on success, any other value on failure. 
+*  TI_STATUS - 0 on success, any other value on failure.
 *
 */
 
@@ -88,17 +93,17 @@ keyParser_t* keyParser_create(TI_HANDLE hOs)
 *
 * Function  - Init KEY Parser module.
 *
-* \b Description: 
+* \b Description:
 *
-* Called by RSN Manager. 
+* Called by RSN Manager.
 * Registers the function 'rsn_keyParserRecv()' at the distributor to receive KEY frames upon receiving a KEY_RECV event.
 *
 * \b ARGS:
 *
-*  
+*
 * \b RETURNS:
 *
-*  TI_STATUS - 0 on success, any other value on failure. 
+*  TI_STATUS - 0 on success, any other value on failure.
 *
 */
 
@@ -114,17 +119,17 @@ TI_STATUS keyParser_unload(struct _keyParser_t *pKeyParser)
 *
 * Function  - Init KEY Parser module.
 *
-* \b Description: 
+* \b Description:
 *
-* Called by RSN Manager. 
+* Called by RSN Manager.
 * Registers the function 'rsn_keyParserRecv()' at the distributor to receive KEY frames upon receiving a KEY_RECV event.
 *
 * \b ARGS:
 *
-*  
+*
 * \b RETURNS:
 *
-*  TI_STATUS - 0 on success, any other value on failure. 
+*  TI_STATUS - 0 on success, any other value on failure.
 *
 */
 
@@ -137,7 +142,7 @@ TI_STATUS keyParser_config(struct _keyParser_t *pKeyParser,
 						TI_HANDLE hOs,
                         TI_HANDLE hCtrlData)
 {
-    
+
     pKeyParser->pParent = pParent;
     pKeyParser->pUcastKey = pUcastKey;
     pKeyParser->pBcastKey = pBcastKey;
@@ -148,7 +153,7 @@ TI_STATUS keyParser_config(struct _keyParser_t *pKeyParser,
     pKeyParser->hCtrlData = hCtrlData;
 
 	keyParserExternal_config(pKeyParser);
-	
+
 	return TI_OK;
 }
 
@@ -158,16 +163,16 @@ TI_STATUS keyParserNone_config(keyParser_t *pKeyParser)
 {
 	pKeyParser->recv = NULL;
 	pKeyParser->replayReset = NULL;
-	
+
 	return TI_OK;
-	
+
 }
 
 
 TI_STATUS keyParser_nop(keyParser_t *pKeyParser)
 {
 TRACE0(pKeyParser->hReport, REPORT_SEVERITY_INFORMATION, "KEY_PARSER: nop \n");
-	
+
 	return TI_OK;
 }
 

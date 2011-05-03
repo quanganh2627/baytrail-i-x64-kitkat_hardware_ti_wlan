@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * trafficAdmControl.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 /***************************************************************************/
 /*																		   */
@@ -48,8 +53,8 @@
 #include "trafficAdmControl.h"
 #include "qosMngr_API.h"
 #include "TWDriver.h"
-#ifdef CCX_MODULE_INCLUDED
-#include "ccxMngr.h"
+#ifdef XCC_MODULE_INCLUDED
+#include "XCCMngr.h"
 #endif
 /* Constants */
 
@@ -61,7 +66,7 @@
 
 extern int WMEQosTagToACTable[MAX_NUM_OF_802_1d_TAGS];
 
-typedef struct 
+typedef struct
 {
 	TI_HANDLE hTrafficAdmCtrl;
 	tspecInfo_t *pTSpecInfo;
@@ -105,10 +110,10 @@ static TI_STATUS trafficAdmCtrl_tokenToAc (TI_HANDLE hTrafficAdmCtrl, TI_UINT8 t
  ********************************************************************************
 DESCRIPTION: trafficAdmCtrl module creation function
 
-  INPUT:      hOs -			Handle to OS		
+  INPUT:      hOs -			Handle to OS
 
 
-OUTPUT:		
+OUTPUT:
 
 RETURN:     Handle to the trafficAdmCtrl module on success, NULL otherwise
 
@@ -143,12 +148,12 @@ TI_HANDLE trafficAdmCtrl_create(TI_HANDLE hOs)
 /************************************************************************
  *                        trafficAdmCtrl_unload						    *
  ************************************************************************
-DESCRIPTION: trafficAdmCtrl module destroy function, 
+DESCRIPTION: trafficAdmCtrl module destroy function,
 				-	Free all memory alocated by the module
-				
-INPUT:      hTrafficAdmCtrl	-	trafficAdmCtrl handle.		
 
-OUTPUT:		
+INPUT:      hTrafficAdmCtrl	-	trafficAdmCtrl handle.
+
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
@@ -162,11 +167,11 @@ TI_STATUS trafficAdmCtrl_unload(TI_HANDLE hTrafficAdmCtrl)
 	{
         fsm_Unload (pTrafficAdmCtrl->hOs, pTrafficAdmCtrl->pTrafficAdmCtrlSm);
 	}
-	
+
 	/* free timers */
 	for (uAcId = 0; uAcId < MAX_NUM_OF_AC; uAcId++)
     {
-        if (pTrafficAdmCtrl->hAdmCtrlTimer[uAcId]) 
+        if (pTrafficAdmCtrl->hAdmCtrlTimer[uAcId])
         {
             tmr_DestroyTimer (pTrafficAdmCtrl->hAdmCtrlTimer[uAcId]);
         }
@@ -180,16 +185,16 @@ TI_STATUS trafficAdmCtrl_unload(TI_HANDLE hTrafficAdmCtrl)
 /************************************************************************
  *                        trafficAdmCtrl_config							*
  ************************************************************************
-DESCRIPTION: trafficAdmCtrl module configuration function, 
+DESCRIPTION: trafficAdmCtrl module configuration function,
 				performs the following:
 				-	Reset & initiailzes local variables
 				-	Init the handles to be used by the module
-                                                                                                   
+
 INPUT:      hTrafficAdmCtrl	         -	trafficAdmCtrl handle.
 		    List of handles to be used by the module
-			pTrafficAdmCtrlInitParams	-	init parameters.		
-			
-OUTPUT:		
+			pTrafficAdmCtrlInitParams	-	init parameters.
+
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 ************************************************************************/
@@ -199,7 +204,7 @@ TI_STATUS trafficAdmCtrl_config (TI_HANDLE hTrafficAdmCtrl,
     						     TI_HANDLE hOs,
     						     TI_HANDLE hQosMngr,
     						     TI_HANDLE hCtrlData,
-    						     TI_HANDLE hCcxMgr,
+    						     TI_HANDLE hXCCMgr,
     						     TI_HANDLE hTimer,
     						     TI_HANDLE hTWD,
                                  TI_HANDLE hTxCtrl,
@@ -226,7 +231,7 @@ TI_STATUS trafficAdmCtrl_config (TI_HANDLE hTrafficAdmCtrl,
 		 {TRAFFIC_ADM_CTRL_SM_STATE_IDLE, (fsm_Action_t)trafficAdmCtrl_smWaitTimeout},		/*EVENT_TIMEOUT*/
 		},
 	};
-	
+
 	pTrafficAdmCtrl = (trafficAdmCtrl_t*)hTrafficAdmCtrl;
 
 	pTrafficAdmCtrl->hTxMgmtQ = hTxMgmtQ;
@@ -234,7 +239,7 @@ TI_STATUS trafficAdmCtrl_config (TI_HANDLE hTrafficAdmCtrl,
 	pTrafficAdmCtrl->hOs		= hOs;
 	pTrafficAdmCtrl->hQosMngr	= hQosMngr;
 	pTrafficAdmCtrl->hCtrlData	= hCtrlData;
-	pTrafficAdmCtrl->hCcxMgr	= hCcxMgr;
+	pTrafficAdmCtrl->hXCCMgr	= hXCCMgr;
 	pTrafficAdmCtrl->hTimer	    = hTimer;
 	pTrafficAdmCtrl->hTWD	    = hTWD;
 	pTrafficAdmCtrl->hTxCtrl	= hTxCtrl;
@@ -253,7 +258,7 @@ TI_STATUS trafficAdmCtrl_config (TI_HANDLE hTrafficAdmCtrl,
     }
 
     /* configure state machine */
-	status = fsm_Config(pTrafficAdmCtrl->pTrafficAdmCtrlSm, &trafficAdmCtrl_smMatrix[0][0], 
+	status = fsm_Config(pTrafficAdmCtrl->pTrafficAdmCtrlSm, &trafficAdmCtrl_smMatrix[0][0],
 						TRAFFIC_ADM_CTRL_SM_NUM_STATES, TRAFFIC_ADM_CTRL_SM_NUM_EVENTS, NULL, hOs);
 	if (status != TI_OK)
 	{
@@ -266,7 +271,7 @@ TRACE0(pTrafficAdmCtrl->hReport, REPORT_SEVERITY_ERROR, "TRAFFIC_ADM_CTRL_SM: fs
     pTrafficAdmCtrl->useFixedMsduSize = pTrafficAdmCtrlInitParams->trafficAdmCtrlUseFixedMsduSize;
 
 	pTrafficAdmCtrl->dialogTokenCounter = INITIAL_DIALOG_TOKEN;
-	
+
 
 TRACE0(pTrafficAdmCtrl->hReport, REPORT_SEVERITY_INFORMATION, "TRAFFIC ADM CTRL -  configuration completed ..... \n");
 
@@ -278,11 +283,11 @@ TRACE0(pTrafficAdmCtrl->hReport, REPORT_SEVERITY_INFORMATION, "TRAFFIC ADM CTRL 
  *                        trafficAdmCtrl_smEvent						*
  ************************************************************************
 DESCRIPTION: trafficAdmCtrl SM general function
-                                                                                                   
+
 INPUT:      pTrafficAdmCtrl	    -	trafficAdmCtr handle.
 			event				-	the event to the SM.
-			pData				-	handle to passing parameter			
-OUTPUT:		
+			pData				-	handle to passing parameter
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 ************************************************************************/
@@ -326,19 +331,19 @@ TRACE0(pTrafficAdmCtrl->hReport, REPORT_SEVERITY_ERROR, "ADM_CTRL: ERROR - faile
 /************************************************************************
  *                        trafficAdmCtrl_smStart						*
  ************************************************************************
-DESCRIPTION: the action function when event start ocuured on idle state 
+DESCRIPTION: the action function when event start ocuured on idle state
 				performs the following:
-				-	send admision requestReset 
+				-	send admision requestReset
 				-	start timer for the response.
-                                                                                                   
-INPUT:      fsmTSpecInfo - parameters for the request		
-			
-OUTPUT:		
+
+INPUT:      fsmTSpecInfo - parameters for the request
+
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 ************************************************************************/
 
-TI_STATUS trafficAdmCtrl_smStart(fsmTSpecInfo_t *fsmTSpecInfo)		
+TI_STATUS trafficAdmCtrl_smStart(fsmTSpecInfo_t *fsmTSpecInfo)
 {
 	TI_STATUS				status;
 	trafficAdmCtrl_t		*pTrafficAdmCtrl;
@@ -360,13 +365,13 @@ TI_STATUS trafficAdmCtrl_smStart(fsmTSpecInfo_t *fsmTSpecInfo)
 /************************************************************************
  *                        trafficAdmCtrl_smWaitStop						*
  ************************************************************************
-DESCRIPTION: the action function when event stop ocuured on wait state 
+DESCRIPTION: the action function when event stop ocuured on wait state
 				performs the following:
 				-	stop timer.
-                                                                                                   
-INPUT:      fsmTSpecInfo - parameters of the request		
-			
-OUTPUT:		
+
+INPUT:      fsmTSpecInfo - parameters of the request
+
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 ************************************************************************/
@@ -384,19 +389,19 @@ TI_STATUS trafficAdmCtrl_smWaitStop(fsmTSpecInfo_t *fsmTSpecInfo)
 
 TRACE1(pTrafficAdmCtrl->hReport, REPORT_SEVERITY_INFORMATION, "TRAFFIC ADM CTRL -  AC = %d,    Stoped ..... \n", pTSpecInfo->AC);
 
-	
+
 	return TI_OK;
 }
 /************************************************************************
  *                        trafficAdmCtrl_smWaitAccept					*
  ************************************************************************
-DESCRIPTION: the action function when event accept ocuured on wait state 
+DESCRIPTION: the action function when event accept ocuured on wait state
 				performs the following:
 				-	update the Qos Mngr of the status and the parameters
-                                                                                                   
-INPUT:      fsmTSpecInfo - parameters of the response		
-			
-OUTPUT:		
+
+INPUT:      fsmTSpecInfo - parameters of the response
+
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 ************************************************************************/
@@ -417,13 +422,13 @@ TI_STATUS trafficAdmCtrl_smWaitAccept(fsmTSpecInfo_t *fsmTSpecInfo)
 /************************************************************************
  *                        trafficAdmCtrl_smWaitReject					*
  ************************************************************************
-DESCRIPTION: the action function when event reject ocuured on wait state 
+DESCRIPTION: the action function when event reject ocuured on wait state
 				performs the following:
 				-	update the Qos Mngr of the status and the parameters
-                                                                                                   
-INPUT:      fsmTSpecInfo - parameters of the response		
-			
-OUTPUT:		
+
+INPUT:      fsmTSpecInfo - parameters of the response
+
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 ************************************************************************/
@@ -443,13 +448,13 @@ TI_STATUS trafficAdmCtrl_smWaitReject(fsmTSpecInfo_t *fsmTSpecInfo)
 /************************************************************************
  *                        trafficAdmCtrl_smWaitTimeout					*
  ************************************************************************
-DESCRIPTION: the action function when event timeout ocuured on wait state 
+DESCRIPTION: the action function when event timeout ocuured on wait state
 				performs the following:
 				-	update the Qos Mngr of the status and the parameters
-                                                                                                   
-INPUT:      fsmTSpecInfo - parameters of the request		
-			
-OUTPUT:		
+
+INPUT:      fsmTSpecInfo - parameters of the request
+
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 ************************************************************************/
@@ -468,10 +473,10 @@ TI_STATUS trafficAdmCtrl_smWaitTimeout(fsmTSpecInfo_t *fsmTSpecInfo)
 /************************************************************************
  *               trafficAdmCtrl_smActionUnexpected						*
  ************************************************************************
-DESCRIPTION:                                                 
-INPUT:      fsmTSpecInfo - tspec parameters 	
-			
-OUTPUT:		
+DESCRIPTION:
+INPUT:      fsmTSpecInfo - tspec parameters
+
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 ************************************************************************/
@@ -490,9 +495,9 @@ TRACE1(pTrafficAdmCtrl->hReport, REPORT_SEVERITY_ERROR, "TRAFFIC ADM CTRL -  AC 
 /************************************************************************
  *               trafficAdmCtrl_smActionUnexpectedTspecResponse			*
  ************************************************************************
-DESCRIPTION:                                                 
-INPUT:      fsmTSpecInfo - tspec parameters 	
-OUTPUT:		
+DESCRIPTION:
+INPUT:      fsmTSpecInfo - tspec parameters
+OUTPUT:
 RETURN:     TI_OK on success, TI_NOK otherwise
 ************************************************************************/
 
@@ -516,10 +521,10 @@ TRACE1(pTrafficAdmCtrl->hReport, REPORT_SEVERITY_WARNING, "TRAFFIC ADM CTRL -  A
 /************************************************************************
  *                        trafficAdmCtrl_smActionNop					*
  ************************************************************************
-DESCRIPTION:                                                 
-INPUT:      fsmTSpecInfo - tspec parameters 	
-			
-OUTPUT:		
+DESCRIPTION:
+INPUT:      fsmTSpecInfo - tspec parameters
+
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 ************************************************************************/
@@ -545,11 +550,11 @@ TRACE1(pTrafficAdmCtrl->hReport, REPORT_SEVERITY_INFORMATION, "TRAFFIC ADM CTRL 
  *                    trafficAdmCtrl_startAdmRequest                    *
  ************************************************************************
 DESCRIPTION: start TSPEC signaling
-                                                                                                   
+
 INPUT:      pTrafficAdmCtrl	    -	trafficAdmCtr handle.
 			pTSpecInfo			-	the TSPEC parameters
-	
-OUTPUT:		
+
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
@@ -579,11 +584,11 @@ TI_STATUS trafficAdmCtrl_startAdmRequest(TI_HANDLE	hTrafficAdmCtrl, tspecInfo_t 
  *                    trafficAdmCtrl_stopAdmRequest                     *
  ************************************************************************
 DESCRIPTION: stop specific tspec signaling
-                                                                                                   
+
 INPUT:      pTrafficAdmCtrl	    -	trafficAdmCtr handle.
 			acID				-	the AC of the tspec to stop
-	
-OUTPUT:		
+
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
@@ -593,7 +598,7 @@ TI_STATUS trafficAdmCtrl_stopAdmRequest(TI_HANDLE hTrafficAdmCtrl, TI_UINT8 acID
 {
 	TI_STATUS			status;
 	trafficAdmCtrl_t	*pTrafficAdmCtrl = (trafficAdmCtrl_t*)hTrafficAdmCtrl;
-	
+
 	tspecInfo_t			pTSpecInfo;
 	fsmTSpecInfo_t		fsmTSpecInfo;
 
@@ -605,19 +610,19 @@ TI_STATUS trafficAdmCtrl_stopAdmRequest(TI_HANDLE hTrafficAdmCtrl, TI_UINT8 acID
 
 	/* send event STOP to SM */
 	status = trafficAdmCtrl_smEvent(pTrafficAdmCtrl, TRAFFIC_ADM_CTRL_SM_EVENT_STOP, &fsmTSpecInfo);
-	
+
 	return status;
 
 }
 /************************************************************************
  *                    trafficAdmCtrl_stop			                     *
  ************************************************************************
-DESCRIPTION: stop all tspecs and reset SM  
+DESCRIPTION: stop all tspecs and reset SM
 			called on disconnect
-                                                                                                 
+
 INPUT:      pTrafficAdmCtrl	    -	trafficAdmCtr handle.
-	
-OUTPUT:		
+
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
@@ -627,7 +632,7 @@ TI_STATUS trafficAdmCtrl_stop(TI_HANDLE	hTrafficAdmCtrl)
 	TI_UINT32  uAcId;
 
 	trafficAdmCtrl_t	*pTrafficAdmCtrl = (trafficAdmCtrl_t*)hTrafficAdmCtrl;
-	
+
 	tspecInfo_t			pTSpecInfo;
 	fsmTSpecInfo_t		fsmTSpecInfo;
 
@@ -645,18 +650,18 @@ TI_STATUS trafficAdmCtrl_stop(TI_HANDLE	hTrafficAdmCtrl)
 	}
 
 	pTrafficAdmCtrl->dialogTokenCounter = INITIAL_DIALOG_TOKEN;
-	
+
 	return TI_OK;
 }
 
 /************************************************************************
  *                    trafficAdmCtrl_recv			                     *
  ************************************************************************
-DESCRIPTION: 
-                                                                                                 
+DESCRIPTION:
+
 INPUT:      pTrafficAdmCtrl	    -	trafficAdmCtr handle.
-	
-OUTPUT:		
+
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
@@ -673,14 +678,14 @@ TI_STATUS trafficAdmCtrl_recv(TI_HANDLE hTrafficAdmCtrl, TI_UINT8* pData, TI_UIN
 
 	trafficAdmCtrl_t *pTrafficAdmCtrl = (trafficAdmCtrl_t*)hTrafficAdmCtrl;
 
-	if (action == ADDTS_RESPONSE_ACTION) 
+	if (action == ADDTS_RESPONSE_ACTION)
 	{
 TRACE0(pTrafficAdmCtrl->hReport, REPORT_SEVERITY_INFORMATION, "action = 1 - ADDTS RESPONSE ACTION........!! \n");
 
 		/* parsing the dialog token */
 		dialogToken = *pData;
 		pData++;
-		
+
 		/* in WME status code is 1 byte, in WSM is 2 bytes */
 		statusCode = *pData;
 		pData++;
@@ -694,19 +699,19 @@ TRACE2(pTrafficAdmCtrl->hReport, REPORT_SEVERITY_INFORMATION, "dialogToken = %d 
 		if (trafficAdmCtrl_tokenToAc (pTrafficAdmCtrl, dialogToken, &tacID) == TI_NOK)
 		{
 TRACE1(pTrafficAdmCtrl->hReport, REPORT_SEVERITY_WARNING, "dialog token Not found,  dialogToken = %d , \n",dialogToken);
-			
+
 			qosMngr_sendUnexpectedTSPECResponseEvent(pTrafficAdmCtrl->hQosMngr, &tspecInfo);
-		
+
 			return TI_NOK;
 		}
-		
+
 		/* validate dialog token matching */
 		if(pTrafficAdmCtrl->dialogToken[tspecInfo.AC] != dialogToken)
 		{
 TRACE2(pTrafficAdmCtrl->hReport, REPORT_SEVERITY_WARNING, "dialog token mismatch,  dialogToken = %d ,  acID = %d \n",dialogToken, tspecInfo.AC);
-			
+
 			qosMngr_sendUnexpectedTSPECResponseEvent(pTrafficAdmCtrl->hQosMngr, &tspecInfo);
-		
+
 			return TI_NOK;
 		}
 
@@ -717,31 +722,31 @@ TRACE2(pTrafficAdmCtrl->hReport, REPORT_SEVERITY_WARNING, "dialog token mismatch
 		fsmTSpecInfo.pTSpecInfo = &tspecInfo;
 
 		fsmTSpecInfo.acID = tspecInfo.AC;
-		
+
 		if(statusCode != ADDTS_STATUS_CODE_SUCCESS)
 		{
 			/* admission reject */
 			/********************/
 TRACE1(pTrafficAdmCtrl->hReport, REPORT_SEVERITY_INFORMATION, "***** admCtrlQos_recv: admission reject [ statusCode = %d ]\n",statusCode);
-			
-			
+
+
 TRACE1(pTrafficAdmCtrl->hReport, REPORT_SEVERITY_INFORMATION, "ADDTS Response (reject) userPriority = %d , \n", tspecInfo.userPriority);
-			
+
 			trafficAdmCtrl_smEvent(pTrafficAdmCtrl, TRAFFIC_ADM_CTRL_SM_EVENT_REJECT, &fsmTSpecInfo);
-			
+
 		}
 		else
 		{
 			/* admission accept */
 			/********************/
-			
+
 TRACE1(pTrafficAdmCtrl->hReport, REPORT_SEVERITY_INFORMATION, "***** admCtrlQos_recv: admission accept [ statusCode = %d ]\n",statusCode);
-			
-			
+
+
 TRACE1(pTrafficAdmCtrl->hReport, REPORT_SEVERITY_INFORMATION, "ADDTS Response (accepted) userPriority = %d ,  \n", tspecInfo.userPriority);
-	
+
 TRACE2(pTrafficAdmCtrl->hReport, REPORT_SEVERITY_INFORMATION, "mediumTime = %d ,  surplusBandwidthAllowance = %d \n", tspecInfo.mediumTime, tspecInfo.surplausBwAllowance);
-			
+
 			trafficAdmCtrl_smEvent(pTrafficAdmCtrl, TRAFFIC_ADM_CTRL_SM_EVENT_ACCEPT, &fsmTSpecInfo);
 		}
 	}
@@ -758,11 +763,11 @@ TRACE1(pTrafficAdmCtrl->hReport, REPORT_SEVERITY_INFORMATION, "trafficAdmCtrl_re
 /************************************************************************
  *                    trafficAdmCtrl_sendDeltsFrame                     *
  ************************************************************************
-DESCRIPTION: 
-                                                                                                 
+DESCRIPTION:
+
 INPUT:      pTrafficAdmCtrl	    -	trafficAdmCtr handle.
-	
-OUTPUT:		
+
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
@@ -794,7 +799,7 @@ TI_STATUS trafficAdmCtrl_sendDeltsFrame(TI_HANDLE hTrafficAdmCtrl, tspecInfo_t *
         TWD_txCtrlBlk_Free (pTrafficAdmCtrl->hTWD, pPktCtrlBlk);
         return TI_NOK;
     }
-	
+
 	status = trafficAdmCtrl_buildFrameHeader (pTrafficAdmCtrl, pPktCtrlBlk);
 	if (status != TI_OK)
 	{
@@ -810,9 +815,9 @@ TI_STATUS trafficAdmCtrl_sendDeltsFrame(TI_HANDLE hTrafficAdmCtrl, tspecInfo_t *
 	totalLen++;
 	*(pPktBuffer + totalLen) = 0;		/* STATUS CODE is 0 in DELTS */
 	totalLen++;
-	
-	/* 
-	 * Build tsInfo fields 
+
+	/*
+	 * Build tsInfo fields
 	 */
 
 	tsInfo.tsInfoArr[0] = 0;
@@ -823,17 +828,17 @@ TI_STATUS trafficAdmCtrl_sendDeltsFrame(TI_HANDLE hTrafficAdmCtrl, tspecInfo_t *
 
 	tsInfo.tsInfoArr[0] |= (BI_DIRECTIONAL << DIRECTION_SHIFT);		/* bidirectional */
 	tsInfo.tsInfoArr[0] |= (TS_INFO_0_ACCESS_POLICY_EDCA << ACCESS_POLICY_SHIFT);	/* EDCA */
-	
+
 	tsInfo.tsInfoArr[1] |= (0 << AGGREGATION_SHIFT);
-	
+
 	tsInfo.tsInfoArr[1] |= (pTSpecInfo->UPSDFlag << APSD_SHIFT);
-	
+
 	tsInfo.tsInfoArr[1] |= (pTSpecInfo->userPriority << USER_PRIORITY_SHIFT);
 	tsInfo.tsInfoArr[1] |= (NORMAL_ACKNOWLEDGEMENT << TSINFO_ACK_POLICY_SHIFT);
-	
+
 	tsInfo.tsInfoArr[2] |= (NO_SCHEDULE << SCHEDULE_SHIFT);
 
-	/*  
+	/*
 	 * Build TSpec IE for DELTS
 	 */
 
@@ -850,7 +855,7 @@ TI_STATUS trafficAdmCtrl_sendDeltsFrame(TI_HANDLE hTrafficAdmCtrl, tspecInfo_t *
 	*(pPktBuffer + totalLen + 8) = tsInfo.tsInfoArr[0];
 	*(pPktBuffer + totalLen + 9) = tsInfo.tsInfoArr[1];
 	*(pPktBuffer + totalLen +10) = tsInfo.tsInfoArr[2];
-	
+
 	totalLen += WME_TSPEC_IE_TSINFO_LEN + 2;
 
     /* Update packet parameters (start-time, pkt-type and BDL) */
@@ -872,11 +877,11 @@ TI_STATUS trafficAdmCtrl_sendDeltsFrame(TI_HANDLE hTrafficAdmCtrl, tspecInfo_t *
  *                    trafficAdmCtrl_startTimer		                    *
  ************************************************************************
 DESCRIPTION: start a specific ac timer
-                                                                                                   
+
 INPUT:      pTrafficAdmCtrl	    -	trafficAdmCtr handle.
 			acID				-	the AC of the timer
-	
-OUTPUT:		
+
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
@@ -891,7 +896,7 @@ TI_STATUS trafficAdmCtrl_startTimer(trafficAdmCtrl_t* pTrafficAdmCtrl, TI_UINT8 
 		return TI_NOK;
     }
 
-    switch (acID) 
+    switch (acID)
     {
         case QOS_AC_BE:  fTimerExpiryFunc = trafficAdmCtrl_timeoutAcBE;   break;
         case QOS_AC_BK:  fTimerExpiryFunc = trafficAdmCtrl_timeoutAcBK;   break;
@@ -911,11 +916,11 @@ TI_STATUS trafficAdmCtrl_startTimer(trafficAdmCtrl_t* pTrafficAdmCtrl, TI_UINT8 
  *                    trafficAdmCtrl_stopTimer		                    *
  ************************************************************************
 DESCRIPTION: stop a specific ac timer
-                                                                                                   
+
 INPUT:      pTrafficAdmCtrl	    -	trafficAdmCtr handle.
 			acID				-	the AC of the timer
-	
-OUTPUT:		
+
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
@@ -925,7 +930,7 @@ TI_STATUS trafficAdmCtrl_stopTimer(trafficAdmCtrl_t* pTrafficAdmCtrl, TI_UINT8 a
 {
 	if (pTrafficAdmCtrl == NULL)
 		return TI_NOK;
-	
+
 	tmr_StopTimer (pTrafficAdmCtrl->hAdmCtrlTimer[acID]);
 
 	return TI_OK;
@@ -942,7 +947,7 @@ void trafficAdmCtrl_timeoutAcBE (TI_HANDLE hTrafficAdmCtrl, TI_BOOL bTwdInitOccu
 	fsmTSpecInfo_t	fsmTSpecInfo;
 	trafficAdmCtrl_t *pTrafficAdmCtrl = (trafficAdmCtrl_t*)hTrafficAdmCtrl;
 
-	
+
 	/* FSM Tspec Info Structure */
 	fsmTSpecInfo.acID = QOS_AC_BE;
 	fsmTSpecInfo.hTrafficAdmCtrl = hTrafficAdmCtrl;
@@ -958,7 +963,7 @@ void trafficAdmCtrl_timeoutAcBK(TI_HANDLE hTrafficAdmCtrl, TI_BOOL bTwdInitOccur
 	fsmTSpecInfo_t	fsmTSpecInfo;
 	trafficAdmCtrl_t *pTrafficAdmCtrl = (trafficAdmCtrl_t*)hTrafficAdmCtrl;
 
-	
+
 	/* FSM Tspec Info Structure */
 	fsmTSpecInfo.acID = QOS_AC_BK;
 	fsmTSpecInfo.hTrafficAdmCtrl = hTrafficAdmCtrl;
@@ -974,7 +979,7 @@ void trafficAdmCtrl_timeoutAcVI(TI_HANDLE hTrafficAdmCtrl, TI_BOOL bTwdInitOccur
 	fsmTSpecInfo_t	fsmTSpecInfo;
 	trafficAdmCtrl_t *pTrafficAdmCtrl = (trafficAdmCtrl_t*)hTrafficAdmCtrl;
 
-	
+
 	/* FSM Tspec Info Structure */
 	fsmTSpecInfo.acID = QOS_AC_VI;
 	fsmTSpecInfo.hTrafficAdmCtrl = hTrafficAdmCtrl;
@@ -990,7 +995,7 @@ void trafficAdmCtrl_timeoutAcVO(TI_HANDLE hTrafficAdmCtrl, TI_BOOL bTwdInitOccur
 	fsmTSpecInfo_t	fsmTSpecInfo;
 	trafficAdmCtrl_t *pTrafficAdmCtrl = (trafficAdmCtrl_t*)hTrafficAdmCtrl;
 
-	
+
 	/* FSM Tspec Info Structure */
 	fsmTSpecInfo.acID = QOS_AC_VO;
 	fsmTSpecInfo.hTrafficAdmCtrl = hTrafficAdmCtrl;
@@ -1024,11 +1029,11 @@ static TI_STATUS trafficAdmCtrl_tokenToAc (TI_HANDLE hTrafficAdmCtrl, TI_UINT8 t
 /************************************************************************
  *              trafficAdmCtrl_buildFrameHeader							*
  ************************************************************************
-DESCRIPTION: build frame header 
-                                                                                                   
-INPUT:    	
-			
-OUTPUT:		
+DESCRIPTION: build frame header
+
+INPUT:
+
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 ************************************************************************/
@@ -1041,7 +1046,7 @@ TI_STATUS trafficAdmCtrl_buildFrameHeader(trafficAdmCtrl_t *pTrafficAdmCtrl, TTx
 	TMacAddr    		currBssId;
 
 	pdot11Header = (dot11_mgmtHeader_t *)(pPktCtrlBlk->aPktHdr);
-	
+
     /* Get the Destination MAC address */
 	status = ctrlData_getParamBssid(pTrafficAdmCtrl->hCtrlData, CTRL_DATA_CURRENT_BSSID_PARAM, daBssid);
 	if (status != TI_OK)
@@ -1084,11 +1089,11 @@ TRACE0(pTrafficAdmCtrl->hReport, REPORT_SEVERITY_ERROR, "trafficAdmCtrl_buildFra
  *                  trafficAdmCtrl_sendAdmissionReq						*
  ************************************************************************
 DESCRIPTION: send admision request frame
-                                                                                                   
+
 INPUT:      hTrafficAdmCtrl	         -	Qos Manager handle.
 		    pTSpecInfo				 -  tspec parameters
-			
-OUTPUT:		
+
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 ************************************************************************/
@@ -1112,7 +1117,7 @@ TI_STATUS trafficAdmCtrl_sendAdmissionReq(TI_HANDLE hTrafficAdmCtrl, tspecInfo_t
         TRACE0(pTrafficAdmCtrl->hReport, REPORT_SEVERITY_ERROR , ": No ctrl blocks\n");
         return TI_NOK;
     }
-	
+
     pPktBuffer  = txCtrl_AllocPacketBuffer (pTrafficAdmCtrl->hTxCtrl, pPktCtrlBlk, 2000);
     if (pPktBuffer == NULL)
     {
@@ -1120,7 +1125,7 @@ TI_STATUS trafficAdmCtrl_sendAdmissionReq(TI_HANDLE hTrafficAdmCtrl, tspecInfo_t
         TWD_txCtrlBlk_Free (pTrafficAdmCtrl->hTWD, pPktCtrlBlk);
         return TI_NOK;
     }
-	
+
 	status = trafficAdmCtrl_buildFrameHeader (pTrafficAdmCtrl, pPktCtrlBlk);
 	if (status != TI_OK)
 	{
@@ -1158,18 +1163,18 @@ TI_STATUS trafficAdmCtrl_sendAdmissionReq(TI_HANDLE hTrafficAdmCtrl, tspecInfo_t
  *                        trafficAdmCtrl_buildTSPec							*
  ************************************************************************
 DESCRIPTION: build a tspec according to the tspec parameters
-                                                                                                   
+
 INPUT:      hTrafficAdmCtrl	     -	Qos Manager handle.
 		    pTSpecInfo			 -  tspec parameters
 
 OUTPUT:		pPktBuffer             - the Tspec IE to send
-			len					 - the tspec frame len				
+			len					 - the tspec frame len
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 ************************************************************************/
 
-void trafficAdmCtrl_buildTSPec(trafficAdmCtrl_t	*pTrafficAdmCtrl, 
-							   tspecInfo_t		*pTSpecInfo, 
+void trafficAdmCtrl_buildTSPec(trafficAdmCtrl_t	*pTrafficAdmCtrl,
+							   tspecInfo_t		*pTSpecInfo,
 							   TI_UINT8			*pDataBuf,
 							   TI_UINT32		*len)
 {
@@ -1190,8 +1195,8 @@ void trafficAdmCtrl_buildTSPec(trafficAdmCtrl_t	*pTrafficAdmCtrl,
 	*(pDataBuf + 6) =	WME_TSPEC_IE_OUI_SUB_TYPE;
 	*(pDataBuf + 7) =	WME_TSPEC_IE_VERSION;
 
-	/* 
-	 * Build tsInfo fields 
+	/*
+	 * Build tsInfo fields
 	 */
 
 	tsInfo.tsInfoArr[0] = 0;
@@ -1209,17 +1214,17 @@ void trafficAdmCtrl_buildTSPec(trafficAdmCtrl_t	*pTrafficAdmCtrl,
 
 	tsInfo.tsInfoArr[1] |=		(pTSpecInfo->userPriority << USER_PRIORITY_SHIFT);
 	tsInfo.tsInfoArr[1] |=		(NORMAL_ACKNOWLEDGEMENT << TSINFO_ACK_POLICY_SHIFT);
-	
+
 	tsInfo.tsInfoArr[2] |=		(NO_SCHEDULE << SCHEDULE_SHIFT);
 
 	*(pDataBuf + 8) =	tsInfo.tsInfoArr[0];
 	*(pDataBuf + 9) =	tsInfo.tsInfoArr[1];
 	*(pDataBuf +10) =	tsInfo.tsInfoArr[2];
-    
+
 	pDataBuf += 11;  /* Progress the data pointer to the next IE parameters. */
-    
+
 	/*
-	 * Set all remained parameters 
+	 * Set all remained parameters
 	 */
 
     nominalMSDUSize = pTSpecInfo->nominalMsduSize;
@@ -1246,7 +1251,7 @@ void trafficAdmCtrl_buildTSPec(trafficAdmCtrl_t	*pTrafficAdmCtrl,
  *                        trafficAdmCtrl_parseTspecIE					*
  ************************************************************************
 DESCRIPTION: parses a tspec IE according to the tspec parameters
-                                                                                                   
+
 INPUT:      pData			-  tspec IE from received frame
 
 OUTPUT:		pTSpecInfo		-  parsed tspec parameters
@@ -1271,7 +1276,7 @@ void trafficAdmCtrl_parseTspecIE(tspecInfo_t *pTSpecInfo, TI_UINT8 *pData)
 	pData += 3;
 
 	userPriority = (((tsInfo.tsInfoArr[1]) & TS_INFO_1_USER_PRIORITY_MASK) >> USER_PRIORITY_SHIFT);
-	
+
 	acID = WMEQosTagToACTable[userPriority];
 
 	tid = 	(((tsInfo.tsInfoArr[0]) & TS_INFO_0_TSID_MASK) >> TSID_SHIFT);
@@ -1320,4 +1325,4 @@ void trafficAdmCtrl_print(trafficAdmCtrl_t *pTrafficAdmCtr)
 			WLAN_OS_REPORT(("dialogToken    = %d \n",pTrafficAdmCtr->dialogToken[acID]));
 	}
 }
-	
+

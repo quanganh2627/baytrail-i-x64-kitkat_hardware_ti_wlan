@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * GenSM.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file GenSM.c
  *  \brief Generic state machine implementation
  *
@@ -40,13 +45,13 @@
 #include "GenSM.h"
 
 
-/** 
- * \fn     genSM_Create 
+/**
+ * \fn     genSM_Create
  * \brief  Cerates a generic state machine object
- * 
+ *
  * Cerates a generic state machine object. Allocates system resources.
- * 
- * \note   event/action matrix and debug descriptions are used by reference, and are not copied! 
+ *
+ * \note   event/action matrix and debug descriptions are used by reference, and are not copied!
  * \param  hOS - handle to the OS object
  * \return Handle to the generic state machine object
  * \sa     GenSM_Unload, GenSM_Init, genSM_SetDefaults
@@ -66,15 +71,15 @@ TI_HANDLE genSM_Create (TI_HANDLE hOS)
     return (TI_HANDLE)pGenSM;
 }
 
-/** 
- * \fn     genSM_Unload 
+/**
+ * \fn     genSM_Unload
  * \brief  Unloads a generic state machine object
- * 
+ *
  * Unloads a generic state machine object. Frees system resources consumed by the object.
- * 
+ *
  * \param  hGenSM - hanlde to the generic state machine object
  * \return None
- * \sa     GenSM_Create 
+ * \sa     GenSM_Create
  */
 void genSM_Unload (TI_HANDLE hGenSM)
 {
@@ -84,12 +89,12 @@ void genSM_Unload (TI_HANDLE hGenSM)
     os_memoryFree (pGenSM->hOS, hGenSM, sizeof (TGenSM));
 }
 
-/** 
- * \fn     genSM_Init 
+/**
+ * \fn     genSM_Init
  * \brief  Initializes the generic state machine object
- * 
+ *
  * Initializes the generic state machine object. Store handles to other modules.
- * 
+ *
  * \param  hGenSM - hanlde to the generic state machine object
  * \param  hReport - handle to the report module
  * \return None
@@ -103,13 +108,13 @@ void genSM_Init (TI_HANDLE hGenSM, TI_HANDLE hReport)
     pGenSM->hReport = hReport;
 }
 
-/** 
- * \fn     genSM_SetDefaults 
- * \brief  Set default values to the generic state machine 
- * 
+/**
+ * \fn     genSM_SetDefaults
+ * \brief  Set default values to the generic state machine
+ *
  * Set default values to the generic state machine
- * 
- * \note   event/action matrix and debug descriptions are used by reference, and are not copied! 
+ *
+ * \note   event/action matrix and debug descriptions are used by reference, and are not copied!
  * \param  hGenSM - hanlde to the generic state machine object
  * \param  uStateNum - number of states
  * \param  uEventNum - number of events
@@ -123,7 +128,7 @@ void genSM_Init (TI_HANDLE hGenSM, TI_HANDLE hReport)
  * \sa     genSM_Create, genSM_Init
  */
 void genSM_SetDefaults (TI_HANDLE hGenSM, TI_UINT32 uStateNum, TI_UINT32 uEventNum,
-                        TGenSM_matrix pMatrix, TI_UINT32 uInitialState, TI_INT8 *pGenSMName, 
+                        TGenSM_matrix pMatrix, TI_UINT32 uInitialState, TI_INT8 *pGenSMName,
                         TI_INT8 **pStateDesc, TI_INT8 **pEventDesc, TI_UINT32 uModuleLogIndex)
 {
     TGenSM      *pGenSM =       (TGenSM*)hGenSM;
@@ -183,7 +188,7 @@ void genSM_Event (TI_HANDLE hGenSM, TI_UINT32 uEvent, void *pData)
     {
         /* get the cell pointer for the current state and event */
         pCell = &(pGenSM->tMatrix[ (pGenSM->uCurrentState * pGenSM->uEventNum) + pGenSM->uEvent ]);
-        
+
 
         /* print state transition information */
 		TRACE4(pGenSM->hReport, REPORT_SEVERITY_INFORMATION, "genSM_Event: module %d <currentState = %d, event = %d> --> nextState = %d\n", pGenSM->uModuleLogIndex, pGenSM->uCurrentState, uEvent, pCell->uNextState);
@@ -193,7 +198,7 @@ void genSM_Event (TI_HANDLE hGenSM, TI_UINT32 uEvent, void *pData)
 
         /* mark that pending event is being handled */
         pGenSM->bEventPending = TI_FALSE;
-        
+
         /* keep current state */
         uCurrentState = pGenSM->uCurrentState;
 
@@ -208,12 +213,12 @@ void genSM_Event (TI_HANDLE hGenSM, TI_UINT32 uEvent, void *pData)
     }
 }
 
-/** 
+/**
  * \fn     genSM_GetCurrentState
  * \brief  retrieves the state machine current state
- * 
+ *
  * retrieves the state machine current state
- * 
+ *
  * \param  hGenSM - hanlde to the generic state machine object
  * \return state machine current state
  */

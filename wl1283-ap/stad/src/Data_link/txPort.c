@@ -1,41 +1,46 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * txPort.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 /****************************************************************************
  *
  *   MODULE:  txPort.c
- *   
+ *
  *   PURPOSE: Multiplexes between the management and data queues.
- * 
- *	 DESCRIPTION:  
+ *
+ *	 DESCRIPTION:
  *   ============
- * 		The Tx port state machine multiplexes between the management and data queues 
+ * 		The Tx port state machine multiplexes between the management and data queues
  *		according to the management queues requests.
  *
  ****************************************************************************/
@@ -63,7 +68,7 @@ typedef enum
 } EQueueAction;
 
 /* The txPort module object. */
-typedef struct 
+typedef struct
 {
 	TI_HANDLE		hOs;
 	TI_HANDLE		hReport;
@@ -76,7 +81,7 @@ typedef struct
 	TI_BOOL			dataQueueEnabled;
 } TTxPortObj;
 
-/* 
+/*
  * The txPort local functions:
  */
 static void updateQueuesStates(TTxPortObj *pTxPort);
@@ -90,12 +95,12 @@ static char *txPortActionNameStr(EQueueAction queueAction);
 /****************************************************************************
  *                      txPort_Create()
  ****************************************************************************
- * DESCRIPTION:	Create the txPort module object 
- * 
+ * DESCRIPTION:	Create the txPort module object
+ *
  * INPUTS:	None
- * 
+ *
  * OUTPUT:	None
- * 
+ *
  * RETURNS:	The Created object
  ****************************************************************************/
 TI_HANDLE txPort_create(TI_HANDLE hOs)
@@ -117,13 +122,13 @@ TI_HANDLE txPort_create(TI_HANDLE hOs)
 /****************************************************************************
  *                      txPort_unLoad()
  ****************************************************************************
- * DESCRIPTION:	Unload the txPort module object 
- * 
+ * DESCRIPTION:	Unload the txPort module object
+ *
  * INPUTS:	hTxPort - The object to free
- * 
+ *
  * OUTPUT:	None
- * 
- * RETURNS:	TI_OK 
+ *
+ * RETURNS:	TI_OK
  ****************************************************************************/
 TI_STATUS txPort_unLoad(TI_HANDLE hTxPort)
 {
@@ -139,12 +144,12 @@ TI_STATUS txPort_unLoad(TI_HANDLE hTxPort)
 /****************************************************************************
  *                      txPort_init()
  ****************************************************************************
- * DESCRIPTION:	Configure the txPort module object 
- * 
+ * DESCRIPTION:	Configure the txPort module object
+ *
  * INPUTS:	The needed TI handles
- * 
+ *
  * OUTPUT:	None
- * 
+ *
  * RETURNS:	void
  ****************************************************************************/
 void txPort_init (TStadHandlesList *pStadHandles)
@@ -174,7 +179,7 @@ void txPort_enableData(TI_HANDLE hTxPort)
 
 	pTxPort->queuesMuxState = MUX_DATA_QUEUES;
 	updateQueuesStates(pTxPort);
-} 
+}
 
 
 /****************************************************************************
@@ -196,7 +201,7 @@ void txPort_enableMgmt(TI_HANDLE hTxPort)
  *                      txPort_suspendTx()
  ****************************************************************************
  * DESCRIPTION:	Used by STAD applications (e.g. recovery) to temporarily suspend the Tx path.
- ****************************************************************************/ 
+ ****************************************************************************/
 void txPort_suspendTx(TI_HANDLE hTxPort)
 {
 	TTxPortObj *pTxPort = (TTxPortObj *)hTxPort;
@@ -210,7 +215,7 @@ void txPort_suspendTx(TI_HANDLE hTxPort)
  *                      txPort_resumeTx()
  ****************************************************************************
  * DESCRIPTION:	Used by STAD applications (e.g. recovery) to resume Tx path after suspended.
- ****************************************************************************/ 
+ ****************************************************************************/
 void txPort_resumeTx(TI_HANDLE hTxPort)
 {
 	TTxPortObj *pTxPort = (TTxPortObj *)hTxPort;
@@ -225,7 +230,7 @@ void txPort_resumeTx(TI_HANDLE hTxPort)
  ****************************************************************************
  * DESCRIPTION:	 Switch the Data-Queue and Mgmt-Queue Tx on/off (stop/wake)
  *				   according to the current port conditions.
- ****************************************************************************/ 
+ ****************************************************************************/
 static void updateQueuesStates (TTxPortObj *pTxPort)
 {
 	EQueueAction mgmtQueueAction = QUEUE_ACTION_NONE;
@@ -235,7 +240,7 @@ static void updateQueuesStates (TTxPortObj *pTxPort)
 	char *pPortActionNameStr;
 #endif
 
-	/* 
+	/*
 	 * If the Tx path is not suspended:
 	 */
 	if (!pTxPort->txSuspended)
@@ -259,7 +264,7 @@ static void updateQueuesStates (TTxPortObj *pTxPort)
 		}
 	}
 
-	/* 
+	/*
 	 * If the Tx path is not available (Xfer is busy or suspension is requested),
 	 *   set required actions (stop mgmt and data if needed).
 	 */
@@ -275,13 +280,13 @@ static void updateQueuesStates (TTxPortObj *pTxPort)
 #ifdef TI_DBG
 	pMuxStateNameStr = txPortMuxStateNameStr(pTxPort->queuesMuxState);
 	TRACE1(pTxPort->hReport, REPORT_SEVERITY_INFORMATION, ":  queuesMuxState = , TxSuspend = %d\n", pTxPort->txSuspended);
-		
+
 	pPortActionNameStr = txPortActionNameStr (mgmtQueueAction);
 	TRACE2(pTxPort->hReport, REPORT_SEVERITY_INFORMATION, ":  PrevMgmtEnabled = %d,  PrevDataEnabled = %d, MgmtAction = , DataAction = \n", pTxPort->mgmtQueueEnabled, pTxPort->dataQueueEnabled);
 #endif /* TI_DBG */
 
-	/* 
-	 * Execute the required actions. 
+	/*
+	 * Execute the required actions.
 	 * Note: This is done at the end of this function because it may start a sequence that will call it again!!
 	 *       Always do WAKE action after STOP action, since WAKE may lead to more activities!!
 	 */
@@ -314,7 +319,7 @@ static void updateQueuesStates (TTxPortObj *pTxPort)
 /****************************************************************************
  *	Debug functions:	txPortMuxStateNameStr()
  *                      txPortActionNameStr()
- ****************************************************************************/ 
+ ****************************************************************************/
 static char *txPortMuxStateNameStr(EQueuesMuxState queuesMuxState)
 {
 	switch (queuesMuxState)
@@ -334,8 +339,8 @@ static char *txPortActionNameStr(EQueueAction queueAction)
 		case QUEUE_ACTION_WAKE:	return "QUEUE_ACTION_WAKE";
 		default:				return "UNKNOWN ACTION";
 	}
-} 
-		
+}
+
 #endif /* TI_DBG */
 
 

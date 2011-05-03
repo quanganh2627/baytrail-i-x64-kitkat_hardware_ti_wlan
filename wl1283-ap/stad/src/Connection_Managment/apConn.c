@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * apConn.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file apConn.c
  *  \brief AP Connection
  *
@@ -36,11 +41,11 @@
  *                                                                          *
  *   MODULE:  AP Connection                                                 *
  *   PURPOSE:                                                               *
- *   Roaming ability of eSTA is implemented by Roaming Manager Component and 
- *   described in "Roaming Manager module LLD" document, and by 
+ *   Roaming ability of eSTA is implemented by Roaming Manager Component and
+ *   described in "Roaming Manager module LLD" document, and by
  *   AP Connection module. AP Connection module implemented as two sub-modules:
- *   The major one is AP Connection, that is responsible for: 
- *   - providing Roaming Manager with access to other parts of WLAN Driver, 
+ *   The major one is AP Connection, that is responsible for:
+ *   - providing Roaming Manager with access to other parts of WLAN Driver,
  *   - implementing low levels of roaming mechanism.
  *   Current BSS sub-module takes care of:
  *   - maintaining database of current AP info,
@@ -57,8 +62,8 @@
 #include "PowerMgr_API.h"
 #include "TrafficMonitorAPI.h"
 #include "qosMngr_API.h"
-#ifdef CCX_MODULE_INCLUDED
- #include "ccxMngr.h"
+#ifdef XCC_MODULE_INCLUDED
+ #include "XCCMngr.h"
 #endif
 #include "measurementMgrApi.h"
 #include "connApi.h"
@@ -94,7 +99,7 @@
                 (roamingEventType != ROAMING_TRIGGER_SECURITY_ATTACK)) \
             { \
                 pAPConnection->sendDeauthPacket = TI_FALSE; \
-            } 
+            }
 
 /* Init bits */
 
@@ -133,13 +138,13 @@ typedef enum
     AP_CONNECT_EVENT_START_ROAM,            /**< Sent by Roam MNGR when it wishes to roam to new AP */
     AP_CONNECT_EVENT_START_SWITCH_CHANNEL,  /**< Sent by Switch channel module when starting switch channel process (tx enabled) */
     AP_CONNECT_EVENT_FINISHED_SWITCH_CH,    /**< Sent by Switch channel module when finishing switch channel process (tx enabled) */
-    AP_CONNECT_EVENT_FINISHED_HAND_OVER,    /**< Sent by CCX module when finishing hand-over */
+    AP_CONNECT_EVENT_FINISHED_HAND_OVER,    /**< Sent by XCC module when finishing hand-over */
     AP_CONNECT_EVENT_STOP,                  /**< Disconnect current link, send stop indication to other modules */
     AP_CONNECT_EVENT_LAST
 } apConn_smEvents;
 
-#define AP_CONNECT_NUM_STATES       AP_CONNECT_STATE_LAST    
-#define AP_CONNECT_NUM_EVENTS       AP_CONNECT_EVENT_LAST   
+#define AP_CONNECT_NUM_STATES       AP_CONNECT_STATE_LAST
+#define AP_CONNECT_NUM_EVENTS       AP_CONNECT_EVENT_LAST
 
 
 /*----------*/
@@ -151,7 +156,7 @@ typedef enum
 /*------------*/
 
 /**
-* AP Connection control block 
+* AP Connection control block
 * Following structure defines parameters that can be configured externally,
 * internal variables, AP Connection state machine and handlers of other modules
 * used by AP Connection module
@@ -160,7 +165,7 @@ typedef struct _apConn_t
 {
     /* AP Connection state machine */
     TI_UINT8                currentState;       /**< AP Connection state machine current state */
-    
+
     /* Internal parameters */
     TI_BOOL                 firstAttempt2Roam;  /**< TI_TRUE if still connected to original AP, TI_FALSE otherwise */
     TI_BOOL                 roamingEnabled;     /**< If TI_FALSE, act like if no roaming callback registered. */
@@ -179,7 +184,7 @@ typedef struct _apConn_t
     TI_BOOL                 isConsTxFailureMaskedOut;
     TI_BOOL                 islowRateTriggerMaskedOut;
     TI_BOOL                 removeKeys;         /**< Indicates whether keys should be removed after disconnect or not */
-    TI_BOOL                 ignoreDeauthReason0;/**< Indicates whether to ignore DeAuth with reason 0, required for Rogue AP test CCX-V2 */
+    TI_BOOL                 ignoreDeauthReason0;/**< Indicates whether to ignore DeAuth with reason 0, required for Rogue AP test XCC-V2 */
     TI_BOOL                 sendDeauthPacket;   /**< Indicates whether to send DEAUTH packet when discommecting or not */
     TI_UINT8                deauthPacketReasonCode;   /**< Indicates what error code to indicate in the DEAUTH packet  */
     TI_BOOL                 voiceTspecConfigured;/**< Shall be set to TI_TRUE before roaming in case the TSPEC is configured */
@@ -190,12 +195,12 @@ typedef struct _apConn_t
     TI_UINT32               roamingStartedTimestamp;
     TI_UINT8                roamingSuccesfulHandoverNum;
     TI_BOOL					bNonRoamingDisAssocReason; /**< Indicate whether last disconnection was called from outside (SME) */
-    
+
     /** Callback functions, registered by Roaming manager */
-    apConn_roamMngrEventCallb_t  roamEventCallb;         /**< roam event triggers */ 
+    apConn_roamMngrEventCallb_t  roamEventCallb;         /**< roam event triggers */
     apConn_roamMngrCallb_t       reportStatusCallb;      /**< connection status events  */
     apConn_roamMngrCallb_t       returnNeighborApsCallb; /**< neighbor APs list update */
-    
+
     /* Handlers of other modules used by AP Connection */
     TI_HANDLE               hOs;
     TI_HANDLE               hReport;
@@ -203,24 +208,25 @@ typedef struct _apConn_t
     TI_HANDLE               hRoamMng;
     TI_HANDLE               hSme;
     TI_HANDLE               hSiteMgr;
-    TI_HANDLE               hCcxMngr;
+    TI_HANDLE               hXCCMngr;
     TI_HANDLE               hConnSm;
     TI_HANDLE               hPrivacy;
     TI_HANDLE               hQos;
-    TI_HANDLE               hEvHandler; 
-    TI_HANDLE               hScr;   
+    TI_HANDLE               hEvHandler;
+    TI_HANDLE               hScr;
     TI_HANDLE               hAssoc;
     TI_HANDLE               hRegulatoryDomain;
     TI_HANDLE               hMlme;
-    
+
     /* Counters for statistics */
     TI_UINT32               roamingTriggerEvents[MAX_ROAMING_TRIGGERS];
-    TI_UINT32               roamingSuccesfulHandoverTotalNum;   
-    TI_UINT32               roamingFailedHandoverNum;   
+    TI_UINT32               roamingSuccesfulHandoverTotalNum;
+    TI_UINT32               roamingFailedHandoverNum;
     TI_UINT32               retainCurrAPNum;
     TI_UINT32               disconnectFromRoamMngrNum;
     TI_UINT32               stopFromSmeNum;
-   
+
+
     TI_HANDLE               hAPConnSM;
 	apConn_roamingTrigger_e	assocRoamingTrigger;
 } apConn_t;
@@ -247,7 +253,7 @@ static void apConn_smSwChFinished(void *pData);
 static void apConn_smHandleTspecReneg (void *pData);
 
 /* other functions */
-#ifdef CCX_MODULE_INCLUDED
+#ifdef XCC_MODULE_INCLUDED
 static void apConn_calcNewTsf(apConn_t *hAPConnection, TI_UINT8 *tsfTimeStamp, TI_UINT32 newSiteOsTimeStamp, TI_UINT32 beaconInterval);
 #endif
 static TI_STATUS apConn_qosMngrReportResultCallb (TI_HANDLE hApConn, trafficAdmRequestStatus_e result);
@@ -262,22 +268,22 @@ static void		 apConn_reportConnStatusToSME	 (apConn_t *pAPConnection);
 *
 * apConn_create
 *
-* \b Description: 
+* \b Description:
 *
-* Create the AP Connection context: 
-* allocate memory for internal variables; 
+* Create the AP Connection context:
+* allocate memory for internal variables;
 * create state machine.
 *
 * \b ARGS:
 *
 *  I   - hOs - OS handler
-*  
+*
 * \b RETURNS:
 *
-* Pointer to the AP Connection on success, NULL on failure 
+* Pointer to the AP Connection on success, NULL on failure
 * (unable to allocate memory or other error).
 *
-* \sa 
+* \sa
 */
 TI_HANDLE apConn_create(TI_HANDLE hOs)
 {
@@ -296,7 +302,7 @@ TI_HANDLE apConn_create(TI_HANDLE hOs)
         }
 
         /* Succeeded to create AP Connection module context - return pointer to it */
-        return pAPConnection; 
+        return pAPConnection;
     }
     else /* Failed to allocate control block */
     {
@@ -310,7 +316,7 @@ TI_HANDLE apConn_create(TI_HANDLE hOs)
 *
 * apConn_unload
 *
-* \b Description: 
+* \b Description:
 *
 * Finish AP Connection module work:
 * release the allocation for state machine and internal variables.
@@ -322,7 +328,7 @@ TI_HANDLE apConn_create(TI_HANDLE hOs)
 *
 *  TI_OK if successful, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 TI_STATUS apConn_unload(TI_HANDLE hAPConnection)
 {
@@ -344,121 +350,121 @@ TI_STATUS apConn_unload(TI_HANDLE hAPConnection)
 static TGenSM_actionCell apConnSM_matrix[AP_CONNECT_NUM_STATES][AP_CONNECT_NUM_EVENTS] =
 {
     /* next state and actions for IDLE state */
-        {   {AP_CONNECT_STATE_IDLE, apConn_smUnexpected},                   /* PREPARE_FOR_ROAMING  */ 
+        {   {AP_CONNECT_STATE_IDLE, apConn_smUnexpected},                   /* PREPARE_FOR_ROAMING  */
             {AP_CONNECT_STATE_IDLE, apConn_smUnexpected},                   /* FINISHED_OK          */
             {AP_CONNECT_STATE_IDLE, apConn_smUnexpected},                   /* FINISHED_NOT_OK      */
-            {AP_CONNECT_STATE_IDLE, apConn_smUnexpected},                   /* RETAIN_CURRENT_AP    */ 
-            {AP_CONNECT_STATE_WAIT_ROAM,apConn_smStartWaitingForTriggers},  /* START                */ 
-            {AP_CONNECT_STATE_IDLE, apConn_smUnexpected},                   /* START_ROAM           */ 
-            {AP_CONNECT_STATE_IDLE, apConn_smUnexpected},                   /* START_SWITCH_CHANNEL */ 
-            {AP_CONNECT_STATE_IDLE, apConn_smNop},                          /* FINISHED_SWITCH_CH   */ 
-            {AP_CONNECT_STATE_IDLE, apConn_smNop},                          /* FINISHED_HAND_OVER   */ 
+            {AP_CONNECT_STATE_IDLE, apConn_smUnexpected},                   /* RETAIN_CURRENT_AP    */
+            {AP_CONNECT_STATE_WAIT_ROAM,apConn_smStartWaitingForTriggers},  /* START                */
+            {AP_CONNECT_STATE_IDLE, apConn_smUnexpected},                   /* START_ROAM           */
+            {AP_CONNECT_STATE_IDLE, apConn_smUnexpected},                   /* START_SWITCH_CHANNEL */
+            {AP_CONNECT_STATE_IDLE, apConn_smNop},                          /* FINISHED_SWITCH_CH   */
+            {AP_CONNECT_STATE_IDLE, apConn_smNop},                          /* FINISHED_HAND_OVER   */
             {AP_CONNECT_STATE_IDLE, apConn_smUnexpected}                    /* STOP                 */
-        },                                                                              
+        },
         /* next state and actions for WAIT_ROAM state */
-        {   {AP_CONNECT_STATE_WAIT_CONNECT_CMD,apConn_smConfigureDriverBeforeRoaming},/* PREPARE_FOR_ROAMING  */ 
+        {   {AP_CONNECT_STATE_WAIT_CONNECT_CMD,apConn_smConfigureDriverBeforeRoaming},/* PREPARE_FOR_ROAMING  */
             {AP_CONNECT_STATE_WAIT_ROAM, apConn_smUnexpected},          /* FINISHED_OK          */
             {AP_CONNECT_STATE_WAIT_ROAM, apConn_smUnexpected},          /* FINISHED_NOT_OK      */
-            {AP_CONNECT_STATE_WAIT_ROAM, apConn_smUnexpected},          /* RETAIN_CURRENT_AP    */ 
-            {AP_CONNECT_STATE_WAIT_ROAM, apConn_smUnexpected},          /* START                */ 
-            {AP_CONNECT_STATE_WAIT_ROAM, apConn_smUnexpected},          /* START_ROAM           */ 
-            {AP_CONNECT_STATE_SWITCHING_CHANNEL, apConn_smNop},         /* START_SWITCH_CHANNEL */ 
-            {AP_CONNECT_STATE_WAIT_ROAM, apConn_smUnexpected},          /* FINISHED_SWITCH_CH   */ 
-            {AP_CONNECT_STATE_WAIT_ROAM, apConn_smUnexpected},          /* FINISHED_HAND_OVER   */ 
+            {AP_CONNECT_STATE_WAIT_ROAM, apConn_smUnexpected},          /* RETAIN_CURRENT_AP    */
+            {AP_CONNECT_STATE_WAIT_ROAM, apConn_smUnexpected},          /* START                */
+            {AP_CONNECT_STATE_WAIT_ROAM, apConn_smUnexpected},          /* START_ROAM           */
+            {AP_CONNECT_STATE_SWITCHING_CHANNEL, apConn_smNop},         /* START_SWITCH_CHANNEL */
+            {AP_CONNECT_STATE_WAIT_ROAM, apConn_smUnexpected},          /* FINISHED_SWITCH_CH   */
+            {AP_CONNECT_STATE_WAIT_ROAM, apConn_smUnexpected},          /* FINISHED_HAND_OVER   */
             {AP_CONNECT_STATE_DISCONNECTING, apConn_smStopConnection}   /* STOP                 */
-        },                                                                              
+        },
         /* next state and actions for SWITCHING_CHANNEL state */
-        {   {AP_CONNECT_STATE_SWITCHING_CHANNEL, apConn_smUnexpected},  /* PREPARE_FOR_ROAMING  */ 
+        {   {AP_CONNECT_STATE_SWITCHING_CHANNEL, apConn_smUnexpected},  /* PREPARE_FOR_ROAMING  */
             {AP_CONNECT_STATE_SWITCHING_CHANNEL, apConn_smUnexpected},  /* FINISHED_OK          */
             {AP_CONNECT_STATE_SWITCHING_CHANNEL, apConn_smUnexpected},  /* FINISHED_NOT_OK      */
-            {AP_CONNECT_STATE_SWITCHING_CHANNEL, apConn_smUnexpected},  /* RETAIN_CURRENT_AP    */ 
-            {AP_CONNECT_STATE_SWITCHING_CHANNEL, apConn_smUnexpected},  /* START                */ 
-            {AP_CONNECT_STATE_SWITCHING_CHANNEL, apConn_smUnexpected},  /* START_ROAM           */ 
-            {AP_CONNECT_STATE_SWITCHING_CHANNEL, apConn_smSwChFinished},/* START_SWITCH_CHANNEL */ 
-            {AP_CONNECT_STATE_WAIT_ROAM, apConn_smNop},                 /* FINISHED_SWITCH_CH   */ 
-            {AP_CONNECT_STATE_SWITCHING_CHANNEL, apConn_smUnexpected},  /* FINISHED_HAND_OVER   */ 
+            {AP_CONNECT_STATE_SWITCHING_CHANNEL, apConn_smUnexpected},  /* RETAIN_CURRENT_AP    */
+            {AP_CONNECT_STATE_SWITCHING_CHANNEL, apConn_smUnexpected},  /* START                */
+            {AP_CONNECT_STATE_SWITCHING_CHANNEL, apConn_smUnexpected},  /* START_ROAM           */
+            {AP_CONNECT_STATE_SWITCHING_CHANNEL, apConn_smSwChFinished},/* START_SWITCH_CHANNEL */
+            {AP_CONNECT_STATE_WAIT_ROAM, apConn_smNop},                 /* FINISHED_SWITCH_CH   */
+            {AP_CONNECT_STATE_SWITCHING_CHANNEL, apConn_smUnexpected},  /* FINISHED_HAND_OVER   */
             {AP_CONNECT_STATE_DISCONNECTING, apConn_smStopConnection}   /* STOP                 */
-        },                                                                              
+        },
         /* next state and actions for WAIT_CONNECT_CMD state */
-        {   {AP_CONNECT_STATE_WAIT_CONNECT_CMD, apConn_smUnexpected},   /* PREPARE_FOR_ROAMING  */ 
+        {   {AP_CONNECT_STATE_WAIT_CONNECT_CMD, apConn_smUnexpected},   /* PREPARE_FOR_ROAMING  */
             {AP_CONNECT_STATE_WAIT_CONNECT_CMD, apConn_smUnexpected},   /* FINISHED_OK          */
             {AP_CONNECT_STATE_WAIT_CONNECT_CMD, apConn_smUnexpected},   /* FINISHED_NOT_OK      */
-            {AP_CONNECT_STATE_WAIT_ROAM, apConn_smRetainAP},            /* RETAIN_CURRENT_AP    */ 
-            {AP_CONNECT_STATE_WAIT_CONNECT_CMD, apConn_smUnexpected},   /* START                */ 
-            {AP_CONNECT_STATE_PREPARE_HAND_OFF, apConn_smRequestCCKM},  /* START_ROAM           */ 
-            {AP_CONNECT_STATE_WAIT_CONNECT_CMD, apConn_smUnexpected},   /* START_SWITCH_CHANNEL */ 
-            {AP_CONNECT_STATE_WAIT_CONNECT_CMD, apConn_smUnexpected},   /* FINISHED_SWITCH_CH   */ 
-            {AP_CONNECT_STATE_WAIT_CONNECT_CMD, apConn_smUnexpected},   /* FINISHED_HAND_OVER   */ 
+            {AP_CONNECT_STATE_WAIT_ROAM, apConn_smRetainAP},            /* RETAIN_CURRENT_AP    */
+            {AP_CONNECT_STATE_WAIT_CONNECT_CMD, apConn_smUnexpected},   /* START                */
+            {AP_CONNECT_STATE_PREPARE_HAND_OFF, apConn_smRequestCCKM},  /* START_ROAM           */
+            {AP_CONNECT_STATE_WAIT_CONNECT_CMD, apConn_smUnexpected},   /* START_SWITCH_CHANNEL */
+            {AP_CONNECT_STATE_WAIT_CONNECT_CMD, apConn_smUnexpected},   /* FINISHED_SWITCH_CH   */
+            {AP_CONNECT_STATE_WAIT_CONNECT_CMD, apConn_smUnexpected},   /* FINISHED_HAND_OVER   */
             {AP_CONNECT_STATE_DISCONNECTING, apConn_smStopConnection}   /* STOP                 */
-        },                                                                              
+        },
         /* next state and actions for PREPARE_HAND_OFF state */
-        {   {AP_CONNECT_STATE_PREPARE_HAND_OFF, apConn_smUnexpected},   /* PREPARE_FOR_ROAMING  */ 
+        {   {AP_CONNECT_STATE_PREPARE_HAND_OFF, apConn_smUnexpected},   /* PREPARE_FOR_ROAMING  */
             {AP_CONNECT_STATE_PREPARE_HAND_OFF, apConn_smUnexpected},   /* FINISHED_OK          */
             {AP_CONNECT_STATE_PREPARE_HAND_OFF, apConn_smUnexpected},   /* FINISHED_NOT_OK      */
-            {AP_CONNECT_STATE_PREPARE_HAND_OFF, apConn_smUnexpected},   /* RETAIN_CURRENT_AP    */ 
-            {AP_CONNECT_STATE_PREPARE_HAND_OFF, apConn_smUnexpected},   /* START                */ 
-            {AP_CONNECT_STATE_PREPARE_HAND_OFF, apConn_smUnexpected},   /* START_ROAM           */ 
-            {AP_CONNECT_STATE_PREPARE_HAND_OFF, apConn_smUnexpected},   /* START_SWITCH_CHANNEL */ 
-            {AP_CONNECT_STATE_PREPARE_HAND_OFF, apConn_smUnexpected},   /* FINISHED_SWITCH_CH   */ 
-            {AP_CONNECT_STATE_CONNECTING, apConn_smInvokeConnectionToNewAp},/* FINISHED_HAND_OVER */ 
+            {AP_CONNECT_STATE_PREPARE_HAND_OFF, apConn_smUnexpected},   /* RETAIN_CURRENT_AP    */
+            {AP_CONNECT_STATE_PREPARE_HAND_OFF, apConn_smUnexpected},   /* START                */
+            {AP_CONNECT_STATE_PREPARE_HAND_OFF, apConn_smUnexpected},   /* START_ROAM           */
+            {AP_CONNECT_STATE_PREPARE_HAND_OFF, apConn_smUnexpected},   /* START_SWITCH_CHANNEL */
+            {AP_CONNECT_STATE_PREPARE_HAND_OFF, apConn_smUnexpected},   /* FINISHED_SWITCH_CH   */
+            {AP_CONNECT_STATE_CONNECTING, apConn_smInvokeConnectionToNewAp},/* FINISHED_HAND_OVER */
             {AP_CONNECT_STATE_DISCONNECTING, apConn_smStopConnection}       /* STOP               */
-        },                                                                              
+        },
         /* next state and actions for CONNECTING state */
-        {   {AP_CONNECT_STATE_CONNECTING, apConn_smUnexpected},             /* PREPARE_FOR_ROAMING  */ 
+        {   {AP_CONNECT_STATE_CONNECTING, apConn_smUnexpected},             /* PREPARE_FOR_ROAMING  */
             {AP_CONNECT_STATE_REESTABLISH_VOICE,apConn_smHandleTspecReneg}, /* FINISHED_OK             */
             {AP_CONNECT_STATE_WAIT_CONNECT_CMD, apConn_smReportConnFail},   /* FINISHED_NOT_OK      */
-            {AP_CONNECT_STATE_CONNECTING, apConn_smUnexpected},             /* RETAIN_CURRENT_AP    */ 
-            {AP_CONNECT_STATE_CONNECTING, apConn_smUnexpected},             /* START                */ 
-            {AP_CONNECT_STATE_CONNECTING, apConn_smUnexpected},             /* START_ROAM           */ 
-            {AP_CONNECT_STATE_CONNECTING, apConn_smUnexpected},             /* START_SWITCH_CHANNEL */ 
-            {AP_CONNECT_STATE_CONNECTING, apConn_smUnexpected},             /* FINISHED_SWITCH_CH   */ 
-            {AP_CONNECT_STATE_CONNECTING, apConn_smUnexpected},             /* FINISHED_HAND_OVER   */ 
+            {AP_CONNECT_STATE_CONNECTING, apConn_smUnexpected},             /* RETAIN_CURRENT_AP    */
+            {AP_CONNECT_STATE_CONNECTING, apConn_smUnexpected},             /* START                */
+            {AP_CONNECT_STATE_CONNECTING, apConn_smUnexpected},             /* START_ROAM           */
+            {AP_CONNECT_STATE_CONNECTING, apConn_smUnexpected},             /* START_SWITCH_CHANNEL */
+            {AP_CONNECT_STATE_CONNECTING, apConn_smUnexpected},             /* FINISHED_SWITCH_CH   */
+            {AP_CONNECT_STATE_CONNECTING, apConn_smUnexpected},             /* FINISHED_HAND_OVER   */
             {AP_CONNECT_STATE_DISCONNECTING, apConn_smStopConnection}       /* STOP                 */
-        },                                                                              
+        },
         /* next state and actions for DISCONNECTING state */
-        {   {AP_CONNECT_STATE_DISCONNECTING, apConn_smNop},             /* PREPARE_FOR_ROAMING  */ 
+        {   {AP_CONNECT_STATE_DISCONNECTING, apConn_smNop},             /* PREPARE_FOR_ROAMING  */
             {AP_CONNECT_STATE_IDLE, apConn_smReportDisconnected},       /* FINISHED_OK          */
             {AP_CONNECT_STATE_IDLE, apConn_smReportDisconnected},       /* FINISHED_NOT_OK      */
-            {AP_CONNECT_STATE_DISCONNECTING, apConn_smNop},             /* RETAIN_CURRENT_AP    */ 
-            {AP_CONNECT_STATE_DISCONNECTING, apConn_smUnexpected},      /* START                */ 
-            {AP_CONNECT_STATE_DISCONNECTING, apConn_smNop},             /* START_ROAM           */ 
-            {AP_CONNECT_STATE_DISCONNECTING, apConn_smNop},             /* START_SWITCH_CHANNEL */ 
-            {AP_CONNECT_STATE_DISCONNECTING, apConn_smNop},             /* FINISHED_SWITCH_CH   */ 
-            {AP_CONNECT_STATE_DISCONNECTING, apConn_smNop},             /* FINISHED_HAND_OVER   */ 
+            {AP_CONNECT_STATE_DISCONNECTING, apConn_smNop},             /* RETAIN_CURRENT_AP    */
+            {AP_CONNECT_STATE_DISCONNECTING, apConn_smUnexpected},      /* START                */
+            {AP_CONNECT_STATE_DISCONNECTING, apConn_smNop},             /* START_ROAM           */
+            {AP_CONNECT_STATE_DISCONNECTING, apConn_smNop},             /* START_SWITCH_CHANNEL */
+            {AP_CONNECT_STATE_DISCONNECTING, apConn_smNop},             /* FINISHED_SWITCH_CH   */
+            {AP_CONNECT_STATE_DISCONNECTING, apConn_smNop},             /* FINISHED_HAND_OVER   */
             {AP_CONNECT_STATE_DISCONNECTING, apConn_smNop},             /* STOP                 */
-        },                                                                             
+        },
         /* next state and actions for REESTABLISH_VOICE state */
-        {   {AP_CONNECT_STATE_REESTABLISH_VOICE, apConn_smUnexpected},      /* PREPARE_FOR_ROAMING  */ 
+        {   {AP_CONNECT_STATE_REESTABLISH_VOICE, apConn_smUnexpected},      /* PREPARE_FOR_ROAMING  */
             {AP_CONNECT_STATE_WAIT_ROAM,apConn_smConnectedToNewAP},         /* FINISHED_OK          */
             {AP_CONNECT_STATE_WAIT_CONNECT_CMD, apConn_smReportConnFail},   /* FINISHED_NOT_OK      */
-            {AP_CONNECT_STATE_REESTABLISH_VOICE, apConn_smUnexpected},      /* RETAIN_CURRENT_AP    */ 
-            {AP_CONNECT_STATE_REESTABLISH_VOICE, apConn_smUnexpected},      /* START                */ 
-            {AP_CONNECT_STATE_REESTABLISH_VOICE, apConn_smUnexpected},      /* START_ROAM           */ 
-            {AP_CONNECT_STATE_REESTABLISH_VOICE, apConn_smUnexpected},      /* START_SWITCH_CHANNEL */ 
-            {AP_CONNECT_STATE_REESTABLISH_VOICE, apConn_smUnexpected},      /* FINISHED_SWITCH_CH   */ 
-            {AP_CONNECT_STATE_REESTABLISH_VOICE, apConn_smUnexpected},      /* FINISHED_HAND_OVER   */ 
+            {AP_CONNECT_STATE_REESTABLISH_VOICE, apConn_smUnexpected},      /* RETAIN_CURRENT_AP    */
+            {AP_CONNECT_STATE_REESTABLISH_VOICE, apConn_smUnexpected},      /* START                */
+            {AP_CONNECT_STATE_REESTABLISH_VOICE, apConn_smUnexpected},      /* START_ROAM           */
+            {AP_CONNECT_STATE_REESTABLISH_VOICE, apConn_smUnexpected},      /* START_SWITCH_CHANNEL */
+            {AP_CONNECT_STATE_REESTABLISH_VOICE, apConn_smUnexpected},      /* FINISHED_SWITCH_CH   */
+            {AP_CONNECT_STATE_REESTABLISH_VOICE, apConn_smUnexpected},      /* FINISHED_HAND_OVER   */
             {AP_CONNECT_STATE_DISCONNECTING, apConn_smStopConnection}       /* STOP                 */
-        }                                                                             
-}; 
+        }
+};
 
 
 /**
 *
 * apConn_init
 *
-* \b Description: 
+* \b Description:
 *
 * Prepare AP Connection module to work: initiate internal variables, start state machine
 *
 * \b ARGS:
 *
 *  I   - pStadHandles  - The driver modules handles  \n
-*  
+*
 * \b RETURNS:
 *
 *  void
 *
-* \sa 
+* \sa
 */
 void apConn_init (TStadHandlesList *pStadHandles)
 {
@@ -469,7 +475,7 @@ void apConn_init (TStadHandlesList *pStadHandles)
     pAPConnection->hRoamMng     = pStadHandles->hRoamingMngr;
     pAPConnection->hSme         = pStadHandles->hSme;
     pAPConnection->hSiteMgr     = pStadHandles->hSiteMgr;
-    pAPConnection->hCcxMngr     = pStadHandles->hCcxMngr;
+    pAPConnection->hXCCMngr     = pStadHandles->hXCCMngr;
     pAPConnection->hConnSm      = pStadHandles->hConn;
     pAPConnection->hPrivacy     = pStadHandles->hRsn;
     pAPConnection->hQos         = pStadHandles->hQosMngr;
@@ -478,7 +484,7 @@ void apConn_init (TStadHandlesList *pStadHandles)
     pAPConnection->hAssoc       = pStadHandles->hAssoc;
     pAPConnection->hMlme        = pStadHandles->hMlmeSm;
     pAPConnection->hRegulatoryDomain = pStadHandles->hRegulatoryDomain;
-    
+
     pAPConnection->currentState = AP_CONNECT_STATE_IDLE;
     pAPConnection->firstAttempt2Roam = TI_TRUE;
     pAPConnection->roamingEnabled = TI_TRUE;
@@ -550,9 +556,9 @@ TI_STATUS apConn_SetDefaults  (TI_HANDLE hAPConnection, apConnParams_t *pApConnP
 
 /* apConn_isPsRequiredBeforeScan
 *
-* \b Description: 
+* \b Description:
 *
-* verify if the PS required before scan according if roaming triger is part of ROAMING_TRIGGER_LOW_QUALITY_GROUP 
+* verify if the PS required before scan according if roaming triger is part of ROAMING_TRIGGER_LOW_QUALITY_GROUP
 *
 * \b ARGS:
 *
@@ -562,7 +568,7 @@ TI_STATUS apConn_SetDefaults  (TI_HANDLE hAPConnection, apConnParams_t *pApConnP
 *
 *  TRUE or FALSE.
 *
-* \sa 
+* \sa
 */
 TI_BOOL apConn_isPsRequiredBeforeScan(TI_HANDLE hAPConnection)
 {
@@ -581,10 +587,10 @@ TI_BOOL apConn_isPsRequiredBeforeScan(TI_HANDLE hAPConnection)
 *
 * apConn_ConnCompleteInd
 *
-* \b Description: 
+* \b Description:
 *
-* Inform AP Connection about successful / unsuccessful completion 
-* of link establishing 
+* Inform AP Connection about successful / unsuccessful completion
+* of link establishing
 *
 * \b ARGS:
 *
@@ -594,13 +600,13 @@ TI_BOOL apConn_isPsRequiredBeforeScan(TI_HANDLE hAPConnection)
 *
 *  None.
 *
-* \sa 
+* \sa
 */
 void apConn_ConnCompleteInd(TI_HANDLE hAPConnection, mgmtStatus_e status, TI_UINT32 uStatusCode)
 {
     apConn_t *pAPConnection = (apConn_t *)hAPConnection;
 
-    if (status == STATUS_SUCCESSFUL) 
+    if (status == STATUS_SUCCESSFUL)
     {
         apConn_smEvent(&(pAPConnection->currentState), AP_CONNECT_EVENT_FINISHED_OK, pAPConnection);
     }
@@ -619,9 +625,9 @@ TI_STATUS apConn_getRoamThresholds(TI_HANDLE hAPConnection, roamingMngrThreshold
     pParam->txRateThreshold = pAPConnection->lowRateThreshold;
     pParam->dataRetryThreshold = pAPConnection->txFailureThreshold;
 
-    currBSS_getRoamingParams(pAPConnection->hCurrBSS, 
-                             &pParam->numExpectedTbttForBSSLoss, 
-                             &pParam->lowQualityForBackgroungScanCondition, 
+    currBSS_getRoamingParams(pAPConnection->hCurrBSS,
+                             &pParam->numExpectedTbttForBSSLoss,
+                             &pParam->lowQualityForBackgroungScanCondition,
                              &pParam->normalQualityForBackgroungScanCondition);
 
     return TI_OK;
@@ -635,7 +641,7 @@ TI_STATUS apConn_setRoamThresholds(TI_HANDLE hAPConnection, roamingMngrThreshold
 
     /* If low quality trigger threshold is set to 0 - this is the request to ignore this trigger */
     /* Otherwise store it */
-    if (pParam->lowRssiThreshold == (TI_INT8)AP_CONNECT_TRIGGER_IGNORED) 
+    if (pParam->lowRssiThreshold == (TI_INT8)AP_CONNECT_TRIGGER_IGNORED)
     {
         pAPConnection->isRssiTriggerMaskedOut = TI_TRUE;
         pParam->lowRssiThreshold = pAPConnection->rssiThreshold;
@@ -646,7 +652,7 @@ TI_STATUS apConn_setRoamThresholds(TI_HANDLE hAPConnection, roamingMngrThreshold
         pAPConnection->rssiThreshold = pParam->lowRssiThreshold;
     }
 
-    if (pParam->txRateThreshold == AP_CONNECT_TRIGGER_IGNORED) 
+    if (pParam->txRateThreshold == AP_CONNECT_TRIGGER_IGNORED)
     {
         pAPConnection->islowRateTriggerMaskedOut = TI_TRUE;
         pParam->txRateThreshold = pAPConnection->lowRateThreshold;
@@ -657,7 +663,7 @@ TI_STATUS apConn_setRoamThresholds(TI_HANDLE hAPConnection, roamingMngrThreshold
         pAPConnection->lowRateThreshold = pParam->txRateThreshold;
     }
 
-    if (pParam->dataRetryThreshold == AP_CONNECT_TRIGGER_IGNORED) 
+    if (pParam->dataRetryThreshold == AP_CONNECT_TRIGGER_IGNORED)
     {
         pAPConnection->isConsTxFailureMaskedOut = TI_TRUE;
         pParam->dataRetryThreshold = pAPConnection->txFailureThreshold;
@@ -676,7 +682,7 @@ TI_STATUS apConn_setRoamThresholds(TI_HANDLE hAPConnection, roamingMngrThreshold
     return TI_OK;
 }
 
-TI_STATUS apConn_registerRoamMngrCallb(TI_HANDLE hAPConnection, 
+TI_STATUS apConn_registerRoamMngrCallb(TI_HANDLE hAPConnection,
                                        apConn_roamMngrEventCallb_t  roamEventCallb,
                                        apConn_roamMngrCallb_t       reportStatusCallb,
                                        apConn_roamMngrCallb_t       returnNeighborApsCallb)
@@ -700,7 +706,7 @@ TI_STATUS apConn_registerRoamMngrCallb(TI_HANDLE hAPConnection,
         reportStatus.dataBufLength = param.content.assocReqBuffer.bufferSize;
 
         reportStatus.status = CONN_STATUS_CONNECTED;
-        reportStatusCallb(pAPConnection->hRoamMng, &reportStatus);  
+        reportStatusCallb(pAPConnection->hRoamMng, &reportStatus);
     }
     ((apConn_t *)hAPConnection)->returnNeighborApsCallb = returnNeighborApsCallb;
 
@@ -758,7 +764,7 @@ TI_STATUS apConn_getStaCapabilities(TI_HANDLE hAPConnection,
 
     /* Get authentication suite type */
     param.paramType = RSN_EXT_AUTHENTICATION_MODE;
-    rsn_getParam(pAPConnection->hPrivacy, &param);      
+    rsn_getParam(pAPConnection->hPrivacy, &param);
 
     switch (param.content.rsnExtAuthneticationMode)
     {
@@ -821,12 +827,12 @@ TI_STATUS apConn_getStaCapabilities(TI_HANDLE hAPConnection,
     param.paramType = SITE_MGR_DESIRED_SUPPORTED_RATE_SET_PARAM;
     siteMgr_getParam(pAPConnection->hSiteMgr, &param);
     os_memoryCopy(pAPConnection->hOs, (void *)param.content.siteMgrDesiredSupportedRateSet.ratesString, pList->rateMask, sizeof(OS_802_11_RATES_EX));
-    
+
     /* Get mode: 2.4G, 5G or Dual */
     param.paramType = SITE_MGR_DESIRED_DOT11_MODE_PARAM;
     siteMgr_getParam(pAPConnection->hSiteMgr, &param);
     pList->networkType = (OS_802_11_NETWORK_TYPE)param.content.siteMgrDot11Mode;
-    switch(param.content.siteMgrDot11Mode) 
+    switch(param.content.siteMgrDot11Mode)
     {
         case DOT11_B_MODE:
             pList->networkType = os802_11DS;
@@ -846,13 +852,13 @@ TI_STATUS apConn_getStaCapabilities(TI_HANDLE hAPConnection,
     }
 
 
-    /* Get CCX status */
-#ifdef CCX_MODULE_INCLUDED
-    param.paramType = CCX_ENABLED;
-    ccxMngr_getParam(pAPConnection->hCcxMngr, &param);
-    pList->ccxEnabled = (param.content.ccxEnabled==CCX_MODE_ENABLED)? TI_TRUE : TI_FALSE;
+    /* Get XCC status */
+#ifdef XCC_MODULE_INCLUDED
+    param.paramType = XCC_ENABLED;
+    XCCMngr_getParam(pAPConnection->hXCCMngr, &param);
+    pList->XCCEnabled = (param.content.XCCEnabled==XCC_MODE_ENABLED)? TI_TRUE : TI_FALSE;
 #else
-    pList->ccxEnabled = TI_FALSE;
+    pList->XCCEnabled = TI_FALSE;
 #endif
 
     /* Get QoS type */
@@ -868,7 +874,7 @@ TI_STATUS apConn_getStaCapabilities(TI_HANDLE hAPConnection,
     {   /* 802.11h is enabled (802.11h includes 802.11d) */
         pList->regDomain = REG_DOMAIN_80211H;
     }
-    else 
+    else
     {
     param.paramType = REGULATORY_DOMAIN_ENABLED_PARAM;
     regulatoryDomain_getParam(pAPConnection->hRegulatoryDomain, &param);
@@ -891,7 +897,7 @@ TI_STATUS apConn_connectToAP(TI_HANDLE hAPConnection,
 
     pAPConnection->requestType = request->requestType;
 
-    switch (request->requestType) 
+    switch (request->requestType)
     {
         case AP_CONNECT_RETAIN_CURR_AP:
             apConn_smEvent(&(pAPConnection->currentState), AP_CONNECT_EVENT_RETAIN_CURRENT_AP, pAPConnection);
@@ -937,7 +943,7 @@ bssEntry_t *apConn_getBSSParams(TI_HANDLE hAPConnection)
         return NULL;
     }
 #endif
-        
+
     return currBSS_getBssInfo(((apConn_t *)hAPConnection)->hCurrBSS);
 }
 
@@ -976,13 +982,13 @@ TI_STATUS apConn_preAuthenticate(TI_HANDLE hAPConnection, bssList_t *listAPs)
         WLAN_OS_REPORT(("FATAL ERROR: AP Connection context is not initiated\n"));
         return TI_NOK;
     }
-        
+
         TRACE0(pAPConnection->hReport, REPORT_SEVERITY_INFORMATION, "apConn_reserveResources \n");
 #endif
 
     for (listIndex=0, apListIndex=0; listIndex<listAPs->numOfEntries; listIndex++)
     {
-        MAC_COPY (apList.bssidList[apListIndex].bssId, 
+        MAC_COPY (apList.bssidList[apListIndex].bssId,
 				  listAPs->BSSList[listIndex].BSSID);
 
         /* search in the buffer pointer to the beginning of the
@@ -990,7 +996,7 @@ TI_STATUS apConn_preAuthenticate(TI_HANDLE hAPConnection, bssList_t *listAPs)
         if (!mlmeParser_ParseIeBuffer (pAPConnection->hMlme, listAPs->BSSList[listIndex].pBuffer, listAPs->BSSList[listIndex].bufferLength, RSN_IE_ID, &pRsnIEs, NULL, 0))
         {
             TRACE0(pAPConnection->hReport, REPORT_SEVERITY_INFORMATION, "apConn_preAuthenticate, no RSN IE was found \n");
-            TRACE_INFO_HEX(pAPConnection->hReport, listAPs->BSSList[listIndex].pBuffer, listAPs->BSSList[listIndex].bufferLength); 
+            TRACE_INFO_HEX(pAPConnection->hReport, listAPs->BSSList[listIndex].pBuffer, listAPs->BSSList[listIndex].bufferLength);
             continue;
         }
 
@@ -999,8 +1005,8 @@ TI_STATUS apConn_preAuthenticate(TI_HANDLE hAPConnection, bssList_t *listAPs)
         apListIndex++;
     }
 
-    /* Start pre-auth after any Conn succ (including first), 
-    and not only when a New BSSID was added, in order to save/refresh 
+    /* Start pre-auth after any Conn succ (including first),
+    and not only when a New BSSID was added, in order to save/refresh
     PMKID of the current AP.*/
     {
         /* Add the current BSSID to the list */
@@ -1034,7 +1040,7 @@ TI_STATUS apConn_prepareToRoaming(TI_HANDLE hAPConnection, apConn_roamingTrigger
     AP_CONN_VALIDATE_HANDLE(hAPConnection);
 
     pAPConnection->roamReason = reason;
-    
+
     apConn_smEvent(&(pAPConnection->currentState), AP_CONNECT_EVENT_PREPARE_FOR_ROAMING, pAPConnection);
     return TI_OK;
 }
@@ -1043,9 +1049,9 @@ TI_STATUS apConn_prepareToRoaming(TI_HANDLE hAPConnection, apConn_roamingTrigger
 *
 * apConn_indicateSwitchChannelInProgress
 *
-* \b Description: 
+* \b Description:
 *
-* This function is called when switch channel process is started; it will trigger 
+* This function is called when switch channel process is started; it will trigger
 * AP Connection state machine from 'Wait for roaming start' to 'Switch channel in progress'
 * state.
 *
@@ -1057,7 +1063,7 @@ TI_STATUS apConn_prepareToRoaming(TI_HANDLE hAPConnection, apConn_roamingTrigger
 *
 *  TI_OK if successful, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 TI_STATUS apConn_indicateSwitchChannelInProgress(TI_HANDLE hAPConnection)
 {
@@ -1074,7 +1080,7 @@ TI_STATUS apConn_indicateSwitchChannelInProgress(TI_HANDLE hAPConnection)
 *
 * apConn_indicateSwitchChannelFinished
 *
-* \b Description: 
+* \b Description:
 *
 * This function is called when switch channel process is finished
 *
@@ -1086,7 +1092,7 @@ TI_STATUS apConn_indicateSwitchChannelInProgress(TI_HANDLE hAPConnection)
 *
 *  TI_OK if successful, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 TI_STATUS apConn_indicateSwitchChannelFinished(TI_HANDLE hAPConnection)
 {
@@ -1104,20 +1110,20 @@ TI_STATUS apConn_indicateSwitchChannelFinished(TI_HANDLE hAPConnection)
 *
 * apConn_start
 *
-* \b Description: 
+* \b Description:
 *
 * Called by SME module when new connection has been successfully established (first time connection)
 *
 * \b ARGS:
 *
-*  I   - isValidBSS - if TI_FALSE, no roaming shall be performed, disconnect upon any roaming event; 
+*  I   - isValidBSS - if TI_FALSE, no roaming shall be performed, disconnect upon any roaming event;
 *                   other parameters of current AP can be received from Current BSS module
 *
 * \b RETURNS:
 *
 *  TI_OK if successful, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 TI_STATUS apConn_start(TI_HANDLE hAPConnection, TI_BOOL roamingEnabled)
 {
@@ -1136,7 +1142,7 @@ TI_STATUS apConn_start(TI_HANDLE hAPConnection, TI_BOOL roamingEnabled)
 *
 * apConn_stop
 *
-* \b Description: 
+* \b Description:
 *
 * Called by SME module when current connection must be taken down
 * (due to driver download, connection failure or any other reason)
@@ -1147,7 +1153,7 @@ TI_STATUS apConn_start(TI_HANDLE hAPConnection, TI_BOOL roamingEnabled)
 *
 *  TI_OK if successful, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 TI_STATUS apConn_stop(TI_HANDLE hAPConnection, TI_BOOL removeKeys)
 {
@@ -1175,26 +1181,26 @@ TI_STATUS apConn_stop(TI_HANDLE hAPConnection, TI_BOOL removeKeys)
 *
 * apConn_reportRoamingEvent
 *
-* \b Description: 
+* \b Description:
 *
 * Called when one of roaming events occur
 *
 * \b ARGS:
 *
-*  I   - roamingEventType   
+*  I   - roamingEventType
 *  I   - pRoamingEventData - in case of 'Tx rate' event, or AP disconnect
 *
 * \b RETURNS:
 *
 *  TI_OK if successful, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 TI_STATUS apConn_reportRoamingEvent(TI_HANDLE hAPConnection,
                                     apConn_roamingTrigger_e roamingEventType,
                                     roamingEventData_u *pRoamingEventData)
 {
-    apConn_t *pAPConnection = (apConn_t *)hAPConnection; 
+    apConn_t *pAPConnection = (apConn_t *)hAPConnection;
     paramInfo_t param;  /* parameter for retrieving BSSID */
     TI_UINT16 reasonCode = 0;
 
@@ -1203,10 +1209,10 @@ TI_STATUS apConn_reportRoamingEvent(TI_HANDLE hAPConnection,
     TRACE4(pAPConnection->hReport, REPORT_SEVERITY_INFORMATION, "apConn_reportRoamingEvent, type=%d, cur_state=%d, roamingEnabled=%d, roamEventCallb=%p  \n", roamingEventType, pAPConnection->currentState, pAPConnection->roamingEnabled, pAPConnection->roamEventCallb);
 
     pAPConnection->assocRoamingTrigger = roamingEventType;
-	
+
 	/* 1. Check if this is Rogue AP test case */
     if (roamingEventType == ROAMING_TRIGGER_AP_DISCONNECT)
-    {   
+    {
 		if (pRoamingEventData != NULL)
 		{	/* Save the disconnect reason for future use */
 			pAPConnection->APDisconnect.uStatusCode     = pRoamingEventData->APDisconnect.uStatusCode;
@@ -1217,7 +1223,7 @@ TI_STATUS apConn_reportRoamingEvent(TI_HANDLE hAPConnection,
                (pAPConnection->APDisconnect.uStatusCode == 0))
         {   /* This is required for Rogue AP test,
                 When Rogue AP due to invalid User name, deauth with reason 0 arrives before the Rogue AP,
-                and this CCX test fails.*/
+                and this XCC test fails.*/
             TRACE0(pAPConnection->hReport, REPORT_SEVERITY_INFORMATION, "apConn_reportRoamingEvent, Ignore DeAuth with reason 0 \n");
             return TI_OK;
         }
@@ -1225,18 +1231,18 @@ TI_STATUS apConn_reportRoamingEvent(TI_HANDLE hAPConnection,
 
         if (pAPConnection->APDisconnect.uStatusCode == STATUS_CODE_802_1X_AUTHENTICATION_FAILED)
         {
-          #ifdef CCX_MODULE_INCLUDED
+          #ifdef XCC_MODULE_INCLUDED
             TI_STATUS    status;
 
             /* Raise the EAP-Failure as event */
-            status = ccxMngr_rogueApDetected (pAPConnection->hCcxMngr, RSN_AUTH_STATUS_CHALLENGE_FROM_AP_FAILED);
+            status = XCCMngr_rogueApDetected (pAPConnection->hXCCMngr, RSN_AUTH_STATUS_CHALLENGE_FROM_AP_FAILED);
           #endif
 
-            
+
             /* Remove AP from candidate list for a specified amount of time */
             param.paramType = SITE_MGR_CURRENT_BSSID_PARAM;
         	siteMgr_getParam(pAPConnection->hSiteMgr, &param);
-            
+
             TRACE1(pAPConnection->hReport, REPORT_SEVERITY_INFORMATION, "current station is banned from the roaming candidates list for %d Ms\n", RSN_AUTH_FAILURE_TIMEOUT);
 
             rsn_banSite(pAPConnection->hPrivacy, param.content.siteMgrDesiredBSSID, RSN_SITE_BAN_LEVEL_FULL, RSN_AUTH_FAILURE_TIMEOUT);
@@ -1269,13 +1275,13 @@ TI_STATUS apConn_reportRoamingEvent(TI_HANDLE hAPConnection,
           (pAPConnection->currentState == AP_CONNECT_STATE_IDLE))
         && (roamingEventType > ROAMING_TRIGGER_MAX_TX_RETRIES))
     {
-       /* 'Any SSID' configured, meaning Roaming Manager is not allowed to perform roaming, 
+       /* 'Any SSID' configured, meaning Roaming Manager is not allowed to perform roaming,
            or Roaming Manager is not registered for roaming events;
            unless this is trigger to change parameters of background scan, disconnect the link */
         TRACE1(pAPConnection->hReport, REPORT_SEVERITY_INFORMATION, "Disconnecting link due to roaming event: ev = %d\n", roamingEventType);
 
-        /*  Handle IBSS case TBD to remove 
-            Handle also the case where A first connection is in progress, and 
+        /*  Handle IBSS case TBD to remove
+            Handle also the case where A first connection is in progress, and
             de-auth arrived. */
         if (pAPConnection->currentState == AP_CONNECT_STATE_IDLE)
 		{
@@ -1314,7 +1320,7 @@ TI_STATUS apConn_reportRoamingEvent(TI_HANDLE hAPConnection,
     if ((pAPConnection->roamingEnabled == TI_TRUE) && (pAPConnection->roamEventCallb != NULL))
     {
         TRACE1(pAPConnection->hReport, REPORT_SEVERITY_INFORMATION, "Roaming event raised: ev = %d\n", roamingEventType);
-        if (roamingEventType == ROAMING_TRIGGER_LOW_QUALITY) 
+        if (roamingEventType == ROAMING_TRIGGER_LOW_QUALITY)
         {
             EvHandlerSendEvent(pAPConnection->hEvHandler, IPC_EVENT_LOW_RSSI, NULL,0);
         }
@@ -1330,16 +1336,16 @@ TI_STATUS apConn_reportRoamingEvent(TI_HANDLE hAPConnection,
 *
 * apConn_RoamHandoffFinished
 *
-* \b Description: 
+* \b Description:
 *
-* Called when CCX module receives response from the supplicant or recognizes 
-* timeout while waiting for the response 
+* Called when XCC module receives response from the supplicant or recognizes
+* timeout while waiting for the response
 *
 * \b ARGS:
 *
 * \b RETURNS:
 *
-* \sa 
+* \sa
 */
 void apConn_RoamHandoffFinished(TI_HANDLE hAPConnection)
 {
@@ -1361,7 +1367,7 @@ void apConn_RoamHandoffFinished(TI_HANDLE hAPConnection)
 *
 * apConn_DisconnCompleteInd
 *
-* \b Description: 
+* \b Description:
 *
 * DISASSOCIATE Packet was sent - proceed with stopping the module
 *
@@ -1373,7 +1379,7 @@ void apConn_RoamHandoffFinished(TI_HANDLE hAPConnection)
 *
 *  None
 *
-* \sa 
+* \sa
 */
 void apConn_DisconnCompleteInd(TI_HANDLE hAPConnection, mgmtStatus_e status, TI_UINT32 uStatusCode)
 {
@@ -1387,9 +1393,9 @@ void apConn_DisconnCompleteInd(TI_HANDLE hAPConnection, mgmtStatus_e status, TI_
 *
 * apConn_updateNeighborAPsList
 *
-* \b Description: 
+* \b Description:
 *
-* Called by CCX Manager when Priority APs are found  
+* Called by XCC Manager when Priority APs are found
 *
 * \b ARGS:
 *
@@ -1397,12 +1403,12 @@ void apConn_DisconnCompleteInd(TI_HANDLE hAPConnection, mgmtStatus_e status, TI_
 *
 *  TI_OK if successful, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 void apConn_updateNeighborAPsList(TI_HANDLE hAPConnection, neighborAPList_t *pListOfpriorityAps)
 {
     apConn_t *pAPConnection = (apConn_t *)hAPConnection;
-    
+
     if (pAPConnection->returnNeighborApsCallb != NULL )
     {
         pAPConnection->returnNeighborApsCallb(pAPConnection->hRoamMng, pListOfpriorityAps);
@@ -1414,9 +1420,9 @@ void apConn_updateNeighborAPsList(TI_HANDLE hAPConnection, neighborAPList_t *pLi
 *
 * apConn_getRoamingStatistics
 *
-* \b Description: 
+* \b Description:
 *
-* Called from Measurement CCX sub-module when preparing TSM report to the AP. 
+* Called from Measurement XCC sub-module when preparing TSM report to the AP.
 *
 * \b ARGS: AP Connection handle
 *
@@ -1425,12 +1431,12 @@ void apConn_updateNeighborAPsList(TI_HANDLE hAPConnection, neighborAPList_t *pLi
 *  total number of successful roams
 *  delay of the latest successful roam
 *
-* \sa 
+* \sa
 */
 void apConn_getRoamingStatistics(TI_HANDLE hAPConnection, TI_UINT8 *roamingCount, TI_UINT16 *roamingDelay)
 {
     apConn_t *pAPConnection = (apConn_t *)hAPConnection;
-    
+
     /* Get (and clear) total number of successful roams */
     *roamingCount = pAPConnection->roamingSuccesfulHandoverNum;
     pAPConnection->roamingSuccesfulHandoverNum = 0;
@@ -1447,9 +1453,9 @@ void apConn_getRoamingStatistics(TI_HANDLE hAPConnection, TI_UINT8 *roamingCount
 *
 * apConn_resetRoamingStatistics
 *
-* \b Description: 
+* \b Description:
 *
-* Called from Measurement CCX sub-module in order to re-start roaming statistics. 
+* Called from Measurement XCC sub-module in order to re-start roaming statistics.
 *
 * \b ARGS: AP Connection handle
 *
@@ -1458,12 +1464,12 @@ void apConn_getRoamingStatistics(TI_HANDLE hAPConnection, TI_UINT8 *roamingCount
 *  total number of successful roams
 *  delay of the latest successful roam
 *
-* \sa 
+* \sa
 */
 void apConn_resetRoamingStatistics(TI_HANDLE hAPConnection)
 {
     apConn_t *pAPConnection = (apConn_t *)hAPConnection;
-    
+
     pAPConnection->resetReportedRoamingStatistics = TI_TRUE;
     pAPConnection->roamingSuccesfulHandoverNum = 0;
     pAPConnection->lastRoamingDelay = 0;
@@ -1474,9 +1480,9 @@ void apConn_resetRoamingStatistics(TI_HANDLE hAPConnection)
 *
 * apConn_printStatistics
 *
-* \b Description: 
+* \b Description:
 *
-* Called by Site Manager when request to print statistics is requested from CLI  
+* Called by Site Manager when request to print statistics is requested from CLI
 *
 * \b ARGS: AP Connection handle
 *
@@ -1484,7 +1490,7 @@ void apConn_resetRoamingStatistics(TI_HANDLE hAPConnection)
 *
 *  TI_OK if successful, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 void apConn_printStatistics(TI_HANDLE hAPConnection)
 {
@@ -1512,12 +1518,12 @@ void apConn_printStatistics(TI_HANDLE hAPConnection)
 *
 * apConn_getVendorSpecificIE
 *
-* \b Description: 
+* \b Description:
 *
 * Called by Association SM when request to associate is built and sent to AP;
 * returns request updated with vendor specific info-element
 *
-* \b ARGS: 
+* \b ARGS:
 *
 *  I   - hAPConnection - AP Connection handle\n
 *  O   - pRequest - pointer to request buffer\n
@@ -1527,7 +1533,7 @@ void apConn_printStatistics(TI_HANDLE hAPConnection)
 *
 *  TI_OK if successful, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 TI_STATUS apConn_getVendorSpecificIE(TI_HANDLE hAPConnection, TI_UINT8 *pRequest, TI_UINT32 *len)
 {
@@ -1558,7 +1564,7 @@ TI_STATUS apConn_getVendorSpecificIE(TI_HANDLE hAPConnection, TI_UINT8 *pRequest
 *
 * apConn_smEvent
 *
-* \b Description: 
+* \b Description:
 *
 * AP Connection state machine transition function
 *
@@ -1572,7 +1578,7 @@ TI_STATUS apConn_getVendorSpecificIE(TI_HANDLE hAPConnection, TI_UINT8 *pRequest
 *
 *  TI_OK on success, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 static TI_STATUS apConn_smEvent(TI_UINT8 *currState, TI_UINT8 event, void* data)
 {
@@ -1590,7 +1596,7 @@ static TI_STATUS apConn_smEvent(TI_UINT8 *currState, TI_UINT8 event, void* data)
 *
 * apConn_smNop - Do nothing
 *
-* \b Description: 
+* \b Description:
 *
 * Do nothing in the SM.
 *
@@ -1602,7 +1608,7 @@ static TI_STATUS apConn_smEvent(TI_UINT8 *currState, TI_UINT8 event, void* data)
 *
 *  TI_OK if successful, TI_NOK otherwise.
 *
-* 
+*
 */
 static void apConn_smNop(void *pData)
 {
@@ -1615,7 +1621,7 @@ static void apConn_smNop(void *pData)
 *
 * apConn_smUnexpected - Unexpected event
 *
-* \b Description: 
+* \b Description:
 *
 * Unexpected event in the SM.
 *
@@ -1627,7 +1633,7 @@ static void apConn_smNop(void *pData)
 *
 *  TI_OK if successful, TI_NOK otherwise.
 *
-* 
+*
 */
 void apConn_smUnexpected(void *pData)
 {
@@ -1639,7 +1645,7 @@ void apConn_smUnexpected(void *pData)
 *
 * apConn_smStartWaitingForTriggers
 *
-* \b Description: 
+* \b Description:
 *
 * SME informs AP Connection module about successfull link establishment; start wiating for roaming triggers
 *
@@ -1651,16 +1657,16 @@ void apConn_smUnexpected(void *pData)
 *
 *  TI_OK on success, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 static void apConn_smStartWaitingForTriggers(void *pData)
 {
     apConn_t    *pAPConnection;
-    apConn_connStatus_t reportStatus;  
+    apConn_connStatus_t reportStatus;
     paramInfo_t param;
 
     pAPConnection = (apConn_t *)pData;
-    
+
     if ((pAPConnection->roamingEnabled) && (pAPConnection->reportStatusCallb != NULL))
     {
         param.paramType   = ASSOC_ASSOCIATION_REQ_PARAM;
@@ -1670,7 +1676,7 @@ static void apConn_smStartWaitingForTriggers(void *pData)
         reportStatus.dataBufLength = param.content.assocReqBuffer.bufferSize;
 
         reportStatus.status = CONN_STATUS_CONNECTED;
-        pAPConnection->reportStatusCallb(pAPConnection->hRoamMng, &reportStatus);   
+        pAPConnection->reportStatusCallb(pAPConnection->hRoamMng, &reportStatus);
     }
     pAPConnection->firstAttempt2Roam = TI_TRUE;
     pAPConnection->roamReason = ROAMING_TRIGGER_NONE;
@@ -1686,7 +1692,7 @@ static void apConn_smStartWaitingForTriggers(void *pData)
 *
 * apConn_smConnectedToNewAP
 *
-* \b Description: 
+* \b Description:
 *
 * After roaming was requested, Connection SM informs AP Connection module about
 * successful link re-establishment; start waiting for roaming triggers
@@ -1699,16 +1705,16 @@ static void apConn_smStartWaitingForTriggers(void *pData)
 *
 *  TI_OK on success, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 static void apConn_smConnectedToNewAP(void *pData)
 {
     apConn_t    *pAPConnection;
-    apConn_connStatus_t reportStatus; 
+    apConn_connStatus_t reportStatus;
     paramInfo_t param;
 
     pAPConnection = (apConn_t *)pData;
-    
+
     /* Configure SCR group back to connection */
     scr_setGroup (pAPConnection->hScr, SCR_GID_CONNECTED);
 
@@ -1732,7 +1738,7 @@ static void apConn_smConnectedToNewAP(void *pData)
 
         reportStatus.status = CONN_STATUS_HANDOVER_SUCCESS;
 
-        pAPConnection->reportStatusCallb(pAPConnection->hRoamMng, &reportStatus);   
+        pAPConnection->reportStatusCallb(pAPConnection->hRoamMng, &reportStatus);
     }
     pAPConnection->firstAttempt2Roam = TI_TRUE;
     pAPConnection->roamReason = ROAMING_TRIGGER_NONE;
@@ -1743,12 +1749,12 @@ static void apConn_smConnectedToNewAP(void *pData)
     pAPConnection->voiceTspecConfigured = TI_FALSE;
 	pAPConnection->videoTspecConfigured = TI_FALSE;
 
-    
+
     if (!pAPConnection->resetReportedRoamingStatistics)
     {
         pAPConnection->roamingSuccesfulHandoverNum++;
-        pAPConnection->lastRoamingDelay = 
-	        (TI_UINT16)os_timeStampMs(pAPConnection->hOs) - pAPConnection->roamingStartedTimestamp;		  
+        pAPConnection->lastRoamingDelay =
+	        (TI_UINT16)os_timeStampMs(pAPConnection->hOs) - pAPConnection->roamingStartedTimestamp;
     }
     else
     {
@@ -1765,7 +1771,7 @@ static void apConn_smConnectedToNewAP(void *pData)
 *
 * apConn_smStopConnection
 *
-* \b Description: 
+* \b Description:
 *
 * Stop required before roaming was started
 *
@@ -1777,36 +1783,36 @@ static void apConn_smConnectedToNewAP(void *pData)
 *
 *  TI_OK on success, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 static void apConn_smStopConnection(void *pData)
 {
     apConn_t *pAPConnection;
     DisconnectType_e disConnType;
     pAPConnection = (apConn_t *)pData;
-    
+
     TRACE2(pAPConnection->hReport, REPORT_SEVERITY_INFORMATION, "apConn_smStopConnection, calls conn_stop, removeKeys=%d, sendDeauthPacket=%d \n", pAPConnection->removeKeys, pAPConnection->sendDeauthPacket);
-    
+
     /* Erase vendor specific info-element if was defined for last AP Assoc request */
     pAPConnection->vsIElength = 0;
-    
+
     /* In case AP connection was stopped by SME, and radioOn is false, meaning immidiate shutdown is required without disassoc frame */
     /* Otherwise, ask for normal disconnection with disassoc frame */
     disConnType = (pAPConnection->sendDeauthPacket == TI_TRUE) ? DISCONNECT_DE_AUTH : DISCONNECT_IMMEDIATE;
 
-    
+
 
     /* set the SCr group to connecting */
     scr_setGroup (pAPConnection->hScr, SCR_GID_CONNECT);
-    
+
 	/* Stop Connection state machine - always immediate TBD */
-	conn_stop(pAPConnection->hConnSm, 
+	conn_stop(pAPConnection->hConnSm,
 			  disConnType,
 			  pAPConnection->deauthPacketReasonCode,
-			  pAPConnection->removeKeys, /* for Roaming, do not remove the keys */              
+			  pAPConnection->removeKeys, /* for Roaming, do not remove the keys */
 			  apConn_DisconnCompleteInd,
 			  pAPConnection);
-	
+
 	pAPConnection->deauthPacketReasonCode = STATUS_UNSPECIFIED;
 }
 
@@ -1815,7 +1821,7 @@ static void apConn_smStopConnection(void *pData)
 *
 * apConn_smReportDisconnected
 *
-* \b Description: 
+* \b Description:
 *
 * Moving from 'Disconnecting' state to 'Idle':
 *   RoamMgr.status("not-connected")
@@ -1828,21 +1834,21 @@ static void apConn_smStopConnection(void *pData)
 *
 *  TI_OK on success, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 static void apConn_smReportDisconnected(void *pData)
 {
     apConn_t    *pAPConnection;
-    apConn_connStatus_t reportStatus; 
+    apConn_connStatus_t reportStatus;
 
     pAPConnection = (apConn_t *)pData;
 
-    if (pAPConnection->reportStatusCallb != NULL) 
+    if (pAPConnection->reportStatusCallb != NULL)
     {
         reportStatus.status = CONN_STATUS_NOT_CONNECTED;
-        pAPConnection->reportStatusCallb(pAPConnection->hRoamMng, &reportStatus);   
+        pAPConnection->reportStatusCallb(pAPConnection->hRoamMng, &reportStatus);
     }
-    
+
     pAPConnection->firstAttempt2Roam = TI_TRUE;
 
     /* Notify SME */
@@ -1854,7 +1860,7 @@ static void apConn_smReportDisconnected(void *pData)
 *
 * apConn_smRetainAP
 *
-* \b Description: 
+* \b Description:
 *
 * Roaming Manager gives up on roaming.
 * Moving from 'Wait for connection command' back to 'Wait for roam started.
@@ -1867,12 +1873,12 @@ static void apConn_smReportDisconnected(void *pData)
 *
 *  TI_OK on success, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 static void apConn_smRetainAP(void *data)
 {
     apConn_t    *pAPConnection;
-    apConn_connStatus_t reportStatus; 
+    apConn_connStatus_t reportStatus;
     paramInfo_t param;
 
     pAPConnection = (apConn_t *)data;
@@ -1881,7 +1887,7 @@ static void apConn_smRetainAP(void *data)
     scr_setGroup (pAPConnection->hScr, SCR_GID_CONNECTED);
 
     /* Report Roaming Manager */
-    if (pAPConnection->reportStatusCallb != NULL) 
+    if (pAPConnection->reportStatusCallb != NULL)
     {
         param.paramType   = ASSOC_ASSOCIATION_REQ_PARAM;
 
@@ -1891,7 +1897,7 @@ static void apConn_smRetainAP(void *data)
 
         reportStatus.status = CONN_STATUS_HANDOVER_SUCCESS;
 
-        pAPConnection->reportStatusCallb(pAPConnection->hRoamMng, &reportStatus);   
+        pAPConnection->reportStatusCallb(pAPConnection->hRoamMng, &reportStatus);
     }
     pAPConnection->retainCurrAPNum++;
 
@@ -1909,7 +1915,7 @@ static void apConn_smRetainAP(void *data)
 *
 * apConn_smRequestCCKM
 *
-* \b Description: 
+* \b Description:
 *
 * Roaming Manager requests to roaming.
 * Get CCKM (prepare hand-off).
@@ -1922,30 +1928,30 @@ static void apConn_smRetainAP(void *data)
 *
 *  TI_OK on success, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 static void apConn_smRequestCCKM(void *data)
 {
     apConn_t    *pAPConnection;
     pAPConnection = (apConn_t *)data;
-	
-#ifdef CCX_MODULE_INCLUDED
-        /* Send request to CCX module */
-   
+
+#ifdef XCC_MODULE_INCLUDED
+        /* Send request to XCC module */
+
     apConn_calcNewTsf(pAPConnection, (TI_UINT8 *)&(pAPConnection->newAP->lastRxTSF), pAPConnection->newAP->lastRxHostTimestamp, pAPConnection->newAP->beaconInterval);
-    ccxMngr_startCckm(pAPConnection->hCcxMngr, &(pAPConnection->newAP->BSSID), (TI_UINT8 *)&(pAPConnection->newAP->lastRxTSF));
+    XCCMngr_startCckm(pAPConnection->hXCCMngr, &(pAPConnection->newAP->BSSID), (TI_UINT8 *)&(pAPConnection->newAP->lastRxTSF));
 #else
     apConn_RoamHandoffFinished(pAPConnection);
 #endif
 }
 
 
-#ifdef CCX_MODULE_INCLUDED
+#ifdef XCC_MODULE_INCLUDED
 /**
 *
 * calcNewTsfTimestamp - Calculates the TSF
 *
-* \b Description: 
+* \b Description:
 *
 * Calculates the TSF according to the delta of the TSF from the last Beacon/Probe Resp and the current time.
 *
@@ -1959,23 +1965,23 @@ static void apConn_smRequestCCKM(void *data)
 *
 *  Nothing.
 *
-* 
+*
 */
 static void apConn_calcNewTsf(apConn_t *hAPConnection, TI_UINT8 *tsfTimeStamp, TI_UINT32 newSiteOsTimeStamp, TI_UINT32 beaconInterval)
 {
     apConn_t    *pAPConnection = hAPConnection;
     TI_UINT32      osTimeStamp = os_timeStampMs(pAPConnection->hOs);
-    TI_UINT32      deltaTimeStamp; 
-    TI_UINT32      tsfLsdw,tsfMsdw, newOsTimeStamp; 
+    TI_UINT32      deltaTimeStamp;
+    TI_UINT32      tsfLsdw,tsfMsdw, newOsTimeStamp;
     TI_UINT32      remainder;
     TI_UINT8       newTsfTimestamp[TIME_STAMP_LEN];
 
     /* get the delta TS between the TS of the last Beacon/ProbeResp-from the site table
     and the current TS */
     deltaTimeStamp = osTimeStamp - newSiteOsTimeStamp;
-    tsfLsdw = *((TI_UINT32*)&tsfTimeStamp[0]); 
+    tsfLsdw = *((TI_UINT32*)&tsfTimeStamp[0]);
     tsfMsdw = *((TI_UINT32*)&tsfTimeStamp[4]);
-    
+
     TRACE2(pAPConnection->hReport, REPORT_SEVERITY_INFORMATION, " TSF time LSDW reversed=%x, TSF time MSDW reversed=%x\n", tsfLsdw, tsfMsdw);
 
     deltaTimeStamp = deltaTimeStamp*1000;/* from mSec to uSec*/
@@ -2001,7 +2007,7 @@ static void apConn_calcNewTsf(apConn_t *hAPConnection, TI_UINT8 *tsfTimeStamp, T
     if (remainder > 0xff)
     {
         tsfMsdw++;
-        
+
     }
     /* update the MSB of the TSF */
     newTsfTimestamp[4] = tsfMsdw & 0x000000ff;
@@ -2020,7 +2026,7 @@ static void apConn_calcNewTsf(apConn_t *hAPConnection, TI_UINT8 *tsfTimeStamp, T
 *
 * apConn_invokeConnectionToNewAp
 *
-* \b Description: 
+* \b Description:
 *
 * Got CCKM (hand-off), start re-connection to another AP
 *
@@ -2032,7 +2038,7 @@ static void apConn_calcNewTsf(apConn_t *hAPConnection, TI_UINT8 *tsfTimeStamp, T
 *
 *  TI_OK on success, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 static void apConn_smInvokeConnectionToNewAp(void *data)
 {
@@ -2041,7 +2047,7 @@ static void apConn_smInvokeConnectionToNewAp(void *data)
     paramInfo_t param;
     TI_UINT8     staPrivacySupported, apPrivacySupported;
     TI_BOOL      renegotiateTspec = TI_FALSE;
-    
+
 	pAPConnection = (apConn_t *)data;
 
 	pAPConnection->roamingStartedTimestamp = os_timeStampMs(pAPConnection->hOs);
@@ -2086,13 +2092,13 @@ static void apConn_smInvokeConnectionToNewAp(void *data)
         connType = CONN_TYPE_FIRST_CONN;
     }
 
-#ifdef CCX_MODULE_INCLUDED
+#ifdef XCC_MODULE_INCLUDED
     /* Check the need in TSPEC re-negotiation */
     if ( (pAPConnection->voiceTspecConfigured || pAPConnection->videoTspecConfigured) && pAPConnection->reNegotiateTSPEC )
     {
-        /* If the candidate AP is at least CCXver4 AP, try to re-negotiate TSPECs */
-        if (ccxMngr_parseCcxVer(pAPConnection->hCcxMngr, 
-                                pAPConnection->newAP->pBuffer, 
+        /* If the candidate AP is at least XCCver4 AP, try to re-negotiate TSPECs */
+        if (XCCMngr_parseXCCVer(pAPConnection->hXCCMngr,
+                                pAPConnection->newAP->pBuffer,
                                 pAPConnection->newAP->bufferLength) >= 4)
         {
             renegotiateTspec = TI_TRUE;
@@ -2103,7 +2109,7 @@ static void apConn_smInvokeConnectionToNewAp(void *data)
     TRACE2(pAPConnection->hReport, REPORT_SEVERITY_INFORMATION, ": calls conn_start, removeKeys=%d, renegotiateTSPEC=%d\n", pAPConnection->removeKeys, renegotiateTspec);
 
     /* Start Connection state machine */
-    conn_start(pAPConnection->hConnSm, 
+    conn_start(pAPConnection->hConnSm,
                       connType,
                       apConn_ConnCompleteInd,
                       pAPConnection,
@@ -2116,7 +2122,7 @@ static void apConn_smInvokeConnectionToNewAp(void *data)
 *
 * apConn_smReportConnFail
 *
-* \b Description: 
+* \b Description:
 *
 * Got 'Failed' indication from Connection state machine - inform Roaming Manager Module
 *
@@ -2128,12 +2134,12 @@ static void apConn_smInvokeConnectionToNewAp(void *data)
 *
 *  TI_OK on success, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 static void apConn_smReportConnFail(void *data)
 {
     apConn_t *pAPConnection;
-    apConn_connStatus_t reportStatus; 
+    apConn_connStatus_t reportStatus;
     paramInfo_t param;
 
     pAPConnection = (apConn_t *)data;
@@ -2155,7 +2161,7 @@ static void apConn_smReportConnFail(void *data)
 
         reportStatus.status = CONN_STATUS_HANDOVER_FAILURE;
 
-        pAPConnection->reportStatusCallb(pAPConnection->hRoamMng, &reportStatus);   
+        pAPConnection->reportStatusCallb(pAPConnection->hRoamMng, &reportStatus);
     }
 }
 
@@ -2164,7 +2170,7 @@ static void apConn_smReportConnFail(void *data)
 *
 * apConn_smConfigureDriverBeforeRoaming
 *
-* \b Description: 
+* \b Description:
 *
 * Got 'Failed' indication from Connection state machine - inform Roaming Manager Module
 *
@@ -2176,19 +2182,19 @@ static void apConn_smReportConnFail(void *data)
 *
 *  TI_OK on success, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 static void apConn_smConfigureDriverBeforeRoaming(void *pData)
 {
     apConn_t    *pAPConnection = (apConn_t*)pData;
     paramInfo_t param;
-	
+
     /* Configure SCR group of allowed clients according to 'Roaming' rule */
     scr_setGroup (pAPConnection->hScr, SCR_GID_ROAMING);
     param.paramType = QOS_MNGR_VOICE_RE_NEGOTIATE_TSPEC;
     qosMngr_getParams(pAPConnection->hQos, &param);
-    pAPConnection->voiceTspecConfigured = param.content.TspecConfigure.voiceTspecConfigure;    
-    pAPConnection->videoTspecConfigured = param.content.TspecConfigure.videoTspecConfigure;  
+    pAPConnection->voiceTspecConfigured = param.content.TspecConfigure.voiceTspecConfigure;
+    pAPConnection->videoTspecConfigured = param.content.TspecConfigure.videoTspecConfigure;
     pAPConnection->resetReportedRoamingStatistics = TI_FALSE;
 }
 
@@ -2196,9 +2202,9 @@ static void apConn_smConfigureDriverBeforeRoaming(void *pData)
 *
 * apConn_smSwChFinished
 *
-* \b Description: 
+* \b Description:
 *
-* Switch channel completed; if there were roaming Manager triggers meanwhile, 
+* Switch channel completed; if there were roaming Manager triggers meanwhile,
 * inform Roaming Manager Module
 *
 * \b ARGS:
@@ -2209,7 +2215,7 @@ static void apConn_smConfigureDriverBeforeRoaming(void *pData)
 *
 *  TI_OK on success, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 static void apConn_smSwChFinished(void *pData)
 {
@@ -2218,11 +2224,11 @@ static void apConn_smSwChFinished(void *pData)
     /* Inform Current BSS module */
     currBSS_restartRssiCounting(pAPConnection->hCurrBSS);
 
-    /* If there are unreported roaming triggers of 'No AP' type, 
+    /* If there are unreported roaming triggers of 'No AP' type,
        report them now to roaming manager */
     if (pAPConnection->roamReason >= ROAMING_TRIGGER_MAX_TX_RETRIES)
     {
-        if ((pAPConnection->roamingEnabled == TI_TRUE) && 
+        if ((pAPConnection->roamingEnabled == TI_TRUE) &&
             (pAPConnection->roamEventCallb != NULL))
         {
             /* Report to Roaming Manager */
@@ -2240,14 +2246,14 @@ static void apConn_smSwChFinished(void *pData)
 *
 * apConn_smHandleTspecReneg
 *
-* \b Description: 
+* \b Description:
 *
-* This function will be called when moving from CONNECTING state to 
-* START_TSPEC_RENEGOTIATION state. It checks if TSPEC re-negotiation was requested 
-* by roaming manager, if the TSPEC for voice was defined by user application, 
-* if the re-negotiation was performed during hand-over. 
-* If so, it will trigger moving to WAIT_ROAM state, otherwise it will start 
-* TSPEC negotiation, staying in the REESTABLISHING_VOICE state and waiting 
+* This function will be called when moving from CONNECTING state to
+* START_TSPEC_RENEGOTIATION state. It checks if TSPEC re-negotiation was requested
+* by roaming manager, if the TSPEC for voice was defined by user application,
+* if the re-negotiation was performed during hand-over.
+* If so, it will trigger moving to WAIT_ROAM state, otherwise it will start
+* TSPEC negotiation, staying in the REESTABLISHING_VOICE state and waiting
 * for results.
 *
 * \b ARGS:
@@ -2258,7 +2264,7 @@ static void apConn_smSwChFinished(void *pData)
 *
 *  TI_OK on success, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 static void apConn_smHandleTspecReneg (void *pData)
 {
@@ -2280,7 +2286,7 @@ static void apConn_smHandleTspecReneg (void *pData)
         {
             param.paramType = QOS_MNGR_RESEND_TSPEC_REQUEST;
             param.content.qosRenegotiateTspecRequest.callback = (void *)apConn_qosMngrReportResultCallb;
-            param.content.qosRenegotiateTspecRequest.handler = pData; 
+            param.content.qosRenegotiateTspecRequest.handler = pData;
 
             if (qosMngr_setParams(pAPConnection->hQos, &param) != TI_OK)
             {
@@ -2304,12 +2310,12 @@ static void apConn_smHandleTspecReneg (void *pData)
 *
 * apConn_qosMngrReportResultCallb
 *
-* \b Description: 
+* \b Description:
 *
 * This function will be transferred to QoS manager upon request to start negotiation
 * of the TSPEC for voice and signaling, and will be called when the voice TSPEC
-* renegotiation is completed. The function will generate FINISHED_OK or 
-* FINISHED_NOK events to the state machine of AP Connection, triggering change of 
+* renegotiation is completed. The function will generate FINISHED_OK or
+* FINISHED_NOK events to the state machine of AP Connection, triggering change of
 * the current state.
 *
 * \b ARGS:
@@ -2321,7 +2327,7 @@ static void apConn_smHandleTspecReneg (void *pData)
 *
 *  TI_OK on success, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 static TI_STATUS apConn_qosMngrReportResultCallb (TI_HANDLE hApConn, trafficAdmRequestStatus_e result)
 {
@@ -2329,7 +2335,7 @@ static TI_STATUS apConn_qosMngrReportResultCallb (TI_HANDLE hApConn, trafficAdmR
 
     AP_CONN_VALIDATE_HANDLE(hApConn);
 
-    if (result == STATUS_TRAFFIC_ADM_REQUEST_ACCEPT) 
+    if (result == STATUS_TRAFFIC_ADM_REQUEST_ACCEPT)
     {
         apConn_smEvent(&(pAPConnection->currentState), AP_CONNECT_EVENT_FINISHED_OK, pAPConnection);
     }
@@ -2344,7 +2350,7 @@ static TI_STATUS apConn_qosMngrReportResultCallb (TI_HANDLE hApConn, trafficAdmR
 *
 * apConn_reportConnStatusToSME
 *
-* \b Description: 
+* \b Description:
 *
 * Sends report to SME regarding the connection status
 *
@@ -2356,11 +2362,11 @@ static TI_STATUS apConn_qosMngrReportResultCallb (TI_HANDLE hApConn, trafficAdmR
 *
 *  OK on success, NOK otherwise.
 *
-* \sa 
+* \sa
 */
 static void apConn_reportConnStatusToSME (apConn_t *pAPConnection)
 {
-	
+
 TRACE3(pAPConnection->hReport, REPORT_SEVERITY_INFORMATION, " roamingTrigger = %d, APDisconnectStatusCode = %d, bNonRoamingDisAssocReason = %d\n", pAPConnection->roamReason, pAPConnection->APDisconnect.uStatusCode, 		pAPConnection->bNonRoamingDisAssocReason);
 
 	/* Check if an outside reason caused the disconnection. */
@@ -2374,9 +2380,9 @@ TRACE3(pAPConnection->hReport, REPORT_SEVERITY_INFORMATION, " roamingTrigger = %
 	{	/* AP disconnect is a special case of the status delivered to SME */
 		mgmtStatus_e mgmtStatus = ( pAPConnection->APDisconnect.bDeAuthenticate ? STATUS_AP_DEAUTHENTICATE : STATUS_AP_DISASSOCIATE );
 		sme_ReportApConnStatus(pAPConnection->hSme, mgmtStatus, pAPConnection->APDisconnect.uStatusCode);
-	} 
+	}
 	else	/* Finally, just send the last roaming trigger */
-	{	
+	{
 		sme_ReportApConnStatus(pAPConnection->hSme, STATUS_ROAMING_TRIGGER, (TI_UINT32)pAPConnection->roamReason);
 	}
 }

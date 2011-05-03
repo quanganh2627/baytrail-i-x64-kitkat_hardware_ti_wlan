@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * ScanCncn.h
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file  ScanCncn.h
  *  \brief Scan concentartor module API
  *
@@ -42,10 +47,10 @@
 
 /** \enum EScanCncnClient
  * \brief	Scan Concentrator Client
- * 
+ *
  * \par Description
  * Enumerates the different possible clients requesting scan from the scan concentrator
- * 
+ *
  * \sa
  */
 typedef enum
@@ -62,23 +67,23 @@ typedef enum
 
 /** \enum EScanCncnResultStatus
  * \brief	Scan Concentrator Result Status
- * 
+ *
  * \par Description
  * Enumerates the possible scan result statuses
- * 
+ *
  * \sa
  */
-typedef enum 
+typedef enum
 {
 /*	0	*/	SCAN_CRS_RECEIVED_FRAME = 0,            /**< Scan is still running; management frame information is passed. */
 /*	1	*/	SCAN_CRS_SCAN_COMPLETE_OK,              /**< Scan completed successfully */
 /*	2	*/	SCAN_CRS_SCAN_RUNNING,                  /**< Scan started successfully and now is running */
-/*	3	*/	SCAN_CRS_SCAN_FAILED,                   /**< 
-													* scan failed due to unexpected situation (SCR reject, no 
+/*	3	*/	SCAN_CRS_SCAN_FAILED,                   /**<
+													* scan failed due to unexpected situation (SCR reject, no
 													* channels available, scan SRV returned TI_NOK, etc)
 													*/
 /*	4	*/	SCAN_CRS_SCAN_STOPPED,                  /**< scan stopped by user */
-/*	5	*/	SCAN_CRS_TSF_ERROR,                     /**< TSF error (AP recovery) occurred (for SPS only): 
+/*	5	*/	SCAN_CRS_TSF_ERROR,                     /**< TSF error (AP recovery) occurred (for SPS only):
 													* SPS was not performed because current TSF value is less than designated TSF value.
 													*/
 /*	6	*/	SCAN_CRS_SCAN_ABORTED_FW_RESET,         /**< scan aborted due to FW reset */
@@ -89,13 +94,13 @@ typedef enum
 
 /** \struct TScanFrameInfo
  * \brief Scan Fram Information
- * 
+ *
  * \par Description
  * This structure contains a single frame information, returned by the result CB when a frame is available.
  * It is used to pass scan results (beacons and probe responses).
- * 
+ *
  * \sa
- */ 
+ */
 typedef struct
 {
     TMacAddr*           bssId;              /* BSSID (MAC address) of the AP from which the frame was received */
@@ -116,19 +121,19 @@ typedef struct
   * termination or a result frame received).
   */
 /**
- * \brief	Scan Result CB  
- * 
+ * \brief	Scan Result CB
+ *
  * \param  clientObj    				- TWD module object handle
  * \param  status 				- TID number
- * \param  frameInfo 				- Policy : Enable / Disable 
+ * \param  frameInfo 				- Policy : Enable / Disable
  * \param  SPSStatus 					- Mac address of: SA as receiver / RA as initiator
  * \return void
- * 
+ *
  * \par Description
  * Defines the function prototype for the scan result callback
  * (notification by the scan concentrator to a client of either a scan termination or a result frame received)
  * This CB is egistered by each client and invoked by the scan concentrator, passes scan results to the caller.
- * 
+ *
  * \sa
  */
 typedef void (*TScanResultCB) (TI_HANDLE clientObj, EScanCncnResultStatus status,
@@ -144,11 +149,11 @@ void                    scanCncn_SwitchToNotConnected (TI_HANDLE hScanCncn);
 void                    scanCncn_SwitchToIBSS (TI_HANDLE hScanCncn);
 /**
  * \brief Starts a one-shot scan operation
- * 
+ *
  * \param  hScanCncn 	- Handle to the scan concentrator object
  * \param  eClient 		- The client requesting the scan operation
  * \param  pScanParams 	- Parameters for the requested scan
- * \return Scan Concentrator Result Status: 
+ * \return Scan Concentrator Result Status:
  * SCAN_CRS_SCAN_RUNNING - scan started successfully and is now running
  * SCAN_CRS_SCAN_FAILED - scan failed to start due to an unexpected error
  *
@@ -159,48 +164,48 @@ void                    scanCncn_SwitchToIBSS (TI_HANDLE hScanCncn);
  *  - verifies the requested channels with the reg doamin
  *  - if needed, adjust to SG compensation values
  *  - send an event to the client SM
- * 
+ *
  * \sa	scanCncn_StopScan
- */ 
+ */
 EScanCncnResultStatus   scanCncn_Start1ShotScan (TI_HANDLE hScanCncn, EScanCncnClient eClient, TScanParams* pScanParams);
 /**
  * \brief Stop an on-going one-shot scan operation
- * 
+ *
  * \param  hScanCncn 	- Handle to the scan concentrator object
  * \param  eClient 		- The client requesting to stop the scan operation
  * \return void
- * 
+ *
  * \par Description
  * Set necessary flags and send a stop scan event to the client SM
- * 
+ *
  * \sa	scanCncn_Start1ShotScan
- */ 
+ */
 void                    scanCncn_StopScan (TI_HANDLE hScanCncn, EScanCncnClient eClient);
 EScanCncnResultStatus   scanCncn_StartPeriodicScan (TI_HANDLE hScanCncn, EScanCncnClient eClient,
                                                     TPeriodicScanParams *pScanParams);
 void                    scanCncn_StopPeriodicScan (TI_HANDLE hScanCncn, EScanCncnClient eClient);
 /**
  * \brief Registers a scan complete object
- * 
+ *
  * \param  hScanCncn 		- Handle to the scan concentrator object
  * \param  eClient 			- The client requesting to stop the scan operation
  * \param  scanResultCBFunc - Pointer to the resulting callback function
  * \param  scanResultCBObj 	- Object passed to the scan resulting callback function
  * \return void
- * 
+ *
  * \par Description
- * Registers a callback function for a client that is called for every scan result and scan complete event. 
+ * Registers a callback function for a client that is called for every scan result and scan complete event.
  * It is called by each client one time before issuing a scan request.
- * 
- * \sa	
- */ 
+ *
+ * \sa
+ */
 void                    scanCncn_RegisterScanResultCB (TI_HANDLE hScanCncn, EScanCncnClient eClient,
                                                        TScanResultCB scanResultCBFunc, TI_HANDLE scanResultCBObj);
 void                    scanCncn_ScanCompleteNotificationCB (TI_HANDLE hScanCncn, EScanResultTag eTag,
                                                              TI_UINT32 uResultCount, TI_UINT16 SPSStatus,
                                                              TI_BOOL bTSFError, TI_STATUS scanStatus,
                                                              TI_STATUS PSMode);
-void                    scanCncn_MlmeResultCB (TI_HANDLE hScanCncn, TMacAddr* bssid, mlmeFrameInfo_t* frameInfo, 
+void                    scanCncn_MlmeResultCB (TI_HANDLE hScanCncn, TMacAddr* bssid, mlmeFrameInfo_t* frameInfo,
                                                TRxAttr* pRxAttr, TI_UINT8* buffer, TI_UINT16 bufferLength);
 void                    scanCncn_ScrRoamingImmedCB (TI_HANDLE hScanCncn, EScrClientRequestStatus eRequestStatus,
                                                     EScrResourceId eResource, EScePendReason ePendReason);

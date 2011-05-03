@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * broadcastKey802_1x.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file broadcastKey802_1x.c
  * \brief broadcast key 802.1x implementation
  *
@@ -54,7 +59,7 @@ TI_STATUS broadcastKey802_1x_start(struct _broadcastKey_t *pBroadcastKey);
 
 TI_STATUS broadcastKey802_1x_stop(struct _broadcastKey_t *pBroadcastKey);
 
-TI_STATUS broadcastKey802_1x_recvSuccess(struct _broadcastKey_t *pBroadcastKey, 
+TI_STATUS broadcastKey802_1x_recvSuccess(struct _broadcastKey_t *pBroadcastKey,
 									encodedKeyMaterial_t *pEncodedKeyMaterial);
 
 TI_STATUS broadcastKey802_1x_recvFailure(struct _broadcastKey_t *pBroadcastKey);
@@ -64,7 +69,7 @@ TI_STATUS broadcastKey802_1x_distribute(struct _broadcastKey_t *pBroadcastKey);
 TI_STATUS broadcastKey802_1x_redistribute(struct _broadcastKey_t *pBroadcastKey);
 
 TI_STATUS broadcastKey802_1x_event(struct _broadcastKey_t *pBroadcastKey,
-							  TI_UINT8 event, 
+							  TI_UINT8 event,
 							  void *pData);
 
 
@@ -72,24 +77,24 @@ TI_STATUS broadcastKey802_1x_event(struct _broadcastKey_t *pBroadcastKey,
 *
 * Function  - Init KEY Parser module.
 *
-* \b Description: 
+* \b Description:
 *
-* Called by RSN Manager. 
+* Called by RSN Manager.
 * Registers the function 'rsn_BroadcastKeyRecv()' at the distributor to receive KEY frames upon receiving a KEY_RECV event.
 *
 * \b ARGS:
 *
-*  
+*
 * \b RETURNS:
 *
-*  TI_STATUS - 0 on success, any other value on failure. 
+*  TI_STATUS - 0 on success, any other value on failure.
 *
 */
 
 TI_STATUS broadcastKey802_1x_config(struct _broadcastKey_t *pBroadcastKey)
 {
 	TI_STATUS		status = TI_NOK;
-	
+
 	/** Station broadcast key State Machine matrix */
 	fsm_actionCell_t    broadcastKey802_1x_matrix[BCAST_KEY_802_1X_NUM_STATES][BCAST_KEY_802_1X_NUM_EVENTS] =
 	{
@@ -99,14 +104,14 @@ TI_STATUS broadcastKey802_1x_config(struct _broadcastKey_t *pBroadcastKey)
 			{BCAST_KEY_802_1X_STATE_IDLE, (fsm_Action_t)broadcastKeySmNop},
 			{BCAST_KEY_802_1X_STATE_IDLE, (fsm_Action_t)broadcastKeySmUnexpected}
 		},
-	
+
 		/* next state and actions for START state */
 		{	{BCAST_KEY_802_1X_STATE_START, (fsm_Action_t)broadcastKeySmUnexpected},
 			{BCAST_KEY_802_1X_STATE_IDLE, (fsm_Action_t)broadcastKeySmNop},
 			{BCAST_KEY_802_1X_STATE_COMPLETE, (fsm_Action_t)broadcastKey802_1x_distribute},
 			{BCAST_KEY_802_1X_STATE_START, (fsm_Action_t)broadcastKeySmNop}
 		},
-	
+
 		/* next state and actions for COMPLETE state */
 		{	{BCAST_KEY_802_1X_STATE_COMPLETE, (fsm_Action_t)broadcastKeySmUnexpected},
 			{BCAST_KEY_802_1X_STATE_IDLE, (fsm_Action_t)broadcastKeySmNop},
@@ -123,10 +128,10 @@ TI_STATUS broadcastKey802_1x_config(struct _broadcastKey_t *pBroadcastKey)
 
 	pBroadcastKey->currentState = BCAST_KEY_802_1X_STATE_IDLE;
 
-	status = fsm_Config(pBroadcastKey->pBcastKeySm, 
-						&broadcastKey802_1x_matrix[0][0], 
-						BCAST_KEY_802_1X_NUM_STATES, 
-						BCAST_KEY_802_1X_NUM_EVENTS, 
+	status = fsm_Config(pBroadcastKey->pBcastKeySm,
+						&broadcastKey802_1x_matrix[0][0],
+						BCAST_KEY_802_1X_NUM_STATES,
+						BCAST_KEY_802_1X_NUM_EVENTS,
 						NULL, pBroadcastKey->hOs);
 
 
@@ -139,7 +144,7 @@ TI_STATUS broadcastKey802_1x_config(struct _broadcastKey_t *pBroadcastKey)
 *
 * broadcastKey802_1x_event
 *
-* \b Description: 
+* \b Description:
 *
 * broadcast key state machine transition function
 *
@@ -153,7 +158,7 @@ TI_STATUS broadcastKey802_1x_config(struct _broadcastKey_t *pBroadcastKey)
 *
 *  TI_OK on success, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 TI_STATUS broadcastKey802_1x_event(struct _broadcastKey_t *pBroadcastKey, TI_UINT8 event, void *pData)
 {
@@ -179,7 +184,7 @@ TRACE3(pBroadcastKey->hReport, REPORT_SEVERITY_INFORMATION, "STATION_BROADCAST_K
 *
 * broadcastKey802_1x_start
 *
-* \b Description: 
+* \b Description:
 *
 * START event handler
 *
@@ -196,7 +201,7 @@ TRACE3(pBroadcastKey->hReport, REPORT_SEVERITY_INFORMATION, "STATION_BROADCAST_K
 TI_STATUS broadcastKey802_1x_start(struct _broadcastKey_t *pBroadcastKey)
 {
 	TI_STATUS  status;
-	
+
 	status = broadcastKey802_1x_event(pBroadcastKey, BCAST_KEY_802_1X_EVENT_START, pBroadcastKey);
 
 	return status;
@@ -207,7 +212,7 @@ TI_STATUS broadcastKey802_1x_start(struct _broadcastKey_t *pBroadcastKey)
 *
 * broadcastKey802_1x_stop
 *
-* \b Description: 
+* \b Description:
 *
 * START event handler
 *
@@ -235,7 +240,7 @@ TI_STATUS broadcastKey802_1x_stop(struct _broadcastKey_t *pBroadcastKey)
 *
 * broadcastKey802_1x_recvSuccess
 *
-* \b Description: 
+* \b Description:
 *
 * SUCCESS event handler
 *
@@ -265,7 +270,7 @@ TI_STATUS broadcastKey802_1x_recvSuccess(struct _broadcastKey_t *pBroadcastKey, 
 *
 * broadcastKey802_1x_recvFailure
 *
-* \b Description: 
+* \b Description:
 *
 * FAILURE event handler
 *
@@ -281,7 +286,7 @@ TI_STATUS broadcastKey802_1x_recvSuccess(struct _broadcastKey_t *pBroadcastKey, 
 TI_STATUS broadcastKey802_1x_recvFailure(struct _broadcastKey_t *pBroadcastKey)
 {
 	TI_STATUS  status;
-	
+
 	status = broadcastKey802_1x_event(pBroadcastKey, BCAST_KEY_802_1X_EVENT_FAILURE, pBroadcastKey);
 
 	return status;
@@ -292,7 +297,7 @@ TI_STATUS broadcastKey802_1x_recvFailure(struct _broadcastKey_t *pBroadcastKey)
 *
 * broadcastKey802_1x_distribute
 *
-* \b Description: 
+* \b Description:
 *
 * Distribute broadcast key material to the driver and report the main key SM on broadcast complete.
 *
@@ -307,10 +312,10 @@ TI_STATUS broadcastKey802_1x_recvFailure(struct _broadcastKey_t *pBroadcastKey)
 TI_STATUS broadcastKey802_1x_distribute(struct _broadcastKey_t *pBroadcastKey)
 {
 	TI_STATUS  status=TI_NOK;
-	
+
 	if (pBroadcastKey->pKeyDerive->derive!=NULL)
     {
-	status = pBroadcastKey->pKeyDerive->derive(pBroadcastKey->pKeyDerive, 
+	status = pBroadcastKey->pKeyDerive->derive(pBroadcastKey->pKeyDerive,
 											   pBroadcastKey->data.pEncodedKeyMaterial);
     }
 	if (status != TI_OK)

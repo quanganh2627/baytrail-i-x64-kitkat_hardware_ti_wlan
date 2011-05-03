@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * debug.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file reportReplvl.c
  *  \brief Report level implementation
  *
@@ -105,7 +110,7 @@ typedef enum
 #define DBG_UTILS_PRINT_TIMER_MODULE_INFO    2
 #define DBG_UTILS_PRINT_TRACE_BUFFER         3
 /* General Parameters Structure */
-typedef struct 
+typedef struct
 {
 	TI_UINT32	paramType;
 	TI_UINT32	value;
@@ -121,29 +126,29 @@ static void printUtilsDbgFunctions (void);
 *                       FUNCTIONS  IMPLEMENTATION				  *
 *******************************************************************/
 
-/** 
+/**
  * \fn     debugFunction
  * \brief  The debug functions dispatcher
- * 
+ *
  * Decode from the debug functionNumber the relevant module and call its debug
  *   function with the provided parameters.
  * The functionNumber parameter is composed as follows:
- *   Module Number      = functionNumber / 100  
- *   Specific Functionc = functionNumber % 100  
- * 
- * \note   
- * \param  pStadHandles   - Pointer to the STAD modules handles                           
- * \param  functionNumber - The module and function numbers composed in a decimal number                           
- * \param  pParam         - The function parameters (optional).                           
- * \return 
- * \sa     
- */ 
+ *   Module Number      = functionNumber / 100
+ *   Specific Functionc = functionNumber % 100
+ *
+ * \note
+ * \param  pStadHandles   - Pointer to the STAD modules handles
+ * \param  functionNumber - The module and function numbers composed in a decimal number
+ * \param  pParam         - The function parameters (optional).
+ * \return
+ * \sa
+ */
 TI_STATUS debugFunction(TStadHandlesList *pStadHandles, TI_UINT32 functionNumber, void *pParam)
 {
     TI_UINT32  moduleNumber;
-    
+
     moduleNumber = functionNumber / 100;
-    
+
     if  (moduleNumber > MAX_PARAM_TYPE)
         return PARAM_MODULE_NUMBER_INVALID;
 
@@ -153,7 +158,7 @@ TI_STATUS debugFunction(TStadHandlesList *pStadHandles, TI_UINT32 functionNumber
         printMenue();
         break;
 
-    case TEST_ASSOC_MODULE_PARAM: 
+    case TEST_ASSOC_MODULE_PARAM:
         break;
 
     case TEST_UTILS_MODULE_PARAM:
@@ -192,10 +197,10 @@ TI_STATUS debugFunction(TStadHandlesList *pStadHandles, TI_UINT32 functionNumber
         break;
 
     case TEST_MEASUREMENT_MODULE_PARAM:
-        measurementDebugFunction (pStadHandles->hMeasurementMgr, 
-                                  pStadHandles->hSwitchChannel, 
-                                  pStadHandles->hRegulatoryDomain, 
-                                  functionNumber % 100, 
+        measurementDebugFunction (pStadHandles->hMeasurementMgr,
+                                  pStadHandles->hSwitchChannel,
+                                  pStadHandles->hRegulatoryDomain,
+                                  functionNumber % 100,
                                   pParam);
         break;
 
@@ -220,7 +225,7 @@ TI_STATUS debugFunction(TStadHandlesList *pStadHandles, TI_UINT32 functionNumber
     case TEST_SCR_PARAM:
         scrDebugFunction( pStadHandles->hSCR, functionNumber % 100, pParam );
         break;
-    
+
     case TEST_SG_PARAM:
         SoftGeminiDebugFunction( pStadHandles->hSoftGemini, functionNumber % 100, pParam );
         break;
@@ -238,13 +243,13 @@ TI_STATUS debugFunction(TStadHandlesList *pStadHandles, TI_UINT32 functionNumber
         break;
 
     case TEST_FW_DEBUG_PARAM:
-         FWDebugFunction(pStadHandles->hDrvMain, 
-						 pStadHandles->hOs, 
-						 pStadHandles->hTWD, 
-						 pStadHandles->hMlmeSm, 
+         FWDebugFunction(pStadHandles->hDrvMain,
+						 pStadHandles->hOs,
+						 pStadHandles->hTWD,
+						 pStadHandles->hMlmeSm,
 						 pStadHandles->hTxMgmtQ,
 						 pStadHandles->hTxCtrl,
-						 functionNumber % 100, 
+						 functionNumber % 100,
 						 pParam/*yael , packetNum*/);
         break;
 
@@ -253,7 +258,7 @@ TI_STATUS debugFunction(TStadHandlesList *pStadHandles, TI_UINT32 functionNumber
         break;
 
     default:
-        WLAN_OS_REPORT(("Invalid debug function module number: %d\n\n", moduleNumber)); 
+        WLAN_OS_REPORT(("Invalid debug function module number: %d\n\n", moduleNumber));
         break;
     }
 
@@ -265,7 +270,7 @@ static void printMenue(void)
     WLAN_OS_REPORT(("   Debug main menu (p <num>)\n"));
     WLAN_OS_REPORT(("-----------------------------\n"));
 
-    WLAN_OS_REPORT(("Association             100\n")); 
+    WLAN_OS_REPORT(("Association             100\n"));
     WLAN_OS_REPORT(("Utils                   200\n"));
     WLAN_OS_REPORT(("Tx                      300\n"));
     WLAN_OS_REPORT(("Rx                      350\n"));
@@ -306,19 +311,19 @@ static void utilsDebugFunction (TStadHandlesList *pStadHandles, TI_UINT32 funcTy
         case DBG_UTILS_PRINT_HELP:
             printUtilsDbgFunctions ();
             break;
-    
+
         case DBG_UTILS_PRINT_CONTEXT_INFO:
             context_Print (pStadHandles->hContext);
             break;
-    
+
         case DBG_UTILS_PRINT_TIMER_MODULE_INFO:
             tmr_PrintModule (pStadHandles->hTimer);
             break;
-    
+
         case DBG_UTILS_PRINT_TRACE_BUFFER:
 /*          tb_printf(); */
             break;
-    
+
         default:
        		WLAN_OS_REPORT(("utilsDebugFunction(): Invalid function type: %d\n", funcType));
             break;

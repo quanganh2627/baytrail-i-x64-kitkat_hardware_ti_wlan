@@ -1,35 +1,40 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * TWDriverScan.h
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 #ifndef TWDRIVERSCAN_H
 #define TWDRIVERSCAN_H
 
-/** \file  TWDriverScan.h 
+/** \file  TWDriverScan.h
  *  \brief TWDriver Scan APIs
  *
  *  \see
@@ -104,17 +109,17 @@ typedef enum
     SCAN_ET_COND_BEACON      = 0x10,        /**< Early termination scan on beacon reception 									*/
     SCAN_ET_COND_PROBE_RESP  = 0x20,        /**< Early termination scan on probe response reception 							*/
     SCAN_ET_COND_ANY_FRAME   = 0x30,        /**< Early termination scan on both beacon or probe response reception 				*/
-    SCAN_ET_COND_NUM_OF_CONDS= 0x4          /**< Number of early termination conditions 										*/ 
+    SCAN_ET_COND_NUM_OF_CONDS= 0x4          /**< Number of early termination conditions 										*/
 
 } EScanEtCondition;
 
 /** \enum EScanResultTag
  * \brief Scan Debug Tags
- * 
+ *
  * \par Description
  * Enumeration of the differnet Scan Result Tags possible
- * 
- * \sa	
+ *
+ * \sa
  */
 typedef enum
 {
@@ -131,9 +136,9 @@ typedef enum
 
 /** \enum ESsidVisability
  * \brief SSID Visablility Type
- * 
+ *
  * \par Description
- * 
+ *
  * \sa
  */
 typedef enum
@@ -148,37 +153,37 @@ typedef enum
  */
 /** \struct TSsid
  * \brief SSID Parameters
- * 
+ *
  * \par Description
- * 
+ *
  * \sa
- */ 
+ */
 typedef struct
 {
-    TI_UINT8    len;		  			/**< SSID Length		*/   		
+    TI_UINT8    len;		  			/**< SSID Length		*/
     char        str[ MAX_SSID_LEN ];	/**< SSID string buffer	*/
 
 }  TSsid;
 
 /** \struct TScanNormalChannelEntry
  * \brief Scan Normal Channel Entry
- * 
+ *
  * \par Description
  * This structure defines single channel parameters for normal scan operation other than SPS (inc. triggered)
- * 
+ *
  * \sa
- */ 
+ */
 typedef struct
 {
     TMacAddr               bssId;                  	/**< BSSID (MAC address) to filter */
-    TI_UINT32              maxChannelDwellTime;     /**< Maximum time to stay on the channel if some frames were 
-													* received but the early termination limit has not been reached (microseconds) 
+    TI_UINT32              maxChannelDwellTime;     /**< Maximum time to stay on the channel if some frames were
+													* received but the early termination limit has not been reached (microseconds)
 													*/
     TI_UINT32              minChannelDwellTime;     /**< Minimum time to stay on the channel if no frames were received (microseconds) */
     EScanEtCondition       earlyTerminationEvent;   /**< Early termination frame type */
-    TI_UINT8               ETMaxNumOfAPframes;      /**< Number of frames from the early termination frame types according to the early 
-													* Termination Event setting, after which scan is stopped on this channel	
-													*/    
+    TI_UINT8               ETMaxNumOfAPframes;      /**< Number of frames from the early termination frame types according to the early
+													* Termination Event setting, after which scan is stopped on this channel
+													*/
     TI_UINT8               txPowerDbm;              /**< Power level used to transmit (for active scan only) (0: no change; 1-5: predefined power level */
     TI_UINT8               channel;                 /**< Channel to scan */
 
@@ -186,19 +191,19 @@ typedef struct
 
 /** \struct TScanSpsChannelEntry
  * \brief Scan SPS Channel Entry
- * 
+ *
  * \par Description
  * This structure defines single channel parameters for an SPS scan operation
- * 
+ *
  * \sa
- */ 
+ */
 typedef struct
 {
     TMacAddr               bssId;               	/**< BSSID (source is MAC address) to filter */
     TI_UINT32              scanDuration;            /**< Length of time to start scanning the channel (TSF lower 4 bytes) */
     TI_UINT32              scanStartTime;           /**< Exact time to start scanning the channel (TSF lower 4 bytes) */
     EScanEtCondition       earlyTerminationEvent;   /**< Scan early termination frame type */
-    TI_UINT8               ETMaxNumOfAPframes;      /**< Number of frames from the early termination frame types according to 
+    TI_UINT8               ETMaxNumOfAPframes;      /**< Number of frames from the early termination frame types according to
 													* the early Termination Event setting, after which scan is stopped on this channel
 													*/
     TI_UINT8               channel;                 /**< Channel to scan */
@@ -207,13 +212,13 @@ typedef struct
 
 /** \struct TScanChannelEntry
  * \brief Scan Channel Entry
- * 
+ *
  * \par Description
  * Holds single channel parameters single-channel parameters for all scan types,
  * either for normal scan or for SPS scan
- * 
+ *
  * \sa
- */ 
+ */
 typedef union
 {
     TScanNormalChannelEntry   normalChannelEntry;	/**< Normal scan parameters: channel parameters for all scan types other than SPS 	*/
@@ -223,12 +228,12 @@ typedef union
 
 /** \struct TScanParams
  * \brief scan operation parameters
- * 
+ *
  * \par Description
  * This structure defines parameters for a scan operation
- * 
+ *
  * \sa
- */ 
+ */
 typedef struct
 {
     TSsid                  desiredSsid;    		/**< The SSID to search (optional) 												*/
@@ -237,11 +242,11 @@ typedef struct
     TI_UINT8               probeReqNumber;     	/**< Number of probe requests to send on each channel (for active scan) 		*/
     ERateMask              probeRequestRate;    /**< The rate at which to send the probe requests 								*/
     TI_UINT8               Tid;                 /**< Time at which to trigger the scan (for triggered scan)						*/
-    TI_UINT64              latestTSFValue;      /**< For SPS scan: the latest TSF at which a frame was received. Used to detect 
-												* TSF error (AP recovery). 
+    TI_UINT64              latestTSFValue;      /**< For SPS scan: the latest TSF at which a frame was received. Used to detect
+												* TSF error (AP recovery).
 												*/
-    TI_UINT32              SPSScanDuration;    	/**< For SPS scan ONLY: the time duration of the scan (in milliseconds), used to 
-												* Set timer according to. Used to set scan-complete timer 
+    TI_UINT32              SPSScanDuration;    	/**< For SPS scan ONLY: the time duration of the scan (in milliseconds), used to
+												* Set timer according to. Used to set scan-complete timer
 												*/
     TI_UINT8               numOfChannels;       /**< Number of channels to scan 														*/
     TScanChannelEntry      channelEntry[ MAX_NUMBER_OF_CHANNELS_PER_SCAN ];	/**< Channel data array, actual size according to the above field. */
@@ -250,30 +255,30 @@ typedef struct
 
 /** \struct TPeriodicScanSsid
  * \brief Periodic Scan SSID
- * 
+ *
  * \par Description
  * This structure defines parameters for Periodic scan for SSID
- * 
+ *
  * \sa
- */ 
+ */
 typedef struct
 {
-    ESsidVisability eVisability;	/**< Indicates if SSID Visible or not	*/	
+    ESsidVisability eVisability;	/**< Indicates if SSID Visible or not	*/
     TSsid           tSsid;			/**< The Parameters of Scaned SSID 		*/
 } TPeriodicScanSsid;
 
 /** \struct TPeriodicChannelEntry
  * \brief Periodic Channel Entry
- * 
+ *
  * \par Description
  * This structure defines a Channel Entry of Periodic scan
  * (each scanned channel has its own Channel Entry)
- * 
+ *
  * \sa
  */
 typedef struct
 {
-    ERadioBand      eBand;			  	/**< Channel's Radio Band									*/  	
+    ERadioBand      eBand;			  	/**< Channel's Radio Band									*/
     TI_UINT32       uChannel;			/**< Channel's Number										*/
     EScanType       eScanType;			/**< The Type of Scan Performed on the channel				*/
     TI_UINT32       uMinDwellTimeMs;	/**< minimum time to dwell on the channel, in microseconds	*/
@@ -283,22 +288,22 @@ typedef struct
 
 /** \struct TPeriodicScanParams
  * \brief Periodic Scan Parameters
- * 
+ *
  * \par Description
  * This structure defines all the parameters of Periodic scan
- * 
+ *
  * \sa
  */
 typedef struct
 {
     TI_UINT32               uSsidNum;												/**< Number of Desired SSID scanned			 					*/
     TI_UINT8				uSsidListFilterEnabled;										/** 1: eneable filtering according to the list; 0: disable  */
-    TPeriodicScanSsid       tDesiredSsid[ PERIODIC_SCAN_MAX_SSID_NUM ];				/**< Buffer of size of maximum possible Periodic Scanned SSIDs. 
-																					* This buffer holds the Parameters of Desired SSIDs (for each SSID: 
-																					* visibility, length, string buffer) --> number of init entries in 
-																					* buffer: uSsidNum	
+    TPeriodicScanSsid       tDesiredSsid[ PERIODIC_SCAN_MAX_SSID_NUM ];				/**< Buffer of size of maximum possible Periodic Scanned SSIDs.
+																					* This buffer holds the Parameters of Desired SSIDs (for each SSID:
+																					* visibility, length, string buffer) --> number of init entries in
+																					* buffer: uSsidNum
 																					*/
-    TI_UINT32               uCycleNum;												/**< number of Scan cycles to run 						   		*/ 								
+    TI_UINT32               uCycleNum;												/**< number of Scan cycles to run 						   		*/
     TI_UINT32               uCycleIntervalMsec[ PERIODIC_SCAN_MAX_INTERVAL_NUM ];	/**< Intervals (in Msec) between two sequential  scan cycle    	*/
     TI_INT8                 iRssiThreshold;											/**< RSSI threshold 											*/
     TI_INT8                 iSnrThreshold;											/**< SNR threshold	 											*/
@@ -307,8 +312,8 @@ typedef struct
     ScanBssType_e           eBssType;												/**< Scan BSS Type												*/
     TI_UINT32               uProbeRequestNum;										/**< Number of probe requests to transmit per SSID				*/
     TI_UINT32               uChannelNum;											/**< Number of Scaned Channels									*/
-    TPeriodicChannelEntry   tChannels[ PERIODIC_SCAN_MAX_CHANNEL_NUM ];				/**< Buffer of size of maximum possible Periodic Scanned Channels. 
-																					* This buffer holds the Parameters of each Scanned Channel	
+    TPeriodicChannelEntry   tChannels[ PERIODIC_SCAN_MAX_CHANNEL_NUM ];				/**< Buffer of size of maximum possible Periodic Scanned Channels.
+																					* This buffer holds the Parameters of each Scanned Channel
 																					*/
 } TPeriodicScanParams;
 

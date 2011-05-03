@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * mlmeSm.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file mlmeSM.c
  *  \brief 802.11 MLME SM source
  *
@@ -82,7 +87,7 @@ static void mlme_stopAssocAndAuth(mlme_t *pMlme);
 *
 * mlme_Create - allocate memory for MLME SM
 *
-* \b Description: 
+* \b Description:
 *
 * Allocate memory for MLME SM. \n
 *       Allocates memory for MLME context. \n
@@ -132,7 +137,7 @@ TI_HANDLE mlme_create(TI_HANDLE hOs)
 *
 * mlme_Unload - unload MLME SM from memory
 *
-* \b Description: 
+* \b Description:
 *
 * Unload MLME SM from memory
 *
@@ -158,7 +163,7 @@ TI_STATUS mlme_unload(TI_HANDLE hMlme)
     {
         /* report failure but don't stop... */
     }
-    
+
     os_memoryFree(pHandle->hOs, hMlme, sizeof(mlme_t));
 
     return TI_OK;
@@ -168,7 +173,7 @@ TI_STATUS mlme_unload(TI_HANDLE hMlme)
 *
 * mlme_smConfig - configure a new MLME SM
 *
-* \b Description: 
+* \b Description:
 *
 * Configure a new MLME SM and other modules handles.
 *
@@ -181,7 +186,7 @@ TI_STATUS mlme_unload(TI_HANDLE hMlme)
 void mlme_init (TStadHandlesList *pStadHandles)
 {
     mlme_t *pHandle = (mlme_t *)(pStadHandles->hMlmeSm);
-    
+
     /** Main 802.1X State Machine matrix */
     fsm_actionCell_t    mlme_smMatrix[MLME_SM_NUM_STATES][MLME_SM_NUM_EVENTS] =
     {
@@ -218,15 +223,15 @@ void mlme_init (TStadHandlesList *pStadHandles)
          {MLME_SM_STATE_ASSOC, (fsm_Action_t)mlme_smActionUnexpected}   /* MLME_SM_EVENT_ASSOC_FAIL */
         }
     };
-    
+
     fsm_Config(pHandle->pMlmeSm, &mlme_smMatrix[0][0], MLME_SM_NUM_STATES, MLME_SM_NUM_EVENTS, mlme_smEvent, pStadHandles->hOs);
-    
+
     pHandle->currentState = MLME_SM_STATE_IDLE;
     pHandle->legacyAuthType = AUTH_LEGACY_NONE;
     pHandle->reAssoc = TI_FALSE;
     pHandle->disConnType = DISCONNECT_IMMEDIATE;
     pHandle->disConnReason = STATUS_UNSPECIFIED;
-    
+
     pHandle->hAssoc            = pStadHandles->hAssoc;
     pHandle->hAuth             = pStadHandles->hAuth;
     pHandle->hSiteMgr          = pStadHandles->hSiteMgr;
@@ -292,7 +297,7 @@ TI_STATUS mlme_setParam(TI_HANDLE           hMlmeSm,
         case AUTH_LEGACY_AUTO_SWITCH:
             /* First configure the MLME with the new legacy authentication type */
             pMlmeSm->legacyAuthType = AUTH_LEGACY_AUTO_SWITCH;
-            /* Now configure the authentication module, 
+            /* Now configure the authentication module,
                 Auto switch mode means start always with shared key, if fail move to open system. */
             pParam->paramType = AUTH_LEGACY_TYPE_PARAM;
             pParam->content.authLegacyAuthType = AUTH_LEGACY_SHARED_KEY;
@@ -316,7 +321,7 @@ TI_STATUS mlme_setParam(TI_HANDLE           hMlmeSm,
     return TI_OK;
 }
 
-TI_STATUS mlme_getParam(TI_HANDLE           hMlmeSm, 
+TI_STATUS mlme_getParam(TI_HANDLE           hMlmeSm,
                         paramInfo_t         *pParam)
 {
     mlme_t *pMlmeSm = (mlme_t *)hMlmeSm;
@@ -324,7 +329,7 @@ TI_STATUS mlme_getParam(TI_HANDLE           hMlmeSm,
     switch(pParam->paramType)
     {
     case MLME_LEGACY_TYPE_PARAM:
-        pParam->content.mlmeLegacyAuthType = pMlmeSm->legacyAuthType;           
+        pParam->content.mlmeLegacyAuthType = pMlmeSm->legacyAuthType;
         break;
 
     case MLME_CAPABILITY_PARAM:
@@ -348,7 +353,7 @@ TI_STATUS mlme_getParam(TI_HANDLE           hMlmeSm,
 *
 * mlme_Start - Start event for the MLME SM
 *
-* \b Description: 
+* \b Description:
 *
 * Start event for the MLME SM
 *
@@ -387,7 +392,7 @@ TI_STATUS mlme_start(TI_HANDLE hMlme)
 *
 * mlme_Stop - Stop event for the MLME SM
 *
-* \b Description: 
+* \b Description:
 *
 * Stop event for the MLME SM
 *
@@ -415,7 +420,7 @@ TI_STATUS mlme_stop(TI_HANDLE hMlme, DisconnectType_e disConnType, mgmtStatus_e 
     pHandle->disConnReason = reason;
 
     status = mlme_smEvent(&pHandle->currentState, MLME_SM_EVENT_STOP, pHandle);
-    
+
     return status;
 }
 
@@ -424,7 +429,7 @@ TI_STATUS mlme_stop(TI_HANDLE hMlme, DisconnectType_e disConnType, mgmtStatus_e 
 *
 * mlme_reportAuthStatus - Set a specific parameter to the MLME SM
 *
-* \b Description: 
+* \b Description:
 *
 * Set a specific parameter to the MLME SM.
 *
@@ -449,7 +454,7 @@ TI_STATUS mlme_reportAuthStatus(TI_HANDLE hMlme, TI_UINT16 status)
 
     if (pHandle == NULL)
         return TI_NOK;
- 
+
     if (pHandle->legacyAuthType == AUTH_LEGACY_NONE)
         return TI_NOK;
 
@@ -461,10 +466,10 @@ TI_STATUS mlme_reportAuthStatus(TI_HANDLE hMlme, TI_UINT16 status)
         /* Mark a successful status - used for conn.c */
         pHandle->mlmeData.mgmtStatus = STATUS_SUCCESSFUL;
         fStatus = mlme_smEvent(&pHandle->currentState, MLME_SM_EVENT_AUTH_SUCCESS, pHandle);
-    } 
-    else 
+    }
+    else
     {
-        /* Now, if the MLME legacy auth type is AUTO_SWITCH, and the Auth legacy auth type is shared key, 
+        /* Now, if the MLME legacy auth type is AUTO_SWITCH, and the Auth legacy auth type is shared key,
             we configure the auth SM to open system, otherwise, this is really an authentication failure. */
         param.paramType = AUTH_LEGACY_TYPE_PARAM;
         auth_getParam(pHandle->hAuth, &param);
@@ -491,7 +496,7 @@ TI_STATUS mlme_reportAuthStatus(TI_HANDLE hMlme, TI_UINT16 status)
 *
 * mlme_reportAssocStatus - Set a specific parameter to the MLME SM
 *
-* \b Description: 
+* \b Description:
 *
 * Set a specific parameter to the MLME SM.
 *
@@ -526,7 +531,7 @@ TI_STATUS mlme_reportAssocStatus(TI_HANDLE hMlme, TI_UINT16 status)
     {
         pHandle->mlmeData.mgmtStatus = STATUS_SUCCESSFUL;
         fStatus = mlme_smEvent(&pHandle->currentState, MLME_SM_EVENT_ASSOC_SUCCESS, pHandle);
-    } else 
+    } else
     {
         pHandle->mlmeData.mgmtStatus = STATUS_ASSOC_REJECT;
         fStatus = mlme_smEvent(&pHandle->currentState, MLME_SM_EVENT_ASSOC_FAIL, pHandle);
@@ -540,7 +545,7 @@ TI_STATUS mlme_reportAssocStatus(TI_HANDLE hMlme, TI_UINT16 status)
 *
 * mlme_SetParam - Set a specific parameter to the MLME SM
 *
-* \b Description: 
+* \b Description:
 *
 * Set a specific parameter to the MLME SM.
 *
@@ -637,7 +642,7 @@ TI_STATUS mlme_smAssocSuccessAssocWait(mlme_t *pMlme)
 TI_STATUS mlme_smAssocFailAssocWait(mlme_t *pMlme)
 {
     TI_STATUS       status;
- 
+
     status = mlme_smReportStatus(pMlme);
 
     return status;
@@ -692,7 +697,7 @@ static void mlme_stopAssocAndAuth(mlme_t *pMlme)
 
     assoc_setDisAssocFlag(pMlme->hAssoc, sendDisAssoc);
     assoc_stop(pMlme->hAssoc);
-    
+
     auth_stop(pMlme->hAuth, sendDeAuth, pMlme->disConnReason );
 }
 /*****************************************************************************

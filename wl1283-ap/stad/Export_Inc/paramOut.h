@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * paramOut.h
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 /****************************************************************************/
 /*																			*/
@@ -44,12 +49,12 @@
 #include "roamingMngrTypes.h"
 #include "scanMngrTypes.h"
 
-#ifdef CCX_MODULE_INCLUDED
-#include "paramOutCcx.h"
+#ifdef XCC_MODULE_INCLUDED
+#include "paramOutXCC.h"
 #else
-#define   CCX_PARAM_FIELDS
+#define   XCC_PARAM_FIELDS
 #endif
- 
+
 #include "InternalCmdCodes.h"
 #include "commonTypes.h"
 #include "coreDefaultParams.h"
@@ -71,13 +76,13 @@
 #define VAL_TX_POWER_VALUE			100
 #define VAL_NETWORK_TYPE			101
 #define VAL_AP_TX_POWER_LEVEL	    102
-/* #define VAL_COUNTRY_CODE    	        103 */ 
+/* #define VAL_COUNTRY_CODE    	        103 */
 /* #define VAL_REG_DOMAIN_BAND_24	    104 */
 /* #define VAL_REG_DOMAIN_BAND_50	    105 */
 #define VAL_PACKET_BURSTING			106
 #define VAL_MIXED_MODE				107
 #define VAL_PRIVACY_MODE			108
-#define VAL_CCX_SECURITY			109
+#define VAL_XCC_SECURITY			109
 #define VAL_DEFAULT_KEY_ID			110
 #define VAL_AP_SUPPORT_CHANELS 		111
 
@@ -256,23 +261,23 @@ typedef struct rxDataFilterFieldPattern_t
     TI_UINT8       mask[RX_DATA_FILTER_MAX_PATTERN_SIZE]; /* bit-masking of the internal field content */
 } rxDataFilterFieldPattern_t;
 
-typedef struct 
+typedef struct
 {
 	void	*handler;
-	void	*callback; 
+	void	*callback;
 }QoS_renegVoiceTspecReq_t;
 
 /* Authentication/encryption capability */
 #define MAX_AUTH_ENCR_PAIR 13
 
-typedef struct 
+typedef struct
 {
 	EExternalAuthMode   authenticationMode;
 	ECipherSuite        cipherSuite;
 
 } authEncrPairList_t;
 
-typedef struct 
+typedef struct
 {
 	TI_UINT32              NoOfPMKIDs;
 	TI_UINT32              NoOfAuthEncrPairSupported;
@@ -280,7 +285,7 @@ typedef struct
 
 } rsnAuthEncrCapability_t;
 
-typedef struct 
+typedef struct
 {
 	TI_UINT32       numOfPreAuthBssids;
 	TMacAddr     	*listOfPreAuthBssid;
@@ -391,7 +396,7 @@ typedef struct{
     /* 802.11n BA session */
     TI_UINT8               aBaPolicy[MAX_NUM_OF_802_1d_TAGS];
     TI_UINT16              aBaInactivityTimeout[MAX_NUM_OF_802_1d_TAGS];
-	
+
 }QosMngrInitParams_t;
 
 
@@ -418,15 +423,15 @@ typedef struct
 } neighbor_AP_t;
 
 typedef struct
-{    
-    TI_UINT16          maxChannelDuration;		/* One channel max duration time. (time slot 0 - 65000) */    
-    TI_UINT16          minChannelDuration;		/* One channel max duration time. (time slot 0 - 65000) */    
+{
+    TI_UINT16          maxChannelDuration;		/* One channel max duration time. (time slot 0 - 65000) */
+    TI_UINT16          minChannelDuration;		/* One channel max duration time. (time slot 0 - 65000) */
     TI_UINT8           earlyTerminationMode;	/**< 0 = Stay until max duration time. 1 = Terminate scan in
 												* a channel upon a reception of Prob-Res or Beacon. 2 = Terminate scan
 												* in a channel upon a reception of any frame
-												*/    
+												*/
     TI_UINT8           eTMaxNumOfAPframes;		/**< number of AP frames (beacon/probe_resp) to trigger Early termination.
-												* Applicable only when EarlyTerminationMode = 1 
+												* Applicable only when EarlyTerminationMode = 1
 												*/
     TI_UINT8           numOfProbeReq;			/* Number of probe request transmitted on each channel */
 
@@ -434,7 +439,7 @@ typedef struct
 
 
 typedef struct
-{	
+{
 	TI_UINT16 		channelNum;
 	TI_BOOL		channelValidity;
 	ERadioBand		band;
@@ -442,19 +447,19 @@ typedef struct
 
 /** \struct channelCapabilityRet_t
  * \brief Channel Capability Response
- * 
+ *
  * \par Description
  * Defines scan capabilities information, which is given as a response to a scan capabilities query.
- * 
+ *
  * \sa
- */ 
+ */
 typedef struct
 {
-	TI_BOOL 	channelValidity;	/**< Indicates whether the channel is valid for the requested scan type. 
-									* TRUE: channel is valid; FALSE: not valid 
+	TI_BOOL 	channelValidity;	/**< Indicates whether the channel is valid for the requested scan type.
+									* TRUE: channel is valid; FALSE: not valid
 									*/
-	TI_UINT8	maxTxPowerDbm; 		/**< Maximum TX power level allowed on this channel from 1 to 5, 
-									* where 1 is the highest and 5 is the lowest. Units: Dbm/10 
+	TI_UINT8	maxTxPowerDbm; 		/**< Maximum TX power level allowed on this channel from 1 to 5,
+									* where 1 is the highest and 5 is the lowest. Units: Dbm/10
 									*/
 }	channelCapabilityRet_t;
 
@@ -466,17 +471,17 @@ typedef struct
 
 /** \struct channelCapabilityReq_t
  * \brief Channel Capability Resuest
- * 
+ *
  * \par Description
  * Defines the regulatory domain scan capability query information
- * 
+ *
  * \sa
- */ 
+ */
 typedef struct
 {
 	regulatoryDomain_scanOption_e 	scanOption;	/**< Desired scan type (passive or active)		*/
-	TI_UINT8						channelNum; /**< Channel on which scan is to be performed	*/		
-	ERadioBand                     	band; 		/**< Band on which scan is to be performed		*/	
+	TI_UINT8						channelNum; /**< Channel on which scan is to be performed	*/
+	ERadioBand                     	band; 		/**< Band on which scan is to be performed		*/
 }	channelCapabilityReq_t;
 
 typedef struct
@@ -511,13 +516,13 @@ typedef struct
 
 /** \struct paramInfo_t
  * \brief General Parameters Structure
- * 
+ *
  * \par Description
- * This structure holds information for the regulatory domain (and other modules 
+ * This structure holds information for the regulatory domain (and other modules
  * that are outside of the scope of this document) queries
- * 
+ *
  * \sa
- */ 
+ */
 typedef struct{
     TI_UINT32              paramType;		/**< Parameter identification value */
     TI_UINT32              paramLength;		/**< Parameter actual length (or the length allocated in content for parameter value) */
@@ -606,7 +611,7 @@ typedef struct{
         TI_UINT32               			assocResponseTimeout;
 
         OS_802_11_ASSOCIATION_INFORMATION  	assocAssociationInformation;
-		
+
         /* RSN section */
         TI_BOOL                 			rsnPrivacyOptionImplemented;
         EAuthSuite              			rsnDesiredAuthType;
@@ -638,7 +643,7 @@ typedef struct{
         TI_BOOL                    			rxDataFilterEnableDisable;
         TRxDataFilterRequest    			rxDataFilterRequest;
 		TI_UINT16                           rxGenericEthertype;
-        
+
         /* Tx Data section */
         portStatus_e            			txDataPortStatus;
         TTxDataCounters        				*pTxDataCounters;
@@ -650,7 +655,7 @@ typedef struct{
 
 		/* Link Info section*/
 		TLinkDataCounters					linkDataCounters[WLANLINKS_MAX_LINKS];
-        
+
         /* Ctrl Data section */
         TI_BOOL                    			ctrlDataPowerSaveEnable;
         TI_BOOL                    			ctrlDataPowerSaveForce;
@@ -707,7 +712,7 @@ typedef struct{
 		channelValidity_t					channelValidity;
 		channelCapabilityRet_t				channelCapabilityRet;
 		channelCapabilityReq_t				channelCapabilityReq;
-		supportedChannels_t					supportedChannels;					
+		supportedChannels_t					supportedChannels;
         TI_BOOL                    			enableDisable_802_11d;
         TI_BOOL                    			enableDisable_802_11h;
 		TI_BOOL								bActivateTempPowerFix;
@@ -731,8 +736,8 @@ typedef struct{
         TI_UINT32							SoftGeminiParamArray[NUM_OF_CONFIG_PARAMS_IN_SG];
         TI_UINT32							CoexActivityParamArray[NUM_OF_COEX_ACTIVITY_PARAMS_IN_SG];
 
-		/* case CCX MODULE INCLUDED */
-		CCX_PARAM_FIELDS
+		/* case XCC MODULE INCLUDED */
+		XCC_PARAM_FIELDS
 
         /* Application Config Parameters Manager */
 		TAssocReqBuffer						assocReqBuffer;
@@ -764,7 +769,7 @@ typedef struct{
 		OS_802_11_QOS_RX_TIMEOUT_PARAMS		rxTimeOut;
         OS_802_11_QOS_PARAMS        		qosOsParams;
 		OS_802_11_AC_QOS_PARAMS				qosApQosParams;
-		
+
         /* AP Qos Capabilities */
         OS_802_11_AP_QOS_CAPABILITIES_PARAMS qosApCapabilities;
 
@@ -789,12 +794,12 @@ typedef struct{
         TI_BOOL                 			powerMgrKeepAliveEnaDis;
         TKeepAliveTemplate      			*pPowerMgrKeepAliveTemplate;
         TKeepAliveConfig        			*pPowerMgrKeepAliveConfig;
-	 
+
 		/* txRatePolicy params */
 		TTxRatePolicy         				TxRatePolicy;
-	
+
 		TIWLN_RADIO_RX_QUALITY 				RxRadioQuality ;
-		
+
 		/* MIB*/
 		TMib 								mib;
 
@@ -804,11 +809,11 @@ typedef struct{
 		/* debug */
 		TDebugRegisterReq					HwRegister;
         RateMangeParams_t                   RateMng;
-        RateMangeReadParams_t               RateMngParams; 
+        RateMangeReadParams_t               RateMngParams;
 
         TIpAddr    StationIP;
-        
-        
+
+
         /* AP Role params */
         TI_UINT8                            roleAPBssIndex;
         TI_UINT8                            roleAPChannel;
@@ -818,7 +823,7 @@ typedef struct{
         OS_802_11_SSID                      roleAPSsidName;
         TRoleAPGenericCmdToFW               tRoleAPGenericCmd;
         TI_BOOL                             roleAPWantsBeacons; /* whether driver wants FW to pass it incoming beacons */
-       
+
     } content;
 }paramInfo_t;
 
@@ -883,7 +888,7 @@ typedef struct
     TI_UINT16               siteMgrDesiredBeaconInterval;
     TI_UINT32               siteMgrDesiredAtimWindow;
     TI_UINT32               siteMgrFreq2ChannelTable[SITE_MGR_CHANNEL_MAX+1];
-    
+
     TI_UINT8                siteMgrExternalConfiguration;
     TI_UINT8                siteMgrPrivacyMode;
     TI_BOOL                 siteMgrWiFiAdhoc;
@@ -895,7 +900,7 @@ typedef struct
     TI_INT32                   TxPowerRssiRestoreThresh;
     TI_UINT8                   TxPowerRecoverLevel;
     TI_UINT8                   TxPowerDesiredLevel;
-	
+
 	TBeaconFilterInitParams	beaconFilterParams; /*contains the desired state*/
 
 	TI_UINT8					includeWSCinProbeReq;
@@ -921,7 +926,7 @@ typedef struct
     TI_UINT32       uMinScanDuration;
     TI_UINT32       uMaxScanDuration;
     TI_UINT32       uProbeReqNum;
-    TI_INT8         iSnrThreshold;	
+    TI_INT8         iSnrThreshold;
     TI_INT8         iRssiThreshold;
     TI_UINT32       uScanIntervals[ PERIODIC_SCAN_MAX_INTERVAL_NUM ];
     TI_UINT32       uCycleNum;
@@ -1039,18 +1044,18 @@ typedef struct
     scanControlTable_t          desiredScanControlTable;/* for 5 and 2.4 Ghz*/
 } regulatoryDomainInitParams_t;
 
-#ifdef CCX_MODULE_INCLUDED
+#ifdef XCC_MODULE_INCLUDED
 typedef enum
 {
-    CCX_MODE_DISABLED,
-    CCX_MODE_ENABLED,
-    CCX_MODE_STANDBY
-} ccxMngr_mode_t;
+    XCC_MODE_DISABLED,
+    XCC_MODE_ENABLED,
+    XCC_MODE_STANDBY
+} XCCMngr_mode_t;
 
 typedef struct
 {
-    ccxMngr_mode_t  ccxEnabled;
-} ccxMngrParams_t;
+    XCCMngr_mode_t  XCCEnabled;
+} XCCMngrParams_t;
 #endif
 
 /* Measurement module init parameters */
@@ -1058,8 +1063,8 @@ typedef struct
 {
     TI_UINT16              trafficIntensityThreshold;
     TI_UINT16              maxDurationOnNonServingChannel;
-#ifdef CCX_MODULE_INCLUDED
-    ccxMngr_mode_t      ccxEnabled;
+#ifdef XCC_MODULE_INCLUDED
+    XCCMngr_mode_t      XCCEnabled;
 #endif
 } measurementInitParams_t;
 
@@ -1093,15 +1098,15 @@ typedef struct
     PowerMgr_PowerMode_e        autoModeDozeMode;
 
     	EPowerPolicy defaultPowerLevel;
-	EPowerPolicy PowerSavePowerLevel;     	
+	EPowerPolicy PowerSavePowerLevel;
 
-	
+
 	/* powerMgmtConfig IE */
     TI_UINT8						mode;
-    TI_UINT8						needToSendNullData;  
-    TI_UINT8						numNullPktRetries; 
+    TI_UINT8						needToSendNullData;
+    TI_UINT8						numNullPktRetries;
     TI_UINT8						hangOverPeriod;
-    TI_UINT16						NullPktRateModulation; 
+    TI_UINT16						NullPktRateModulation;
 
 	/* PMConfigStruct */
 	TI_UINT32						ELPEnable;			/* based on "elpType" */
@@ -1115,11 +1120,11 @@ typedef struct
     TI_UINT32  						MaximalFullBeaconReceptionInterval; /* maximal time between full beacon reception */
     TI_UINT8   						BetEnableThreshold;
     TI_UINT8   						BetDisableThreshold;
-    TI_UINT8   						BetEnable;             
+    TI_UINT8   						BetEnable;
     TI_UINT8   						MaximumConsecutiveET;
     TI_UINT32						PsPollDeliveryFailureRecoveryPeriod;
 
-	TI_BOOL							reAuthActivePriority;	
+	TI_BOOL							reAuthActivePriority;
 }PowerMgrInitParams_t;
 
 typedef struct
@@ -1195,8 +1200,8 @@ typedef struct
     SoftGeminiInitParams_t          SoftGeminiInitParams;
     QosMngrInitParams_t             qosMngrInitParams;
     clsfrParams_t                   clsfrParams;
-#ifdef CCX_MODULE_INCLUDED
-    ccxMngrParams_t                 ccxMngrParams;
+#ifdef XCC_MODULE_INCLUDED
+    XCCMngrParams_t                 XCCMngrParams;
 #endif
 	SwitchChannelInitParams_t		SwitchChannelInitParams;
 	healthMonitorInitParams_t		healthMonitorInitParams;
@@ -1219,7 +1224,7 @@ typedef struct
 } TInitTable;
 
 /* Intra BSS Bridge Decision parameter */
-typedef enum 
+typedef enum
 {
     INTRA_BSS_BRIDGE_NO_BRIDGE,
     INTRA_BSS_BRIDGE_UNICAST,

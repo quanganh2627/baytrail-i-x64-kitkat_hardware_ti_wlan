@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * admCtrlNone.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file admCtrl.c
  *  \brief Admission control API implimentation
  *
@@ -49,10 +54,10 @@
 #include "rsn.h"
 #include "admCtrl.h"
 #include "admCtrlNone.h"
-#ifdef CCX_MODULE_INCLUDED
-#include "ccxMngr.h"
+#ifdef XCC_MODULE_INCLUDED
+#include "XCCMngr.h"
 #include "admCtrlWpa.h"
-#include "admCtrlCcx.h"
+#include "admCtrlXCC.h"
 #endif
 #include "TWDriver.h"
 
@@ -77,26 +82,26 @@
 *
 * admCtrlNone_config  - Configure empty admission control.
 *
-* \b Description: 
+* \b Description:
 *
 * Configure empty admission control.
 *
 * \b ARGS:
 *
 *  I   - pAdmCtrl - context \n
-*  
+*
 * \b RETURNS:
 *
 *  TI_OK on success, TI_NOK on failure.
 *
-* \sa 
+* \sa
 */
 TI_STATUS admCtrlNone_config(admCtrl_t *pAdmCtrl)
 {
 	TI_STATUS			status;
 	TRsnPaeConfig   	paeConfig;
 
-#ifdef CCX_MODULE_INCLUDED
+#ifdef XCC_MODULE_INCLUDED
 	TTwdParamInfo   	tTwdParam;
 #endif
 
@@ -106,11 +111,11 @@ TI_STATUS admCtrlNone_config(admCtrl_t *pAdmCtrl)
 		/* The default is OPEN */
 		pAdmCtrl->authSuite =	RSN_AUTH_OPEN;
 	}
-	
+
 	/* set admission control parameters */
     pAdmCtrl->keyMngSuite = RSN_KEY_MNG_NONE;
 	pAdmCtrl->externalAuthMode = (EExternalAuthMode)pAdmCtrl->authSuite;
-	
+
 	/* set callback functions (API) */
 	pAdmCtrl->getInfoElement = admCtrlNone_getInfoElement;
 	pAdmCtrl->setSite = admCtrlNone_setSite;
@@ -124,7 +129,7 @@ TI_STATUS admCtrlNone_config(admCtrl_t *pAdmCtrl)
     pAdmCtrl->get802_1x_AkmExists = admCtrl_nullGet802_1x_AkmExists;
 
 
-	
+
 	/* set cipher suite */
 	pAdmCtrl->broadcastSuite =  TWD_CIPHER_NONE;
 	pAdmCtrl->unicastSuite = TWD_CIPHER_NONE;
@@ -137,17 +142,17 @@ TI_STATUS admCtrlNone_config(admCtrl_t *pAdmCtrl)
 	paeConfig.keyExchangeProtocol = pAdmCtrl->keyMngSuite;
 	/* set default PAE configuration */
 	status = pAdmCtrl->pRsn->setPaeConfig(pAdmCtrl->pRsn, &paeConfig);
-						
-#ifdef CCX_MODULE_INCLUDED
+
+#ifdef XCC_MODULE_INCLUDED
 	/* Clean MIC and KP in HAL and re-send WEP-keys  */
-	tTwdParam.paramType = TWD_RSN_CCX_SW_ENC_ENABLE_PARAM_ID; 
-	tTwdParam.content.rsnCcxSwEncFlag = TI_FALSE;
+	tTwdParam.paramType = TWD_RSN_XCC_SW_ENC_ENABLE_PARAM_ID;
+	tTwdParam.content.rsnXCCSwEncFlag = TI_FALSE;
 	status = TWD_SetParam(pAdmCtrl->pRsn->hTWD, &tTwdParam);
 
-	tTwdParam.paramType = TWD_RSN_CCX_MIC_FIELD_ENABLE_PARAM_ID; 
-	tTwdParam.content.rsnCcxMicFieldFlag = TI_FALSE;
+	tTwdParam.paramType = TWD_RSN_XCC_MIC_FIELD_ENABLE_PARAM_ID;
+	tTwdParam.content.rsnXCCMicFieldFlag = TI_FALSE;
 	status = TWD_SetParam(pAdmCtrl->pRsn->hTWD, &tTwdParam);
-#endif /*CCX_MODULE_INCLUDED*/
+#endif /*XCC_MODULE_INCLUDED*/
 
 	return status;
 }
@@ -157,7 +162,7 @@ TI_STATUS admCtrlNone_config(admCtrl_t *pAdmCtrl)
 *
 * admCtrlNone_getInfoElement - Get the current information element.
 *
-* \b Description: 
+* \b Description:
 *
 * Get the current information element.
 *
@@ -166,12 +171,12 @@ TI_STATUS admCtrlNone_config(admCtrl_t *pAdmCtrl)
 *  I   - pAdmCtrl - context \n
 *  I   - pIe - IE buffer \n
 *  I   - pLength - length of IE \n
-*  
+*
 * \b RETURNS:
 *
 *  TI_OK on success, TI_NOK on failure.
 *
-* \sa 
+* \sa
 */
 TI_STATUS admCtrlNone_getInfoElement(admCtrl_t *pAdmCtrl, TI_UINT8 *pIe, TI_UINT32 *pLength)
 {
@@ -185,7 +190,7 @@ TI_STATUS admCtrlNone_getInfoElement(admCtrl_t *pAdmCtrl, TI_UINT8 *pIe, TI_UINT
 *
 * admCtrlNone_setSite  - Set current primary site parameters for registration.
 *
-* \b Description: 
+* \b Description:
 *
 * Set current primary site parameters for registration.
 *
@@ -195,12 +200,12 @@ TI_STATUS admCtrlNone_getInfoElement(admCtrl_t *pAdmCtrl, TI_UINT8 *pIe, TI_UINT
 *  I   - pRsnData - site's RSN data \n
 *  O   - pAssocIe - result IE of evaluation \n
 *  O   - pAssocIeLen - length of result IE of evaluation \n
-*  
+*
 * \b RETURNS:
 *
 *  TI_OK on site is aproved, TI_NOK on site is rejected.
 *
-* \sa 
+* \sa
 */
 TI_STATUS admCtrlNone_setSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TI_UINT8 *pAssocIe, TI_UINT8 *pAssocIeLen)
 {
@@ -223,11 +228,11 @@ TI_STATUS admCtrlNone_setSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TI_UINT8 
 		rsn_setDefaultKeys(pAdmCtrl->pRsn);
 	}
 
-#ifdef CCX_MODULE_INCLUDED
-	admCtrlCcx_setExtendedParams(pAdmCtrl, pRsnData);
+#ifdef XCC_MODULE_INCLUDED
+	admCtrlXCC_setExtendedParams(pAdmCtrl, pRsnData);
 #endif
 
-	/* Now we configure the MLME module with the 802.11 legacy authentication suite, 
+	/* Now we configure the MLME module with the 802.11 legacy authentication suite,
 		THe MLME will configure later the authentication module */
 	param.paramType = MLME_LEGACY_TYPE_PARAM;
 	switch (authSuite)
@@ -236,7 +241,7 @@ TI_STATUS admCtrlNone_setSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TI_UINT8 
 		param.content.mlmeLegacyAuthType = AUTH_LEGACY_OPEN_SYSTEM;
 		break;
 
-	case RSN_AUTH_SHARED_KEY: 
+	case RSN_AUTH_SHARED_KEY:
 		param.content.mlmeLegacyAuthType = AUTH_LEGACY_SHARED_KEY;
 		break;
 
@@ -247,7 +252,7 @@ TI_STATUS admCtrlNone_setSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TI_UINT8 
 	default:
 		return TI_NOK;
 	}
-	
+
 	status = mlme_setParam(pAdmCtrl->hMlme, &param);
 	if (status != TI_OK)
 	{
@@ -277,7 +282,7 @@ TI_STATUS admCtrlNone_setSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TI_UINT8 
 *
 * admCtrlNone_evalSite  - Evaluate site for registration.
 *
-* \b Description: 
+* \b Description:
 *
 * evaluate site RSN capabilities against the station's cap.
 * If the BSS type is infrastructure, the station matches the site only if it's WEP status is same as the site
@@ -288,12 +293,12 @@ TI_STATUS admCtrlNone_setSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TI_UINT8 
 *  I   - pAdmCtrl - Context \n
 *  I   - pRsnData - site's RSN data \n
 *  O   - pEvaluation - Result of evaluation \n
-*  
+*
 * \b RETURNS:
 *
-*  TI_OK 
+*  TI_OK
 *
-* \sa 
+* \sa
 */
 TI_STATUS admCtrlNone_evalSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TRsnSiteParams *pRsnSiteParams, TI_UINT32 *pEvaluation)
 {
@@ -301,7 +306,7 @@ TI_STATUS admCtrlNone_evalSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TRsnSite
 		return TI_NOK;
 	}
 	*pEvaluation = 1;
-	
+
 	/* Check privacy bit if not in mixed mode */
 	if (!pAdmCtrl->mixedMode)
 	{   /* There's no mixed mode, so make sure that the privacy Bit is off*/
@@ -315,7 +320,7 @@ TI_STATUS admCtrlNone_evalSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TRsnSite
     TRACE1(pAdmCtrl->hReport, REPORT_SEVERITY_INFORMATION, "admCtrlNone_evalSite:  pEvaluation=%d\n\n", *pEvaluation);
 
    	return TI_OK;
-	
+
 }
 
 

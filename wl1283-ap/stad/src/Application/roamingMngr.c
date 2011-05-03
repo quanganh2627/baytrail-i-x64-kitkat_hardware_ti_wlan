@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * roamingMngr.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file roamingMngr.c
  *  \brief Roaming Manager
  *
@@ -40,7 +45,7 @@
  *      to select a better AP.
  *      The Roaming triggers are: Low RSSI, PER, consecutive No ACK on TX,
  *      beacon Missed or External request.
- *      In each Internal Roaming request, scan is performed and selection for 
+ *      In each Internal Roaming request, scan is performed and selection for
  *      better AP. Better AP is defined as a different AP with better RSSI,
  *      and similar SSID and security settings.
  *      If better AP is found, there is a check for fast-roaming via the
@@ -122,7 +127,7 @@ static void roamingMngr_resetStatistics(TI_HANDLE hRoamingMngr);
 *
 * roamingMngr_releaseModule
 *
-* \b Description: 
+* \b Description:
 *
 * Called by the un load function
 * Go over the vector, for each bit that is set, release the corresponding module.
@@ -160,9 +165,9 @@ static void roamingMngr_releaseModule(roamingMngr_t *pRoamingMngr, TI_UINT32 ini
 
 /**
 *
-* roamingMngr_triggerRoamingCb 
+* roamingMngr_triggerRoamingCb
 *
-* \b Description: 
+* \b Description:
 *
 * This procedure is called when Roaming should be triggered
  * due to one of apConn_roamingTrigger_e Roaming Reasons.
@@ -178,7 +183,7 @@ static void roamingMngr_releaseModule(roamingMngr_t *pRoamingMngr, TI_UINT32 ini
 *
 *  TI_OK if successful, TI_NOK otherwise.
 *
-* 
+*
 */
 TI_STATUS roamingMngr_triggerRoamingCb(TI_HANDLE hRoamingMngr, void *pData, TI_UINT16 reasonCode)
 {
@@ -196,7 +201,7 @@ TI_STATUS roamingMngr_triggerRoamingCb(TI_HANDLE hRoamingMngr, void *pData, TI_U
 
     roamingTrigger = *(apConn_roamingTrigger_e *)pData;
 
-    if ((ROAMING_OPERATIONAL_MODE_MANUAL == pRoamingMngr->RoamingOperationalMode) && 
+    if ((ROAMING_OPERATIONAL_MODE_MANUAL == pRoamingMngr->RoamingOperationalMode) &&
         (roamingTrigger == ROAMING_TRIGGER_AP_DISCONNECT))
     {
         disConnReasonCode = reasonCode;
@@ -265,12 +270,12 @@ TI_STATUS roamingMngr_triggerRoamingCb(TI_HANDLE hRoamingMngr, void *pData, TI_U
             /* For debug */
             pRoamingMngr->roamingTriggerTimestamp = curTimestamp;
 #endif
-            return (roamingMngr_smEvent(ROAMING_EVENT_ROAM_TRIGGER, pRoamingMngr));  
+            return (roamingMngr_smEvent(ROAMING_EVENT_ROAM_TRIGGER, pRoamingMngr));
         }
         else if (roamingTrigger > ROAMING_TRIGGER_FAST_CONNECT_GROUP)
         {   /* If the trigger is from the Full Connect group, then stop the connection. */
-            return (roamingMngr_smEvent(ROAMING_EVENT_ROAM_TRIGGER, pRoamingMngr));  
-            
+            return (roamingMngr_smEvent(ROAMING_EVENT_ROAM_TRIGGER, pRoamingMngr));
+
         }
     }
 
@@ -279,9 +284,9 @@ TI_STATUS roamingMngr_triggerRoamingCb(TI_HANDLE hRoamingMngr, void *pData, TI_U
 
 /**
 *
-* roamingMngr_connStatusCb 
+* roamingMngr_connStatusCb
 *
-* \b Description: 
+* \b Description:
 *
 * This procedure is called when the connection status event
  * is triggered.
@@ -295,7 +300,7 @@ TI_STATUS roamingMngr_triggerRoamingCb(TI_HANDLE hRoamingMngr, void *pData, TI_U
 *
 *  TI_OK if successful, TI_NOK otherwise.
 *
-* 
+*
 */
 TI_STATUS roamingMngr_connStatusCb(TI_HANDLE hRoamingMngr, void *pData)
 {
@@ -324,8 +329,8 @@ TI_STATUS roamingMngr_connStatusCb(TI_HANDLE hRoamingMngr, void *pData)
         {
         case CONN_STATUS_CONNECTED: roamingEvent = ROAMING_EVENT_START;
             /* Get station capabilities */
-            apConn_getStaCapabilities(pRoamingMngr->hAPConnection, &pRoamingMngr->staCapabilities); 
-            break;     
+            apConn_getStaCapabilities(pRoamingMngr->hAPConnection, &pRoamingMngr->staCapabilities);
+            break;
         case CONN_STATUS_NOT_CONNECTED: roamingEvent = ROAMING_EVENT_STOP;
             break;
         case CONN_STATUS_HANDOVER_SUCCESS: roamingEvent = ROAMING_EVENT_ROAM_SUCCESS;
@@ -353,10 +358,10 @@ TI_STATUS roamingMngr_connStatusCb(TI_HANDLE hRoamingMngr, void *pData)
     {
          switch (connStatus)
          {
-          case CONN_STATUS_CONNECTED: 
+          case CONN_STATUS_CONNECTED:
         		roamingEvent = ROAMING_MANUAL_EVENT_START;
-                apConn_getStaCapabilities(pRoamingMngr->hAPConnection,&pRoamingMngr->staCapabilities); 
-                break;     
+                apConn_getStaCapabilities(pRoamingMngr->hAPConnection,&pRoamingMngr->staCapabilities);
+                break;
           case CONN_STATUS_NOT_CONNECTED:
                 roamingEvent = ROAMING_MANUAL_EVENT_STOP;
                 break;
@@ -367,7 +372,7 @@ TI_STATUS roamingMngr_connStatusCb(TI_HANDLE hRoamingMngr, void *pData)
                 roamingEvent = ROAMING_MANUAL_EVENT_FAIL;
                 break;
           default:
-        	return TI_NOK; 
+        	return TI_NOK;
         }
     }
 
@@ -376,9 +381,9 @@ TI_STATUS roamingMngr_connStatusCb(TI_HANDLE hRoamingMngr, void *pData)
 
 /**
 *
-* roamingMngr_updateNeighborApListCb 
+* roamingMngr_updateNeighborApListCb
 *
-* \b Description: 
+* \b Description:
 *
 * This procedure is called when Neighbor AP list is received from the AP.
  * Save the list, and set them in Scan Manager object.
@@ -392,7 +397,7 @@ TI_STATUS roamingMngr_connStatusCb(TI_HANDLE hRoamingMngr, void *pData)
 *
 *  TI_OK if successful, TI_NOK otherwise.
 *
-* 
+*
 */
 TI_STATUS roamingMngr_updateNeighborApListCb(TI_HANDLE hRoamingMngr, void *pData)
 {
@@ -414,7 +419,7 @@ TI_STATUS roamingMngr_updateNeighborApListCb(TI_HANDLE hRoamingMngr, void *pData
     {
         pRoamingMngr->neighborApsExist = TI_FALSE;
     }
-    
+
     if (pRoamingMngr->roamingMngrConfig.enableDisable)
     {
         scanMngr_setNeighborAPs (pRoamingMngr->hScanMngr, pNeighborAPList);
@@ -428,7 +433,7 @@ TI_STATUS roamingMngr_updateNeighborApListCb(TI_HANDLE hRoamingMngr, void *pData
 *
 * roamingMngr_smEvent
 *
-* \b Description: 
+* \b Description:
 *
 * Roaming Manager state machine transition function
 *
@@ -442,7 +447,7 @@ TI_STATUS roamingMngr_updateNeighborApListCb(TI_HANDLE hRoamingMngr, void *pData
 *
 *  TI_OK on success, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 TI_STATUS roamingMngr_smEvent(TI_UINT8 event, void* data)
 {
@@ -456,18 +461,18 @@ TI_STATUS roamingMngr_smEvent(TI_UINT8 event, void* data)
     genSM_Event (pRoamingMngr->hRoamingSm, (TI_UINT32)event, data);
 
     TRACE1(pRoamingMngr->hReport, REPORT_SEVERITY_INFORMATION, "roamingMngr_smEvent(). new State : %d \n", *(pRoamingMngr->pCurrentState));
-    
+
     return TI_OK;
 }
 
 
-  
+
 #ifdef TI_DBG
 /**
 *
-* roamingMngr_debugTrace 
+* roamingMngr_debugTrace
 *
-* \b Description: 
+* \b Description:
 *
 * This procedure is called for debug only, to trace the roaming triggers and events
 *
@@ -479,7 +484,7 @@ TI_STATUS roamingMngr_smEvent(TI_UINT8 event, void* data)
 *
 *  TI_OK if successful, TI_NOK otherwise.
 *
-* 
+*
 */
 static void roamingMngr_printStatistics(TI_HANDLE hRoamingMngr)
 {
@@ -522,7 +527,7 @@ static void roamingMngr_printStatistics(TI_HANDLE hRoamingMngr)
             break;
         case ROAMING_TRIGGER_SECURITY_ATTACK:
             WLAN_OS_REPORT(("- SEC attack = %d\n",      pRoamingMngr->roamingTriggerEvents[index]));
-            break;  
+            break;
         default:
             break;
         }
@@ -534,42 +539,42 @@ static void roamingMngr_printStatistics(TI_HANDLE hRoamingMngr)
     {
         switch (index)
         {
-        case ROAMING_TRIGGER_LOW_TX_RATE:               
+        case ROAMING_TRIGGER_LOW_TX_RATE:
             WLAN_OS_REPORT(("- Low TX rate = %d\n",     pRoamingMngr->roamingHandoverEvents[index]));
-            break;                                     
-        case ROAMING_TRIGGER_LOW_SNR:               
+            break;
+        case ROAMING_TRIGGER_LOW_SNR:
             WLAN_OS_REPORT(("- Low Snre = %d\n",        pRoamingMngr->roamingHandoverEvents[index]));
-            break;                                     
-        case ROAMING_TRIGGER_LOW_QUALITY:               
+            break;
+        case ROAMING_TRIGGER_LOW_QUALITY:
             WLAN_OS_REPORT(("- Low Quality = %d\n",     pRoamingMngr->roamingHandoverEvents[index]));
-            break;                                     
-        case ROAMING_TRIGGER_MAX_TX_RETRIES:            
+            break;
+        case ROAMING_TRIGGER_MAX_TX_RETRIES:
             WLAN_OS_REPORT(("- MAX TX retries = %d\n",  pRoamingMngr->roamingHandoverEvents[index]));
-            break;                                     
-        case ROAMING_TRIGGER_BSS_LOSS:                  
+            break;
+        case ROAMING_TRIGGER_BSS_LOSS:
             WLAN_OS_REPORT(("- BSS Loss TX = %d\n",     pRoamingMngr->roamingHandoverEvents[index]));
-            break;                                     
-        case ROAMING_TRIGGER_SWITCH_CHANNEL:            
+            break;
+        case ROAMING_TRIGGER_SWITCH_CHANNEL:
             WLAN_OS_REPORT(("- Switch Channel = %d\n",   pRoamingMngr->roamingHandoverEvents[index]));
-            break;                                     
-        case ROAMING_TRIGGER_AP_DISCONNECT:             
+            break;
+        case ROAMING_TRIGGER_AP_DISCONNECT:
             WLAN_OS_REPORT(("- AP Disconnect = %d\n",   pRoamingMngr->roamingHandoverEvents[index]));
-            break;                                     
-        case ROAMING_TRIGGER_SECURITY_ATTACK:           
-            WLAN_OS_REPORT(("- SEC attack = %d\n",      pRoamingMngr->roamingHandoverEvents[index])); 
-            break;                                     
+            break;
+        case ROAMING_TRIGGER_SECURITY_ATTACK:
+            WLAN_OS_REPORT(("- SEC attack = %d\n",      pRoamingMngr->roamingHandoverEvents[index]));
+            break;
         default:
             break;
         }
     }
 
     WLAN_OS_REPORT(("******** ROAMING STATISTICS ********\n"));
-    WLAN_OS_REPORT(("- Num of succesful handovers = %d\n", pRoamingMngr->roamingSuccesfulHandoverNum)); 
-    WLAN_OS_REPORT(("- Num of failed handovers = %d\n", pRoamingMngr->roamingFailedHandoverNum)); 
+    WLAN_OS_REPORT(("- Num of succesful handovers = %d\n", pRoamingMngr->roamingSuccesfulHandoverNum));
+    WLAN_OS_REPORT(("- Num of failed handovers = %d\n", pRoamingMngr->roamingFailedHandoverNum));
     if (pRoamingMngr->roamingSuccesfulHandoverNum >0)
     {
-        WLAN_OS_REPORT(("- Succesful average succesful handover duration = %d\n", pRoamingMngr->roamingAverageSuccHandoverDuration/pRoamingMngr->roamingSuccesfulHandoverNum)); 
-        WLAN_OS_REPORT(("- Succesful average roaming duration = %d\n", pRoamingMngr->roamingAverageRoamingDuration/pRoamingMngr->roamingSuccesfulHandoverNum)); 
+        WLAN_OS_REPORT(("- Succesful average succesful handover duration = %d\n", pRoamingMngr->roamingAverageSuccHandoverDuration/pRoamingMngr->roamingSuccesfulHandoverNum));
+        WLAN_OS_REPORT(("- Succesful average roaming duration = %d\n", pRoamingMngr->roamingAverageRoamingDuration/pRoamingMngr->roamingSuccesfulHandoverNum));
     }
 
 
@@ -578,11 +583,11 @@ static void roamingMngr_printStatistics(TI_HANDLE hRoamingMngr)
 
 /**
 *
-* roamingMngr_resetDebugTrace 
+* roamingMngr_resetDebugTrace
 *
-* \b Description: 
+* \b Description:
 *
-* This procedure is called for debug only, to reset Roaming debug trace 
+* This procedure is called for debug only, to reset Roaming debug trace
 *
 * \b ARGS:
 *
@@ -592,7 +597,7 @@ static void roamingMngr_printStatistics(TI_HANDLE hRoamingMngr)
 *
 *  TI_OK if successful, TI_NOK otherwise.
 *
-* 
+*
 */
 static void roamingMngr_resetStatistics(TI_HANDLE hRoamingMngr)
 {
@@ -607,11 +612,11 @@ static void roamingMngr_resetStatistics(TI_HANDLE hRoamingMngr)
     }
     WLAN_OS_REPORT(("Resetting all ROAMING_EVENTS \n"));
 
-    pRoamingMngr->roamingSuccesfulHandoverNum = 0;    
-    pRoamingMngr->roamingHandoverStartedTimestamp = 0;  
+    pRoamingMngr->roamingSuccesfulHandoverNum = 0;
+    pRoamingMngr->roamingHandoverStartedTimestamp = 0;
     pRoamingMngr->roamingHandoverCompletedTimestamp = 0;
-    pRoamingMngr->roamingAverageSuccHandoverDuration = 0; 
-    pRoamingMngr->roamingAverageRoamingDuration = 0;  
+    pRoamingMngr->roamingAverageSuccHandoverDuration = 0;
+    pRoamingMngr->roamingAverageRoamingDuration = 0;
     pRoamingMngr->roamingFailedHandoverNum = 0;
 
     for (index=ROAMING_TRIGGER_LOW_QUALITY; index<ROAMING_TRIGGER_LAST; index++)
@@ -664,7 +669,7 @@ TI_HANDLE roamingMngr_create(TI_HANDLE hOs)
     }
     initVec |= (1 << ROAMING_MNGR_SM_INIT_BIT);
 
-    
+
     return pRoamingMngr;
 }
 
@@ -685,7 +690,7 @@ TI_STATUS roamingMngr_unload(TI_HANDLE hRoamingMngr)
 
 void roamingMngr_init (TStadHandlesList *pStadHandles)
 {
-    roamingMngr_t    *pRoamingMngr = (roamingMngr_t*)(pStadHandles->hRoamingMngr); 
+    roamingMngr_t    *pRoamingMngr = (roamingMngr_t*)(pStadHandles->hRoamingMngr);
 
     /* Update handlers */
     pRoamingMngr->hReport       = pStadHandles->hReport;
@@ -704,13 +709,13 @@ TI_STATUS roamingMngr_setDefaults (TI_HANDLE hRoamingMngr, TRoamScanMngrInitPara
 
     roamingMngr_t  *pRoamingMngr = (roamingMngr_t*)hRoamingMngr;
 	paramInfo_t     param;
-	
+
 #ifdef TI_DBG
     TI_UINT8 index =0;
 #endif
      /* Init intrenal variables */
     //pRoamingMngr->currentState = ROAMING_STATE_IDLE;
-    pRoamingMngr->roamingMngrConfig.enableDisable = ROAMING_DISABLED; 
+    pRoamingMngr->roamingMngrConfig.enableDisable = ROAMING_DISABLED;
     pRoamingMngr->roamingMngrConfig.apQualityThreshold = DEFAULT_AP_QUALITY;
     pRoamingMngr->roamingMngrConfig.lowPassFilterRoamingAttempt =DEFAULT_LOW_PASS_FILTER;
     pRoamingMngr->roamingTrigger = ROAMING_TRIGGER_NONE;
@@ -725,7 +730,7 @@ TI_STATUS roamingMngr_setDefaults (TI_HANDLE hRoamingMngr, TRoamScanMngrInitPara
     pRoamingMngr->listOfCandidateAps.numOfNeighborBSS = 0;
     pRoamingMngr->listOfCandidateAps.numOfPreAuthBSS = 0;
     pRoamingMngr->listOfCandidateAps.numOfRegularBSS = 0;
-    pRoamingMngr->RoamingOperationalMode =  pInitParam->RoamingOperationalMode; 
+    pRoamingMngr->RoamingOperationalMode =  pInitParam->RoamingOperationalMode;
 
 	if (pInitParam->RoamingScanning_2_4G_enable)
     {
@@ -733,7 +738,7 @@ TI_STATUS roamingMngr_setDefaults (TI_HANDLE hRoamingMngr, TRoamScanMngrInitPara
         param.content.roamingConfigBuffer.roamingMngrConfig.lowPassFilterRoamingAttempt = 30;
         param.content.roamingConfigBuffer.roamingMngrConfig.apQualityThreshold = -70;
 
-        param.content.roamingConfigBuffer.roamingMngrThresholdsConfig.dataRetryThreshold = 20; 
+        param.content.roamingConfigBuffer.roamingMngrThresholdsConfig.dataRetryThreshold = 20;
         param.content.roamingConfigBuffer.roamingMngrThresholdsConfig.numExpectedTbttForBSSLoss = 10;
         param.content.roamingConfigBuffer.roamingMngrThresholdsConfig.txRateThreshold = 2;
         param.content.roamingConfigBuffer.roamingMngrThresholdsConfig.lowRssiThreshold = -80;
@@ -751,7 +756,7 @@ TI_STATUS roamingMngr_setDefaults (TI_HANDLE hRoamingMngr, TRoamScanMngrInitPara
 
 
     /* config the FSM according to the operational mode*/
-     if(ROAMING_OPERATIONAL_MODE_MANUAL==pRoamingMngr->RoamingOperationalMode) 
+     if(ROAMING_OPERATIONAL_MODE_MANUAL==pRoamingMngr->RoamingOperationalMode)
     {
          genSM_SetDefaults(pRoamingMngr->hRoamingSm,
                            ROAMING_MANUAL_NUM_STATES,
@@ -765,9 +770,9 @@ TI_STATUS roamingMngr_setDefaults (TI_HANDLE hRoamingMngr, TRoamScanMngrInitPara
 
          pRoamingMngr->RoamStateDescription = ManualRoamStateDescription;
          pRoamingMngr->RoamEventDescription = ManualRoamEventDescription;
-    }    
+    }
     else
-    { 
+    {
          genSM_SetDefaults(pRoamingMngr->hRoamingSm,
                            ROAMING_MNGR_NUM_STATES,
                            ROAMING_MNGR_NUM_EVENTS,
@@ -786,11 +791,11 @@ TI_STATUS roamingMngr_setDefaults (TI_HANDLE hRoamingMngr, TRoamScanMngrInitPara
 
 #ifdef TI_DBG
     /* debug counters */
-    pRoamingMngr->roamingSuccesfulHandoverNum = 0;    
-    pRoamingMngr->roamingHandoverStartedTimestamp = 0;  
+    pRoamingMngr->roamingSuccesfulHandoverNum = 0;
+    pRoamingMngr->roamingHandoverStartedTimestamp = 0;
     pRoamingMngr->roamingHandoverCompletedTimestamp = 0;
-    pRoamingMngr->roamingAverageSuccHandoverDuration = 0; 
-    pRoamingMngr->roamingAverageRoamingDuration = 0;  
+    pRoamingMngr->roamingAverageSuccHandoverDuration = 0;
+    pRoamingMngr->roamingAverageRoamingDuration = 0;
     pRoamingMngr->roamingFailedHandoverNum = 0;
 
     for (index=ROAMING_TRIGGER_NONE; index<ROAMING_TRIGGER_LAST; index++)
@@ -818,13 +823,13 @@ TI_STATUS roamingMngr_setParam(TI_HANDLE hRoamingMngr, paramInfo_t *pParam)
 
     switch (pParam->paramType)
     {
-    
+
     case ROAMING_MNGR_APPLICATION_CONFIGURATION:
         {
             roamingMngrConfigParams_t   *pRoamingMngrConfigParams;
-    
+
             pRoamingMngrConfigParams = &pParam->content.roamingConfigBuffer;
-    
+
             /* Configure the Roaming Parmeters */
             TRACE3(pRoamingMngr->hReport, REPORT_SEVERITY_INFORMATION, "roamingMngr_setParam Configuration: \n                                  enableDisable= %d,\n  lowPassFilterRoamingAttempt=%d,\n                                  apQualityThreshold=%d\n", pRoamingMngrConfigParams->roamingMngrConfig.enableDisable, pRoamingMngrConfigParams->roamingMngrConfig.lowPassFilterRoamingAttempt, pRoamingMngrConfigParams->roamingMngrConfig.apQualityThreshold);
 
@@ -836,23 +841,23 @@ TI_STATUS roamingMngr_setParam(TI_HANDLE hRoamingMngr, paramInfo_t *pParam)
             TRACE7(pRoamingMngr->hReport, REPORT_SEVERITY_INFORMATION, "roamingMngr_setParam Thresholds: \n                                  dataRetryThreshold= %d,\n  lowQualityForBackgroungScanCondition=%d,\n                                  lowRssiThreshold=%d,\n lowSNRThreshold=%d,\n                                  normalQualityForBackgroungScanCondition=%d,\n                                  numExpectedTbttForBSSLoss=%d,\n txRateThreshold=%d \n \n", pRoamingMngrConfigParams->roamingMngrThresholdsConfig.dataRetryThreshold, pRoamingMngrConfigParams->roamingMngrThresholdsConfig.lowQualityForBackgroungScanCondition, pRoamingMngrConfigParams->roamingMngrThresholdsConfig.lowRssiThreshold, pRoamingMngrConfigParams->roamingMngrThresholdsConfig.lowSnrThreshold, pRoamingMngrConfigParams->roamingMngrThresholdsConfig.normalQualityForBackgroungScanCondition, pRoamingMngrConfigParams->roamingMngrThresholdsConfig.numExpectedTbttForBSSLoss, pRoamingMngrConfigParams->roamingMngrThresholdsConfig.txRateThreshold);
 
             os_memoryCopy(pRoamingMngr->hOs, &pRoamingMngr->roamingMngrThresholdsConfig, &pRoamingMngrConfigParams->roamingMngrThresholdsConfig, sizeof(roamingMngrThresholdsConfig_t));
-            
+
             status = apConn_setRoamThresholds(pRoamingMngr->hAPConnection, &pRoamingMngrConfigParams->roamingMngrThresholdsConfig);
 
-            if (pRoamingMngr->roamingMngrConfig.enableDisable && 
+            if (pRoamingMngr->roamingMngrConfig.enableDisable &&
                 !pRoamingMngrConfigParams->roamingMngrConfig.enableDisable)
             {   /* disable Roaming Manager */
                 apConn_unregisterRoamMngrCallb(pRoamingMngr->hAPConnection);
                 pRoamingMngr->roamingMngrConfig.enableDisable = ROAMING_DISABLED;
                 return (roamingMngr_smEvent(ROAMING_EVENT_STOP, pRoamingMngr));
             }
-            else if (!pRoamingMngr->roamingMngrConfig.enableDisable && 
+            else if (!pRoamingMngr->roamingMngrConfig.enableDisable &&
                 pRoamingMngrConfigParams->roamingMngrConfig.enableDisable)
             {   /* enable Roaming Manager */
                 /* Save the Roaming Configuration parameters */
                 pRoamingMngr->roamingMngrConfig.enableDisable = pRoamingMngrConfigParams->roamingMngrConfig.enableDisable;
                 /* register Roaming callback */
-                apConn_registerRoamMngrCallb(pRoamingMngr->hAPConnection, 
+                apConn_registerRoamMngrCallb(pRoamingMngr->hAPConnection,
                                              roamingMngr_triggerRoamingCb,
                                              roamingMngr_connStatusCb,
                                              roamingMngr_updateNeighborApListCb);
@@ -860,7 +865,7 @@ TI_STATUS roamingMngr_setParam(TI_HANDLE hRoamingMngr, paramInfo_t *pParam)
         }
         break;
 
-  
+
     /*********** For Debug Purposes ***********/
 
     case ROAMING_MNGR_TRIGGER_EVENT:
@@ -868,7 +873,7 @@ TI_STATUS roamingMngr_setParam(TI_HANDLE hRoamingMngr, paramInfo_t *pParam)
         TRACE1(pRoamingMngr->hReport, REPORT_SEVERITY_INFORMATION, "roamingMngr_setParam TRIGGER_EVENT=  %d \n", pParam->content.roamingTriggerType);
         apConn_reportRoamingEvent(pRoamingMngr->hAPConnection, (apConn_roamingTrigger_e)pParam->content.roamingTriggerType, NULL);
         break;
-    
+
     case ROAMING_MNGR_CONN_STATUS:
         /* External request to connect to BBSID */
         TRACE1(pRoamingMngr->hReport, REPORT_SEVERITY_INFORMATION, "roamingMngr_setParam CONN_STATUS=  %d \n", pParam->content.roamingConnStatus);
@@ -902,14 +907,14 @@ TI_STATUS roamingMngr_getParam(TI_HANDLE hRoamingMngr, paramInfo_t *pParam)
     case ROAMING_MNGR_APPLICATION_CONFIGURATION:
         {
             roamingMngrConfigParams_t   *pRoamingMngrConfigParams;
-    
+
             pRoamingMngrConfigParams = &pParam->content.roamingConfigBuffer;
-    
-            if (pRoamingMngr->roamingMngrConfig.enableDisable == ROAMING_DISABLED) 
-            {   
+
+            if (pRoamingMngr->roamingMngrConfig.enableDisable == ROAMING_DISABLED)
+            {
                 pRoamingMngrConfigParams->roamingMngrConfig.enableDisable = TI_FALSE;
             }
-            else 
+            else
             {
                 pRoamingMngrConfigParams->roamingMngrConfig.enableDisable = TI_TRUE;
             }
@@ -1014,11 +1019,11 @@ TI_STATUS roamingMngr_immediateScanComplete(TI_HANDLE hRoamingMngr, scan_mngrRes
     TRACE1(pRoamingMngr->hReport, REPORT_SEVERITY_INFORMATION, "roamingMngr_immediateScanComplete, scanCmpltStatus = %d\n", 							 scanCmpltStatus);
 
     if (scanCmpltStatus == SCAN_MRS_SCAN_COMPLETE_OK)
-    {   
+    {
 		/* The scan completed TI_OK, get the updated list of APs */
         pRoamingMngr->pListOfAPs = scanMngr_getBSSList(pRoamingMngr->hScanMngr);
         if ((pRoamingMngr->pListOfAPs != NULL) && (pRoamingMngr->pListOfAPs->numOfEntries > 0))
-        {   
+        {
 			/* APs were found, start selection */
             pRoamingMngr->scanType = ROAMING_NO_SCAN;
             roamingEvent = ROAMING_EVENT_SELECT;
@@ -1032,7 +1037,7 @@ TI_STATUS roamingMngr_immediateScanComplete(TI_HANDLE hRoamingMngr, scan_mngrRes
                 roamingEvent = ROAMING_EVENT_SCAN;
             }
             else
-            {   
+            {
 				/* No APs were found in FULL SCAN, report failure */
                 roamingEvent = ROAMING_EVENT_SELECT;
             }
@@ -1040,18 +1045,18 @@ TI_STATUS roamingMngr_immediateScanComplete(TI_HANDLE hRoamingMngr, scan_mngrRes
     }
 	/* scanCmpltStatus != SCAN_MRS_SCAN_COMPLETE_OK */
     else
-    {   
+    {
 		/* The scan failed, retry scanning according to the current scan type */
         pRoamingMngr->pListOfAPs = scanMngr_getBSSList(pRoamingMngr->hScanMngr);
         if ((pRoamingMngr->pListOfAPs != NULL) && (pRoamingMngr->pListOfAPs->numOfEntries > 0))
-        {   
+        {
 			/* APs were found, start selection */
             pRoamingMngr->scanType = ROAMING_NO_SCAN;
             roamingEvent = ROAMING_EVENT_SELECT;
         }
         else
-        {   
-			/* The scan failed, and there were no APs found. 
+        {
+			/* The scan failed, and there were no APs found.
 			Retry scanning according to the current scan type */
 			switch (pRoamingMngr->scanType)
 			{
@@ -1074,7 +1079,7 @@ TI_STATUS roamingMngr_immediateScanComplete(TI_HANDLE hRoamingMngr, scan_mngrRes
 			default:
 				roamingEvent = ROAMING_EVENT_SELECT;
 TRACE1(pRoamingMngr->hReport, REPORT_SEVERITY_ERROR, "roamingMngr_immediateScanComplete, pRoamingMngr->scanType = %d\n", 								   pRoamingMngr->scanType);
-				pRoamingMngr->scanType = ROAMING_NO_SCAN;       
+				pRoamingMngr->scanType = ROAMING_NO_SCAN;
 				break;
 			} /* switch (pRoamingMngr->scanType) */
         }
@@ -1083,11 +1088,11 @@ TRACE1(pRoamingMngr->hReport, REPORT_SEVERITY_ERROR, "roamingMngr_immediateScanC
     TRACE2(pRoamingMngr->hReport, REPORT_SEVERITY_INFORMATION, "roamingMngr_immediateScanComplete, roamingEvent = %d, scanType=%d\n", 							roamingEvent, 							 pRoamingMngr->scanType);
 
     return (roamingMngr_smEvent(roamingEvent, pRoamingMngr));
-    
+
 }
 
 TI_STATUS roamingMngr_updateNewBssList(TI_HANDLE hRoamingMngr, bssList_t *bssList)
-{ 
+{
 
     roamingMngr_t       *pRoamingMngr;
 
@@ -1150,11 +1155,11 @@ void roamingMngr_smStop(void *pData)
 }
 /**
 *
-* roamingMngr_smStopWhileScanning - 
+* roamingMngr_smStopWhileScanning -
 *
-* \b Description: 
+* \b Description:
 *
-* Stop event means that the station is not in Connected State. 
+* Stop event means that the station is not in Connected State.
  * Stop continuos and immediate scans and clean internal vars.
 *
 * \b ARGS:
@@ -1165,14 +1170,14 @@ void roamingMngr_smStop(void *pData)
 *
 *  TI_OK if successful, TI_NOK otherwise.
 *
-* 
+*
 */
 void roamingMngr_smStopWhileScanning(void *pData)
 {
     roamingMngr_t* pRoamingMngr;
 
     pRoamingMngr = (roamingMngr_t*)pData;
-   
+
     TRACE0(pRoamingMngr->hReport, REPORT_SEVERITY_INFORMATION, " roamingMngr_smStopWhileScanning\n");
 
     scanMngr_stopImmediateScan(pRoamingMngr->hScanMngr);
@@ -1191,21 +1196,21 @@ void roamingMngr_smStopWhileScanning(void *pData)
 *
 * roamingMngr_setBssLossThreshold API
 *
-* Description: 
+* Description:
 *
-* Set the BSS Loss threshold by EMP and register for the event. 
-* 
+* Set the BSS Loss threshold by EMP and register for the event.
+*
 * ARGS:
 *
 *  hRoamingMngr   - Roaming manager handle \n
-*  uNumOfBeacons - number of consecutive beacons not received allowed before BssLoss event is issued 
-*  uClientID - the ID of the client that has registered for this event. will be sent along with the BssLoss event to EMP 
+*  uNumOfBeacons - number of consecutive beacons not received allowed before BssLoss event is issued
+*  uClientID - the ID of the client that has registered for this event. will be sent along with the BssLoss event to EMP
 * \b RETURNS:
 *
 *  TI_STATUS - registration status.
  * TI_NOK - registration is not allowed
 *
-* \sa 
+* \sa
 */
 TI_STATUS roamingMngr_setBssLossThreshold (TI_HANDLE hRoamingMngr, TI_UINT32 uNumOfBeacons, TI_UINT16 uClientID)
 {
@@ -1231,14 +1236,14 @@ TI_STATUS roamingMngr_setBssLossThreshold (TI_HANDLE hRoamingMngr, TI_UINT32 uNu
 *
 * roamingMngr_Connect API
 *
-* Description: 
+* Description:
 *
-* send the Connect event to roaming state machine 
-* 
+* send the Connect event to roaming state machine
+*
 * ARGS:
 *
 *  hRoamingMngr   - Roaming manager handle \n
-*  pTargetAp - the target AP to connect with info. 
+*  pTargetAp - the target AP to connect with info.
 * \b RETURNS:
 *
 *  TI_STATUS - roamingMngr_smEvent status.
@@ -1254,7 +1259,7 @@ TI_STATUS roamingMngr_connect(TI_HANDLE hRoamingMngr, TargetAp_t* pTargetAp)
                                                                "transitionMethod = %d,"
                                                                "requestType = %d,"
                                                                " \n", pTargetAp->transitionMethod,pTargetAp->connRequest.requestType) ;
-    
+
 
     TRACE6(pRoamingMngr->hReport, REPORT_SEVERITY_ERROR, "roamingMngr_connect(),"
                                                          " AP to roam BSSID: "
@@ -1263,8 +1268,8 @@ TI_STATUS roamingMngr_connect(TI_HANDLE hRoamingMngr, TargetAp_t* pTargetAp)
 
 
     /* Search for target AP in the scan manager results table, to get its beacon/ProbResponse buffer  */
-    bssList = scanMngr_getBSSList(((roamingMngr_t*)hRoamingMngr)->hScanMngr); 
-    for (i=0; i< bssList->numOfEntries ; i++) 
+    bssList = scanMngr_getBSSList(((roamingMngr_t*)hRoamingMngr)->hScanMngr);
+    for (i=0; i< bssList->numOfEntries ; i++)
     {
         if (MAC_EQUAL(bssList->BSSList[i].BSSID, pTargetAp->newAP.BSSID))
         {
@@ -1286,10 +1291,10 @@ TI_STATUS roamingMngr_connect(TI_HANDLE hRoamingMngr, TargetAp_t* pTargetAp)
 *
 * roamingMngr_startImmediateScan API
 *
-* Description: 
+* Description:
 *
 * start the immediate scan with the channel list received by the application
-* 
+*
 * ARGS:
 *
 *  hRoamingMngr   - Roaming manager handle \n
@@ -1305,21 +1310,21 @@ TI_STATUS roamingMngr_startImmediateScan(TI_HANDLE hRoamingMngr, channelList_t* 
 
     TRACE0(pRoamingMngr->hReport, REPORT_SEVERITY_INFORMATION, "roamingMngr_startImmediateScan().\n");
 
-    /* Save the channelList for later usage in the scanMngr_startImmediateScan() */ 
+    /* Save the channelList for later usage in the scanMngr_startImmediateScan() */
     scanMngr_setManualScanChannelList (pRoamingMngr-> hScanMngr, pChannelList);
     return roamingMngr_smEvent(ROAMING_MANUAL_EVENT_SCAN, hRoamingMngr);
 }
-	
+
 
 
 /**
 *
 * roamingMngr_stopImmediateScan API
 *
-* Description: 
+* Description:
 *
 * stop the immediate scan, called by the application.
-* 
+*
 * ARGS:
 *
 *  hRoamingMngr   - Roaming manager handle \n
@@ -1340,17 +1345,17 @@ TI_STATUS roamingMngr_stopImmediateScan(TI_HANDLE hRoamingMngr)
 *
 * roamingMngr_stopImmediateScan API
 *
-* Description: 
+* Description:
 *
 * called upon the immediate scan by application complete
-* 
+*
 * ARGS:
 *
 *  hRoamingMngr   - Roaming manager handle
 *  scanCmpltStatus - scanCmpltStatus
 *
 * \b RETURNS:
-* 
+*
 *  TI_STATUS - State machine event status.
 */
 

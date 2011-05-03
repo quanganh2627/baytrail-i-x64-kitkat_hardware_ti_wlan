@@ -1,32 +1,37 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
- 
+/*
+ * txCtrl.h
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
 /***************************************************************************/
 /*                                                                         */
 /*    MODULE:   txCtrl.h                                                   */
@@ -64,7 +69,7 @@ static const TI_UINT32 txDelayRangeEnd  [TX_DELAY_RANGES_NUM] = { 1000, 10000, 2
 /* BE is ordered here above BK for priority sensitive functions (BE is 0 but has higher priority than BK). */
 static const EAcTrfcType priorityOrderedAc[] = {QOS_AC_BK, QOS_AC_BE, QOS_AC_VI, QOS_AC_VO};
 
-typedef struct 
+typedef struct
 {
     TI_UINT32  dbgNumPktsSent[MAX_NUM_OF_AC];       /* Pkts sent by data-queue or mgmt-queue. */
     TI_UINT32  dbgNumPktsBackpressure[MAX_NUM_OF_AC];/* Pkts for which backpressure was set by HW-Q */
@@ -81,7 +86,7 @@ typedef struct
 
 } txDataDbgCounters_t;
 
-typedef struct 
+typedef struct
 {
     TI_UINT32  dbgNumPktsSent[WLANLINKS_MAX_LINKS];       /* Pkts sent by data-link or mgmt-link. */
 	TI_UINT32  dbgNumBytesSent[WLANLINKS_MAX_LINKS];       /* Bytes sent by data-link or mgmt-link. */
@@ -100,10 +105,10 @@ typedef struct
 } txDataDbgLinkCounters_t;
 
 
-/* 
- *  Module object structure. 
+/*
+ *  Module object structure.
  */
-typedef struct 
+typedef struct
 {
     /* Handles */
     TI_HANDLE           hOs;
@@ -117,7 +122,7 @@ typedef struct
     TI_HANDLE           hHealthMonitor;
     TI_HANDLE           hTimer;
     TI_HANDLE           hStaCap;
-    TI_HANDLE           hCcxMngr;
+    TI_HANDLE           hXCCMngr;
     TI_HANDLE           hQosMngr;
     TI_HANDLE           hRxData;
 
@@ -154,7 +159,7 @@ typedef struct
 
     /* Counters */
     TTxDataCounters     txDataCounters[MAX_NUM_OF_AC]; /* Save Tx statistics per Tx-queue. */
-    TI_UINT32           SumTotalDelayUs[MAX_NUM_OF_AC]; /* Store pkt delay sum in Usecs to avoid divide per 
+    TI_UINT32           SumTotalDelayUs[MAX_NUM_OF_AC]; /* Store pkt delay sum in Usecs to avoid divide per
                                                             pkt, and covert to msec on user request. */
     TI_UINT32           currentConsecutiveRetryFail; /* current consecutive number of tx failures due to max retry */
     ERate               eCurrentTxRate;                 /* Save last data Tx rate for applications' query */

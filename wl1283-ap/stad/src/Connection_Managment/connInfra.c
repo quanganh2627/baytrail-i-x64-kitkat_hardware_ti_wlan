@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * connInfra.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file connInfra.c
  *  \brief Infra connection implementation
  *
@@ -50,7 +55,7 @@
 #include "siteMgrApi.h"
 #include "sme.h"
 #include "rsnApi.h"
-#include "DataCtrl_Api.h"  
+#include "DataCtrl_Api.h"
 #include "paramOut.h"
 #include "siteHash.h"
 #include "smeSm.h"
@@ -69,9 +74,9 @@
 #include "SoftGeminiApi.h"
 #include "RxQueue_api.h"
 
-#ifdef CCX_MODULE_INCLUDED
-#include "ccxMngr.h"
-#include "ccxTSMngr.h"
+#ifdef XCC_MODULE_INCLUDED
+#include "XCCMngr.h"
+#include "XCCTSMngr.h"
 #endif
 
 #define DISCONNECT_TIMEOUT_MSEC      800
@@ -128,14 +133,14 @@ int conn_ConfigHwFinishCb(TI_HANDLE pData);
 
 
 /***********************************************************************
- *                        conn_infraConfig                                  
+ *                        conn_infraConfig
  ***********************************************************************
 DESCRIPTION: Infra Connection configuration function, called by the conection set param function
                 in the selection phase. Configures the connection state machine to Infra connection mode
-                                                                                                   
+
 INPUT:      hConn   -   Connection handle.
 
-OUTPUT:     
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
@@ -175,7 +180,7 @@ TI_STATUS conn_infraConfig(conn_t *pConn)
             {STATE_CONN_INFRA_WAIT_JOIN_CMPLT, actionUnexpected},       /* "EVENT_RSN_SUCC" */
             {STATE_CONN_INFRA_WAIT_JOIN_CMPLT, actionNop},              /* "EVENT_CONFIG_HW"        */
             {STATE_CONN_INFRA_WAIT_JOIN_CMPLT, actionUnexpected}        /* "EVENT_DISCONN_COMPLETE" */
-        
+
         },
 
         /* next state and actions for MLME_WAIT state */
@@ -186,9 +191,9 @@ TI_STATUS conn_infraConfig(conn_t *pConn)
             {STATE_CONN_INFRA_RSN_WAIT,  mlmeWait_to_rsnWait},          /* "EVENT_MLME_SUCC"*/
             {STATE_CONN_INFRA_MLME_WAIT, actionUnexpected},             /* "EVENT_RSN_SUCC" */
             {STATE_CONN_INFRA_MLME_WAIT, actionUnexpected},             /* "EVENT_CONFIG_HW" */
-            {STATE_CONN_INFRA_MLME_WAIT, actionUnexpected}              /* "EVENT_DISCONN_COMPLETE" */   
+            {STATE_CONN_INFRA_MLME_WAIT, actionUnexpected}              /* "EVENT_DISCONN_COMPLETE" */
         },
-        
+
         /* next state and actions for RSN_WAIT state */
         {   {STATE_CONN_INFRA_RSN_WAIT,     actionUnexpected},          /* "EVENT_CONNECT"  */
             {STATE_CONN_INFRA_RSN_WAIT,     actionUnexpected},          /* "EVENT_SCR_SUCC" */
@@ -199,7 +204,7 @@ TI_STATUS conn_infraConfig(conn_t *pConn)
             {STATE_CONN_INFRA_RSN_WAIT,     actionUnexpected},          /* "EVENT_CONFIG_HW"        */
             {STATE_CONN_INFRA_RSN_WAIT,     actionUnexpected}           /* "EVENT_DISCONN_COMPLETE" */
         },
-        
+
         /* next state and actions for CONFIG_HW state */
         {   {STATE_CONN_INFRA_CONFIG_HW, actionUnexpected},             /* "EVENT_CONNECT"  */
             {STATE_CONN_INFRA_CONFIG_HW, actionUnexpected},             /* "EVENT_SCR_SUCC" */
@@ -208,7 +213,7 @@ TI_STATUS conn_infraConfig(conn_t *pConn)
             {STATE_CONN_INFRA_CONFIG_HW, actionUnexpected},             /* "EVENT_MLME_SUCC"*/
             {STATE_CONN_INFRA_CONFIG_HW, actionUnexpected},             /* "EVENT_RSN_SUCC" */
             {STATE_CONN_INFRA_CONNECTED, configHW_to_connected},        /* "EVENT_CONFIG_HW"        */
-            {STATE_CONN_INFRA_CONFIG_HW, actionUnexpected}              /* "EVENT_DISCONN_COMPLETE" */   
+            {STATE_CONN_INFRA_CONFIG_HW, actionUnexpected}              /* "EVENT_DISCONN_COMPLETE" */
         },
 
         /* next state and actions for CONNECTED state */
@@ -219,9 +224,9 @@ TI_STATUS conn_infraConfig(conn_t *pConn)
             {STATE_CONN_INFRA_CONNECTED, actionUnexpected},         /* "EVENT_MLME_SUCC"*/
             {STATE_CONN_INFRA_CONNECTED, actionUnexpected},         /* "EVENT_RSN_SUCC" */
             {STATE_CONN_INFRA_CONNECTED, actionUnexpected},         /* "STATE_CONN_INFRA_CONFIG_HW" */
-            {STATE_CONN_INFRA_CONNECTED, actionUnexpected}          /* "EVENT_DISCONN_COMPLETE" */   
+            {STATE_CONN_INFRA_CONNECTED, actionUnexpected}          /* "EVENT_DISCONN_COMPLETE" */
         },
-        
+
         /* next state and actions for SCR_WAIT_DISCONN state */
         {   {STATE_CONN_INFRA_SCR_WAIT_DISCONN, actionUnexpected},     /* "EVENT_CONNECT"  */
             {STATE_CONN_INFRA_WAIT_DISCONNECT       , connInfra_ScrWaitDisconn_to_disconnect},  /* "EVENT_SCR_SUCC"*/
@@ -241,9 +246,9 @@ TI_STATUS conn_infraConfig(conn_t *pConn)
             {STATE_CONN_INFRA_WAIT_DISCONNECT, actionUnexpected},               /* "EVENT_MLME_SUCC"*/
             {STATE_CONN_INFRA_WAIT_DISCONNECT, actionUnexpected},               /* "EVENT_RSN_SUCC" */
             {STATE_CONN_INFRA_WAIT_DISCONNECT, actionUnexpected},               /* "STATE_CONN_INFRA_CONFIG_HW"  */
-            {STATE_CONN_INFRA_IDLE           , connInfra_WaitDisconnectToIdle}  /* "EVENT_DISCONN_COMPLETE" */       
+            {STATE_CONN_INFRA_IDLE           , connInfra_WaitDisconnectToIdle}  /* "EVENT_DISCONN_COMPLETE" */
         }
-        
+
     };
 
     scr_registerClientCB( pConn->hScr, SCR_CID_CONNECT, InfraConnSM_ScrCB, pConn );
@@ -253,7 +258,7 @@ TI_STATUS conn_infraConfig(conn_t *pConn)
 
 
 /***********************************************************************
- *                        conn_infraSMEvent                                 
+ *                        conn_infraSMEvent
  ***********************************************************************
 DESCRIPTION: Infra Connection SM event processing function, called by the connection API
                 Perform the following:
@@ -261,12 +266,12 @@ DESCRIPTION: Infra Connection SM event processing function, called by the connec
                 -   Calls the generic state machine event processing function which preform the following:
                     -   Calls the correspoding callback function
                     -   Move to next state
-                
+
 INPUT:      currentState    -   Pointer to the connection current state.
             event   -   Received event
             pConn   -   Connection handle
 
-OUTPUT:     
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
@@ -300,7 +305,7 @@ TI_STATUS conn_infraSMEvent(TI_UINT8 *currentState, TI_UINT8 event, TI_HANDLE hC
 static TI_STATUS ScrWait_to_JoinWait(void *pData)
 {
     TI_STATUS status;
-    conn_t *pConn = (conn_t *)pData; 
+    conn_t *pConn = (conn_t *)pData;
 
     status = siteMgr_join(((conn_t *)pData)->hSiteMgr );
     /* If the Join command was failed we report the SME that connection failure so it could exit connecting state */
@@ -347,14 +352,14 @@ static TI_STATUS JoinWait_to_mlmeWait(void *pData)
     /* Update TxMgmtQueue SM to open Tx path only for Mgmt packets. */
     txMgmtQ_SetConnState (((conn_t *)pData)->hTxMgmtQ, TX_CONN_STATE_MGMT);
 
-    /* 
+    /*
      * Set the reassociation flag in the association logic.
-     */ 
+     */
     pParam->paramType = MLME_RE_ASSOC_PARAM;
 
     if( pConn->connType == CONN_TYPE_ROAM )
         pParam->content.mlmeReAssoc = TI_TRUE;
-    else 
+    else
         pParam->content.mlmeReAssoc = TI_FALSE;
 
     status = mlme_setParam(pConn->hMlmeSm, pParam);
@@ -393,15 +398,15 @@ static TI_STATUS mlmeWait_to_WaitDisconnect(void *pData)
     /* Update TxMgmtQueue SM to close Tx path. */
     txMgmtQ_SetConnState (pConn->hTxMgmtQ, TX_CONN_STATE_CLOSE);
 
-    /* Start the disconnect complete time out timer. 
+    /* Start the disconnect complete time out timer.
        Disconect Complete event, which stops the timer. */
     tmr_StartTimer (pConn->hConnTimer, conn_timeout, (TI_HANDLE)pConn, DISCONNECT_TIMEOUT_MSEC, TI_FALSE);
 
-    /* FW will send the disconn frame according to disConnType */ 
-    TWD_CmdFwDisconnect (pConn->hTWD, pConn->disConnType, pConn->disConnReasonToAP); 
+    /* FW will send the disconn frame according to disConnType */
+    TWD_CmdFwDisconnect (pConn->hTWD, pConn->disConnType, pConn->disConnReasonToAP);
 
-#ifdef CCX_MODULE_INCLUDED
-    ccxMngr_updateIappInformation(pConn->hCcxMngr, CCX_DISASSOC);
+#ifdef XCC_MODULE_INCLUDED
+    XCCMngr_updateIappInformation(pConn->hXCCMngr, XCC_DISASSOC);
 #endif
     os_memoryFree(pConn->hOs, pParam, sizeof(paramInfo_t));
     return TI_OK;
@@ -411,15 +416,15 @@ static TI_STATUS mlmeWait_to_WaitDisconnect(void *pData)
   - all we need to do is call siteMgr_disJoin */
 static TI_STATUS JoinWait_to_WaitDisconnect(void *pData)
 {
-    conn_t *pConn = (conn_t *)pData; 
+    conn_t *pConn = (conn_t *)pData;
 
-    /* Start the disconnect complete time out timer. 
+    /* Start the disconnect complete time out timer.
        Disconect Complete event, which stops the timer. */
     tmr_StartTimer (pConn->hConnTimer, conn_timeout, (TI_HANDLE)pConn, DISCONNECT_TIMEOUT_MSEC, TI_FALSE);
 
-    /* FW will send the disconn frame according to disConnType */ 
-    TWD_CmdFwDisconnect (pConn->hTWD, pConn->disConnType, pConn->disConnReasonToAP); 
-    
+    /* FW will send the disconn frame according to disConnType */
+    TWD_CmdFwDisconnect (pConn->hTWD, pConn->disConnType, pConn->disConnReasonToAP);
+
    return TI_OK;
 }
 
@@ -438,7 +443,7 @@ static TI_STATUS mlmeWait_to_rsnWait(void *pData)
 
     pParam->paramType = RX_DATA_PORT_STATUS_PARAM;
     pParam->content.rxDataPortStatus = OPEN_EAPOL;
-    status = rxData_setParam(pConn->hRxData, pParam);    
+    status = rxData_setParam(pConn->hRxData, pParam);
     os_memoryFree(pConn->hOs, pParam, sizeof(paramInfo_t));
     if (status != TI_OK)
         return status;
@@ -447,7 +452,7 @@ static TI_STATUS mlmeWait_to_rsnWait(void *pData)
     txMgmtQ_SetConnState (((conn_t *)pData)->hTxMgmtQ, TX_CONN_STATE_EAPOL);
 
     /*
-     *  Notify that the driver is associated to the supplicant\IP stack. 
+     *  Notify that the driver is associated to the supplicant\IP stack.
      */
     EvHandlerSendEvent(pConn->hEvHandler, IPC_EVENT_ASSOCIATED, NULL,0);
 
@@ -516,13 +521,13 @@ static TI_STATUS configHW_to_disconnect(void *pData)
     pParam->paramType = RX_DATA_PORT_STATUS_PARAM;
     pParam->content.rxDataPortStatus = CLOSE;
     status = rxData_setParam(pConn->hRxData, pParam);
-    if (status == TI_OK) 
+    if (status == TI_OK)
     {
         /* Update TxMgmtQueue SM to close Tx path for all except Mgmt packets. */
         txMgmtQ_SetConnState (pConn->hTxMgmtQ, TX_CONN_STATE_MGMT);
 
         status = mlme_stop( pConn->hMlmeSm, DISCONNECT_IMMEDIATE, pConn->disConnReasonToAP );
-        if (status == TI_OK) 
+        if (status == TI_OK)
         {
             pParam->paramType = REGULATORY_DOMAIN_DISCONNECT_PARAM;
             regulatoryDomain_setParam(pConn->hRegulatoryDomain, pParam);
@@ -545,7 +550,7 @@ static TI_STATUS connInfra_ScrWaitDisconn_to_disconnect(void *pData)
     TI_STATUS status;
     paramInfo_t *pParam;
     conn_t *pConn = (conn_t *)pData;
-    
+
     status = rsn_stop(pConn->hRsn, pConn->disConEraseKeys);
     if (status != TI_OK)
         return status;
@@ -559,7 +564,7 @@ static TI_STATUS connInfra_ScrWaitDisconn_to_disconnect(void *pData)
     pParam->paramType = RX_DATA_PORT_STATUS_PARAM;
     pParam->content.rxDataPortStatus = CLOSE;
     status = rxData_setParam(pConn->hRxData, pParam);
-    if (status == TI_OK) 
+    if (status == TI_OK)
     {
         /* Update TxMgmtQueue SM to close Tx path for all except Mgmt packets. */
         txMgmtQ_SetConnState (pConn->hTxMgmtQ, TX_CONN_STATE_MGMT);
@@ -568,12 +573,12 @@ static TI_STATUS connInfra_ScrWaitDisconn_to_disconnect(void *pData)
         regulatoryDomain_setParam(pConn->hRegulatoryDomain, pParam);
 
         status = mlme_stop( pConn->hMlmeSm, DISCONNECT_IMMEDIATE, pConn->disConnReasonToAP );
-        if (status == TI_OK) 
+        if (status == TI_OK)
         {
             /* Must be called AFTER mlme_stop. since De-Auth packet should be sent with the
                 supported rates, and stopModules clears all rates. */
             stopModules(pConn, TI_TRUE);
-    
+
             /* send disconnect command to firmware */
             prepare_send_disconnect(pData);
         }
@@ -632,7 +637,7 @@ static TI_STATUS rsnWait_to_configHW(void *pData)
     scanCncn_SwitchToConnected (pConn->hScanCncn);
 
     PowerMgr_startPS(pConn->hPwrMngr);
-    
+
     TRACE1(pConn->hReport, REPORT_SEVERITY_INFORMATION, "rsnWait_to_configHW: setStaStatus %d\n",STA_STATE_CONNECTED);
     TWD_CmdSetStaState(pConn->hTWD, STA_STATE_CONNECTED, conn_ConfigHwFinishCb, pData);
 
@@ -656,8 +661,8 @@ static TI_STATUS configHW_to_connected(void *pData)
     /* Update TxMgmtQueue SM to open Tx path to all packets. */
     txMgmtQ_SetConnState (((conn_t *)pData)->hTxMgmtQ, TX_CONN_STATE_OPEN);
 
-#ifdef CCX_MODULE_INCLUDED
-    ccxMngr_updateIappInformation(pConn->hCcxMngr, CCX_ASSOC_OK);
+#ifdef XCC_MODULE_INCLUDED
+    XCCMngr_updateIappInformation(pConn->hXCCMngr, XCC_ASSOC_OK);
 #endif
 
     /* Start keep alive process */
@@ -676,13 +681,13 @@ static TI_STATUS configHW_to_connected(void *pData)
     currBSS_updateConnectedState(pConn->hCurrBss, TI_TRUE, BSS_INFRASTRUCTURE);
 
     pConn->pConnStatusCB( pConn->connStatCbObj, STATUS_SUCCESSFUL, 0);
-    
+
     SoftGemini_SetPSmode(pConn->hSoftGemini);
-#ifdef REPORT_LOG  
-    TRACE0(pConn->hReport, REPORT_SEVERITY_CONSOLE, "************ NEW CONNECTION ************\n"); 
+#ifdef REPORT_LOG
+    TRACE0(pConn->hReport, REPORT_SEVERITY_CONSOLE, "************ NEW CONNECTION ************\n");
     WLAN_OS_REPORT(("************ NEW CONNECTION ************\n"));
     siteMgr_printPrimarySiteDesc(pConn->hSiteMgr);
-     TRACE0(pConn->hReport, REPORT_SEVERITY_CONSOLE, "****************************************\n"); 
+     TRACE0(pConn->hReport, REPORT_SEVERITY_CONSOLE, "****************************************\n");
     WLAN_OS_REPORT(("****************************************\n"));
 #endif
 
@@ -690,18 +695,18 @@ static TI_STATUS configHW_to_connected(void *pData)
 }
 
 
-static TI_STATUS actionUnexpected(void *pData) 
+static TI_STATUS actionUnexpected(void *pData)
 {
 #ifdef TI_DBG
-    conn_t *pConn = (conn_t *)pData; 
-    
+    conn_t *pConn = (conn_t *)pData;
+
     TRACE0(pConn->hReport, REPORT_SEVERITY_SM, "State machine error, unexpected Event\n\n");
 #endif /*TI_DBG*/
-    
+
     return TI_OK;
 }
 
-static TI_STATUS actionNop(void *pData) 
+static TI_STATUS actionNop(void *pData)
 {
     return TI_OK;
 }
@@ -721,8 +726,8 @@ static TI_STATUS connInfra_ScrWait(void *pData)
          uResourceIndex < SCR_RESOURCE_NUM_OF_RESOURCES;
          uResourceIndex++)
     {
-        scrReplyStatus[ uResourceIndex ] = scr_clientRequest( pConn->hScr, SCR_CID_CONNECT, 
-                                                              uResourceIndex, 
+        scrReplyStatus[ uResourceIndex ] = scr_clientRequest( pConn->hScr, SCR_CID_CONNECT,
+                                                              uResourceIndex,
                                                               &(scrPendReason[ uResourceIndex ]));
         pConn->scrRequested[ uResourceIndex ] = TI_TRUE;
 
@@ -773,7 +778,7 @@ void InfraConnSM_ScrCB( TI_HANDLE hConn, EScrClientRequestStatus requestStatus,
     conn_t *pConn = (conn_t *)hConn;
 
     TRACE2( pConn->hReport, REPORT_SEVERITY_INFORMATION, "InfraConnSM_ScrCB called by SCR for resource %d. Status is: %d.\n", eResource, requestStatus);
-    
+
     /* act according to the request staus */
     switch ( requestStatus )
     {
@@ -831,13 +836,13 @@ static TI_STATUS ScrWait_to_idle(void *pData)
 
 static TI_STATUS stopModules( conn_t *pConn, TI_BOOL bDisconnect )
 {
-   
+
     measurementMgr_disconnected(pConn->hMeasurementMgr);
 
     rxData_stop(pConn->hRxData);
 
     ctrlData_stop(pConn->hCtrlData);
-    
+
     TrafficMonitor_Stop(pConn->hTrafficMonitor);
 
     switchChannel_stop(pConn->hSwitchChannel);
@@ -867,19 +872,19 @@ static TI_STATUS prepare_send_disconnect(void *pData)
     txCtrlParams_setEapolEncryptionStatus(pConn->hTxCtrl, DEF_EAPOL_ENCRYPTION_STATUS);
     qosMngr_disconnect (pConn->hQosMngr, TI_TRUE);
 
-#ifdef CCX_MODULE_INCLUDED
+#ifdef XCC_MODULE_INCLUDED
     measurementMgr_disableTsMetrics(pConn->hMeasurementMgr, MAX_NUM_OF_AC);
 #endif
 
-    /* Start the disconnect complete time out timer. 
+    /* Start the disconnect complete time out timer.
        Disconect Complete event, which stops the timer. */
     tmr_StartTimer (pConn->hConnTimer, conn_timeout, (TI_HANDLE)pConn, DISCONNECT_TIMEOUT_MSEC * 4, TI_FALSE);
 
-    /* FW will send the disconn frame according to disConnType */ 
-    TWD_CmdFwDisconnect (pConn->hTWD, pConn->disConnType, pConn->disConnReasonToAP); 
+    /* FW will send the disconn frame according to disConnType */
+    TWD_CmdFwDisconnect (pConn->hTWD, pConn->disConnType, pConn->disConnReasonToAP);
 
-#ifdef CCX_MODULE_INCLUDED
-    ccxMngr_updateIappInformation(pConn->hCcxMngr, CCX_DISASSOC);
+#ifdef XCC_MODULE_INCLUDED
+    XCCMngr_updateIappInformation(pConn->hXCCMngr, XCC_DISASSOC);
 #endif
 
     return TI_OK;
@@ -928,7 +933,7 @@ static TI_STATUS connect_to_ScrWait(void *pData)
      * This function performs roaming by two steps:
      * First - close the current connection without notify the SME.
      * Second - start new connection in reassociation mode.
-     */ 
+     */
 
     /* close all BA sessions */
     TWD_CloseAllBaSessions(pConn->hTWD);
@@ -957,8 +962,8 @@ static TI_STATUS connect_to_ScrWait(void *pData)
             pParam->paramType = REGULATORY_DOMAIN_DISCONNECT_PARAM;
             regulatoryDomain_setParam(pConn->hRegulatoryDomain, pParam);
 
-#ifdef CCX_MODULE_INCLUDED
-            ccxMngr_updateIappInformation(pConn->hCcxMngr, CCX_DISASSOC);
+#ifdef XCC_MODULE_INCLUDED
+            XCCMngr_updateIappInformation(pConn->hXCCMngr, XCC_DISASSOC);
 #endif
         /* Must be called AFTER mlme_stop. since De-Auth packet should be sent with the
             supported rates, and stopModules clears all rates. */
@@ -967,9 +972,9 @@ static TI_STATUS connect_to_ScrWait(void *pData)
             txCtrlParams_setEapolEncryptionStatus(pConn->hTxCtrl, DEF_EAPOL_ENCRYPTION_STATUS);
             qosMngr_disconnect (pConn->hQosMngr, TI_FALSE);
 
-        /* 
+        /*
          * Start new connection.
-         */ 
+         */
             connInfra_ScrWait(pConn);
         }
     }
@@ -982,9 +987,9 @@ static TI_STATUS Idle_to_Idle(void *pData)
 {
     conn_t *pConn = (conn_t *)pData;
 
-    /* 
+    /*
      * In case we are in IDLE and getting DISCONNECT event, we need to inform
-     * the SME\AP_connection that we are disconnected. 
+     * the SME\AP_connection that we are disconnected.
      * Call the connection lost callback set by the SME or AP_CONN.
      */
     pConn->pConnStatusCB( pConn->connStatCbObj, pConn->smContext.disAssocEventReason, pConn->smContext.disAssocEventStatusCode);
@@ -1001,12 +1006,12 @@ INPUT:      hSiteMgr    -   site mgr handle.
 
 OUTPUT:
 
-RETURN:     
+RETURN:
 ************************************************************************/
 TI_STATUS connInfra_JoinCmpltNotification(TI_HANDLE hconn)
 {
     conn_t *pConn = (conn_t *)hconn;
-    
+
     TRACE0(pConn->hReport, REPORT_SEVERITY_INFORMATION, "connInfra_JoinCmpltNotification: has been called\n");
 
    if (pConn->currentConnType == CONNECTION_INFRA ) {

@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * rsnApi.h
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file utilsReplvl.h
  *  \brief Report level API
  *
@@ -83,7 +88,7 @@ typedef enum
     RSN_EXT_AUTH_MODE_WPA2,
     RSN_EXT_AUTH_MODE_WPA2PSK,
     /* Not a real mode, defined as upper bound */
-    RSN_EXT_AUTH_MODEMAX          
+    RSN_EXT_AUTH_MODEMAX
 
 } EExternalAuthMode;
 
@@ -99,19 +104,19 @@ typedef enum
 
 
 /** RSN key management suites */
-typedef enum 
+typedef enum
 {
     RSN_KEY_MNG_NONE                = 0,        /**< no key management available */
     RSN_KEY_MNG_802_1X              = 1,        /**< "802.1X" key management */
     RSN_KEY_MNG_WPA                 = 2,        /**< "WPA 4 way handshake" key management */
-    RSN_KEY_MNG_CCX                 = 3,        /**< "CCX" key management */
+    RSN_KEY_MNG_XCC                 = 3,        /**< "XCC" key management */
     RSN_KEY_MNG_UNKNOWN             = 255       /**< UNKNOWN key management available */
 
 } ERsnKeyMngSuite;
 
 
 /** Available cipher suites for admission control */
-typedef enum 
+typedef enum
 {
     RSN_IBSS                = 0,        /**< IBSS mode */
     RSN_INFRASTRUCTURE      = 1         /**< Infrastructure mode */
@@ -129,18 +134,18 @@ typedef enum
 
 
 /** RSN Events */
-typedef enum 
+typedef enum
 {
     RSN_EVENT_EAPOL_RECV            = 0x0,      /**< EAPOL frame received in the RX */
     RSN_EVENT_SEC_ATTACK_DETECT     = 0x1,      /**< Security Attack detection */
     RSN_EVENT_RAW_KEY_RECV          = 0x2,      /**< Raw key recive */
     RSN_EVENT_KEY_REMOVE            = 0x3       /**< Key remove event */
 
-} ERsnEvent;  
+} ERsnEvent;
 
 
 /** Site ben levels */
-typedef enum 
+typedef enum
 {
     RSN_SITE_BAN_LEVEL_HALF = 1,
     RSN_SITE_BAN_LEVEL_FULL = 2
@@ -170,7 +175,7 @@ typedef struct
 } TRsnData;
 
 
-typedef struct 
+typedef struct
 {
    TMacAddr             bssId;
    dot11_RSN_t          *pRsnIEs;
@@ -179,7 +184,7 @@ typedef struct
 } TBssidRsnInfo;
 
 
-typedef struct 
+typedef struct
 {
    TI_UINT8             NumOfItems;
    TBssidRsnInfo        bssidList[MAX_NUM_OF_PRE_AUTH_BSSIDS];
@@ -242,8 +247,8 @@ TI_STATUS rsn_setSite(TI_HANDLE hRsn, TRsnData *pRsnData, TI_UINT8 *pAssocIe, TI
 
 TI_STATUS rsn_getInfoElement(TI_HANDLE hRsn, TI_UINT8 *pRsnIe, TI_UINT32 *pRsnIeLen);
 
-#ifdef CCX_MODULE_INCLUDED
-TI_STATUS rsn_getCcxExtendedInfoElement(TI_HANDLE hRsn, TI_UINT8 *pRsnIe, TI_UINT8 *pRsnIeLen);
+#ifdef XCC_MODULE_INCLUDED
+TI_STATUS rsn_getXCCExtendedInfoElement(TI_HANDLE hRsn, TI_UINT8 *pRsnIe, TI_UINT8 *pRsnIeLen);
 #endif
 
 TI_STATUS rsn_reportAuthFailure(TI_HANDLE hRsn, EAuthStatus authStatus);

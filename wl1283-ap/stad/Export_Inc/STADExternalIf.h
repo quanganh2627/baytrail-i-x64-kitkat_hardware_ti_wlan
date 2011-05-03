@@ -1,42 +1,47 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * STADExternalIf.h
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 /****************************************************************************/
 /*                                                                          */
 /*    MODULE:   TiWlnIf.h                                       */
 /*    PURPOSE:                                                              */
 /*                                                                          */
-/****************************************************************************/	
+/****************************************************************************/
 #ifndef __TIWLNIF_NEW_H__
 #define __TIWLNIF_NEW_H__
 
-/** \file  STADExternalIf.h 
+/** \file  STADExternalIf.h
  *  \brief STAD External APIs
  */
 
@@ -81,11 +86,11 @@
 
 /** \enum TxDelayRanges_e
  * \brief TX Delay Ranges
- * 
+ *
  * \par Description
- * The Tx path delay histogram (host + MAC)ranges in msec 
- * Used as indexes in tx Delay Histogram Ranges (including Start & End of ranges) Table 
- * 
+ * The Tx path delay histogram (host + MAC)ranges in msec
+ * Used as indexes in tx Delay Histogram Ranges (including Start & End of ranges) Table
+ *
  * \sa
  */
 typedef enum
@@ -108,10 +113,10 @@ typedef enum
 
 /** \enum TIWLN_SIMPLE_CONFIG_MODE
  * \brief TI WLAN Simple Configuration Mode
- * 
+ *
  * \par Description
- * Used for indicating WiFi Simple Configuration mode 
- * 
+ * Used for indicating WiFi Simple Configuration mode
+ *
  * \sa
  */
 typedef enum
@@ -123,16 +128,16 @@ typedef enum
 
 /** \enum EDraftNumber
  * \brief Draft Number
- * 
+ *
  * \par Description
  * Site Manager / Exteranl Rate use draft number
- * 
+ *
  * \sa
  */
 typedef enum
 {
-    DRAFT_5_AND_EARLIER = 5,	/**< */ 
-    DRAFT_6_AND_LATER   = 6		/**< */ 
+    DRAFT_5_AND_EARLIER = 5,	/**< */
+    DRAFT_6_AND_LATER   = 6		/**< */
 
 } EDraftNumber;
 
@@ -151,10 +156,10 @@ typedef enum
 
 /** \struct TTxDataCounters
  * \brief TX Data Counters
- * 
+ *
  * \par Description
- * Tx statistics per Tx-queue 
- * 
+ * Tx statistics per Tx-queue
+ *
  * \sa
  */
 typedef struct
@@ -168,7 +173,7 @@ typedef struct
     TI_UINT32      BroadcastFramesXmit;    /**< The number of broadcast packets that are transmitted without errors 					*/
 
     TI_UINT32      RetryHistogram[ TX_RETRY_HISTOGRAM_SIZE ];	/**< Histogram counting the number of packets xfered with any retry number	*/
-                                        
+
     TI_UINT32      RetryFailCounter;       /**< Number of packets that failed transmission due to retry number exceeded 				*/
     TI_UINT32      TxTimeoutCounter;       /**< Number of packets that failed transmission due to lifetime expiry 						*/
     TI_UINT32      NoLinkCounter;          /**< Number of packets that failed transmission due to link failure 							*/
@@ -185,10 +190,10 @@ typedef struct
 
 /** \struct TIWLN_TX_STATISTICS
  * \brief TI WLAN TX Statistics
- * 
+ *
  * \par Description
- * All Tx statistics of all Tx Queues Tx-queue 
- * 
+ * All Tx statistics of all Tx Queues Tx-queue
+ *
  * \sa
  */
 typedef struct
@@ -199,10 +204,10 @@ typedef struct
 
 /** \struct TIWLN_TX_STATISTICS
  * \brief TI WLAN TX Statistics
- * 
+ *
  * \par Description
- * All Tx statistics of all Tx Queues Tx-queue 
- * 
+ * All Tx statistics of all Tx Queues Tx-queue
+ *
  * \sa
  */
 typedef struct
@@ -212,7 +217,7 @@ typedef struct
 	TMacAddr    	aMacAddr;
     TI_UINT32		recvPktsFromWlan;
 	TI_UINT32		recvBytesFromWlan;
-	TI_UINT32		sentPkts;  
+	TI_UINT32		sentPkts;
 	TI_UINT32		sentBytes;
 	TI_UINT32		sentPktsError;
 
@@ -220,86 +225,86 @@ typedef struct
 
 /** \struct TDfsChannelRange
  * \brief DFS Channel Range
- * 
+ *
  * \par Description
- * Range of Dynamic Frequency Selection Channel 
- * 
+ * Range of Dynamic Frequency Selection Channel
+ *
  * \sa
  */
 typedef struct
 {
-    TI_UINT16   minDFS_channelNum;	/**< Lower limit of DFS Channel Range		*/  	
-    TI_UINT16   maxDFS_channelNum;	/**< Higher limit of DFS Channel Range		*/  	
+    TI_UINT16   minDFS_channelNum;	/**< Lower limit of DFS Channel Range		*/
+    TI_UINT16   maxDFS_channelNum;	/**< Higher limit of DFS Channel Range		*/
 } TDfsChannelRange;
 
 /** \struct TDebugRegisterReq
  * \brief Debug Register Request
- * 
+ *
  * \par Description
- * Used for reading HW register (for debug) 
- * 
+ * Used for reading HW register (for debug)
+ *
  * \sa
  */
 typedef struct
 {
-    TI_UINT32 regSize;			/**< Register Size			*/ 	  	  
-    TI_UINT32 regAddr;			/**< Register Address  		*/ 
-    TI_UINT32 regValue;			/**< Register value read	*/ 
+    TI_UINT32 regSize;			/**< Register Size			*/
+    TI_UINT32 regAddr;			/**< Register Address  		*/
+    TI_UINT32 regValue;			/**< Register value read	*/
 } TDebugRegisterReq;
 
 /** \struct TIWLN_REG_RW
  * \brief TI WLAN Register R/W
- * 
+ *
  * \par Description
- * Used for writing HW register (for debug) 
- * 
+ * Used for writing HW register (for debug)
+ *
  * \sa
  */
 typedef struct
 {
         TI_UINT32 regSize;		/**< Register Size			*/
-        TI_UINT32 regAddr;		/**< Register Address  		*/ 
-        TI_UINT32 regValue;		/**< Register write value	*/ 
+        TI_UINT32 regAddr;		/**< Register Address  		*/
+        TI_UINT32 regValue;		/**< Register write value	*/
 } TIWLN_REG_RW;
 
 /** \struct TCountry
  * \brief Country Parameters
- * 
+ *
  * \par Description
  * Parameters of Country Informatino Element
- * 
+ *
  * \sa
  */
 typedef struct
 {
     TI_UINT8            elementId;		/**< Country IE ID 										*/
     TI_UINT8            len;			/**< Country IE data length 							*/
-    dot11_countryIE_t   countryIE;	   	/**< Country IE (country string and tripple channel)	*/ 
+    dot11_countryIE_t   countryIE;	   	/**< Country IE (country string and tripple channel)	*/
 } TCountry;
 
 /** \struct TRates
  * \brief Rates Parameters
- * 
+ *
  * \par Description
  * Site Manager Supported rates parameters
- * 
+ *
  * \sa
  */
 typedef struct
 {
     TI_UINT8       len;											/**< Number of entries in the rates list													*/
-    TI_UINT8       ratesString[DOT11_MAX_SUPPORTED_RATES];		/**< Rates List. From each entry - a different bitrate (in bps) can be driven as followed: 
-																((ratesString[i] & 0x7F) * 500000). Bits 1-7 are used for the bitrate and bit 8 is MASK used 
+    TI_UINT8       ratesString[DOT11_MAX_SUPPORTED_RATES];		/**< Rates List. From each entry - a different bitrate (in bps) can be driven as followed:
+																((ratesString[i] & 0x7F) * 500000). Bits 1-7 are used for the bitrate and bit 8 is MASK used
 																for indicating if NET Basic
 																*/
 } TRates;
 
 /** \struct TRxDataFilterRequest
  * \brief RX Data Filter Request
- * 
+ *
  * \par Description
  * Use for handling RX Data Filter (Add, Remove, parse, usage)
- * 
+ *
  * \sa
  */
 typedef struct
@@ -313,13 +318,13 @@ typedef struct
 
 /** \struct TIWLN_COUNTERS
  * \brief TI WLAN Counters
- * 
+ *
  * \par Description
  * Use for handling RX Data Filter (Add, Remove, parse, usage)
- * 
+ *
  * \sa
  */
-typedef struct 
+typedef struct
 {
     TI_UINT32  RecvOk;              /**< Number of frames that the NIC receives without errors										*/
     TI_UINT32  RecvError;           /**< Number of frames that a NIC receives but does not indicate to the protocols due to errors	*/
@@ -346,12 +351,12 @@ typedef struct
 
 /** \struct TPowerMgr_PowerMode
  * \brief Power Mode Parameters
- * 
+ *
  * \par Description
- * 
+ *
  * \sa
  */
-typedef struct 
+typedef struct
 {
     PowerMgr_PowerMode_e    PowerMode;			/**< Power Mode	Type		*/
     PowerMgr_Priority_e     PowerMngPriority; 	/**< Power Mode	Priority	*/
@@ -359,14 +364,14 @@ typedef struct
 
 /** \struct TWscMode
  * \brief WSC Mode
- * 
+ *
  * \par Description
  * This structure is used whenever the WiFi Simple Configuration Mode is modified between ON and OFF.
  * Upon enabling the Simple Configuration, the user must fill the probeReqWSCIE fields
- * 
+ *
  * \sa
  */
-typedef struct 
+typedef struct
 {
     TIWLN_SIMPLE_CONFIG_MODE  WSCMode;						/**< WiFi Simple Configuration mode 			   			*/
     TI_UINT8 probeReqWSCIE[DOT11_WSC_PROBE_REQ_MAX_LENGTH];	/**< Buffer which holds the parameters of ProbeReq - WSC IE	*/
@@ -374,10 +379,10 @@ typedef struct
 
 /** \struct TKeepAliveTemplate
  * \brief Keep Alive Template
- * 
+ *
  * \par Description
  * Used for Add/Remove to/from FW Keep Alive Configuration (Parameters & Template)
- * 
+ *
  * \sa
  */
 typedef struct
@@ -390,18 +395,18 @@ typedef struct
 
 /** \struct TKeepAliveConfig
  * \brief Keep Alive Configuration
- * 
+ *
  * \par Description
  * Used for Get/Set Keep Alive Configuration (Parameters & Template)
- * 
+ *
  * \sa
  */
 typedef struct
 {
     TI_UINT8                enaDisFlag;									/**< Indicates if Keep Alive is Enabled/Disabled	*/
-    TKeepAliveTemplate      templates[ KEEP_ALIVE_MAX_USER_MESSAGES ];	/**< Buffer which holds the maximum Keep Alive Template 
+    TKeepAliveTemplate      templates[ KEEP_ALIVE_MAX_USER_MESSAGES ];	/**< Buffer which holds the maximum Keep Alive Template
 																		* possible (according to maximum Keep Alive user messages
-																		possible) 
+																		possible)
 																		*/
 } TKeepAliveConfig;
 
@@ -410,7 +415,7 @@ typedef struct
 {
     TI_UINT8   buffer[128];
     TI_UINT8   len;
-    TI_UINT16  uCmdID; 
+    TI_UINT16  uCmdID;
 } TRoleAPGenericCmdToFW;
 
 #endif /* __TIWLNIF_H__*/

@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * mlmeParser.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
  /** \file mlmeBuilder.c
  *  \brief 802.11 MLME Parser
  *
@@ -101,9 +106,9 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
     TMacAddr               recvSa;
     TI_UINT8               rsnIeIdx = 0;
     TI_UINT8               wpaIeOuiIe[] = WPA_IE_OUI;
-#ifdef CCX_MODULE_INCLUDED
-	TI_UINT8			   ccx_oui[] = CCX_OUI;
-	CCXv4IEs_t			   *pCcxIeParameter;
+#ifdef XCC_MODULE_INCLUDED
+	TI_UINT8			   XCC_oui[] = XCC_OUI;
+	XCCv4IEs_t			   *pXCCIeParameter;
 #endif
     TI_BOOL				   ciscoIEPresent = TI_FALSE;
 
@@ -127,7 +132,7 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
     }
 
     pParam = (paramInfo_t *)os_memoryAlloc(pHandle->hOs, sizeof(paramInfo_t));
-    if (!pParam) 
+    if (!pParam)
     {
         return TI_NOK;
     }
@@ -275,11 +280,11 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
                 */
 
                 /* check if this is WME IE */
-                if((os_memoryCompare(pHandle->hOs, wpaIeOuiIe, pData+2, DOT11_OUI_LEN) == 0) && 
+                if((os_memoryCompare(pHandle->hOs, wpaIeOuiIe, pData+2, DOT11_OUI_LEN) == 0) &&
 						((*(TI_UINT8*)(pData+5)) == dot11_WME_OUI_TYPE))
                 {
                     pHandle->tempFrameInfo.frame.content.assocRsp.WMEParams = &(pHandle->tempFrameInfo.WMEParams);
-                    status = mlmeParser_readWMEParams(pHandle, pData, bodyDataLen, &readLen, 
+                    status = mlmeParser_readWMEParams(pHandle, pData, bodyDataLen, &readLen,
                                                       &(pHandle->tempFrameInfo.WMEParams),
 													  &(pHandle->tempFrameInfo.frame.content.assocRsp));
                     if (status != TI_OK)
@@ -288,12 +293,12 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
                         goto mlme_recv_end;
                     }
                 }
-#ifdef CCX_MODULE_INCLUDED
-				/* check if this is CCX vendor specific OUI */
-				else if (os_memoryCompare(pHandle->hOs, ccx_oui, pData+2, DOT11_OUI_LEN) == 0) 
+#ifdef XCC_MODULE_INCLUDED
+				/* check if this is XCC vendor specific OUI */
+				else if (os_memoryCompare(pHandle->hOs, XCC_oui, pData+2, DOT11_OUI_LEN) == 0)
 				{
-					pCcxIeParameter = &(pHandle->tempFrameInfo.frame.content.assocRsp.ccxIEs[WMEQosTagToACTable[*(pData+6)]]);
-					mlmeParser_readCcxOui(pData, bodyDataLen, &readLen, pCcxIeParameter);
+					pXCCIeParameter = &(pHandle->tempFrameInfo.frame.content.assocRsp.XCCIEs[WMEQosTagToACTable[*(pData+6)]]);
+					mlmeParser_readXCCOui(pData, bodyDataLen, &readLen, pXCCIeParameter);
 				}
 #endif
 				else
@@ -303,22 +308,22 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
                 }
                 break;
 
-            case CCX_EXT_1_IE_ID:
+            case XCC_EXT_1_IE_ID:
 				ciscoIEPresent = TI_TRUE;
                 pHandle->tempFrameInfo.frame.content.assocRsp.pRsnIe = &(pHandle->tempFrameInfo.rsnIe[0]);
-                status = mlmeParser_readRsnIe(pHandle, pData, bodyDataLen, &readLen, 
+                status = mlmeParser_readRsnIe(pHandle, pData, bodyDataLen, &readLen,
                                               &(pHandle->tempFrameInfo.rsnIe[rsnIeIdx]));
                 if (status != TI_OK)
                 {
-                    TRACE0(pHandle->hReport, REPORT_SEVERITY_ERROR, "MLME_PARSER: error reading CCX EXT1 IE\n");
+                    TRACE0(pHandle->hReport, REPORT_SEVERITY_ERROR, "MLME_PARSER: error reading XCC EXT1 IE\n");
                     goto mlme_recv_end;
                 }
-    
+
                 pHandle->tempFrameInfo.frame.content.assocRsp.rsnIeLen += readLen;
                 rsnIeIdx ++;
                 break;
 
-            case CCX_EXT_2_IE_ID:
+            case XCC_EXT_2_IE_ID:
 				ciscoIEPresent = TI_TRUE;
                 pHandle->tempFrameInfo.frame.content.assocRsp.pRsnIe   = &(pHandle->tempFrameInfo.rsnIe[0]);
                 status = mlmeParser_readRsnIe(pHandle, pData, bodyDataLen, &readLen,
@@ -328,14 +333,14 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
                     TRACE0(pHandle->hReport, REPORT_SEVERITY_ERROR, "MLME_PARSER: error reading RSN IP ADDR IE\n");
                     goto mlme_recv_end;
                 }
-    
+
                 pHandle->tempFrameInfo.frame.content.assocRsp.rsnIeLen += readLen;
                 rsnIeIdx ++;
                 break;
 
 			case DOT11_QOS_CAPABILITY_ELE_ID:
 				pHandle->tempFrameInfo.frame.content.assocRsp.QoSCapParameters = &(pHandle->tempFrameInfo.QosCapParams);
-                status = mlmeParser_readQosCapabilityIE(pHandle, pData, bodyDataLen, &readLen, 
+                status = mlmeParser_readQosCapabilityIE(pHandle, pData, bodyDataLen, &readLen,
                                                         &(pHandle->tempFrameInfo.QosCapParams));
                 if (status != TI_OK)
                 {
@@ -358,7 +363,7 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
 
 			case HT_INFORMATION_IE_ID:
 				pHandle->tempFrameInfo.frame.content.assocRsp.pHtInformation = &(pHandle->tempFrameInfo.tHtInformation);
-                status = mlmeParser_readHtInformationIE (pHandle, pData, bodyDataLen, &readLen, 
+                status = mlmeParser_readHtInformationIE (pHandle, pData, bodyDataLen, &readLen,
                                                          &(pHandle->tempFrameInfo.tHtInformation));
                 if (status != TI_OK)
                 {
@@ -470,7 +475,7 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
         }
 
         /* updating CountryIE  */
-        if ((pHandle->tempFrameInfo.frame.content.iePacket.country != NULL) && 
+        if ((pHandle->tempFrameInfo.frame.content.iePacket.country != NULL) &&
             (pHandle->tempFrameInfo.frame.content.iePacket.country->hdr[1] != 0))
         {
             /* set the country info in the regulatory domain - If a different code was detected earlier
@@ -483,9 +488,9 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
         /* if tag = MSR, forward to the MSR module.  */
         if (SCAN_RESULT_TAG_MEASUREMENT == pRxAttr->eScanTag)
         {
-            measurementMgr_mlmeResultCB( pHandle->hMeasurementMgr, 
-                                   &(pHandle->tempFrameInfo.bssid), 
-                                   &(pHandle->tempFrameInfo.frame), 
+            measurementMgr_mlmeResultCB( pHandle->hMeasurementMgr,
+                                   &(pHandle->tempFrameInfo.bssid),
+                                   &(pHandle->tempFrameInfo.frame),
                                    pRxAttr,
                                    (TI_UINT8 *)(pMgmtFrame->body+TIME_STAMP_LEN+4),
                                    RX_BUF_LEN(pBuffer)-WLAN_HDR_LEN-TIME_STAMP_LEN-4 );
@@ -494,11 +499,11 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
         /* only forward frames from the current BSS (according to the tag) to current BSS */
         else if (SCAN_RESULT_TAG_CURENT_BSS == pRxAttr->eScanTag)
         {
-			currBSS_probRespReceivedCallb(pHandle->hCurrBss, 
-                                          pRxAttr, 
-                                          &(pHandle->tempFrameInfo.bssid), 
-                                          &(pHandle->tempFrameInfo.frame), 
-                                          (char *)pMgmtFrame->body+TIME_STAMP_LEN+4, 
+			currBSS_probRespReceivedCallb(pHandle->hCurrBss,
+                                          pRxAttr,
+                                          &(pHandle->tempFrameInfo.bssid),
+                                          &(pHandle->tempFrameInfo.frame),
+                                          (char *)pMgmtFrame->body+TIME_STAMP_LEN+4,
                                           RX_BUF_LEN(pBuffer)-WLAN_HDR_LEN-TIME_STAMP_LEN-4);
         }
 
@@ -506,9 +511,9 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
 		else /* (SCAN_RESULT_TAG_CURENT_BSS!= pRxAttr->eScanTag) & (SCAN_RESULT_TAG_MEASUREMENT != pRxAttr->eScanTag) */
         {
             /* result CB is registered - results are sent to the registered callback */
-            scanCncn_MlmeResultCB( pHandle->hScanCncn, 
-                                   &(pHandle->tempFrameInfo.bssid), 
-                                   &(pHandle->tempFrameInfo.frame), 
+            scanCncn_MlmeResultCB( pHandle->hScanCncn,
+                                   &(pHandle->tempFrameInfo.bssid),
+                                   &(pHandle->tempFrameInfo.frame),
                                    pRxAttr,
                                    (TI_UINT8 *)(pMgmtFrame->body+TIME_STAMP_LEN+4),
                                    RX_BUF_LEN(pBuffer)-WLAN_HDR_LEN-TIME_STAMP_LEN-4 );
@@ -597,7 +602,7 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
         }
 
         /* updating CountryIE  */
-        if ((pHandle->tempFrameInfo.frame.content.iePacket.country != NULL) && 
+        if ((pHandle->tempFrameInfo.frame.content.iePacket.country != NULL) &&
             (pHandle->tempFrameInfo.frame.content.iePacket.country->hdr[1] != 0))
         {
             /* set the country info in the regulatory domain - If a different code was detected earlier
@@ -611,9 +616,9 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
         /* if tag = MSR, forward to the MSR module.  */
         if (SCAN_RESULT_TAG_MEASUREMENT == pRxAttr->eScanTag)
         {
-            measurementMgr_mlmeResultCB( pHandle->hMeasurementMgr, 
-                                   &(pHandle->tempFrameInfo.bssid), 
-                                   &(pHandle->tempFrameInfo.frame), 
+            measurementMgr_mlmeResultCB( pHandle->hMeasurementMgr,
+                                   &(pHandle->tempFrameInfo.bssid),
+                                   &(pHandle->tempFrameInfo.frame),
                                    pRxAttr,
                                    (TI_UINT8 *)(pMgmtFrame->body+TIME_STAMP_LEN+4),
                                    RX_BUF_LEN(pBuffer)-WLAN_HDR_LEN-TIME_STAMP_LEN-4 );
@@ -622,10 +627,10 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
         /* only forward frames from the current BSS (according to the tag) to current BSS */
         else if (SCAN_RESULT_TAG_CURENT_BSS == pRxAttr->eScanTag)
         {
-			currBSS_beaconReceivedCallb(pHandle->hCurrBss, pRxAttr, 
-                                    &(pHandle->tempFrameInfo.bssid), 
-                                    &(pHandle->tempFrameInfo.frame), 
-                                    (char *)pMgmtFrame->body+TIME_STAMP_LEN+4, 
+			currBSS_beaconReceivedCallb(pHandle->hCurrBss, pRxAttr,
+                                    &(pHandle->tempFrameInfo.bssid),
+                                    &(pHandle->tempFrameInfo.frame),
+                                    (char *)pMgmtFrame->body+TIME_STAMP_LEN+4,
                                     RX_BUF_LEN(pBuffer)-WLAN_HDR_LEN-TIME_STAMP_LEN-4);
         }
 
@@ -633,16 +638,16 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
 		else /* (SCAN_RESULT_TAG_CURENT_BSS!= pRxAttr->eScanTag) & (SCAN_RESULT_TAG_MEASUREMENT != pRxAttr->eScanTag) */
 		{
 			/* result CB is registered - results are sent to the registered callback */
-            scanCncn_MlmeResultCB( pHandle->hScanCncn, 
-                                   &(pHandle->tempFrameInfo.bssid), 
-                                   &(pHandle->tempFrameInfo.frame), 
+            scanCncn_MlmeResultCB( pHandle->hScanCncn,
+                                   &(pHandle->tempFrameInfo.bssid),
+                                   &(pHandle->tempFrameInfo.frame),
                                    pRxAttr,
                                    (TI_UINT8 *)(pMgmtFrame->body+TIME_STAMP_LEN+4),
                                    RX_BUF_LEN(pBuffer)-WLAN_HDR_LEN-TIME_STAMP_LEN-4 );
         }
 
         /* Counting the number of recieved beacons - used for statistics */
-        pHandle->BeaconsCounterPS++;   
+        pHandle->BeaconsCounterPS++;
 
         if (pHandle->tempFrameInfo.recvChannelSwitchAnnoncIE == TI_FALSE)
 		{
@@ -726,7 +731,7 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
 		pParam->paramType = CTRL_DATA_CURRENT_BSS_TYPE_PARAM;
 		ctrlData_getParam(pHandle->hCtrlData, pParam);
 
-        if ((!pHandle->tempFrameInfo.myBssid) || 
+        if ((!pHandle->tempFrameInfo.myBssid) ||
 			((!pHandle->tempFrameInfo.mySa) && (pParam->content.ctrlDataCurrentBssType == BSS_INFRASTRUCTURE)))
             break;
 
@@ -742,7 +747,7 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
         /* Checking if the category field is valid */
 		if(( pHandle->tempFrameInfo.frame.content.action.category != CATAGORY_SPECTRUM_MANAGEMENT) &&
 			(pHandle->tempFrameInfo.frame.content.action.category != CATAGORY_QOS)  &&
-			(pHandle->tempFrameInfo.frame.content.action.category != WME_CATAGORY_QOS) )   
+			(pHandle->tempFrameInfo.frame.content.action.category != WME_CATAGORY_QOS) )
         {
             TRACE1(pHandle->hReport, REPORT_SEVERITY_ERROR, "MLME_PARSER: Error category is invalid for action management frame %d \n", pHandle->tempFrameInfo.frame.content.action.category );
             break;
@@ -751,21 +756,21 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
 		switch(pHandle->tempFrameInfo.frame.content.action.category)
 		{
 			case CATAGORY_QOS:
-			case WME_CATAGORY_QOS:			 
+			case WME_CATAGORY_QOS:
 				/* read action field */
 				pHandle->tempFrameInfo.frame.content.action.action = *pData;
 				pData ++;
 				bodyDataLen --;
 
-				QosMngr_receiveActionFrames(pHandle->hQosMngr, pData, pHandle->tempFrameInfo.frame.content.action.action, bodyDataLen); 
+				QosMngr_receiveActionFrames(pHandle->hQosMngr, pData, pHandle->tempFrameInfo.frame.content.action.action, bodyDataLen);
 				break;
-				
+
 			case CATAGORY_SPECTRUM_MANAGEMENT:
 				/* read action field */
 				pHandle->tempFrameInfo.frame.content.action.action = *pData;
 				pData ++;
 				bodyDataLen --;
-				
+
 				switch(pHandle->tempFrameInfo.frame.content.action.action)
 				{
 					case MEASUREMENT_REQUEST:
@@ -774,7 +779,7 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
 							pHandle->tempFrameInfo.frame.content.action.frameType = MSR_FRAME_TYPE_BROADCAST;
 						else
 							pHandle->tempFrameInfo.frame.content.action.frameType = MSR_FRAME_TYPE_UNICAST;
-						
+
 							/*measurementMgr_receiveFrameRequest(pHandle->hMeasurementMgr,
 							pHandle->tempFrameInfo.frame.content.action.frameType,
 							bodyDataLen,pData);*/
@@ -783,7 +788,7 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
 					case TPC_REQUEST:
 						/*measurementMgr_receiveTPCRequest(pHandle->hMeasurementMgr,(TI_UINT8)bodyDataLen,pData);*/
 						break;
-						
+
                 case CHANNEL_SWITCH_ANNOUNCEMENT:
                     	if (pHandle->tempFrameInfo.myBssid)
 						{   /* Ignore Switch Channel commands from non my BSSID */
@@ -791,19 +796,19 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
 								pRxAttr->channel);
 						}
 						break;
-						
+
 					default:
                         TRACE1(pHandle->hReport, REPORT_SEVERITY_ERROR, "MLME_PARSER: Error, category is invalid for action management frame %d \n",							pHandle->tempFrameInfo.frame.content.action.category );
 						break;
 				}
-				
+
 				break;
 
-				
+
 			default:
 				status = TI_NOK;
 				break;
-					
+
 		}
     }
 
@@ -817,7 +822,7 @@ mlme_recv_end:
 TI_STATUS mlmeParser_getFrameType(mlme_t *pMlme, TI_UINT16* pFrameCtrl, dot11MgmtSubType_e *pType)
 {
     TI_UINT16 fc;
-	
+
 	COPY_WLAN_WORD(&fc, pFrameCtrl); /* copy with endianess handling. */
 
 	if ((fc & DOT11_FC_PROT_VERSION_MASK) != DOT11_FC_PROT_VERSION)
@@ -838,8 +843,8 @@ TI_STATUS mlmeParser_getFrameType(mlme_t *pMlme, TI_UINT16* pFrameCtrl, dot11Mgm
 }
 
 
-#ifdef CCX_MODULE_INCLUDED
-void mlmeParser_readCcxOui (TI_UINT8 *pData, TI_UINT32 dataLen, TI_UINT32 *pReadLen, CCXv4IEs_t *ccxIEs)
+#ifdef XCC_MODULE_INCLUDED
+void mlmeParser_readXCCOui (TI_UINT8 *pData, TI_UINT32 dataLen, TI_UINT32 *pReadLen, XCCv4IEs_t *XCCIEs)
 {
     TI_UINT8 ieLen;
 	TI_UINT8 ouiType;
@@ -856,16 +861,16 @@ void mlmeParser_readCcxOui (TI_UINT8 *pData, TI_UINT32 dataLen, TI_UINT32 *pRead
     *pReadLen = ieLen;
 	ouiType = *(pData+5);
 
-	switch (ouiType) 
+	switch (ouiType)
 	{
 		case TS_METRIX_OUI_TYPE:
-			ccxIEs->tsMetrixParameter = (dot11_TS_METRICS_IE_t *)pData;
+			XCCIEs->tsMetrixParameter = (dot11_TS_METRICS_IE_t *)pData;
 			break;
 		case TS_RATE_SET_OUI_TYPE:
-			ccxIEs->trafficStreamParameter = (dot11_TSRS_IE_t *)pData;
+			XCCIEs->trafficStreamParameter = (dot11_TSRS_IE_t *)pData;
 			break;
 		case EDCA_LIFETIME_OUI_TYPE:
-			ccxIEs->edcaLifetimeParameter = (dot11_MSDU_LIFE_TIME_IE_t *)pData;
+			XCCIEs->edcaLifetimeParameter = (dot11_MSDU_LIFE_TIME_IE_t *)pData;
 			break;
 	}
     return;
@@ -1086,8 +1091,8 @@ TI_STATUS mlmeParser_readCountry(mlme_t *pMlme,TI_UINT8 *pData, TI_UINT32 dataLe
 }
 
 
-TI_STATUS mlmeParser_readWMEParams(mlme_t *pMlme,TI_UINT8 *pData, TI_UINT32 dataLen, 
-								   TI_UINT32 *pReadLen, dot11_WME_PARAM_t *pWMEParamIE, 
+TI_STATUS mlmeParser_readWMEParams(mlme_t *pMlme,TI_UINT8 *pData, TI_UINT32 dataLen,
+								   TI_UINT32 *pReadLen, dot11_WME_PARAM_t *pWMEParamIE,
 								   assocRsp_t *assocRsp)
 {
 	TI_UINT8 ieSubtype;
@@ -1125,15 +1130,15 @@ TRACE1(pMlme->hReport, REPORT_SEVERITY_INFORMATION, "MLME_PARSER: WME Parameter 
 				return TI_NOK;
 			}
 
-			/* 
+			/*
 			 * Copy either the WME-Params IE or the WME-Info IE (Info is a subset of Params)!
-			 * 
+			 *
 			 * Note that the WME_ACParameteres part is copied separately for two reasons:
 			 *	1) It exists only in the WME-Params IE.
 			 *	2) There is a gap of 2 bytes before the WME_ACParameteres if OS_PACKED is not supported.
 			 */
 			os_memoryCopy(pMlme->hOs,&(pWMEParamIE->OUI), pData+2, 8);
-		
+
 			if ( *((TI_UINT8*)(pData+6)) == dot11_WME_OUI_SUB_TYPE_PARAMS_IE )
 			{
 				os_memoryCopy(pMlme->hOs,&(pWMEParamIE->WME_ACParameteres), pData+10, pWMEParamIE->hdr[1] - 8);
@@ -1143,7 +1148,7 @@ TRACE1(pMlme->hReport, REPORT_SEVERITY_INFORMATION, "MLME_PARSER: WME Parameter 
 
 		case WME_TSPEC_IE_OUI_SUB_TYPE:
 			/* Read renegotiated TSPEC parameters */
-			if (assocRsp == NULL) 
+			if (assocRsp == NULL)
 			{
 TRACE0(pMlme->hReport, REPORT_SEVERITY_ERROR, "MLME_PARSER: WME Parameter IE error: TSPEC Sub Type in beacon or probe resp\n");
 				return TI_NOK;
@@ -1196,7 +1201,7 @@ static TI_STATUS mlmeParser_readWSCParams(mlme_t *pMlme,TI_UINT8 *pData, TI_UINT
         TRACE2(pMlme->hReport, REPORT_SEVERITY_ERROR, "MLME_PARSER: WSC Parameter IE error: eleLen=%d, maxLen=%d\n", pWSC_IE->hdr[1], ( sizeof(dot11_WSC_t) - sizeof(dot11_eleHdr_t) ));
         return TI_NOK;
     }
-    
+
 	/* Copy the WSC Params IE */
 	os_memoryCopy(pMlme->hOs,&(pWSC_IE->OUI), pData+2, pWSC_IE->hdr[1]);
 
@@ -1246,7 +1251,7 @@ TI_STATUS mlmeParser_readHtCapabilitiesIE(mlme_t *pMlme,TI_UINT8 *pData, TI_UINT
     }
 
     os_memoryCopy(pMlme->hOs, (void*)pHtCapabilities->aHtCapabilitiesIe, pData + 2, pHtCapabilities->tHdr[1]);
-  
+
     return TI_OK;
 }
 
@@ -1270,7 +1275,7 @@ TI_STATUS mlmeParser_readHtInformationIE(mlme_t *pMlme,TI_UINT8 *pData, TI_UINT3
     }
 
     os_memoryCopy(pMlme->hOs, (void*)pHtInformation->aHtInformationIe, pData + 2, pHtInformation->tHdr[1]);
-  
+
     return TI_OK;
 }
 
@@ -1422,10 +1427,10 @@ TI_STATUS mlmeParser_readTPCReport(mlme_t *pMlme,TI_UINT8 *pData, TI_UINT32 data
 }
 
 
-#ifdef CCX_MODULE_INCLUDED
+#ifdef XCC_MODULE_INCLUDED
 TI_STATUS mlmeParser_readCellTP(mlme_t *pMlme, TI_UINT8 *pData, TI_UINT32 dataLen, TI_UINT32 *pReadLen, dot11_CELL_TP_t *cellTP)
 {
-    TI_UINT8 ccx_OUI[] = CCX_OUI;
+    TI_UINT8 XCC_OUI[] = XCC_OUI;
 
     cellTP->hdr[0] = *pData++;
     cellTP->hdr[1] = *pData++;
@@ -1444,7 +1449,7 @@ TI_STATUS mlmeParser_readCellTP(mlme_t *pMlme, TI_UINT8 *pData, TI_UINT32 dataLe
 
 	os_memoryCopy(pMlme->hOs, (void*)cellTP->oui, pData, cellTP->hdr[1]);
 
-    if (os_memoryCompare(pMlme->hOs, (void*)cellTP->oui, ccx_OUI, 3) != 0)
+    if (os_memoryCompare(pMlme->hOs, (void*)cellTP->oui, XCC_OUI, 3) != 0)
     {
 		return TI_NOK;
     }
@@ -1468,7 +1473,7 @@ TI_STATUS mlmeParser_readCellTP(mlme_t *pMlme, TI_UINT8 *pData, TI_UINT32 dataLe
          if ((x)) return TI_NOK;
 #endif
 
-TI_STATUS mlmeParser_parseIEs(TI_HANDLE hMlme, 
+TI_STATUS mlmeParser_parseIEs(TI_HANDLE hMlme,
 							  TI_UINT8 *pData,
 							  TI_INT32 bodyDataLen,
 							  mlmeIEParsingParams_t *params)
@@ -1480,7 +1485,7 @@ TI_STATUS mlmeParser_parseIEs(TI_HANDLE hMlme,
     TI_UINT8 			 wpaIeOuiIe[4] = { 0x00, 0x50, 0xf2, 0x01};
 	beacon_probeRsp_t 	*frame = &(params->frame.content.iePacket);
 	mlme_t 				*pHandle = (mlme_t *)hMlme;
-#ifdef CCX_MODULE_INCLUDED
+#ifdef XCC_MODULE_INCLUDED
 	TI_BOOL				allowCellTP = TI_TRUE;
 #endif
 #if CHECK_PARSING_ERROR_CONDITION_PRINT
@@ -1493,15 +1498,15 @@ TI_STATUS mlmeParser_parseIEs(TI_HANDLE hMlme,
 	while (bodyDataLen > 1)
 	{
 		pEleHdr = (dot11_eleHdr_t *)pData;
-	
+
 #if CHECK_PARSING_ERROR_CONDITION_PRINT
 		/* CHECK_PARSING_ERROR_CONDITION(((*pEleHdr)[1] > (bodyDataLen - 2)), ("MLME_PARSER: IE %d with length %d out of bounds %d\n", (*pEleHdr)[0], (*pEleHdr)[1], (bodyDataLen - 2)), TI_TRUE); */
 		if ((*pEleHdr)[1] > (bodyDataLen - 2))
 		{
 			TRACE3(pHandle->hReport, REPORT_SEVERITY_ERROR, "MLME_PARSER: IE %d with length %d out of bounds %d\n", (*pEleHdr)[0], (*pEleHdr)[1], (bodyDataLen - 2));
-		
+
 			TRACE1(pHandle->hReport, REPORT_SEVERITY_ERROR, "Buff len = %d \n", packetLength);
-			report_PrintDump (pPacketBody, packetLength); 
+			report_PrintDump (pPacketBody, packetLength);
 		}
 #endif
         switch ((*pEleHdr)[0])
@@ -1582,7 +1587,7 @@ TI_STATUS mlmeParser_parseIEs(TI_HANDLE hMlme,
 
 		/* read Power Constraint */
 		case POWER_CONSTRAINT_IE_ID:
-#ifdef CCX_MODULE_INCLUDED
+#ifdef XCC_MODULE_INCLUDED
 			allowCellTP = TI_FALSE;
 #endif
 			frame->powerConstraint = &params->powerConstraint;
@@ -1592,7 +1597,7 @@ TI_STATUS mlmeParser_parseIEs(TI_HANDLE hMlme,
 
 		/* read Channel Switch Mode */
         case CHANNEL_SWITCH_ANNOUNCEMENT_IE_ID:
-            
+
             frame->channelSwitch = &params->channelSwitch;
 
             if (params->myBssid)
@@ -1624,7 +1629,7 @@ TI_STATUS mlmeParser_parseIEs(TI_HANDLE hMlme,
 			CHECK_PARSING_ERROR_CONDITION((status != TI_OK), ("MLME_PARSER: error reading TPC report parameters\n"),TI_TRUE);
 			break;
 
-		case CCX_EXT_1_IE_ID:
+		case XCC_EXT_1_IE_ID:
 			frame->pRsnIe   = &params->rsnIe[0];
 			status = mlmeParser_readRsnIe(pHandle, pData, bodyDataLen, &readLen, &params->rsnIe[rsnIeIdx]);
 			CHECK_PARSING_ERROR_CONDITION((status != TI_OK), ("MLME_PARSER: error reading RSN IE\n"),TI_TRUE);
@@ -1682,7 +1687,7 @@ TI_STATUS mlmeParser_parseIEs(TI_HANDLE hMlme,
 
 					CHECK_PARSING_ERROR_CONDITION((status != TI_OK), ("MLME_PARSER: error reading RSN IE\n"),TI_TRUE);
 				}
-				if( ( (*(TI_UINT8*)(pData+5)) == dot11_WME_OUI_TYPE ) && 
+				if( ( (*(TI_UINT8*)(pData+5)) == dot11_WME_OUI_TYPE ) &&
 					( ( (*(TI_UINT8*)(pData+6)) == dot11_WME_OUI_SUB_TYPE_PARAMS_IE) ||
 					  ( (*(TI_UINT8*)(pData+6)) == dot11_WME_OUI_SUB_TYPE_IE) ) )
 				{
@@ -1691,14 +1696,14 @@ TI_STATUS mlmeParser_parseIEs(TI_HANDLE hMlme,
 					     which is a subset of WMEParams, and only one of them is sent in a frame. */
 					frame->WMEParams = &params->WMEParams;
 					status = mlmeParser_readWMEParams(pHandle, pData, bodyDataLen, &readLen, frame->WMEParams, NULL);
-					
+
 					CHECK_PARSING_ERROR_CONDITION((status != TI_OK), ("MLME_PARSER: error reading WME params\n"),TI_TRUE);
 				}
 				if( ( (*(TI_UINT8*)(pData+5)) == dot11_WSC_OUI_TYPE ))
 				{
 					/* If we are here - the following is WSC IE */
                     readLen = mlmeParser_getWSCReadLen (pData);
-                    /* 
+                    /*
                      * This IE is not supposed to be found in beacons accroding to the standard
                      * definition. However, some APs do add it to beacons. It is read from beacons
                      * accroding to a registry key (which is false by default). Even if it is not
@@ -1725,12 +1730,12 @@ TI_STATUS mlmeParser_parseIEs(TI_HANDLE hMlme,
 
 			break;
 
-#ifdef CCX_MODULE_INCLUDED
+#ifdef XCC_MODULE_INCLUDED
 		case CELL_POWER_IE:
 			/* We mustn't take the Cell Transmit Power IE into account if */
 			/* there's a Power Constraint IE. Since the IEs must be in increasing */
 			/* order, it's enough to perform the check here, because if the Power */
-			/* Constraint IE is present it must have already been processed. */ 
+			/* Constraint IE is present it must have already been processed. */
 			if (allowCellTP)
 			{
 				frame->cellTP = &params->cellTP;
@@ -1744,8 +1749,8 @@ TI_STATUS mlmeParser_parseIEs(TI_HANDLE hMlme,
 			TRACE1(pHandle->hReport, REPORT_SEVERITY_INFORMATION, "MLME_PARSER: unknown IE found (%d)\n", pData[0]);
 			readLen = pData[1] + 2;
 			status = TI_OK;
-			os_memoryCopy( pHandle->hOs, 
-				       &params->unknownIe[params->frame.content.iePacket.unknownIeLen], 
+			os_memoryCopy( pHandle->hOs,
+				       &params->unknownIe[params->frame.content.iePacket.unknownIeLen],
 				       pData, readLen );
 			params->frame.content.iePacket.pUnknownIe = params->unknownIe;
 			params->frame.content.iePacket.unknownIeLen += readLen;
@@ -1776,11 +1781,11 @@ mlmeIEParsingParams_t *mlmeParser_getParseIEsBuffer(TI_HANDLE *hMlme)
 *
 * parseIeBuffer  - Parse a required information element.
 *
-* \b Description: 
+* \b Description:
 *
 * Parse an required information element
 * and returns a pointer to the IE.
- * If given a matching buffer as well, returns a pointer to the first IE 
+ * If given a matching buffer as well, returns a pointer to the first IE
  * that matches the IE ID and the given buffer.
 *
 * \b ARGS:
@@ -1788,17 +1793,17 @@ mlmeIEParsingParams_t *mlmeParser_getParseIEsBuffer(TI_HANDLE *hMlme)
 *  I   - hOs - pointer to OS context
 *  I   - pIeBuffer - pointer to the IE buffer  \n
 *  I   - length - the length of the whole buffer
-*  I   - desiredIeId - the desired IE ID 
+*  I   - desiredIeId - the desired IE ID
 *  O   - pDesiredIe - a pointer to the desired IE
-*  I   - pMatchBuffer - a matching buffer in the IE buffer. Optional, if not required a NULL can be given. 
-*  I   - matchBufferLen - the matching buffer length. Optional, if not required zero can be given. 
-*  
-*  
+*  I   - pMatchBuffer - a matching buffer in the IE buffer. Optional, if not required a NULL can be given.
+*  I   - matchBufferLen - the matching buffer length. Optional, if not required zero can be given.
+*
+*
 * \b RETURNS:
 *
-* TI_TRUE if IE pointer was found, TI_FALSE on failure. 
+* TI_TRUE if IE pointer was found, TI_FALSE on failure.
 *
-* \sa 
+* \sa
 */
 TI_BOOL mlmeParser_ParseIeBuffer (TI_HANDLE hMlme, TI_UINT8 *pIeBuffer, TI_UINT32 length, TI_UINT8 desiredIeId, TI_UINT8 **pDesiredIe, TI_UINT8 *pMatchBuffer, TI_UINT32 matchBufferLen)
 {
@@ -1814,20 +1819,20 @@ TI_BOOL mlmeParser_ParseIeBuffer (TI_HANDLE hMlme, TI_UINT8 *pIeBuffer, TI_UINT3
 
     if ((pIeBuffer == NULL) || (length==0))
     {
-       return TI_FALSE;    
+       return TI_FALSE;
     }
 
     pCurIe = pIeBuffer;
-    
+
     while (length>0)
     {
         eleHdr = (dot11_eleHdr_t*)pCurIe;
-        
+
         if ((TI_UINT8)length < ((*eleHdr)[1] + 2))
         {
             return TI_FALSE;
         }
-        
+
         if ((*eleHdr)[0] == desiredIeId)
         {
             if ((matchBufferLen==0) || (pMatchBuffer == NULL) ||

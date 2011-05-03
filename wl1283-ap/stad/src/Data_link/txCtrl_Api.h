@@ -1,32 +1,37 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
- 
+/*
+ * txCtrl_Api.h
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
 /***************************************************************************/
 /*                                                                         */
 /*    MODULE:   txCtrl_Api.h                                               */
@@ -48,7 +53,7 @@ typedef enum
 } EStatusXmit;
 
 
-typedef struct 
+typedef struct
 {
 	TI_BOOL    bHtEnable;	                        /* current flag of HT Capabilities enabled */
     TI_UINT32  uTxCtrlHtControl;        	        /* The HT Control Field for futur use. for now empty and the FW set it */
@@ -67,9 +72,9 @@ typedef struct
 
 /****************************************************************/
 /*                  MODULE  PUBLIC  FUNCTIONS                   */
-/****************************************************************/ 
+/****************************************************************/
 
-/* 
+/*
  *  The TxCtrl MAIN public functions (in txCtrl.c):
  */
 TI_HANDLE txCtrl_Create (TI_HANDLE hOs);
@@ -86,23 +91,23 @@ TI_STATUS txCtrl_CheckForTxStuck(TI_HANDLE hTxCtrl);
 TI_UINT32 txCtrl_BuildDataPktHdr (TI_HANDLE hTxCtrl, TTxCtrlBlk *pPktCtrlBlk, AckPolicy_e ackPolicy);
 
 
-/* 
+/*
  *  The txCtrlParams.c sub-module public functions:
  */
 void      txCtrlParams_resetCounters(TI_HANDLE hTxCtrl);
-TI_HANDLE txCtrlParams_RegNotif(TI_HANDLE hTxCtrl, 
-                                TI_UINT16 EventMask, 
+TI_HANDLE txCtrlParams_RegNotif(TI_HANDLE hTxCtrl,
+                                TI_UINT16 EventMask,
                                 GeneralEventCall_t CallBack,
-                                TI_HANDLE context, 
+                                TI_HANDLE context,
                                 TI_UINT32 Cookie);
 TI_STATUS txCtrlParams_AddToNotifMask(TI_HANDLE hTxCtrl, TI_HANDLE Notifh, TI_UINT16 EventMask);
 TI_STATUS txCtrlParams_UnRegNotif(TI_HANDLE hTxCtrl, TI_HANDLE RegEventHandle);
-TI_STATUS txCtrlParams_setAdmissionCtrlParams(TI_HANDLE hTxCtrl, 
-                                              TI_UINT8 acId, 
-                                              TI_UINT16 mediumTime, 
-                                              TI_UINT32 minimumPHYRate, 
+TI_STATUS txCtrlParams_setAdmissionCtrlParams(TI_HANDLE hTxCtrl,
+                                              TI_UINT8 acId,
+                                              TI_UINT16 mediumTime,
+                                              TI_UINT32 minimumPHYRate,
                                               TI_BOOL admFlag);
-TI_STATUS txCtrlParams_getParam(TI_HANDLE hTxCtrl, paramInfo_t *pParamInfo);    
+TI_STATUS txCtrlParams_getParam(TI_HANDLE hTxCtrl, paramInfo_t *pParamInfo);
 TI_STATUS txCtrlParams_setParam(TI_HANDLE hTxCtrl, paramInfo_t *pParamInfo);
 TI_STATUS txCtrlParams_SetHtControl (TI_HANDLE hTxCtrl, TtxCtrlHtControl *pHtControl);
 void txCtrlParams_setBssId (TI_HANDLE hTxCtrl, TMacAddr *pCurrBssId);
@@ -111,12 +116,12 @@ void txCtrlParams_setQosHeaderConverMode (TI_HANDLE hTxCtrl, EHeaderConvertMode 
 void txCtrlParams_setCurrentPrivacyInvokedMode (TI_HANDLE hTxCtrl, TI_BOOL currentPrivacyInvokedMode);
 void txCtrlParams_setEapolEncryptionStatus (TI_HANDLE hTxCtrl, TI_BOOL eapolEncryptionStatus);
 void txCtrlParams_setEncryptionFieldSizes (TI_HANDLE hTxCtrl, TI_UINT8 encryptionFieldSize);
-void txCtrlParams_getCurrentEncryptionInfo (TI_HANDLE hTxCtrl, 
+void txCtrlParams_getCurrentEncryptionInfo (TI_HANDLE hTxCtrl,
                                             TI_BOOL    *pCurrentPrivacyInvokedMode,
                                             TI_UINT8   *pEncryptionFieldSize);
 ERate txCtrlParams_GetTxRate (TI_HANDLE hTxCtrl);
-void txCtrlParams_setAcAdmissionStatus (TI_HANDLE hTxCtrl, 
-                                        TI_UINT8 ac, 
+void txCtrlParams_setAcAdmissionStatus (TI_HANDLE hTxCtrl,
+                                        TI_UINT8 ac,
                                         EAdmissionState admissionRequired,
                                         ETrafficAdmState admissionState);
 void txCtrlParams_setAcMsduLifeTime (TI_HANDLE hTxCtrl, TI_UINT8 ac, TI_UINT32 msduLifeTime);
@@ -134,7 +139,7 @@ void txCtrlParams_printDebugCounters(TI_HANDLE hTxCtrl);
 #endif /* TI_DBG */
 
 
-/* 
+/*
  *  The txCtrlServ.c sub-module public functions:
  */
 TI_STATUS txCtrlServ_buildNullFrame(TI_HANDLE hTxCtrl, TI_UINT8* pFrame, TI_UINT32* pLength);

@@ -1,35 +1,40 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * systemConfig.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file reportReplvl.c
  *  \brief Report level implementation
  *
- *  \see reportReplvl.h 
+ *  \see reportReplvl.h
  */
 
 /***************************************************************************/
@@ -49,16 +54,16 @@
 #include "report.h"
 #include "TWDriver.h"
 #include "connApi.h"
-#include "DataCtrl_Api.h"  
-#include "siteMgrApi.h"  
+#include "DataCtrl_Api.h"
+#include "siteMgrApi.h"
 #include "EvHandler.h"
 #include "TI_IPC_Api.h"
 #include "regulatoryDomainApi.h"
 #include "measurementMgrApi.h"
-#ifdef CCX_MODULE_INCLUDED
-#include "ccxMngr.h"
-#include "TransmitPowerCcx.h"
-#include "ccxRMMngr.h"
+#ifdef XCC_MODULE_INCLUDED
+#include "XCCMngr.h"
+#include "TransmitPowerXCC.h"
+#include "XCCRMMngr.h"
 #endif
 
 #include "qosMngr_API.h"
@@ -66,26 +71,26 @@
 
 
 /****************************************************************************
-								MATRIC ISSUE							
-	Each function in the select process returns a MATCH, NO_MATCH value in order to 	
+								MATRIC ISSUE
+	Each function in the select process returns a MATCH, NO_MATCH value in order to
 	skip non relevant sites. In addition, some of the functions also measures a matching level of a site.
-	The matching level is returned as a bit map. The select function 'OR's those bit maps in order to 
+	The matching level is returned as a bit map. The select function 'OR's those bit maps in order to
 	select the site that has the biggest matching level. If a function returns a NO_MATCH value, the matching level of the
 	site is reset.
 	Following is the site matching level bit map structure.
-	Please notice, that if all the match functions returned MATCH for a site, its matric must be different than 0, 
+	Please notice, that if all the match functions returned MATCH for a site, its matric must be different than 0,
 	because of the rates bits.
-	
+
 
 	    31 - 24           23 - 20           20 - 16             15 - 10       9 - 8         7         6           5         4 - 0
 	+---------------+---------------+-----------------------+-------------+------------+----------+---------+-----------+-----------+
 	| Rx Level      | Privacy       | Attempts              |Rates        | Modulation |Preamble  | Channel | Spectrum  | Reserved  |
-	|		        |	    		|		                | 		      |			   |		  |		    | management|		    |	
+	|		        |	    		|		                | 		      |			   |		  |		    | management|		    |
 	+---------------+---------------+-----------------------+-------------+------------+----------+---------+-----------+-----------+
 ****************************************************************************/
 
 /* Matric bit map definition */
-typedef enum 
+typedef enum
 {
 	/* Rx level */
 	METRIC_RX_LEVEL_MASK			= 0xFF,
@@ -98,8 +103,8 @@ typedef enum
 	/* Number of attempts */
 	METRIC_ATTEMPTS_NUMBER_MASK		= 0x0F,
 	METRIC_ATTEMPTS_NUMBER_SHIFT	= 16,
-	
-	
+
+
 	/* Rates */
 	METRIC_RATES_MASK				= 0x3F,
 	METRIC_RATES_SHIFT				= 10,
@@ -107,7 +112,7 @@ typedef enum
 	/* PBCC */
 	METRIC_MODULATION_MASK			= 0x03,
 	METRIC_MODULATION_SHIFT			= 8,
-	
+
 	/* Preamble*/
 	METRIC_PREAMBLE_MASK			= 0x01,
 	METRIC_PREAMBLE_SHIFT			= 7,
@@ -150,19 +155,19 @@ static TI_STATUS sendProbeResponse(siteMgr_t *pSiteMgr, TMacAddr *pBssid);
 /* Interface functions Implementation */
 
 /***********************************************************************
- *                        addSelfSite									
+ *                        addSelfSite
  ***********************************************************************
 DESCRIPTION: This function is called if the selection fails and desired BSS type is IBSS
 			That means we creating our own network and wait for other stations to join us.
-			the best site for teh station. 
+			the best site for teh station.
 			Performs the following:
 				-	If the desired BSSID is broadcast, we generate a random BSSId, otherwise we use the desired one.
 				-	If the site table is full we remove the most old site
 				-	We send a probe response with our oiwn desired attributes in order to add the site to the site table
-                                                                                                   
+
 INPUT:      pSiteMgr	-	site mgr handle.
 
-OUTPUT:		
+OUTPUT:
 
 RETURN:     Pointer to rthe self site entry in the site table
 
@@ -171,7 +176,7 @@ siteEntry_t *addSelfSite(TI_HANDLE hSiteMgr)
 {
 	siteMgr_t       *pSiteMgr = (siteMgr_t *)hSiteMgr;
     siteEntry_t		*pSite;
-	TMacAddr		bssid; 
+	TMacAddr		bssid;
     TSsid           *pSsid    = &pSiteMgr->pDesiredParams->siteMgrDesiredSSID;
 
 	if (OS_802_11_SSID_JUNK (pSsid->str, pSsid->len))
@@ -183,7 +188,7 @@ siteEntry_t *addSelfSite(TI_HANDLE hSiteMgr)
 	}
 	else
 	{
-		MAC_COPY (bssid, pSiteMgr->pDesiredParams->siteMgrDesiredBSSID);  
+		MAC_COPY (bssid, pSiteMgr->pDesiredParams->siteMgrDesiredBSSID);
 	}
 
 	if(pSiteMgr->pDesiredParams->siteMgrDesiredChannel <= 14)
@@ -219,11 +224,11 @@ siteEntry_t *addSelfSite(TI_HANDLE hSiteMgr)
     pSite->bssType = BSS_INDEPENDENT;
 
 	return pSite;
-	
+
 }
 
 /***********************************************************************
- *                        sendProbeResponse									
+ *                        sendProbeResponse
  ***********************************************************************
 DESCRIPTION: This function is called by the function 'addSelfSite()' in order to send a probe response
 			to the site mgr. This will cause the site manager to add a new entry to the site table, the self site entry.
@@ -231,7 +236,7 @@ DESCRIPTION: This function is called by the function 'addSelfSite()' in order to
 INPUT:      pSiteMgr	-	site mgr handle.
 			pBssid		-	Received BSSID
 
-OUTPUT:		
+OUTPUT:
 
 RETURN:     TI_OK
 
@@ -240,18 +245,18 @@ static TI_STATUS sendProbeResponse(siteMgr_t *pSiteMgr, TMacAddr *pBssid)
 {
 	mlmeFrameInfo_t		frame;
     ECipherSuite        rsnStatus;
-	dot11_SSID_t 		ssid;	   
-	dot11_RATES_t 		rates;	   
-	dot11_FH_PARAMS_t 	FHParamsSet;	   
-	dot11_DS_PARAMS_t 	DSParamsSet;	   
-	dot11_CF_PARAMS_t 	CFParamsSet;	   
+	dot11_SSID_t 		ssid;
+	dot11_RATES_t 		rates;
+	dot11_FH_PARAMS_t 	FHParamsSet;
+	dot11_DS_PARAMS_t 	DSParamsSet;
+	dot11_CF_PARAMS_t 	CFParamsSet;
 	dot11_IBSS_PARAMS_t IBSSParamsSet;
 	TI_UINT32			len = 0, ofdmIndex = 0;
     ERadioBand          band;
 	dot11_RATES_t 		extRates;
-	TI_UINT8			ratesBuf[DOT11_MAX_SUPPORTED_RATES];	
+	TI_UINT8			ratesBuf[DOT11_MAX_SUPPORTED_RATES];
 	TI_BOOL				extRatesInd = TI_FALSE;
-	
+
 	/* The easiest way to add a site to the site table is to simulate a probe frame. */
 	frame.subType = PROBE_RESPONSE;
 	os_memoryZero(pSiteMgr->hOs, &frame, sizeof(mlmeFrameInfo_t));
@@ -277,21 +282,21 @@ static TI_STATUS sendProbeResponse(siteMgr_t *pSiteMgr, TMacAddr *pBssid)
 	} else {
 		frame.content.iePacket.capabilities |= (TI_TRUE << CAP_PRIVACY_SHIFT);
 	}
-	
+
 	if (pSiteMgr->pDesiredParams->siteMgrDesiredModulationType == DRV_MODULATION_PBCC)
 		frame.content.iePacket.capabilities |= (TI_TRUE << CAP_PBCC_SHIFT);
-	
+
     if (pSiteMgr->siteMgrOperationalMode == DOT11_G_MODE)
     {
         if(pSiteMgr->pDesiredParams->siteMgrDesiredSlotTime == PHY_SLOT_TIME_SHORT)
             frame.content.iePacket.capabilities |= (TI_TRUE << CAP_SLOT_TIME_SHIFT);
     }
-	
+
 	/* Build ssid */
 	os_memoryZero(pSiteMgr->hOs, (void *)ssid.serviceSetId, MAX_SSID_LEN);
 
 	if (pSiteMgr->pDesiredParams->siteMgrDesiredSSID.len == 0)
-		ssid.hdr[1] = 0;   
+		ssid.hdr[1] = 0;
     /* It looks like it never happens. Anyway decided to check */
     else  if ( pSiteMgr->pDesiredParams->siteMgrDesiredSSID.len > DOT11_SSID_MAX_LEN )
     {
@@ -306,7 +311,7 @@ static TI_STATUS sendProbeResponse(siteMgr_t *pSiteMgr, TMacAddr *pBssid)
 		os_memoryCopy(pSiteMgr->hOs, (void *)ssid.serviceSetId, (void *)pSiteMgr->pDesiredParams->siteMgrDesiredSSID.str, pSiteMgr->pDesiredParams->siteMgrDesiredSSID.len);
 		ssid.hdr[1] = pSiteMgr->pDesiredParams->siteMgrDesiredSSID.len;
 	}
-	
+
 	if(pSiteMgr->pDesiredParams->siteMgrDesiredChannel <= MAX_GB_MODE_CHANEL)
 		siteMgr_updateRates(pSiteMgr, TI_FALSE, TI_TRUE);
 	else
@@ -315,8 +320,8 @@ static TI_STATUS sendProbeResponse(siteMgr_t *pSiteMgr, TMacAddr *pBssid)
 	/* Build Rates */
 	rate_DrvBitmapToNetStr (pSiteMgr->pDesiredParams->siteMgrCurrentDesiredRateMask.supportedRateMask,
 						    pSiteMgr->pDesiredParams->siteMgrCurrentDesiredRateMask.basicRateMask,
-                            ratesBuf, 
-                            &len, 
+                            ratesBuf,
+                            &len,
                             &ofdmIndex);
 
 	if(pSiteMgr->siteMgrOperationalMode != DOT11_G_MODE ||
@@ -339,7 +344,7 @@ static TI_STATUS sendProbeResponse(siteMgr_t *pSiteMgr, TMacAddr *pBssid)
 		extRatesInd = TI_TRUE;
 	}
 
-    if((pSiteMgr->siteMgrOperationalMode == DOT11_G_MODE) || (pSiteMgr->siteMgrOperationalMode == DOT11_DUAL_MODE)) 
+    if((pSiteMgr->siteMgrOperationalMode == DOT11_G_MODE) || (pSiteMgr->siteMgrOperationalMode == DOT11_DUAL_MODE))
     {
         erpProtectionType_e protType;
         ctrlData_getParamProtType(pSiteMgr->hCtrlData, &protType); /* CTRL_DATA_CURRENT_IBSS_PROTECTION_PARAM */
@@ -381,25 +386,25 @@ static TI_STATUS sendProbeResponse(siteMgr_t *pSiteMgr, TMacAddr *pBssid)
     band = ( MAX_GB_MODE_CHANEL >= pSiteMgr->pDesiredParams->siteMgrDesiredChannel ? RADIO_BAND_2_4_GHZ : RADIO_BAND_5_0_GHZ );
 	/* Update site */
 	siteMgr_updateSite(pSiteMgr, pBssid, &frame ,pSiteMgr->pDesiredParams->siteMgrDesiredChannel, band, TI_FALSE);
-	
+
 	return TI_OK;
 }
 
 /***********************************************************************
- *                        systemConfig									
+ *                        systemConfig
  ***********************************************************************
 DESCRIPTION: This function is called by the function 'siteMgr_selectSite()' in order to configure
 			the system with the chosen site attribute.
 
 INPUT:      pSiteMgr	-	site mgr handle.
 
-OUTPUT:		
+OUTPUT:
 
 RETURN:     TI_OK
 
 ************************************************************************/
 TI_STATUS systemConfig(siteMgr_t *pSiteMgr)
-{ 
+{
 	paramInfo_t *pParam;
 	siteEntry_t *pPrimarySite = pSiteMgr->pSitesMgmtParams->pPrimarySite;
 	TRsnData	rsnData;
@@ -414,7 +419,7 @@ TI_STATUS systemConfig(siteMgr_t *pSiteMgr)
     TI_BOOL     b11nEnable;
     TI_BOOL     bWmeEnable;
 
-#ifdef CCX_MODULE_INCLUDED
+#ifdef XCC_MODULE_INCLUDED
     TI_UINT8     ExternTxPower;
 #endif
 	TI_STATUS	status;
@@ -443,11 +448,11 @@ TI_STATUS systemConfig(siteMgr_t *pSiteMgr)
 		pIeBuffer = pPrimarySite->beaconBuffer;
 		PktLength = pPrimarySite->beaconLength;
 	}
-		
+
 	pSiteMgr->prevRadioBand = pSiteMgr->radioBand;
-	
+
     TRACE2(pSiteMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Capabilities, Slot Time Bit = %d (capabilities = %d)\n", (pPrimarySite->capabilities >> CAP_SLOT_TIME_SHIFT) & 1, pPrimarySite->capabilities);
-	
+
 	if(pPrimarySite->channel <= MAX_GB_MODE_CHANEL)
 	{
 		if(pSiteMgr->pDesiredParams->siteMgrDesiredDot11Mode == DOT11_B_MODE)
@@ -505,7 +510,7 @@ TI_STATUS systemConfig(siteMgr_t *pSiteMgr)
 	TWD_CfgSlotTime (pSiteMgr->hTWD, slotTime);
 
 	/***************** Config Site Manager *************************/
-	/* L.M. Should be fixed, should take into account the AP's rates */ 
+	/* L.M. Should be fixed, should take into account the AP's rates */
 	if(pSiteMgr->pDesiredParams->siteMgrDesiredModulationType == DRV_MODULATION_CCK)
 		pSiteMgr->chosenModulation = DRV_MODULATION_CCK;
 	else if(pSiteMgr->pDesiredParams->siteMgrDesiredModulationType == DRV_MODULATION_PBCC)
@@ -517,11 +522,11 @@ TI_STATUS systemConfig(siteMgr_t *pSiteMgr)
 	}
 	else
 		pSiteMgr->chosenModulation = DRV_MODULATION_OFDM;
-	
+
 	/* We use this variable in order tp perform the PBCC algorithm. */
 	pSiteMgr->currentDataModulation = pSiteMgr->chosenModulation;
 	/***************** Config Data CTRL *************************/
-	
+
 	pParam->paramType = CTRL_DATA_CURRENT_BSSID_PARAM;							/* Current BSSID */
 	MAC_COPY (pParam->content.ctrlDataCurrentBSSID, pPrimarySite->bssid);
 	ctrlData_setParam(pSiteMgr->hCtrlData, pParam);
@@ -544,14 +549,14 @@ TI_STATUS systemConfig(siteMgr_t *pSiteMgr)
 					pSiteMgr->pDesiredParams->siteMgrCurrentDesiredRateMask.supportedRateMask;
 
 
-    pSiteMgr->pDesiredParams->siteMgrMatchedSuppRateMask = StaTotalRates & 
+    pSiteMgr->pDesiredParams->siteMgrMatchedSuppRateMask = StaTotalRates &
 														   pPrimarySite->rateMask.supportedRateMask;
-	
+
 	pSiteMgr->pDesiredParams->siteMgrMatchedBasicRateMask = StaTotalRates &
 															pPrimarySite->rateMask.basicRateMask;
 	if (pSiteMgr->pDesiredParams->siteMgrMatchedBasicRateMask == 0)
 	{
-		pSiteMgr->pDesiredParams->siteMgrMatchedBasicRateMask = 
+		pSiteMgr->pDesiredParams->siteMgrMatchedBasicRateMask =
 			pSiteMgr->pDesiredParams->siteMgrCurrentDesiredRateMask.basicRateMask;
 	}
 
@@ -561,7 +566,7 @@ TI_STATUS systemConfig(siteMgr_t *pSiteMgr)
         pParam->paramType = CTRL_DATA_CURRENT_IBSS_PROTECTION_PARAM;
     }
     else
-    {   
+    {
         pParam->paramType = CTRL_DATA_CURRENT_PROTECTION_STATUS_PARAM;
     }
     pParam->content.ctrlDataProtectionEnabled = pPrimarySite->useProtection;
@@ -586,8 +591,8 @@ TI_STATUS systemConfig(siteMgr_t *pSiteMgr)
 
 	 pParam->paramType = QOS_MNGR_SET_SITE_PROTOCOL;
 	 qosMngr_setParams(pSiteMgr->hQosMngr, pParam);
-	 
-     /* Set active protocol in qosMngr according to station desired mode and site capabilities 
+
+     /* Set active protocol in qosMngr according to station desired mode and site capabilities
      Must be called BEFORE setting the "CURRENT_PS_MODE" into the QosMngr */
      qosMngr_selectActiveProtocol(pSiteMgr->hQosMngr);
 
@@ -602,7 +607,7 @@ TI_STATUS systemConfig(siteMgr_t *pSiteMgr)
      /* Set upsd/ps_poll configuration */
      /* Must be done AFTER setting the active Protocol */
      qosMngr_setAcPsDeliveryMode (pSiteMgr->hQosMngr);
-	
+
 
      /********** Set Site HT setting support *************/
      /* set HT setting to the FW */
@@ -610,11 +615,11 @@ TI_STATUS systemConfig(siteMgr_t *pSiteMgr)
      StaCap_IsHtEnable (pSiteMgr->hStaCap, &b11nEnable);
 
      /* verify that WME flag enable */
-     qosMngr_GetWmeEnableFlag (pSiteMgr->hQosMngr, &bWmeEnable); 
+     qosMngr_GetWmeEnableFlag (pSiteMgr->hQosMngr, &bWmeEnable);
 
      if ((b11nEnable != TI_FALSE) &&
          (bWmeEnable != TI_FALSE) &&
-         (pPrimarySite->tHtCapabilities.tHdr[0] != TI_FALSE) && 
+         (pPrimarySite->tHtCapabilities.tHdr[0] != TI_FALSE) &&
          (pPrimarySite->tHtInformation.tHdr[0] != TI_FALSE))
      {
          TWD_CfgSetFwHtCapabilities (pSiteMgr->hTWD, &pPrimarySite->tHtCapabilities, TI_TRUE);
@@ -637,40 +642,40 @@ TI_STATUS systemConfig(siteMgr_t *pSiteMgr)
     pRsnIe = pPrimarySite->pRsnIe;
 	length = 0;
     rsnIECount = 0;
-    while ((length < pPrimarySite->rsnIeLen) && (pPrimarySite->rsnIeLen < 255) 
+    while ((length < pPrimarySite->rsnIeLen) && (pPrimarySite->rsnIeLen < 255)
            && (rsnIECount < MAX_RSN_IE))
     {
         curRsnData[0+length] = pRsnIe->hdr[0];
         curRsnData[1+length] = pRsnIe->hdr[1];
-        os_memoryCopy(pSiteMgr->hOs, &curRsnData[2+length], (void *)pRsnIe->rsnIeData, pRsnIe->hdr[1]); 
+        os_memoryCopy(pSiteMgr->hOs, &curRsnData[2+length], (void *)pRsnIe->rsnIeData, pRsnIe->hdr[1]);
         length += pRsnIe->hdr[1]+2;
         pRsnIe += 1;
         rsnIECount++;
     }
-    if (length<pPrimarySite->rsnIeLen) 
+    if (length<pPrimarySite->rsnIeLen)
     {
         TRACE2(pSiteMgr->hReport, REPORT_SEVERITY_ERROR, "siteMgr_selectSiteFromTable, RSN IE is too long: rsnIeLen=%d, MAX_RSN_IE=%d\n", pPrimarySite->rsnIeLen, MAX_RSN_IE);
     }
 
 	rsnData.pIe = (pPrimarySite->rsnIeLen==0) ? NULL : curRsnData;
 	rsnData.ieLen = pPrimarySite->rsnIeLen;
-    rsnData.privacy = pPrimarySite->privacy; 
-    
+    rsnData.privacy = pPrimarySite->privacy;
+
     rsn_setSite(pSiteMgr->hRsn, &rsnData, NULL, &rsnAssocIeLen);
 
 	/***************** Config RegulatoryDomain **************************/
-	
-#ifdef CCX_MODULE_INCLUDED
-	/* set CCX TPC if present */
-	if(Ccx_ParseClientTP(pSiteMgr->hOs,pPrimarySite,&ExternTxPower,pIeBuffer,PktLength) == TI_OK)
+
+#ifdef XCC_MODULE_INCLUDED
+	/* set XCC TPC if present */
+	if(XCC_ParseClientTP(pSiteMgr->hOs,pPrimarySite,&ExternTxPower,pIeBuffer,PktLength) == TI_OK)
     {
-        TRACE1(pSiteMgr->hReport, REPORT_SEVERITY_INFORMATION, "Select Ccx_ParseClientTP == OK: Dbm = %d\n",ExternTxPower);
+        TRACE1(pSiteMgr->hReport, REPORT_SEVERITY_INFORMATION, "Select XCC_ParseClientTP == OK: Dbm = %d\n",ExternTxPower);
         pParam->paramType = REGULATORY_DOMAIN_EXTERN_TX_POWER_PREFERRED;
         pParam->content.ExternTxPowerPreferred = ExternTxPower;
         regulatoryDomain_setParam(pSiteMgr->hRegulatoryDomain, pParam);
     }
-	/* Parse and save the CCX Version Number if exists */
-	ccxMngr_parseCcxVer(pSiteMgr->hCcxMngr, pIeBuffer, PktLength);
+	/* Parse and save the XCC Version Number if exists */
+	XCCMngr_parseXCCVer(pSiteMgr->hXCCMngr, pIeBuffer, PktLength);
 
 #endif
 
@@ -687,12 +692,12 @@ TI_STATUS systemConfig(siteMgr_t *pSiteMgr)
     capabilities = pPrimarySite->capabilities;
 
     /* Updating the Measurement Module Mode */
-    measurementMgr_setMeasurementMode(pSiteMgr->hMeasurementMgr, capabilities, 
+    measurementMgr_setMeasurementMode(pSiteMgr->hMeasurementMgr, capabilities,
 									pIeBuffer, PktLength);
 
     os_memoryFree(pSiteMgr->hOs, curRsnData, 256);
     os_memoryFree(pSiteMgr->hOs, pParam, sizeof(paramInfo_t));
-    
+
 	return TI_OK;
 }
 

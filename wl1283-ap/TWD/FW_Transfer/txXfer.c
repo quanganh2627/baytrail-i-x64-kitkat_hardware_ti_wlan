@@ -1,42 +1,47 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * txXfer.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
-/** \file   txXfer.c 
- *  \brief  Handle Tx packets transfer to the firmware. 
+
+/** \file   txXfer.c
+ *  \brief  Handle Tx packets transfer to the firmware.
  *
  *  This module gets the upper driver's Tx packets after FW resources were
- *    allocated for them, aggregates them if possible, and handles their transfer 
+ *    allocated for them, aggregates them if possible, and handles their transfer
  *    to the FW via the host slave (indirect) interface, using the TwIf Transaction API.
  *  The aggregation processing is completed by the BusDrv where the packets are combined
  *    and sent to the FW in one transaction.
- * 
- *  \see    
+ *
+ *  \see
  */
 
 
@@ -53,23 +58,23 @@
 #define     DBG_MAX_AGGREG_PKTS     16
 #endif
 
-typedef struct 
+typedef struct
 {
     TTxnStruct              tTxnStruct;
-    TI_UINT32               uPktsCntr; 
+    TI_UINT32               uPktsCntr;
 } TPktsCntrTxn;
 
 /* The TxXfer module object. */
-typedef struct 
+typedef struct
 {
     TI_HANDLE               hOs;
     TI_HANDLE               hReport;
     TI_HANDLE               hTwIf;
 
     TI_UINT32               uAggregMaxPkts;          /* Max number of packets that may be aggregated */
-    TI_UINT32               uAggregMaxLen;           /* Max length in bytes of a single aggregation */ 
+    TI_UINT32               uAggregMaxLen;           /* Max length in bytes of a single aggregation */
     TI_UINT32               uAggregPktsNum;          /* Number of packets in current aggregation */
-    TI_UINT32               uAggregPktsLen;          /* Aggregated length of current aggregation */ 
+    TI_UINT32               uAggregPktsLen;          /* Aggregated length of current aggregation */
     TTxCtrlBlk *            pAggregFirstPkt;         /* Pointer to the first packet of current aggregation */
     TTxCtrlBlk *            pAggregLastPkt;          /* Pointer to the last packet of current aggregation */
     TSendPacketTranferCb    fSendPacketTransferCb;   /* Upper layer Xfer-Complete callback */
@@ -203,7 +208,7 @@ ETxnStatus txXfer_SendPacket (TI_HANDLE hTxXfer, TTxCtrlBlk *pPktCtrlBlk)
 {
     TTxXferObj   *pTxXfer = (TTxXferObj *)hTxXfer;
     TI_UINT32    uPktLen  = ENDIAN_HANDLE_WORD(pPktCtrlBlk->tTxDescriptor.length << 2); /* swap back for endianess if needed */
-    ETxnStatus   eStatus; 
+    ETxnStatus   eStatus;
 
     /* If starting a new aggregation, prepare it, and send packet if aggregation is disabled. */
     if (pTxXfer->uAggregPktsNum == 0)
@@ -218,14 +223,14 @@ ETxnStatus txXfer_SendPacket (TI_HANDLE hTxXfer, TTxCtrlBlk *pPktCtrlBlk)
             eStatus = txXfer_SendAggregatedPkts (pTxXfer, TI_TRUE);
             pTxXfer->uAggregPktsNum = 0;
         }
-        else 
+        else
         {
             eStatus = TXN_STATUS_PENDING;
         }
     }
 
     /* Else, if new packet can be added to aggregation, add it and set status as Pending. */
-    else if ((pTxXfer->uAggregPktsNum + 1 <= pTxXfer->uAggregMaxPkts)  && 
+    else if ((pTxXfer->uAggregPktsNum + 1 <= pTxXfer->uAggregMaxPkts)  &&
              (pTxXfer->uAggregPktsLen + uPktLen <= pTxXfer->uAggregMaxLen))
     {
         pTxXfer->uAggregPktsNum++;
@@ -237,7 +242,7 @@ ETxnStatus txXfer_SendPacket (TI_HANDLE hTxXfer, TTxCtrlBlk *pPktCtrlBlk)
     }
 
     /* Else, we can't add the new packet, so send current aggregation and start a new one */
-    else 
+    else
     {
         txXfer_SendAggregatedPkts (pTxXfer, TI_FALSE);
         eStatus = TXN_STATUS_PENDING;  /* The current packet is not sent yet so return Pending */
@@ -259,7 +264,7 @@ void txXfer_EndOfBurst (TI_HANDLE hTxXfer)
 {
     TTxXferObj   *pTxXfer = (TTxXferObj *)hTxXfer;
 
-    if (pTxXfer->uAggregPktsNum > 0) 
+    if (pTxXfer->uAggregPktsNum > 0)
     {
         /* No more packets from TxDataQ so send any aggregated packets and clear aggregation */
         txXfer_SendAggregatedPkts (pTxXfer, TI_FALSE);
@@ -274,26 +279,26 @@ void txXfer_EndOfBurst (TI_HANDLE hTxXfer)
 *																				*
 *********************************************************************************/
 
-/** 
+/**
  * \fn     txXfer_SendAggregatedPkts
  * \brief  Send aggregated Tx packets to bus Txn layer
- * 
+ *
  * Send aggregated Tx packets to bus Txn layer one by one.
  * Increase the packets counter by the number of packets and send it to the FW (generates an interrupt).
  * If xfer completion CB is registered and status is Complete, call CB for all packets (except last one if inseted now).
- * 
+ *
  * \note   The BusDrv combines the packets and sends them in one transaction.
  * \param  pTxXfer         - The module's object
  * \param  bLastPktSentNow - If TRUE, last packet in the aggregation was inserted in current call to txXfer_SendPacket.
  * \return COMPLETE if transaction completed in this context, PENDING if not, ERROR if failed
- * \sa     
- */ 
+ * \sa
+ */
 static ETxnStatus txXfer_SendAggregatedPkts (TTxXferObj *pTxXfer, TI_BOOL bLastPktSentNow)
 {
     TTxCtrlBlk   *pCurrPkt;
     TTxnStruct   *pTxn;
-    TPktsCntrTxn *pPktsCntrTxn; 
-    ETxnStatus   eStatus = TXN_STATUS_COMPLETE; 
+    TPktsCntrTxn *pPktsCntrTxn;
+    ETxnStatus   eStatus = TXN_STATUS_COMPLETE;
     TI_UINT32    i;
 
     /* Prepare and send all aggregated packets (combined and sent in one transaction by the BusDrv) */
@@ -310,7 +315,7 @@ static ETxnStatus txXfer_SendAggregatedPkts (TTxXferObj *pTxXfer, TI_BOOL bLastP
             pCurrPkt = pCurrPkt->pNextAggregEntry;
         }
         /* If last packet, clear aggregation flag and set completion CB (exist only if registered) */
-        else 
+        else
         {
             TXN_PARAM_SET_AGGREGATE(pTxn, TXN_AGGREGATE_OFF);
             pTxn->fTxnDoneCb = pTxXfer->fXferCompleteLocalCb;
@@ -332,11 +337,11 @@ static ETxnStatus txXfer_SendAggregatedPkts (TTxXferObj *pTxXfer, TI_BOOL bLastP
     }
 #endif  /* TI_DBG */
 
-    /* Write packet counter to FW (generates an interrupt). 
+    /* Write packet counter to FW (generates an interrupt).
        Note: This may be removed once the host-slave HW counter functionality is verified */
     pTxXfer->uPktsCntr += pTxXfer->uAggregPktsNum;
     pTxXfer->uPktsCntrTxnIndex++;
-    if (pTxXfer->uPktsCntrTxnIndex == CTRL_BLK_ENTRIES_NUM) 
+    if (pTxXfer->uPktsCntrTxnIndex == CTRL_BLK_ENTRIES_NUM)
     {
         pTxXfer->uPktsCntrTxnIndex = 0;
     }
@@ -350,10 +355,10 @@ static ETxnStatus txXfer_SendAggregatedPkts (TTxXferObj *pTxXfer, TI_BOOL bLastP
         twIf_Transact(pTxXfer->hTwIf, &pPktsCntrTxn->tTxnStruct);
     }
 #endif
-    /* If xfer completion CB is registered and last packet status is Complete, call the CB for all 
-     *     packets except the input one (covered by the return code). 
+    /* If xfer completion CB is registered and last packet status is Complete, call the CB for all
+     *     packets except the input one (covered by the return code).
      */
-    if (pTxXfer->fSendPacketTransferCb && (eStatus == TXN_STATUS_COMPLETE)) 
+    if (pTxXfer->fSendPacketTransferCb && (eStatus == TXN_STATUS_COMPLETE))
     {
         /* Don't call CB for last packet if inserted in current Tx */
         TI_UINT32 uNumCbCalls = bLastPktSentNow ? (pTxXfer->uAggregPktsNum - 1) : pTxXfer->uAggregPktsNum;
@@ -372,18 +377,18 @@ static ETxnStatus txXfer_SendAggregatedPkts (TTxXferObj *pTxXfer, TI_BOOL bLastP
 }
 
 
-/** 
+/**
  * \fn     txXfer_TransferDoneCb
  * \brief  Send aggregated Tx packets to bus Txn layer
- * 
+ *
  * Call the upper layers TranferDone CB for all packets of the completed aggregation
  * This function is called only if the upper layers registered their CB (used only by WHA)
- * 
- * \note   
+ *
+ * \note
  * \param  pTxXfer - The module's object
  * \return COMPLETE if completed in this context, PENDING if not, ERROR if failed
- * \sa     
- */ 
+ * \sa
+ */
 static void txXfer_TransferDoneCb (TI_HANDLE hTxXfer, TTxnStruct *pTxn)
 {
     TTxXferObj *pTxXfer   = (TTxXferObj*)hTxXfer;
@@ -401,7 +406,7 @@ static void txXfer_TransferDoneCb (TI_HANDLE hTxXfer, TTxnStruct *pTxn)
         /* If we got back to the input packet we went over all the aggregation */
         if (pCurrPkt == pInputPkt)
         {
-            break;   
+            break;
         }
 
         pCurrPkt = pCurrPkt->pNextAggregEntry;
@@ -424,7 +429,7 @@ void txXfer_PrintStats (TI_HANDLE hTxXfer)
 {
     TTxXferObj *pTxXfer = (TTxXferObj*)hTxXfer;
     TI_UINT32   i;
-    
+
     WLAN_OS_REPORT(("Print Tx Xfer module info\n"));
     WLAN_OS_REPORT(("=========================\n"));
     WLAN_OS_REPORT(("uAggregMaxPkts     = %d\n", pTxXfer->uAggregMaxPkts));

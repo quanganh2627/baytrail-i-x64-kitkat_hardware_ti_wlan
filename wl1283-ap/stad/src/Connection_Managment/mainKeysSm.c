@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * mainKeysSm.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file mainKeySM.c
  * \brief Main key state machine implementation.
  *
@@ -47,10 +52,10 @@
 #include "rsn.h"
 #include "rsnApi.h"
 #include "smeApi.h"
-#include "mainSecSm.h"                         
-#include "keyParser.h" 
+#include "mainSecSm.h"
+#include "keyParser.h"
 #include "broadcastKeySM.h"
-#include "unicastKeySM.h"  
+#include "unicastKeySM.h"
 #include "mainKeysSm.h"
 #include "mainKeysSmInternal.h"
 #include "DataCtrl_Api.h"
@@ -65,7 +70,7 @@ static TI_STATUS mainKeys_smEvent(struct _mainKeys_t *pMainKeys, TI_UINT8 event,
 *
 * mainKeys_create
 *
-* \b Description: 
+* \b Description:
 *
 * Allocate memory for the main security context, and create all the rest of the needed contexts.
 *
@@ -77,7 +82,7 @@ static TI_STATUS mainKeys_smEvent(struct _mainKeys_t *pMainKeys, TI_UINT8 event,
 *
 *  pointer to main security context. If failed, returns NULL.
 *
-* \sa 
+* \sa
 */
 mainKeys_t* mainKeys_create(TI_HANDLE hOs)
 {
@@ -127,14 +132,14 @@ mainKeys_t* mainKeys_create(TI_HANDLE hOs)
 		os_memoryFree(hOs, pHandle, sizeof(mainKeys_t));
 		return NULL;
 	}
-    
+
 	pHandle->hOs = hOs;
-    
+
 	/* At first Timeout we will send MediaSpecific Event   */
 	/* At any other Timeout we will send the Timeout Event */
 
 	pHandle->mainKeysTimeoutCounter = TI_FALSE;
-    
+
 	return pHandle;
 }
 
@@ -142,7 +147,7 @@ mainKeys_t* mainKeys_create(TI_HANDLE hOs)
 *
 * mainKeys_config
 *
-* \b Description: 
+* \b Description:
 *
 * Init main security state machine state machine
 *
@@ -154,10 +159,10 @@ mainKeys_t* mainKeys_create(TI_HANDLE hOs)
 *
 *  TI_OK on success, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
-TI_STATUS mainKeys_config (mainKeys_t    *pMainKeys, 
-                           TRsnPaeConfig *pPaeConfig, 
+TI_STATUS mainKeys_config (mainKeys_t    *pMainKeys,
+                           TRsnPaeConfig *pPaeConfig,
                            void          *pParent,
                            TI_HANDLE      hReport,
                            TI_HANDLE      hOs,
@@ -174,7 +179,7 @@ TI_STATUS mainKeys_config (mainKeys_t    *pMainKeys,
 	fsm_actionCell_t    mainKeysSM_matrix[MAIN_KEYS_NUM_STATES][MAIN_KEYS_NUM_EVENTS] =
 	{
 		/* next state and actions for IDLE state */
-		{	{MAIN_KEYS_STATE_START, (fsm_Action_t)mainKeys_startIdle}, 
+		{	{MAIN_KEYS_STATE_START, (fsm_Action_t)mainKeys_startIdle},
 			{MAIN_KEYS_STATE_IDLE, (fsm_Action_t)mainKeySmNop},
 			{MAIN_KEYS_STATE_IDLE, (fsm_Action_t)mainKeySmUnexpected},
 			{MAIN_KEYS_STATE_IDLE, (fsm_Action_t)mainKeySmUnexpected},
@@ -183,7 +188,7 @@ TI_STATUS mainKeys_config (mainKeys_t    *pMainKeys,
 
 		/* next state and actions for START state */
 		{	{MAIN_KEYS_STATE_START, (fsm_Action_t)mainKeySmUnexpected},
-			{MAIN_KEYS_STATE_IDLE, (fsm_Action_t)mainKeys_stopStart}, 
+			{MAIN_KEYS_STATE_IDLE, (fsm_Action_t)mainKeys_stopStart},
 			{MAIN_KEYS_STATE_UNICAST_COMPLETE, (fsm_Action_t)mainKeySmNop},
 			{MAIN_KEYS_STATE_BROADCAST_COMPLETE, (fsm_Action_t)mainKeySmNop},
 			{MAIN_KEYS_STATE_START, (fsm_Action_t)mainKeys_smTimeOut}
@@ -191,7 +196,7 @@ TI_STATUS mainKeys_config (mainKeys_t    *pMainKeys,
 
 		/* next state and actions for UNICAST COMPLETE state */
 		{	{MAIN_KEYS_STATE_UNICAST_COMPLETE, (fsm_Action_t)mainKeySmUnexpected},
-			{MAIN_KEYS_STATE_IDLE, (fsm_Action_t)mainKeys_stopUcastComplete}, 
+			{MAIN_KEYS_STATE_IDLE, (fsm_Action_t)mainKeys_stopUcastComplete},
 			{MAIN_KEYS_STATE_UNICAST_COMPLETE, (fsm_Action_t)mainKeySmNop},
 			{MAIN_KEYS_STATE_COMPLETE, (fsm_Action_t)mainKeys_bcastCompleteUcastComplete},
 			{MAIN_KEYS_STATE_UNICAST_COMPLETE, (fsm_Action_t)mainKeys_smTimeOut}
@@ -247,7 +252,7 @@ TI_STATUS mainKeys_config (mainKeys_t    *pMainKeys,
         }
 	}
 
-    status = fsm_Config(pMainKeys->pMainKeysSm, &mainKeysSM_matrix[0][0], 
+    status = fsm_Config(pMainKeys->pMainKeysSm, &mainKeysSM_matrix[0][0],
 						MAIN_KEYS_NUM_STATES, MAIN_KEYS_NUM_EVENTS, NULL, pMainKeys->hOs);
 	if (status != TI_OK)
 	{
@@ -255,12 +260,12 @@ TRACE0(pMainKeys->hReport, REPORT_SEVERITY_ERROR, "MAIN_KEYS_SM: Error in config
 		return status;
 	}
 
-	status = keyParser_config(pMainKeys->pKeyParser, 
-                              pPaeConfig, 
-                              pMainKeys->pUcastSm, 
-                              pMainKeys->pBcastSm, 
-                              pMainKeys, 
-                              hReport, 
+	status = keyParser_config(pMainKeys->pKeyParser,
+                              pPaeConfig,
+                              pMainKeys->pUcastSm,
+                              pMainKeys->pBcastSm,
+                              pMainKeys,
+                              hReport,
                               hOs,
                               hCtrlData);
 	if (status != TI_OK)
@@ -275,14 +280,14 @@ TRACE0(pMainKeys->hReport, REPORT_SEVERITY_ERROR, "MAIN_KEYS_SM: Error in config
 TRACE0(pMainKeys->hReport, REPORT_SEVERITY_ERROR, "MAIN_KEYS_SM: Error in configuring broadcast key SM\n");
 		return status;
 	}
-    
+
 	status = unicastKey_config(pMainKeys->pUcastSm, pPaeConfig, pMainKeys, hReport, hOs);
 	if (status != TI_OK)
 	{
 TRACE0(pMainKeys->hReport, REPORT_SEVERITY_ERROR, "MAIN_KEYS_SM: Error in configuring unicast key SM\n");
 		return status;
 	}
-	
+
 	return TI_OK;
 }
 
@@ -290,7 +295,7 @@ TRACE0(pMainKeys->hReport, REPORT_SEVERITY_ERROR, "MAIN_KEYS_SM: Error in config
 *
 * mainKeys_config
 *
-* \b Description: 
+* \b Description:
 *
 * Init main security state machine state machine
 *
@@ -302,7 +307,7 @@ TRACE0(pMainKeys->hReport, REPORT_SEVERITY_ERROR, "MAIN_KEYS_SM: Error in config
 *
 *  TI_OK on success, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 TI_STATUS mainKeys_unload(mainKeys_t *pMainKeys)
 {
@@ -325,7 +330,7 @@ TI_STATUS mainKeys_unload(mainKeys_t *pMainKeys)
 		tmr_DestroyTimer (pMainKeys->hSessionTimer);
 	}
     pMainKeys->hSessionTimer = NULL;
-	
+
     status = keyParser_unload(pMainKeys->pKeyParser);
     if (status != TI_OK)
 	{
@@ -346,7 +351,7 @@ TI_STATUS mainKeys_unload(mainKeys_t *pMainKeys)
 		/* report failure but don't stop... */
         TRACE0(pMainKeys->hReport, REPORT_SEVERITY_ERROR, "MAIN_KEYS_SM: Error unloading unicast key SM\n");
 	}
-	
+
 	os_memoryFree(pMainKeys->hOs, pMainKeys, sizeof(mainKeys_t));
 
     return TI_OK;
@@ -357,7 +362,7 @@ TI_STATUS mainKeys_unload(mainKeys_t *pMainKeys)
 *
 * rsn_mainKeySmStart
 *
-* \b Description: 
+* \b Description:
 *
 * START event handler
 *
@@ -385,7 +390,7 @@ TI_STATUS mainKeys_start(struct _mainKeys_t *pMainKeys)
 *
 * rsn_mainKeySmStop
 *
-* \b Description: 
+* \b Description:
 *
 * STOP event handler
 *
@@ -413,7 +418,7 @@ TI_STATUS mainKeys_stop(struct _mainKeys_t *pMainKeys)
 *
 * rsn_mainKeySmReportUnicastComplete
 *
-* \b Description: 
+* \b Description:
 *
 * UNICAST_COMPLETE event handler
 *
@@ -438,7 +443,7 @@ TI_STATUS mainKeys_reportUcastStatus(struct _mainKeys_t *pMainKeys, TI_STATUS uc
 	{
 
 		txCtrlParams_setCurrentPrivacyInvokedMode(pRsn->hTxCtrl, TI_TRUE);
-        
+
 		status = pRsn->pAdmCtrl->getExtAuthMode(pRsn->pAdmCtrl, &extAuthMode);
         if (status != TI_OK)
         {
@@ -452,7 +457,7 @@ TI_STATUS mainKeys_reportUcastStatus(struct _mainKeys_t *pMainKeys, TI_STATUS uc
         {
 			txCtrlParams_setEapolEncryptionStatus(pRsn->hTxCtrl, TI_FALSE);
         }
-		
+
         status = mainKeys_smEvent(pMainKeys, MAIN_KEYS_EVENT_UCAST_COMPLETE, pMainKeys);
 	}
 
@@ -464,7 +469,7 @@ TI_STATUS mainKeys_reportUcastStatus(struct _mainKeys_t *pMainKeys, TI_STATUS uc
 *
 * rsn_mainKeySmReportBroadcastComplete
 *
-* \b Description: 
+* \b Description:
 *
 * BROADCAST_COMPLETE event handler
 *
@@ -495,7 +500,7 @@ TI_STATUS mainKeys_reportBcastStatus(struct _mainKeys_t *pMainKeys, TI_STATUS bc
 *
 * mainKeySmSessionTimeout
 *
-* \b Description: 
+* \b Description:
 *
 * SESSION_TIMEOUOT event handler
 *
@@ -516,7 +521,7 @@ TI_STATUS mainKeys_setKey(struct _mainKeys_t *pMainKeys, TSecurityKeys *pKey)
 *
 * mainKeySmSessionTimeout
 *
-* \b Description: 
+* \b Description:
 *
 * SESSION_TIMEOUOT event handler
 *
@@ -537,7 +542,7 @@ TI_STATUS mainKeys_removeKey(struct _mainKeys_t *pMainKeys, TSecurityKeys *pKey)
 *
 * mainKeySmSessionTimeout
 *
-* \b Description: 
+* \b Description:
 *
 * SESSION_TIMEOUOT event handler
 *
@@ -558,7 +563,7 @@ TI_STATUS mainKeys_setDefaultKeyId(struct _mainKeys_t *pMainKeys, TI_UINT8 keyId
 *
 * mainKeySmSessionTimeout
 *
-* \b Description: 
+* \b Description:
 *
 * SESSION_TIMEOUOT event handler
 *
@@ -583,7 +588,7 @@ TI_STATUS mainKeys_getSessionKey(struct _mainKeys_t *pMainKeys, TI_UINT8 *pKey, 
 *
 * mainKeySmSessionTimeout
 *
-* \b Description: 
+* \b Description:
 *
 * SESSION_TIMEOUOT event handler
 *
@@ -629,7 +634,7 @@ TRACE0(pMainKeys->hReport, REPORT_SEVERITY_ERROR, "MAIN_KEYS_SM: ERROR - failed 
 *
 * mainKeySmStartSubKeySmsAndTimer
 *
-* \b Description: 
+* \b Description:
 *
 * Starts unicast & broadcast key SMs and session timer.
 *
@@ -645,7 +650,7 @@ TRACE0(pMainKeys->hReport, REPORT_SEVERITY_ERROR, "MAIN_KEYS_SM: ERROR - failed 
 TI_STATUS mainKeys_startIdle(struct _mainKeys_t *pMainKeys)
 {
 	TI_STATUS  status;
-	
+
 	status = pMainKeys->pUcastSm->start(pMainKeys->pUcastSm);
 	if (status != TI_OK)
 	{
@@ -663,7 +668,7 @@ TI_STATUS mainKeys_startIdle(struct _mainKeys_t *pMainKeys)
                     (TI_HANDLE)pMainKeys,
                     pMainKeys->keysTimeout,
                     TI_FALSE);
-	
+
 	status = pMainKeys->pKeyParser->replayReset(pMainKeys->pKeyParser);
 
 	return status;
@@ -674,7 +679,7 @@ TI_STATUS mainKeys_startIdle(struct _mainKeys_t *pMainKeys)
 *
 * mainKeySmStopSubKeySmsAndTimer
 *
-* \b Description: 
+* \b Description:
 *
 * Stops unicast & broadcast key SMs and session timer.
 *
@@ -703,7 +708,7 @@ TI_STATUS mainKeys_stopStart(struct _mainKeys_t *pMainKeys)
 	}
 
 	tmr_StopTimer (pMainKeys->hSessionTimer);
-	
+
 	return status;
 }
 
@@ -712,7 +717,7 @@ TI_STATUS mainKeys_stopStart(struct _mainKeys_t *pMainKeys)
 *
 * mainKeySmStopSubKeySmsAndTimer
 *
-* \b Description: 
+* \b Description:
 *
 * Stops unicast & broadcast key SMs and session timer.
 *
@@ -741,7 +746,7 @@ TI_STATUS mainKeys_stopUcastComplete(struct _mainKeys_t *pMainKeys)
 	}
 
 	tmr_StopTimer (pMainKeys->hSessionTimer);
-	
+
 	return status;
 }
 
@@ -749,7 +754,7 @@ TI_STATUS mainKeys_stopUcastComplete(struct _mainKeys_t *pMainKeys)
 *
 * mainKeySmReportComplete
 *
-* \b Description: 
+* \b Description:
 *
 * Report key complete to the main security SM.
 *
@@ -779,7 +784,7 @@ TI_STATUS mainKeys_bcastCompleteUcastComplete(struct _mainKeys_t *pMainKeys)
 *
 * mainKeySmStopSubKeySmsAndTimer
 *
-* \b Description: 
+* \b Description:
 *
 * Stops unicast & broadcast key SMs and session timer.
 *
@@ -808,7 +813,7 @@ TI_STATUS mainKeys_stopBcastComplete(struct _mainKeys_t *pMainKeys)
 	}
 
 	tmr_StopTimer (pMainKeys->hSessionTimer);
-	
+
 	return status;
 }
 
@@ -816,7 +821,7 @@ TI_STATUS mainKeys_stopBcastComplete(struct _mainKeys_t *pMainKeys)
 *
 * mainKeySmReportComplete
 *
-* \b Description: 
+* \b Description:
 *
 * Report key complete to the main security SM.
 *
@@ -845,7 +850,7 @@ TI_STATUS mainKeys_ucastCompleteBcastComplete(struct _mainKeys_t *pMainKeys)
 *
 * mainKeySmStopSubKeySmsAndTimer
 *
-* \b Description: 
+* \b Description:
 *
 * Stops unicast & broadcast key SMs and session timer.
 *
@@ -880,7 +885,7 @@ TI_STATUS mainKeys_stopComplete(struct _mainKeys_t *pMainKeys)
 *
 * mainKeySmLogMessage
 *
-* \b Description: 
+* \b Description:
 *
 * Prints Log messge.\n
 * Start session timer.
@@ -917,26 +922,26 @@ TRACE1(pMainKeys->hReport, REPORT_SEVERITY_INFORMATION, "MAIN_KEY_SM: TRAP: Sess
     TRACE1(pMainKeys->hReport, REPORT_SEVERITY_INFORMATION, "current station is banned from the roaming candidates list for %d Ms\n", RSN_MAIN_KEYS_SESSION_TIMEOUT);
 
     rsn_banSite(pMainKeys->hRsn, param.content.ctrlDataCurrentBSSID, RSN_SITE_BAN_LEVEL_FULL, RSN_MAIN_KEYS_SESSION_TIMEOUT);
-	
+
 
 	/* mainKeysTimeoutCounter is a boolean variable, With states:	*/
-	/* TI_TRUE - It is a Timeout Association Event						*/ 
+	/* TI_TRUE - It is a Timeout Association Event						*/
 	/* TI_FALSE - It is a Media specific Event							*/
 
 	if (!pMainKeys->mainKeysTimeoutCounter)
 	{
-		/* Fill Media specific indication fields and send to OS/User    */ 
+		/* Fill Media specific indication fields and send to OS/User    */
 		MAC_COPY (request->BSSID, param.content.ctrlDataCurrentBSSID);
-	
+
 		request->Flags = OS_802_11_REQUEST_REAUTH;
-	
+
 		*(TI_UINT32*)AuthBuf = os802_11StatusType_Authentication;
-	
+
 TRACE1(pMainKeys->hReport, REPORT_SEVERITY_INFORMATION, " %d Ms\n",RSN_MAIN_KEYS_SESSION_TIMEOUT);
-	
+
 		EvHandlerSendEvent(pMainKeys->hEvHandler, IPC_EVENT_MEDIA_SPECIFIC, (TI_UINT8*)AuthBuf,
 							sizeof(TI_UINT32) + sizeof(OS_802_11_AUTHENTICATION_REQUEST));
-	
+
         tmr_StartTimer (pMainKeys->hSessionTimer,
                         mainKeys_sessionTimeout,
                         (TI_HANDLE)pMainKeys,

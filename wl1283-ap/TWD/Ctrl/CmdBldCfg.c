@@ -1,36 +1,41 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * CmdBldCfg.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
-/** \file  CmdBldCfg.c 
+
+/** \file  CmdBldCfg.c
  *  \brief Command builder. Configuration commands
  *
- *  \see   CmdBld.h 
+ *  \see   CmdBld.h
  */
 #define __FILE_ID__  FILE_ID_91
 #include "osApi.h"
@@ -44,13 +49,13 @@
 /****************************************************************************
  *                      cmdBld_CfgRx()
  ****************************************************************************
- * DESCRIPTION: Sets the filters according to the given configuration. 
- * 
+ * DESCRIPTION: Sets the filters according to the given configuration.
+ *
  * INPUTS:  RxConfigOption  - The given Rx filters configuration
  *          RxFilterOption  - The given Rx filters options
- * 
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CfgRx (TI_HANDLE hCmdBld, TI_UINT32 uRxConfigOption, TI_UINT32 uRxFilterOption, void *fCb, TI_HANDLE hCb)
@@ -60,7 +65,7 @@ TI_STATUS cmdBld_CfgRx (TI_HANDLE hCmdBld, TI_UINT32 uRxConfigOption, TI_UINT32 
     DB_WLAN(hCmdBld).RxConfigOption |= RX_CFG_ENABLE_PHY_HEADER_PLCP;
   #if defined (TNETW_MASTER_MODE) || defined (TNETW_USB_MODE)
     DB_WLAN(hCmdBld).RxConfigOption |= RX_CFG_COPY_RX_STATUS;
-  #endif    
+  #endif
 
     if (DB_WLAN(hCmdBld).RxDisableBroadcast)
     {
@@ -78,10 +83,10 @@ TI_STATUS cmdBld_CfgRx (TI_HANDLE hCmdBld, TI_UINT32 uRxConfigOption, TI_UINT32 
 /****************************************************************************
  *                      cmdBld_CfgArpIpAddrTable()
  ****************************************************************************
- * DESCRIPTION: Sets the ARP IP table according to the given configuration. 
- * 
+ * DESCRIPTION: Sets the ARP IP table according to the given configuration.
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CfgArpIpAddrTable (TI_HANDLE hCmdBld, TIpAddr tIpAddr, TI_UINT8 bEnabled, EIpVer eIpVer, void *fCb, TI_HANDLE hCb)
@@ -89,7 +94,7 @@ TI_STATUS cmdBld_CfgArpIpAddrTable (TI_HANDLE hCmdBld, TIpAddr tIpAddr, TI_UINT8
     DB_WLAN(hCmdBld).arp_IP_ver = eIpVer;
 
     /* no support for IPV6 */
-    if (eIpVer == IP_VER_4) 
+    if (eIpVer == IP_VER_4)
     {
         IP_COPY (DB_WLAN(hCmdBld).arp_IP_addr, tIpAddr);
     }
@@ -103,13 +108,13 @@ TI_STATUS cmdBld_CfgArpIpAddrTable (TI_HANDLE hCmdBld, TIpAddr tIpAddr, TI_UINT8
  /****************************************************************************
  *                      cmdBld_CfgArpIpFilter()
  ****************************************************************************
- * DESCRIPTION: Enable\Disable the ARP filter 
- * 
+ * DESCRIPTION: Enable\Disable the ARP filter
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
-TI_STATUS cmdBld_CfgArpIpFilter (TI_HANDLE hCmdBld, TIpAddr tIpAddr, void *fCb, TI_HANDLE hCb) 
+TI_STATUS cmdBld_CfgArpIpFilter (TI_HANDLE hCmdBld, TIpAddr tIpAddr, void *fCb, TI_HANDLE hCb)
 {
     /* no support for IPV6 */
     IP_COPY (DB_WLAN(hCmdBld).arp_IP_addr, tIpAddr);
@@ -119,27 +124,27 @@ TI_STATUS cmdBld_CfgArpIpFilter (TI_HANDLE hCmdBld, TIpAddr tIpAddr, void *fCb, 
                                     DB_WLAN(hCmdBld).arpFilterType,
                                     fCb,
                                     hCb);
-} 
+}
 /****************************************************************************
  *                      cmdBld_CfgGroupAddressTable()
  ****************************************************************************
- * DESCRIPTION: Sets the Group table according to the given configuration. 
- * 
+ * DESCRIPTION: Sets the Group table according to the given configuration.
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CfgGroupAddressTable (TI_HANDLE        hCmdBld,
-                                       TI_UINT8         uNumGroupAddr, 
+                                       TI_UINT8         uNumGroupAddr,
                                        TMacAddr         *pGroupAddr,
-                                       TI_BOOL          bEnabled, 
-                                       void             *fCb, 
+                                       TI_BOOL          bEnabled,
+                                       void             *fCb,
                                        TI_HANDLE        hCb)
 {
     TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
     TI_UINT32    i;
 
-    if (uNumGroupAddr > MAX_MULTICAST_GROUP_ADDRS) 
+    if (uNumGroupAddr > MAX_MULTICAST_GROUP_ADDRS)
     {
         TRACE1(pCmdBld->hReport, REPORT_SEVERITY_ERROR, "cmdBld_CfgGroupAddressTable: numGroupAddrs=%d\n", uNumGroupAddr);
         return PARAM_VALUE_NOT_VALID;
@@ -155,21 +160,21 @@ TI_STATUS cmdBld_CfgGroupAddressTable (TI_HANDLE        hCmdBld,
     DB_WLAN(hCmdBld).numGroupAddrs = uNumGroupAddr;
     DB_WLAN(hCmdBld).isMacAddrFilteringnabled = bEnabled;
 
-    for (i = 0; i < uNumGroupAddr; i++) 
+    for (i = 0; i < uNumGroupAddr; i++)
     {
         MAC_COPY (DB_WLAN(hCmdBld).aGroupAddr[i], *(pGroupAddr + i));
     }
 
-    return cmdBld_CfgIeGroupAdressTable (hCmdBld, uNumGroupAddr, pGroupAddr, bEnabled, fCb, hCb);  
+    return cmdBld_CfgIeGroupAdressTable (hCmdBld, uNumGroupAddr, pGroupAddr, bEnabled, fCb, hCb);
 }
 
 /****************************************************************************
  *                      cmdBld_CfgRtsThreshold()
  ****************************************************************************
- * DESCRIPTION: Sets the Rts Threshold. 
- * 
+ * DESCRIPTION: Sets the Rts Threshold.
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: TI_OK or TI_NOK  pWlanParams->RtsThreshold
  ****************************************************************************/
 TI_STATUS cmdBld_CfgRtsThreshold (TI_HANDLE hCmdBld, TI_UINT16 threshold, void *fCb, TI_HANDLE hCb)
@@ -181,10 +186,10 @@ TI_STATUS cmdBld_CfgRtsThreshold (TI_HANDLE hCmdBld, TI_UINT16 threshold, void *
  *                      cmdBld_CfgConnectionPhase()
  ****************************************************************************
  * DESCRIPTION:  Set Connection Phase
- * 
+ *
  * OUTPUT:  None
- * 
- * RETURNS: TI_OK or TI_NOK  
+ *
+ * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CfgConnectionPhase (TI_HANDLE hCmdBld, TMacAddr aMacAddr, void *fCb, TI_HANDLE hCb)
 {
@@ -194,11 +199,11 @@ TI_STATUS cmdBld_CfgConnectionPhase (TI_HANDLE hCmdBld, TMacAddr aMacAddr, void 
 /****************************************************************************
  *                      cmdBld_CfgDcoItrimParams()
  ****************************************************************************
- * DESCRIPTION: Sets the DCO Itrim parameters. 
- * 
+ * DESCRIPTION: Sets the DCO Itrim parameters.
+ *
  * OUTPUT:  None
- * 
- * RETURNS: TI_OK or TI_NOK 
+ *
+ * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CfgDcoItrimParams (TI_HANDLE hCmdBld, TI_BOOL enable, TI_UINT32 moderationTimeoutUsec, void *fCb, TI_HANDLE hCb)
 {
@@ -212,15 +217,15 @@ TI_STATUS cmdBld_CfgDcoItrimParams (TI_HANDLE hCmdBld, TI_BOOL enable, TI_UINT32
 /****************************************************************************
  *                      cmdBld_CfgFragmentThreshold()
  ****************************************************************************
- * DESCRIPTION: Sets the tx fragmentation Threshold. 
- * 
+ * DESCRIPTION: Sets the tx fragmentation Threshold.
+ *
  * OUTPUT:  None
- * 
- * RETURNS: TI_OK or TI_NOK 
+ *
+ * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CfgFragmentThreshold (TI_HANDLE hCmdBld, TI_UINT16 uFragmentThreshold, void *fCb, TI_HANDLE hCb)
 {
-    DB_WLAN(hCmdBld).FragmentThreshold = uFragmentThreshold;  
+    DB_WLAN(hCmdBld).FragmentThreshold = uFragmentThreshold;
 
     return cmdBld_CfgIeFragmentThreshold (hCmdBld, uFragmentThreshold, fCb, hCb);
 }
@@ -231,16 +236,16 @@ TI_STATUS cmdBld_CfgFragmentThreshold (TI_HANDLE hCmdBld, TI_UINT16 uFragmentThr
  ****************************************************************************
  * DESCRIPTION: Set the preamble in ?????? hardware register
  *
- * INPUTS:  
- *      preambleVal     
- * 
+ * INPUTS:
+ *      preambleVal
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: None
  ****************************************************************************/
 TI_STATUS cmdBld_CfgPreamble (TI_HANDLE hCmdBld, Preamble_e ePreamble, void *fCb, TI_HANDLE hCb)
 {
-    DB_WLAN(hCmdBld).preamble = ePreamble;      
+    DB_WLAN(hCmdBld).preamble = ePreamble;
     CMD_BLD_MARK_INIT_SEQUENCE_CMD_AS_VALID(hCmdBld, __CFG_PREAMBLE_JOIN)
 
     return cmdBld_CfgIePreamble (hCmdBld, (TI_UINT8)ePreamble, fCb, hCb);
@@ -251,11 +256,11 @@ TI_STATUS cmdBld_CfgPreamble (TI_HANDLE hCmdBld, Preamble_e ePreamble, void *fCb
  *                      cmdBld_CfgBcnBrcOptions()
  ****************************************************************************
  * DESCRIPTION: Configure the wlan hardware
- * 
- * INPUTS: None 
- * 
+ *
+ * INPUTS: None
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CfgBcnBrcOptions (TI_HANDLE hCmdBld, TPowerMgmtConfig *pPMConfig, void *fCb, TI_HANDLE hCb)
@@ -268,11 +273,11 @@ TI_STATUS cmdBld_CfgBcnBrcOptions (TI_HANDLE hCmdBld, TPowerMgmtConfig *pPMConfi
  *                      cmdBld_CfgWakeUpCondition()
  ****************************************************************************
  * DESCRIPTION: Configure the wlan hardware
- * 
- * INPUTS: None 
- * 
+ *
+ * INPUTS: None
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CfgWakeUpCondition (TI_HANDLE hCmdBld, TPowerMgmtConfig *pPMConfig, void *fCb, TI_HANDLE hCb)
@@ -285,11 +290,11 @@ TI_STATUS cmdBld_CfgWakeUpCondition (TI_HANDLE hCmdBld, TPowerMgmtConfig *pPMCon
  *                      cmdBld_CfgSleepAuth ()
  ****************************************************************************
  * DESCRIPTION: Set the min power level
- * 
- * INPUTS: 
- * 
- * OUTPUT:  
- * 
+ *
+ * INPUTS:
+ *
+ * OUTPUT:
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CfgSleepAuth (TI_HANDLE hCmdBld, EPowerPolicy eMinPowerLevel, void *fCb, TI_HANDLE hCb)
@@ -310,11 +315,11 @@ typedef enum { HW_CLOCK_40_MHZ = 40, HW_CLOCK_80_MHZ = 80 } EHwClock;
  ****************************************************************************
  * DESCRIPTION: Configure the arm clock
  *  !!! Note that the firmware will set the slot time according to the new clock
- * 
- * INPUTS: None 
- * 
+ *
+ * INPUTS: None
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CfgArmClock (TI_HANDLE hCmdBld, TI_UINT32 uArmClock, void *fCb, TI_HANDLE hCb)
@@ -331,10 +336,10 @@ TI_STATUS cmdBld_CfgArmClock (TI_HANDLE hCmdBld, TI_UINT32 uArmClock, void *fCb,
         pWlanParams->MacClock = HW_CLOCK_40_MHZ;
     }
 
-    return cmdBld_CfgIeFeatureConfig (hCmdBld, 
-                                      pWlanParams->FeatureOptions, 
+    return cmdBld_CfgIeFeatureConfig (hCmdBld,
+                                      pWlanParams->FeatureOptions,
                                       pWlanParams->FeatureDataFlowOptions,
-                                      fCb, 
+                                      fCb,
                                       hCb);
 }
 
@@ -344,11 +349,11 @@ TI_STATUS cmdBld_CfgArmClock (TI_HANDLE hCmdBld, TI_UINT32 uArmClock, void *fCb,
  ****************************************************************************
  * DESCRIPTION: Configure the mac clock
  *  !!! Note that the firmware will set the slot time according to the new clock
- * 
- * INPUTS: None 
- * 
+ *
+ * INPUTS: None
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CfgMacClock (TI_HANDLE hCmdBld, TI_UINT32 uMacClock, void *fCb, TI_HANDLE hCb)
@@ -368,10 +373,10 @@ TI_STATUS cmdBld_CfgMacClock (TI_HANDLE hCmdBld, TI_UINT32 uMacClock, void *fCb,
         pWlanParams->MacClock = HW_CLOCK_40_MHZ;
     }
 
-    return cmdBld_CfgIeFeatureConfig (hCmdBld, 
-                                      pWlanParams->FeatureOptions, 
-                                      pWlanParams->FeatureDataFlowOptions, 
-                                      fCb, 
+    return cmdBld_CfgIeFeatureConfig (hCmdBld,
+                                      pWlanParams->FeatureOptions,
+                                      pWlanParams->FeatureDataFlowOptions,
+                                      fCb,
                                       hCb);
 }
 
@@ -380,11 +385,11 @@ TI_STATUS cmdBld_CfgMacClock (TI_HANDLE hCmdBld, TI_UINT32 uMacClock, void *fCb,
  *                      cmdBld_CfgAid()
  ****************************************************************************
  * DESCRIPTION: Set the AID
- * 
- * INPUTS:  
- * 
- * OUTPUT:  
- * 
+ *
+ * INPUTS:
+ *
+ * OUTPUT:
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CfgAid (TI_HANDLE hCmdBld, TI_UINT16 uAidVal, void *fCb, TI_HANDLE hCb)
@@ -405,10 +410,10 @@ TI_STATUS cmdBld_CfgClkRun (TI_HANDLE hCmdBld, TI_BOOL aClkRunEnable, void *fCb,
         pWlanParams->FeatureDataFlowOptions &= ~FEAT_PCI_CLK_RUN_ENABLE;
     }
 
-    return cmdBld_CfgIeFeatureConfig (hCmdBld, 
-                                      pWlanParams->FeatureOptions, 
-                                      pWlanParams->FeatureDataFlowOptions, 
-                                      fCb, 
+    return cmdBld_CfgIeFeatureConfig (hCmdBld,
+                                      pWlanParams->FeatureOptions,
+                                      pWlanParams->FeatureDataFlowOptions,
+                                      fCb,
                                       hCb);
 }
 
@@ -432,10 +437,10 @@ TI_STATUS cmdBld_CfgRxMsduFormat (TI_HANDLE hCmdBld, TI_BOOL bRxMsduForamtEnable
         pWlanParams->FeatureDataFlowOptions &= ~DATA_FLOW_RX_MSDU_FRAME;
     }
 
-    return cmdBld_CfgIeFeatureConfig (hCmdBld, 
-                                      pWlanParams->FeatureOptions, 
-                                      pWlanParams->FeatureDataFlowOptions, 
-                                      fCb, 
+    return cmdBld_CfgIeFeatureConfig (hCmdBld,
+                                      pWlanParams->FeatureOptions,
+                                      pWlanParams->FeatureDataFlowOptions,
+                                      fCb,
                                       hCb);
 #endif
 }
@@ -445,11 +450,11 @@ TI_STATUS cmdBld_CfgRxMsduFormat (TI_HANDLE hCmdBld, TI_BOOL bRxMsduForamtEnable
  *                      cmdBld_CfgTid()
  ****************************************************************************
  * DESCRIPTION: configure Queue traffic params
- * 
- * INPUTS: None 
- * 
+ *
+ * INPUTS: None
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CfgTid (TI_HANDLE hCmdBld, TQueueTrafficParams *pQtrafficParams, void *fCb, TI_HANDLE hCb)
@@ -459,7 +464,7 @@ TI_STATUS cmdBld_CfgTid (TI_HANDLE hCmdBld, TQueueTrafficParams *pQtrafficParams
 
     CMD_BLD_MARK_INIT_SEQUENCE_CMD_AS_VALID(hCmdBld, (__CFG_TID_0 + 2*pQtrafficParams->queueID))
 
-    return cmdBld_CfgIeTid (hCmdBld, pQtrafficParams, fCb, hCb);  
+    return cmdBld_CfgIeTid (hCmdBld, pQtrafficParams, fCb, hCb);
 }
 
 
@@ -467,11 +472,11 @@ TI_STATUS cmdBld_CfgTid (TI_HANDLE hCmdBld, TQueueTrafficParams *pQtrafficParams
  *                      cmdBld_CfgAcParams()
  ****************************************************************************
  * DESCRIPTION: configure AC params
- * 
- * INPUTS: None 
- * 
+ *
+ * INPUTS: None
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CfgAcParams (TI_HANDLE hCmdBld, TAcQosParams *pAcQosParams, void *fCb, TI_HANDLE hCb)
@@ -481,7 +486,7 @@ TI_STATUS cmdBld_CfgAcParams (TI_HANDLE hCmdBld, TAcQosParams *pAcQosParams, voi
 
     CMD_BLD_MARK_INIT_SEQUENCE_CMD_AS_VALID(hCmdBld, (__CFG_AC_PARAMS_0 + 2*pAcQosParams->ac))
 
-    return cmdBld_CfgIeAcParams (hCmdBld, pAcQosParams, fCb, hCb);  
+    return cmdBld_CfgIeAcParams (hCmdBld, pAcQosParams, fCb, hCb);
 }
 
 
@@ -489,11 +494,11 @@ TI_STATUS cmdBld_CfgAcParams (TI_HANDLE hCmdBld, TAcQosParams *pAcQosParams, voi
  *                      cmdBld_CfgPsRxStreaming()
  ****************************************************************************
  * DESCRIPTION: configure PS-Rx-Streaming params
- * 
- * INPUTS: None 
- * 
+ *
+ * INPUTS: None
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CfgPsRxStreaming (TI_HANDLE hCmdBld, TPsRxStreaming *pPsRxStreaming, void *fCb, TI_HANDLE hCb)
@@ -501,19 +506,19 @@ TI_STATUS cmdBld_CfgPsRxStreaming (TI_HANDLE hCmdBld, TPsRxStreaming *pPsRxStrea
     DB_PS_STREAM(hCmdBld).tid[pPsRxStreaming->uTid] = *pPsRxStreaming;
     CMD_BLD_MARK_INIT_SEQUENCE_CMD_AS_VALID(hCmdBld, __CFG_PS_RX_STREAMING)
 
-    return cmdBld_CfgIePsRxStreaming (hCmdBld, pPsRxStreaming, fCb, hCb);  
+    return cmdBld_CfgIePsRxStreaming (hCmdBld, pPsRxStreaming, fCb, hCb);
 }
 
 
 /****************************************************************************
  *                     cmdBld_CfgPacketDetectionThreshold
  ****************************************************************************
- * DESCRIPTION: Sets Packet Detection Threshold 
- * 
- * INPUTS:  None    
- * 
+ * DESCRIPTION: Sets Packet Detection Threshold
+ *
+ * INPUTS:  None
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CfgPacketDetectionThreshold (TI_HANDLE hCmdBld, TI_UINT32 threshold, void *fCb, TI_HANDLE hCb)
@@ -527,27 +532,27 @@ TI_STATUS cmdBld_CfgPacketDetectionThreshold (TI_HANDLE hCmdBld, TI_UINT32 thres
 /****************************************************************************
  *                     cmdBld_CfgBeaconFilterOpt
  ****************************************************************************
- * DESCRIPTION: Sets Beacon filtering state 
- * 
- * INPUTS:  None    
- * 
+ * DESCRIPTION: Sets Beacon filtering state
+ *
+ * INPUTS:  None
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
-TI_STATUS cmdBld_CfgBeaconFilterOpt (TI_HANDLE  hCmdBld, 
-                                     TI_UINT8   uBeaconFilteringStatus, 
-                                     TI_UINT8   uNumOfBeaconsToBuffer, 
-                                     void       *fCb, 
+TI_STATUS cmdBld_CfgBeaconFilterOpt (TI_HANDLE  hCmdBld,
+                                     TI_UINT8   uBeaconFilteringStatus,
+                                     TI_UINT8   uNumOfBeaconsToBuffer,
+                                     void       *fCb,
                                      TI_HANDLE  hCb)
 {
     DB_WLAN(hCmdBld).beaconFilterParams.desiredState = uBeaconFilteringStatus;
     DB_WLAN(hCmdBld).beaconFilterParams.numOfElements = uNumOfBeaconsToBuffer;
 
-    return cmdBld_CfgIeBeaconFilterOpt (hCmdBld, 
-                                        uBeaconFilteringStatus, 
-                                        uNumOfBeaconsToBuffer, 
-                                        fCb, 
+    return cmdBld_CfgIeBeaconFilterOpt (hCmdBld,
+                                        uBeaconFilteringStatus,
+                                        uNumOfBeaconsToBuffer,
+                                        fCb,
                                         hCb);
 }
 
@@ -572,18 +577,18 @@ TI_STATUS cmdBld_CfgApBeaconFilter(TI_HANDLE hCmdBld, TI_BOOL bEnable,void *fCb,
 /****************************************************************************
  *                     cmdBld_CfgRateMngDbg
  ****************************************************************************
- * DESCRIPTION: Sets rate managment params  
- * 
- * INPUTS:  None    
- * 
+ * DESCRIPTION: Sets rate managment params
+ *
+ * INPUTS:  None
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 
-TI_STATUS cmdBld_CfgRateMngDbg (TI_HANDLE  hCmdBld, 
-                                RateMangeParams_t *pRateMngParams , 
-                                void       *fCb, 
+TI_STATUS cmdBld_CfgRateMngDbg (TI_HANDLE  hCmdBld,
+                                RateMangeParams_t *pRateMngParams ,
+                                void       *fCb,
                                 TI_HANDLE  hCb)
 {
 
@@ -593,7 +598,7 @@ TI_STATUS cmdBld_CfgRateMngDbg (TI_HANDLE  hCmdBld,
 	pRateMngParamsDB->rateMngParams.paramIndex = pRateMngParams->paramIndex;
 
 	 switch (pRateMngParams->paramIndex)
-		{   
+		{
 		case RATE_MGMT_RETRY_SCORE_PARAM:
 			pRateMngParamsDB->rateMngParams.RateRetryScore = pRateMngParams->RateRetryScore;
 			break;
@@ -645,9 +650,9 @@ TI_STATUS cmdBld_CfgRateMngDbg (TI_HANDLE  hCmdBld,
 	 }
 
 
-    return cmdBld_CfgIeRateMngDbg (hCmdBld, 
-                                   pRateMngParams, 
-                                   fCb, 
+    return cmdBld_CfgIeRateMngDbg (hCmdBld,
+                                   pRateMngParams,
+                                   fCb,
                                    hCb);
 
 }
@@ -656,19 +661,19 @@ TI_STATUS cmdBld_CfgRateMngDbg (TI_HANDLE  hCmdBld,
 /****************************************************************************
  *                     cmdBld_CfgBeaconFilterTable
  ****************************************************************************
- * DESCRIPTION: Sets Beacon filtering state 
- * 
- * INPUTS:  None    
- * 
+ * DESCRIPTION: Sets Beacon filtering state
+ *
+ * INPUTS:  None
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
-TI_STATUS cmdBld_CfgBeaconFilterTable (TI_HANDLE    hCmdBld, 
-                                       TI_UINT8     uNumberOfIEs, 
-                                       TI_UINT8     *pIETable, 
-                                       TI_UINT8     uIETableSize, 
-                                       void         *fCb, 
+TI_STATUS cmdBld_CfgBeaconFilterTable (TI_HANDLE    hCmdBld,
+                                       TI_UINT8     uNumberOfIEs,
+                                       TI_UINT8     *pIETable,
+                                       TI_UINT8     uIETableSize,
+                                       void         *fCb,
                                        TI_HANDLE    hCb)
 {
     TCmdBld   *pCmdBld = (TCmdBld *)hCmdBld;
@@ -680,12 +685,12 @@ TI_STATUS cmdBld_CfgBeaconFilterTable (TI_HANDLE    hCmdBld,
         return PARAM_VALUE_NOT_VALID;
     }
 
-    os_memoryZero (pCmdBld->hOs, 
-                   (void *)DB_WLAN(hCmdBld).beaconFilterIETable.IETable, 
+    os_memoryZero (pCmdBld->hOs,
+                   (void *)DB_WLAN(hCmdBld).beaconFilterIETable.IETable,
                    BEACON_FILTER_TABLE_MAX_SIZE);
-    os_memoryCopy (pCmdBld->hOs, 
-                   (void *)DB_WLAN(hCmdBld).beaconFilterIETable.IETable, 
-                   (void *)pIETable, 
+    os_memoryCopy (pCmdBld->hOs,
+                   (void *)DB_WLAN(hCmdBld).beaconFilterIETable.IETable,
+                   (void *)pIETable,
                    uIETableSize);
     DB_WLAN(hCmdBld).beaconFilterIETable.numberOfIEs = uNumberOfIEs;
     DB_WLAN(hCmdBld).beaconFilterIETable.IETableSize = uIETableSize;
@@ -693,7 +698,7 @@ TI_STATUS cmdBld_CfgBeaconFilterTable (TI_HANDLE    hCmdBld,
     return cmdBld_CfgIeBeaconFilterTable (hCmdBld, uNumberOfIEs, pIETable, uIETableSize, fCb, hCb);
 }
 
- 
+
 /*----------------------------------------*/
 /* Roaming Trigger Configuration Commands */
 /*----------------------------------------*/
@@ -703,13 +708,13 @@ TI_STATUS cmdBld_CfgBeaconFilterTable (TI_HANDLE    hCmdBld,
  ****************************************************************************
  * DESCRIPTION: Set the RSSI/SNR Trigger parameters.
  *
- * INPUTS:  
+ * INPUTS:
  *
  * OUTPUT:  None
  *
  * RETURNS: None
  ****************************************************************************/
-TI_STATUS cmdBld_CfgRssiSnrTrigger (TI_HANDLE hCmdBld, RssiSnrTriggerCfg_t *pTriggerParam, void *fCb, TI_HANDLE hCb) 
+TI_STATUS cmdBld_CfgRssiSnrTrigger (TI_HANDLE hCmdBld, RssiSnrTriggerCfg_t *pTriggerParam, void *fCb, TI_HANDLE hCb)
 {
     DB_WLAN(hCmdBld).tRssiSnrTrigger[pTriggerParam->index].index     = pTriggerParam->index;
     DB_WLAN(hCmdBld).tRssiSnrTrigger[pTriggerParam->index].threshold = pTriggerParam->threshold;
@@ -731,13 +736,13 @@ TI_STATUS cmdBld_CfgRssiSnrTrigger (TI_HANDLE hCmdBld, RssiSnrTriggerCfg_t *pTri
  ****************************************************************************
  * DESCRIPTION: Set RSSI/SNR Weights for Average calculations.
  *
- * INPUTS:  
+ * INPUTS:
  *
  * OUTPUT:  None
  *
  * RETURNS: None
  ****************************************************************************/
-TI_STATUS cmdBld_CfgRssiSnrWeights (TI_HANDLE hCmdBld, RssiSnrAverageWeights_t *pWeightsParam, void *fCb, TI_HANDLE hCb) 
+TI_STATUS cmdBld_CfgRssiSnrWeights (TI_HANDLE hCmdBld, RssiSnrAverageWeights_t *pWeightsParam, void *fCb, TI_HANDLE hCb)
 {
     TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
 
@@ -757,7 +762,7 @@ TI_STATUS cmdBld_CfgRssiSnrWeights (TI_HANDLE hCmdBld, RssiSnrAverageWeights_t *
  ****************************************************************************
  * DESCRIPTION: Set Max Tx retry parmaters.
  *
- * INPUTS:  
+ * INPUTS:
  *      maxTxRetry             max Tx Retry
  *
  * OUTPUT:  None
@@ -790,7 +795,7 @@ TI_STATUS cmdBld_CfgSgEnable (TI_HANDLE hCmdBld, ESoftGeminiEnableModes eSgEnabl
     CMD_BLD_MARK_INIT_SEQUENCE_CMD_AS_VALID(hCmdBld, __CFG_SG_ENABLE)
 
     DB_WLAN(hCmdBld).SoftGeminiEnable = eSgEnable;
-                    
+
     return cmdBld_CfgIeSgEnable (hCmdBld, eSgEnable, fCb, hCb);
 }
 
@@ -823,10 +828,10 @@ TI_STATUS cmdBld_CfgSg (TI_HANDLE hCmdBld, TSoftGeminiParams *pSgParam, void *fC
 /****************************************************************************
  *                      cmdBld_CfgCoexActivity()
  ****************************************************************************
- * DESCRIPTION: Sets the CoexActivity table. 
- * 
+ * DESCRIPTION: Sets the CoexActivity table.
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: TI_OK or TI_NOK  pWlanParams->RtsThreshold
  ****************************************************************************/
 TI_STATUS cmdBld_CfgCoexActivity (TI_HANDLE hCmdBld, TCoexActivity *pCoexActivity, void *fCb, TI_HANDLE hCb)
@@ -836,7 +841,7 @@ TI_STATUS cmdBld_CfgCoexActivity (TI_HANDLE hCmdBld, TCoexActivity *pCoexActivit
     TCoexActivity *pSaveCoex = &pWlanParams->tWlanParamsCoexActivityTable.entry[0];
     int numOfElements = pWlanParams->tWlanParamsCoexActivityTable.numOfElements;
     int i;
-    
+
     /* Check if to overwrite existing entry or put on last index */
     for (i=0; i<numOfElements; i++)
     {
@@ -869,7 +874,7 @@ TI_STATUS cmdBld_CfgCoexActivity (TI_HANDLE hCmdBld, TCoexActivity *pCoexActivit
  ****************************************************************************
  * DESCRIPTION: Save and configure FM coexistence parameters
  *
- * INPUTS:      
+ * INPUTS:
  *
  * OUTPUT:
  *
@@ -884,7 +889,7 @@ TI_STATUS cmdBld_CfgFmCoex (TI_HANDLE hCmdBld, TFmCoexParams *pFmCoexParams, voi
                    (void*)&(DB_WLAN(hCmdBld).tFmCoexParams),
                    (void*)pFmCoexParams,
                    sizeof(TFmCoexParams));
-                  
+
     return cmdBld_CfgIeFmCoex (hCmdBld, pFmCoexParams, fCb, hCb);
 }
 
@@ -892,11 +897,11 @@ TI_STATUS cmdBld_CfgFmCoex (TI_HANDLE hCmdBld, TFmCoexParams *pFmCoexParams, voi
  *                      cmdBld_CfgTxRatePolicy()
  ****************************************************************************
  * DESCRIPTION: configure TxRatePolicy params
- * 
- * INPUTS: None 
- * 
+ *
+ * INPUTS: None
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CfgTxRatePolicy (TI_HANDLE hCmdBld, TTxRatePolicy *pTxRatePolicy, void *fCb, TI_HANDLE hCb)
@@ -928,9 +933,9 @@ TI_STATUS cmdBld_CfgTxRatePolicy (TI_HANDLE hCmdBld, TTxRatePolicy *pTxRatePolic
     }
 
     CMD_BLD_MARK_INIT_SEQUENCE_CMD_AS_VALID(hCmdBld, __CFG_TX_RATE_POLICY)
-    return cmdBld_CfgIeTxRatePolicy (hCmdBld, pTxRatePolicy, fCb, hCb);  
+    return cmdBld_CfgIeTxRatePolicy (hCmdBld, pTxRatePolicy, fCb, hCb);
 #else
-    return cmdBld_CfgIeTxRatePolicy (hCmdBld, pTxRatePolicy, fCb, hCb);  
+    return cmdBld_CfgIeTxRatePolicy (hCmdBld, pTxRatePolicy, fCb, hCb);
 #endif
 }
 
@@ -939,7 +944,7 @@ TI_STATUS cmdBld_CfgSlotTime (TI_HANDLE hCmdBld, ESlotTime eSlotTime, void *fCb,
 {
     TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
 
-    DB_WLAN(hCmdBld).SlotTime = eSlotTime;      
+    DB_WLAN(hCmdBld).SlotTime = eSlotTime;
     CMD_BLD_MARK_INIT_SEQUENCE_CMD_AS_VALID(hCmdBld, __CFG_SLOT_TIME)
     CMD_BLD_MARK_INIT_SEQUENCE_CMD_AS_VALID(hCmdBld, __CFG_SLOT_TIME_JOIN)
 
@@ -960,7 +965,7 @@ TI_STATUS cmdBld_CfgEventMask (TI_HANDLE hCmdBld, TI_UINT32 uEventMask, void *fC
  * ----------------------------------------------------------------------------
  * Function : cmdBld_CfgHwEncEnable
  *
- * Input    : 
+ * Input    :
  * Output   :
  * Process  :
  * Note(s)  :
@@ -970,7 +975,7 @@ TI_STATUS cmdBld_CfgHwEncEnable (TI_HANDLE hCmdBld, TI_BOOL bHwEncEnable, TI_BOO
 {
     TCmdBld     *pCmdBld = (TCmdBld *)hCmdBld;
     TWlanParams *pWlanParams = &DB_WLAN(hCmdBld);
-    
+
     /* Store the HW encryption Enable flag for reconfigure time (FW reload)*/
     DB_KEYS(pCmdBld).bReconfHwEncEnable = bHwEncEnable;
     DB_KEYS(pCmdBld).bHwEncDecrEnableValid = TI_TRUE;
@@ -986,7 +991,7 @@ TI_STATUS cmdBld_CfgHwEncEnable (TI_HANDLE hCmdBld, TI_BOOL bHwEncEnable, TI_BOO
 
     /* Set bit DF_SNIFF_MODE_ENABLE to enable or prevent decryption in fw */
     /* WARNING: Have to check how to control the decryption (which bit) and then set/reset
-                the  appropriate bit*/ 
+                the  appropriate bit*/
     if (bHwDecEnable)
     {
         pWlanParams->FeatureDataFlowOptions &= ~DF_SNIFF_MODE_ENABLE;
@@ -996,10 +1001,10 @@ TI_STATUS cmdBld_CfgHwEncEnable (TI_HANDLE hCmdBld, TI_BOOL bHwEncEnable, TI_BOO
         pWlanParams->FeatureDataFlowOptions |= DF_SNIFF_MODE_ENABLE;
     }
 
-    return cmdBld_CfgIeFeatureConfig (hCmdBld, 
-                                      pWlanParams->FeatureOptions, 
-                                      pWlanParams->FeatureDataFlowOptions, 
-                                      fCb, 
+    return cmdBld_CfgIeFeatureConfig (hCmdBld,
+                                      pWlanParams->FeatureOptions,
+                                      pWlanParams->FeatureDataFlowOptions,
+                                      fCb,
                                       hCb);
 }
 
@@ -1014,7 +1019,7 @@ TI_STATUS cmdBld_CfgHwEncDecEnable (TI_HANDLE hCmdBld, TI_BOOL bHwEncEnable, voi
  * ----------------------------------------------------------------------------
  * Function : cmdBld_CfgSecureMode
  *
- * Input    : 
+ * Input    :
  * Output   :
  * Process  :
  * Note(s)  :
@@ -1036,20 +1041,20 @@ TI_STATUS cmdBld_CfgSecureMode (TI_HANDLE hCmdBld, ECipherSuite eSecurMode, void
 
         /* Reset all reconfig valid fields*/
         DB_KEYS(pCmdBld).bHwEncDecrEnableValid = TI_FALSE;
-        DB_KEYS(pCmdBld).bDefaultKeyIdValid = TI_FALSE;  
-        for (index = 0; 
-             index < pCmdBld->tSecurity.uNumOfStations * NO_OF_RECONF_SECUR_KEYS_PER_STATION + NO_OF_EXTRA_RECONF_SECUR_KEYS; 
+        DB_KEYS(pCmdBld).bDefaultKeyIdValid = TI_FALSE;
+        for (index = 0;
+             index < pCmdBld->tSecurity.uNumOfStations * NO_OF_RECONF_SECUR_KEYS_PER_STATION + NO_OF_EXTRA_RECONF_SECUR_KEYS;
              index++)
         {
             (DB_KEYS(pCmdBld).pReconfKeys + index)->keyType = KEY_NULL;
         }
-        
+
         /* set the new tSecurity mode*/
         pCmdBld->tSecurity.eSecurityMode = eSecurMode;
 
-        /* disable defrag, duplicate detection on TNETW+CCX on chip level*/
+        /* disable defrag, duplicate detection on TNETW+XCC on chip level*/
         /* YV- to add fragmentation control (if there is- artur ?)*/
-        return cmdBld_CfgRxMsduFormat (hCmdBld, 
+        return cmdBld_CfgRxMsduFormat (hCmdBld,
                                        pCmdBld->tSecurity.eSecurityMode != TWD_CIPHER_CKIP,
                                        fCb,
                                        hCb);
@@ -1061,9 +1066,9 @@ TI_STATUS cmdBld_CfgSecureMode (TI_HANDLE hCmdBld, ECipherSuite eSecurMode, void
 }
 
 
-TI_STATUS cmdBld_CfgConnMonitParams (TI_HANDLE  hCmdBld, 
-                                     TRroamingTriggerParams *pRoamingTriggerCmd, 
-                                     void       *fCb, 
+TI_STATUS cmdBld_CfgConnMonitParams (TI_HANDLE  hCmdBld,
+                                     TRroamingTriggerParams *pRoamingTriggerCmd,
+                                     void       *fCb,
                                      TI_HANDLE  hCb)
 {
     TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
@@ -1083,18 +1088,18 @@ TI_STATUS cmdBld_CfgConnMonitParams (TI_HANDLE  hCmdBld,
  *                 cmdBld_CfgEnableRxDataFilter()
  ****************************************************************************
  * DESCRIPTION: Enables or disables Rx data filtering.
- * 
+ *
  * INPUTS:  enabled             - 0 to disable data filtering, any other value to enable.
  *          defaultAction       - The default action to take on non-matching packets.
- * 
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
-TI_STATUS cmdBld_CfgEnableRxDataFilter (TI_HANDLE   hCmdBld, 
-                                        TI_BOOL     bEnabled, 
-                                        filter_e    eDefaultAction, 
-                                        void        *fCb, 
+TI_STATUS cmdBld_CfgEnableRxDataFilter (TI_HANDLE   hCmdBld,
+                                        TI_BOOL     bEnabled,
+                                        filter_e    eDefaultAction,
+                                        void        *fCb,
                                         TI_HANDLE   hCb)
 {
     /* Save parameters for reconfig phase */
@@ -1123,14 +1128,14 @@ TI_STATUS cmdBld_CfgEnableRxDataFilter (TI_HANDLE   hCmdBld,
 *
 * RETURNS: TI_OK or TI_NOK
 ****************************************************************************/
-TI_STATUS cmdBld_CfgRxDataFilter (TI_HANDLE hCmdBld, 
-                                  TI_UINT8     index, 
-                                  TI_UINT8     command, 
-                                  filter_e  eAction, 
-                                  TI_UINT8     uNumFieldPatterns, 
-                                  TI_UINT8     uLenFieldPatterns, 
-                                  TI_UINT8  *pFieldPatterns, 
-                                  void      *fCb, 
+TI_STATUS cmdBld_CfgRxDataFilter (TI_HANDLE hCmdBld,
+                                  TI_UINT8     index,
+                                  TI_UINT8     command,
+                                  filter_e  eAction,
+                                  TI_UINT8     uNumFieldPatterns,
+                                  TI_UINT8     uLenFieldPatterns,
+                                  TI_UINT8  *pFieldPatterns,
+                                  void      *fCb,
                                   TI_HANDLE hCb)
 {
     TCmdBld         *pCmdBld  = (TCmdBld *)hCmdBld;
@@ -1144,14 +1149,14 @@ TI_STATUS cmdBld_CfgRxDataFilter (TI_HANDLE hCmdBld,
     pFilters->uLenFieldPatterns = uLenFieldPatterns;
     os_memoryCopy(pCmdBld->hOs, pFilters->aFieldPattern, pFieldPatterns, uLenFieldPatterns);
 
-    return cmdBld_CfgIeRxDataFilter (hCmdBld, 
-                                     index, 
-                                     command, 
-                                     eAction, 
-                                     uNumFieldPatterns, 
-                                     uLenFieldPatterns, 
-                                     pFieldPatterns, 
-                                     fCb, 
+    return cmdBld_CfgIeRxDataFilter (hCmdBld,
+                                     index,
+                                     command,
+                                     eAction,
+                                     uNumFieldPatterns,
+                                     uLenFieldPatterns,
+                                     pFieldPatterns,
+                                     fCb,
                                      hCb);
 }
 
@@ -1218,11 +1223,11 @@ TI_STATUS cmdBld_CfgBet (TI_HANDLE hCmdBld, TI_UINT8 Enable, TI_UINT8 MaximumCon
  *                      cmdBld_CfgKeepAlive()
  ****************************************************************************
  * DESCRIPTION: Set keep-alive paramters for a single index
- * 
+ *
  * INPUTS: Paramters and CB
- * 
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CfgKeepAlive (TI_HANDLE hCmdBld, TKeepAliveParams *pKeepAliveParams, void *fCb, TI_HANDLE hCb)
@@ -1231,12 +1236,12 @@ TI_STATUS cmdBld_CfgKeepAlive (TI_HANDLE hCmdBld, TKeepAliveParams *pKeepAlivePa
 
     TRACE4(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "CmdBld: Seeting keep-alive params, index=%d, interval=%d msec, trigType=%d, enaFlag=%d\n", pKeepAliveParams->index, pKeepAliveParams->interval, pKeepAliveParams->trigType, pKeepAliveParams->enaDisFlag);
 
-    os_memoryCopy (pCmdBld->hOs, 
-                   (void *)&DB_KLV(hCmdBld).keepAliveParams[ pKeepAliveParams->index ], 
-                   (void *)pKeepAliveParams, 
+    os_memoryCopy (pCmdBld->hOs,
+                   (void *)&DB_KLV(hCmdBld).keepAliveParams[ pKeepAliveParams->index ],
+                   (void *)pKeepAliveParams,
                    sizeof (TKeepAliveParams));
 
-    return cmdBld_CmdIeConfigureKeepAliveParams (hCmdBld, 
+    return cmdBld_CmdIeConfigureKeepAliveParams (hCmdBld,
                                                  pKeepAliveParams->index,
                                                  pKeepAliveParams->enaDisFlag,
                                                  (TI_UINT8)pKeepAliveParams->trigType,
@@ -1249,11 +1254,11 @@ TI_STATUS cmdBld_CfgKeepAlive (TI_HANDLE hCmdBld, TKeepAliveParams *pKeepAlivePa
  *                      cmdBld_CfgKeepAliveEnaDis()
  ****************************************************************************
  * DESCRIPTION: Set global keep-alive enable / disable flag
- * 
+ *
  * INPUTS: Paramters and CB
- * 
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CfgKeepAliveEnaDis(TI_HANDLE hCmdBld, TI_UINT8 enaDisFlag, void *fCb, TI_HANDLE hCb)
@@ -1268,20 +1273,20 @@ TI_STATUS cmdBld_CfgKeepAliveEnaDis(TI_HANDLE hCmdBld, TI_UINT8 enaDisFlag, void
     return cmdBld_CmdIeConfigureKeepAliveEnaDis (hCmdBld, enaDisFlag, fCb, hCb);
 }
 
-/** 
- * \fn     cmdBld_CfgSetFwHtCapabilities 
- * \brief  set the current AP HT Capabilities to the FW. 
+/**
+ * \fn     cmdBld_CfgSetFwHtCapabilities
+ * \brief  set the current AP HT Capabilities to the FW.
  *
- * \note    
- * \return TI_OK on success or TI_NOK on failure 
- * \sa 
- */ 
+ * \note
+ * \return TI_OK on success or TI_NOK on failure
+ * \sa
+ */
 TI_STATUS cmdBld_CfgSetFwHtCapabilities (TI_HANDLE hCmdBld,
                                          TI_UINT32 uHtCapabilites,
                                          TMacAddr  tMacAddress,
                                          TI_UINT8  uAmpduMaxLeng,
                                          TI_UINT8  uAmpduMinSpac,
-                                         void      *fCb, 
+                                         void      *fCb,
                                          TI_HANDLE hCb)
 {
 
@@ -1299,25 +1304,25 @@ TI_STATUS cmdBld_CfgSetFwHtCapabilities (TI_HANDLE hCmdBld,
                                             tMacAddress,
                                             uAmpduMaxLeng,
                                             uAmpduMinSpac,
-                                            fCb, 
+                                            fCb,
                                             hCb);
 }
 
-/** 
- * \fn     cmdBld_CfgSetFwHtInformation 
- * \brief  set the current AP HT Information to the FW. 
+/**
+ * \fn     cmdBld_CfgSetFwHtInformation
+ * \brief  set the current AP HT Information to the FW.
  *
- * \note    
- * \return TI_OK on success or TI_NOK on failure 
- * \sa 
- */ 
+ * \note
+ * \return TI_OK on success or TI_NOK on failure
+ * \sa
+ */
 TI_STATUS cmdBld_CfgSetFwHtInformation (TI_HANDLE hCmdBld,
-                                        TI_UINT8  uRifsMode,         
-                                        TI_UINT8  uHtProtection,     
-                                        TI_UINT8  uGfProtection,     
-                                        TI_UINT8  uHtTxBurstLimit,   
+                                        TI_UINT8  uRifsMode,
+                                        TI_UINT8  uHtProtection,
+                                        TI_UINT8  uGfProtection,
+                                        TI_UINT8  uHtTxBurstLimit,
                                         TI_UINT8  uDualCtsProtection,
-                                        void      *fCb, 
+                                        void      *fCb,
                                         TI_HANDLE hCb)
 {
 
@@ -1331,31 +1336,31 @@ TI_STATUS cmdBld_CfgSetFwHtInformation (TI_HANDLE hCmdBld,
     CMD_BLD_MARK_INIT_SEQUENCE_CMD_AS_VALID(hCmdBld, __CFG_HT_INFORMATION)
 
     return cmdBld_CfgIeSetFwHtInformation (hCmdBld,
-                                           uRifsMode,          
-                                           uHtProtection,      
-                                           uGfProtection,      
-                                           uHtTxBurstLimit,    
-                                           uDualCtsProtection, 
-                                           fCb, 
+                                           uRifsMode,
+                                           uHtProtection,
+                                           uGfProtection,
+                                           uHtTxBurstLimit,
+                                           uDualCtsProtection,
+                                           fCb,
                                            hCb);
 }
 
-/** 
- * \fn     cmdBld_CfgSetBaInitiator 
- * \brief  configure BA session initiator\receiver parameters setting in the FW. 
+/**
+ * \fn     cmdBld_CfgSetBaInitiator
+ * \brief  configure BA session initiator\receiver parameters setting in the FW.
  *
- * \note    
- * \return TI_OK on success or TI_NOK on failure 
- * \sa 
- */ 
-TI_STATUS cmdBld_CfgSetBaSession (TI_HANDLE hCmdBld, 
-                                  InfoElement_e eBaType,   
-                                  TI_UINT8 uTid,               
-                                  TI_UINT8 uState,             
-                                  TMacAddr tRa,                
-                                  TI_UINT16 uWinSize,          
+ * \note
+ * \return TI_OK on success or TI_NOK on failure
+ * \sa
+ */
+TI_STATUS cmdBld_CfgSetBaSession (TI_HANDLE hCmdBld,
+                                  InfoElement_e eBaType,
+                                  TI_UINT8 uTid,
+                                  TI_UINT8 uState,
+                                  TMacAddr tRa,
+                                  TI_UINT16 uWinSize,
                                   TI_UINT16 uInactivityTimeout,
-                                  void *fCb, 
+                                  void *fCb,
                                   TI_HANDLE hCb)
 {
     if (ACX_BA_SESSION_INITIATOR_POLICY == eBaType)
@@ -1379,12 +1384,12 @@ TI_STATUS cmdBld_CfgSetBaSession (TI_HANDLE hCmdBld,
 
     CMD_BLD_MARK_INIT_SEQUENCE_CMD_AS_VALID(hCmdBld, __CFG_BA_SET_SESSION
                                     )
-    return cmdBld_CfgIeSetBaSession (hCmdBld, 
+    return cmdBld_CfgIeSetBaSession (hCmdBld,
                                      eBaType,
-                                     uTid,               
-                                     uState,             
-                                     tRa,                
-                                     uWinSize,          
+                                     uTid,
+                                     uState,
+                                     tRa,
+                                     uWinSize,
                                      uInactivityTimeout,
                                      fCb,
                                      hCb);
@@ -1396,6 +1401,6 @@ TI_STATUS cmdBld_CfgBurstMode (TI_HANDLE hCmdBld, TI_BOOL bEnabled, void *fCb, T
 	DB_AC(hCmdBld).isBurstModeEnabled = bEnabled;
     CMD_BLD_MARK_INIT_SEQUENCE_CMD_AS_VALID(hCmdBld, __CMD_BURST_MODE_ENABLE)
 
-	return cmdBld_CfgIeBurstMode (hCmdBld, bEnabled, fCb, hCb); 
+	return cmdBld_CfgIeBurstMode (hCmdBld, bEnabled, fCb, hCb);
 }
 

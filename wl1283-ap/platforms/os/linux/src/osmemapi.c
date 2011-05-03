@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * osmemapi.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 /*
  * src/osmemapi.c
@@ -66,12 +71,12 @@ struct os_mem_block
 
 /****************************************************************************************
  *                        																*
- *						OS Memory API													*       
+ *						OS Memory API													*
  *																						*
  ****************************************************************************************/
 
 /****************************************************************************************
- *                        os_memoryAlloc()                                 
+ *                        os_memoryAlloc()
  ****************************************************************************************
 DESCRIPTION:    Allocates resident (nonpaged) system-space memory.
 
@@ -98,7 +103,7 @@ os_memoryAlloc(
 #ifdef TI_MEM_ALLOC_TRACE
     os_printf("MTT:%s:%d ::os_memoryAlloc(0x%p, %lu) : %lu\n",__FUNCTION__, __LINE__,OsContext,Size,total_size);
 #endif
-	/* 
+	/*
 		Memory optimization issue. Allocate up to 2 pages (8k) from the SLAB allocator (2^n),
 		    otherwise allocate from virtual pool.
         If full Async mode is used, allow up to 6 pages (24k) for DMA-able memory, so the TxCtrlBlk table
@@ -107,7 +112,7 @@ os_memoryAlloc(
 #ifdef FULL_ASYNC_MODE
 	if (total_size < 6 * 4096)
 #else
-    if (total_size < 2 * 4096)  
+    if (total_size < 2 * 4096)
 #endif
     {
         if (in_atomic())
@@ -119,8 +124,8 @@ os_memoryAlloc(
             blk = kmalloc(total_size, GFP_KERNEL);
         }
         if (!blk)
-        {            
-            printk("%s: NULL\n",__func__);	
+        {
+            printk("%s: NULL\n",__func__);
             return NULL;
         }
         blk->f_free = (os_free)kfree;
@@ -149,7 +154,7 @@ os_memoryAlloc(
 
 
 /****************************************************************************************
- *                        os_memoryCAlloc()                                 
+ *                        os_memoryCAlloc()
  ****************************************************************************************
 DESCRIPTION:    Allocates an array in memory with elements initialized to 0.
 
@@ -159,7 +164,7 @@ ARGUMENTS:		OsContext	-	our adapter context.
 
 RETURN:			None
 
-NOTES:         	
+NOTES:
 *****************************************************************************************/
 void*
 os_memoryCAlloc(
@@ -189,7 +194,7 @@ os_memoryCAlloc(
 
 
 /****************************************************************************************
- *                        os_memoryFree()                                 
+ *                        os_memoryFree()
  ****************************************************************************************
 DESCRIPTION:    This function releases a block of memory previously allocated with the
 				os_memoryAlloc function.
@@ -204,7 +209,7 @@ ARGUMENTS:		OsContext	-	our adapter context.
 
 RETURN:			None
 
-NOTES:         	
+NOTES:
 *****************************************************************************************/
 void
 os_memoryFree(
@@ -215,7 +220,7 @@ os_memoryFree(
 {
     struct os_mem_block *blk =
         (struct os_mem_block *)((char *)pMemPtr - sizeof(struct os_mem_block));
-   
+
 #ifdef TI_MEM_ALLOC_TRACE
     os_printf("MTT:%s:%d ::os_memoryFree(0x%p, 0x%p, %lu) : %d\n",__FUNCTION__,__LINE__,OsContext,pMemPtr,Size,-Size);
 #endif
@@ -240,7 +245,7 @@ os_memoryFree(
 
 
 /****************************************************************************************
- *                        os_memorySet()                                 
+ *                        os_memorySet()
  ****************************************************************************************
 DESCRIPTION:    This function fills a block of memory with given value.
 
@@ -251,7 +256,7 @@ ARGUMENTS:		OsContext	- our adapter context.
 
 RETURN:			None
 
-NOTES:       
+NOTES:
 *****************************************************************************************/
 void
 os_memorySet(
@@ -265,7 +270,7 @@ os_memorySet(
 }
 
 /****************************************************************************************
- *                        _os_memoryAlloc4HwDma()                                 
+ *                        _os_memoryAlloc4HwDma()
  ****************************************************************************************
 DESCRIPTION:    Allocates resident (nonpaged) system-space memory for DMA operations.
 
@@ -275,7 +280,7 @@ ARGUMENTS:		OsContext	- our adapter context.
 RETURN:			Pointer to the allocated memory.
 				NULL if there is insufficient memory available.
 
-NOTES:         		
+NOTES:
 
 *****************************************************************************************/
 void*
@@ -286,7 +291,7 @@ os_memoryAlloc4HwDma(
 {
     struct os_mem_block *blk;
 	__u32 total_size = Size + sizeof(struct os_mem_block) + sizeof(__u32);
-	/* 
+	/*
 		if the size is greater than 2 pages then we cant allocate the memory through kmalloc so the function fails
 	*/
 	if (Size < 2 * OS_PAGE_SIZE)
@@ -310,7 +315,7 @@ os_memoryAlloc4HwDma(
 }
 
 /****************************************************************************************
- *                        _os_memory4HwDmaFree()                                 
+ *                        _os_memory4HwDmaFree()
  ****************************************************************************************
 DESCRIPTION:    This function releases a block of memory previously allocated with the
 				_os_memoryAlloc4HwDma function.
@@ -325,7 +330,7 @@ ARGUMENTS:		OsContext	-	our adapter context.
 
 RETURN:			None
 
-NOTES:         	
+NOTES:
 *****************************************************************************************/
 void
 os_memory4HwDmaFree(
@@ -355,7 +360,7 @@ os_memory4HwDmaFree(
 }
 
 /****************************************************************************************
- *                        os_memoryZero()                                 
+ *                        os_memoryZero()
  ****************************************************************************************
 DESCRIPTION:    This function fills a block of memory with 0s.
 
@@ -365,7 +370,7 @@ ARGUMENTS:		OsContext	- our adapter context.
 
 RETURN:			None
 
-NOTES:  
+NOTES:
 *****************************************************************************************/
 void
 os_memoryZero(
@@ -379,7 +384,7 @@ os_memoryZero(
 
 
 /****************************************************************************************
- *                        os_memoryCopy()                                 
+ *                        os_memoryCopy()
  ****************************************************************************************
 DESCRIPTION:    This function copies a specified number of bytes from one caller-supplied
 				location to another.
@@ -391,7 +396,7 @@ ARGUMENTS:		OsContext	- our adapter context.
 
 RETURN:			None
 
-NOTES:       
+NOTES:
 *****************************************************************************************/
 void
 os_memoryCopy(
@@ -405,7 +410,7 @@ os_memoryCopy(
 }
 
 /****************************************************************************************
- *                        os_memoryCompare()                                 
+ *                        os_memoryCompare()
  ****************************************************************************************
 DESCRIPTION:    Compare characters in two buffers.
 
@@ -419,7 +424,7 @@ RETURN:			The return value indicates the relationship between the buffers:
                 0 Buf1 identical to Buf2
                 > 0 Buf1 greater than Buf2
 
-NOTES:         	
+NOTES:
 *****************************************************************************************/
 TI_INT32
 os_memoryCompare(
@@ -436,7 +441,7 @@ os_memoryCompare(
 
 
 /****************************************************************************************
- *                        os_memoryCopyFromUser()                                 
+ *                        os_memoryCopyFromUser()
  ****************************************************************************************
 DESCRIPTION:    This function copies a specified number of bytes from one caller-supplied
 				location to another. source buffer is in USER-MODE address space
@@ -448,7 +453,7 @@ ARGUMENTS:		OsContext	- our adapter context.
 
 RETURN:			None
 
-NOTES:       
+NOTES:
 *****************************************************************************************/
 int
 os_memoryCopyFromUser(
@@ -462,7 +467,7 @@ os_memoryCopyFromUser(
 }
 
 /****************************************************************************************
- *                        os_memoryCopyToUser()                                 
+ *                        os_memoryCopyToUser()
  ****************************************************************************************
 DESCRIPTION:    This function copies a specified number of bytes from one caller-supplied
 				location to another. desination buffer is in USER-MODE address space
@@ -474,9 +479,9 @@ ARGUMENTS:		OsContext	- our adapter context.
 
 RETURN:			None
 
-NOTES:       
+NOTES:
 *****************************************************************************************/
-int 
+int
 os_memoryCopyToUser(
     TI_HANDLE OsContext,
     void* pDstPtr,

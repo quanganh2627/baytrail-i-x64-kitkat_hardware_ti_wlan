@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * admCtrl.h
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file admCtrl.h
  *  \brief Admission control API
  *
@@ -83,7 +88,7 @@ typedef TI_STATUS (*admCtrl_setMixedMode_t)(admCtrl_t *pAdmCtrl, TI_BOOL mixedMo
 
 typedef TI_STATUS (*admCtrl_getMixedMode_t)(admCtrl_t *pAdmCtrl, TI_BOOL *mixedMode);
 
-typedef TI_STATUS (*admCtrl_getAuthEncrCapability_t)(admCtrl_t *pAdmCtrl, 
+typedef TI_STATUS (*admCtrl_getAuthEncrCapability_t)(admCtrl_t *pAdmCtrl,
                                         rsnAuthEncrCapability_t   *authEncrCapability);
 
 typedef TI_STATUS (*admCtrl_setPMKIDlist_t)(admCtrl_t *pAdmCtrl, OS_802_11_PMKID  *pmkIdList);
@@ -100,10 +105,10 @@ typedef TI_STATUS (*admCtrl_getPromoteFlags_t)(admCtrl_t *pAdmCtrl, TI_UINT32 *f
 
 typedef TI_STATUS (*admCtrl_getWPAMixedModeSupport_t)(admCtrl_t *pAdmCtrl, TI_UINT32 *support);
 
-#ifdef CCX_MODULE_INCLUDED
-typedef TI_STATUS (*admCtrl_getNetworkEap_t)(admCtrl_t *pAdmCtrl, OS_CCX_NETWORK_EAP *networkEap);
+#ifdef XCC_MODULE_INCLUDED
+typedef TI_STATUS (*admCtrl_getNetworkEap_t)(admCtrl_t *pAdmCtrl, OS_XCC_NETWORK_EAP *networkEap);
 
-typedef TI_STATUS (*admCtrl_setNetworkEap_t)(admCtrl_t *pAdmCtrl, OS_CCX_NETWORK_EAP networkEap);
+typedef TI_STATUS (*admCtrl_setNetworkEap_t)(admCtrl_t *pAdmCtrl, OS_XCC_NETWORK_EAP networkEap);
 #endif
 
 
@@ -132,7 +137,7 @@ typedef TI_UINT8 pmkidValue_t[PMKID_VALUE_SIZE];
 
 #define PMKID_MAX_NUMBER 16
 
-typedef struct 
+typedef struct
 {
    TMacAddr         bssId;
    pmkidValue_t     pmkId;
@@ -142,7 +147,7 @@ typedef struct
 
 #define ADMCTRL_PMKID_CACHE_SIZE 32
 
-typedef struct 
+typedef struct
 {
    TSsid               ssid;
    TI_UINT8            entriesNumber;
@@ -170,14 +175,14 @@ struct _admCtrl_t
     TI_BOOL                 encrInSw;
     TI_BOOL                 micInSw;
     TI_BOOL                 setSiteFirst;
-#ifdef CCX_MODULE_INCLUDED
-    OS_CCX_NETWORK_EAP      networkEapMode;
+#ifdef XCC_MODULE_INCLUDED
+    OS_XCC_NETWORK_EAP      networkEapMode;
 #endif
-    TI_BOOL                 ccxSupport;
+    TI_BOOL                 XCCSupport;
     TI_BOOL                 proxyArpEnabled;
 
     TI_BOOL                 WPAMixedModeEnable;
-    TI_UINT32               WPAPromoteFlags;    
+    TI_UINT32               WPAPromoteFlags;
 
     TI_BOOL                 preAuthSupport;
     TI_UINT32               preAuthTimeout;
@@ -189,7 +194,7 @@ struct _admCtrl_t
     TI_HANDLE               hRx;
     TI_HANDLE               hReport;
     TI_HANDLE               hOs;
-    TI_HANDLE               hCcxMngr;
+    TI_HANDLE               hXCCMngr;
     TI_HANDLE               hPowerMgr;
     TI_HANDLE               hEvHandler;
     TI_HANDLE               hTimer;
@@ -221,7 +226,7 @@ struct _admCtrl_t
     admCtrl_get802_1x_AkmExists_t       get802_1x_AkmExists;
 
 
-#ifdef CCX_MODULE_INCLUDED
+#ifdef XCC_MODULE_INCLUDED
     admCtrl_getNetworkEap_t         getNetworkEap;
     admCtrl_setNetworkEap_t         setNetworkEap;
 #endif
@@ -247,7 +252,7 @@ TI_STATUS admCtrl_config (TI_HANDLE hAdmCtrl,
                           TI_HANDLE hReport,
                           TI_HANDLE hOs,
                           struct _rsn_t *pRsn,
-                          TI_HANDLE hCcxMngr,
+                          TI_HANDLE hXCCMngr,
                           TI_HANDLE hPowerMgr,
                           TI_HANDLE hEvHandler,
                           TI_HANDLE hTimer,

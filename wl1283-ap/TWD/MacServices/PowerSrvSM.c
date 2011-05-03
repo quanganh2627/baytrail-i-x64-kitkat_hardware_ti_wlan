@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * PowerSrvSM.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file PowerSrvSM.c
  *  \brief This is the PowerSrvSM module implementation.
  *  \
@@ -84,15 +89,15 @@ static void      powerSrvSMTimerExpired (TI_HANDLE hPowerSrvSM, TI_BOOL bTwdInit
 /****************************************************************************************
  *                        powerSrvSM_create                                                         *
  ****************************************************************************************
-DESCRIPTION: Power Server SM module creation function, called by the Power Server create in creation phase 
+DESCRIPTION: Power Server SM module creation function, called by the Power Server create in creation phase
                 performs the following:
                 -   Allocate the Power Server SM handle
                 -   Creates the fsm.
-                                                                                                                   
-INPUT:          - hOs - Handle to OS        
+
+INPUT:          - hOs - Handle to OS
 
 
-OUTPUT:     
+OUTPUT:
 
 RETURN:     Handle to the Power Server SM module on success, NULL otherwise
 ****************************************************************************************/
@@ -130,18 +135,18 @@ TI_HANDLE powerSrvSM_create(TI_HANDLE hOsHandle)
     return pPowerSrvSM;
 }
 
- 
+
 /****************************************************************************************
  *                        powerSrvSM_destroy                                                            *
  ****************************************************************************************
-DESCRIPTION: Power Server SM module destroy function, 
+DESCRIPTION: Power Server SM module destroy function,
                 -   delete Power Server SM allocation
-                
-                                                                                                                   
+
+
 INPUT:          - hPowerSrvSM - Handle to the Power Server  SM
 
 
-OUTPUT:     
+OUTPUT:
 
 RETURN:    TI_STATUS - TI_OK on success else TI_NOK.
 ****************************************************************************************/
@@ -173,17 +178,17 @@ TI_STATUS powerSrvSM_destroy(TI_HANDLE hPowerSrvSM)
 /****************************************************************************************
 *                        powerSrvSM_init                                                           *
 ****************************************************************************************
-DESCRIPTION: Power Server SM module initialize function, called by the Power Server init in configure phase 
+DESCRIPTION: Power Server SM module initialize function, called by the Power Server init in configure phase
                performs the following:
                -   init the Stet machine states.
                -   set Active as start state.
-                                                                                                                  
+
 INPUT:     - hPowerSrvSM       - handle to the PowerSrvSM object.
            - hReport           - handle to the Report object.
-           - hCmdBld           - handle to the Command Builder object.    
-           - hTimer            - handle to the Timer module object.    
+           - hCmdBld           - handle to the Command Builder object.
+           - hTimer            - handle to the Timer module object.
 
-OUTPUT: 
+OUTPUT:
 RETURN:    TI_STATUS - TI_OK on success else TI_NOK.
 ****************************************************************************************/
 TI_STATUS powerSrvSM_init (TI_HANDLE hPowerSrvSM,
@@ -313,7 +318,7 @@ TI_STATUS powerSrvSM_init (TI_HANDLE hPowerSrvSM,
     /*
     Null packet rate : 2,5.5 M
     Probe Request : Not PBCC modulation, Long Preamble */
-    pPowerSrvSM->NullPktRateModulation= (DRV_RATE_MASK_1_BARKER | DRV_RATE_MASK_2_BARKER); 
+    pPowerSrvSM->NullPktRateModulation= (DRV_RATE_MASK_1_BARKER | DRV_RATE_MASK_2_BARKER);
 
     TRACE0(pPowerSrvSM->hReport, REPORT_SEVERITY_INIT, "PowerSrvSM Initialized\n");
 
@@ -323,15 +328,15 @@ TI_STATUS powerSrvSM_init (TI_HANDLE hPowerSrvSM,
 /****************************************************************************************
 *                        powerSrvSM_config                                                         *
 ****************************************************************************************
-DESCRIPTION: Power Server SM module configuration function, called by the Power Server init in configure phase 
+DESCRIPTION: Power Server SM module configuration function, called by the Power Server init in configure phase
                performs the following:
                -   init the Stet machine states.
                -   set Active as start state.
-                                                                                                                  
-INPUT:      - hPowerSrvSM       - handle to the PowerSrvSM object.  
+
+INPUT:      - hPowerSrvSM       - handle to the PowerSrvSM object.
            - pPowerSrvInitParams   - the Power Server initialize parameters.
 
-OUTPUT: 
+OUTPUT:
 RETURN:    TI_STATUS - TI_OK on success else TI_NOK.
 ****************************************************************************************/
 TI_STATUS powerSrvSM_config(TI_HANDLE hPowerSrvSM,
@@ -351,13 +356,13 @@ TI_STATUS powerSrvSM_config(TI_HANDLE hPowerSrvSM,
  *                        powerSrvSM_SMApi                                                           *
  *****************************************************************************************
 DESCRIPTION: This function triggers events from the outside of the module into the state machine.
-              
-                                                                                                                                                                       
-INPUT:      - hPowerSrvSM                   - handle to the PowerSrvSM object.  
-            - theSMEvent                    - event from TWD.
-            
 
-OUTPUT: 
+
+INPUT:      - hPowerSrvSM                   - handle to the PowerSrvSM object.
+            - theSMEvent                    - event from TWD.
+
+
+OUTPUT:
 RETURN:    TI_STATUS TI_OK / PENDING / TI_NOK
 ****************************************************************************************/
 TI_STATUS powerSrvSM_SMApi(TI_HANDLE hPowerSrvSM,
@@ -394,11 +399,11 @@ TI_STATUS powerSrvSM_SMApi(TI_HANDLE hPowerSrvSM,
  *                        powerSrvSm_setSmRequest                                                    *
  *****************************************************************************************
 DESCRIPTION: This function sets the current SM working request.
-                                                                                                                   
+
 INPUT:      - hPowerSrvSM                       - handle to the PowerSrvSM object.
             -powerSrvRequest_t*                 - pointer to the correct request in the Power server.
 
-OUTPUT: 
+OUTPUT:
 RETURN:    TI_STATUS -  TI_OK
 ****************************************************************************************/
 TI_STATUS powerSrvSm_setSmRequest(TI_HANDLE hPowerSrvSM,powerSrvRequest_t* pSmRequest)
@@ -413,49 +418,49 @@ TI_STATUS powerSrvSm_setSmRequest(TI_HANDLE hPowerSrvSM,powerSrvRequest_t* pSmRe
  *                        powerSrvSM_getCurrentState                                                         *
  *****************************************************************************************
 DESCRIPTION: This function returns the current state of the SM.
-                                                       
-                                                                                                                   
-INPUT:      - hPowerSrvSM                       - handle to the PowerSrvSM object.      
-            
 
-OUTPUT: 
+
+INPUT:      - hPowerSrvSM                       - handle to the PowerSrvSM object.
+
+
+OUTPUT:
 RETURN:    PowerSrvSMStates_e current state
 ****************************************************************************************/
 PowerSrvSMStates_e powerSrvSM_getCurrentState(TI_HANDLE hPowerSrvSM)
 {
     PowerSrvSM_t *pPowerSrvSM = (PowerSrvSM_t*)hPowerSrvSM;
 
-    return pPowerSrvSM->currentState; 
+    return pPowerSrvSM->currentState;
 }
 
 /****************************************************************************************
  *                        powerSrvSM_setRateModulation                                               *
  *****************************************************************************************
 DESCRIPTION: This function sets the Rate Modulation
-                                                       
-                                                                                                                   
-INPUT:      - hPowerSrvSM                       - handle to the PowerSrvSM object.      
+
+
+INPUT:      - hPowerSrvSM                       - handle to the PowerSrvSM object.
             - rateModulation                        - desired rate
 
-OUTPUT: 
+OUTPUT:
 RETURN:      void
 ****************************************************************************************/
 
 void powerSrvSM_setRateModulation(TI_HANDLE hPowerSrvSM, TI_UINT16 rateModulation)
 {
     PowerSrvSM_t *pPowerSrvSM = (PowerSrvSM_t*)hPowerSrvSM;
-    pPowerSrvSM->NullPktRateModulation= rateModulation; 
+    pPowerSrvSM->NullPktRateModulation= rateModulation;
 }
 
 /****************************************************************************************
  *                        powerSrvSM_getRateModulation                                               *
  *****************************************************************************************
 DESCRIPTION: This function sets the Rate Modulation
-                                                       
-                                                                                                                   
-INPUT:      - hPowerSrvSM                       - handle to the PowerSrvSM object.      
 
-OUTPUT: 
+
+INPUT:      - hPowerSrvSM                       - handle to the PowerSrvSM object.
+
+OUTPUT:
 RETURN:      -  desired rate
 ****************************************************************************************/
 
@@ -469,12 +474,12 @@ TI_UINT32 powerSrvSM_getRateModulation(TI_HANDLE hPowerSrvSM)
  *                        powerSrvSM_printObject                                                         *
  *****************************************************************************************
 DESCRIPTION: This function prints the SM object
-                                                       
-                                                                                                                   
-INPUT:      - hPowerSrvSM                       - handle to the PowerSrvSM object.      
-            
 
-OUTPUT: 
+
+INPUT:      - hPowerSrvSM                       - handle to the PowerSrvSM object.
+
+
+OUTPUT:
 RETURN:   void
 ****************************************************************************************/
 void powerSrvSM_printObject(TI_HANDLE hPowerSrvSM)
@@ -537,10 +542,10 @@ void powerSrvSM_printObject(TI_HANDLE hPowerSrvSM)
  *                        powerSrvSmDoEnterPowerSave                                                 *
  *****************************************************************************************
 DESCRIPTION: This function is an action of the state machine to move from active state to PS
-                                                                                                                   
+
 INPUT:      - hPowerSrvSM                       - handle to the PowerSrvSM object.
 
-OUTPUT: 
+OUTPUT:
 RETURN:    TI_STATUS - TI_OK / TI_NOK
 ****************************************************************************************/
 
@@ -558,10 +563,10 @@ static TI_STATUS powerSrvSmDoEnterPowerSave(TI_HANDLE hPowerSrvSM)
  *                        powerSrvSmDoExitPowerSave                                              *
  *****************************************************************************************
 DESCRIPTION: This function is an action of the state machine to move from PS state to Active
-                                                                                                                   
+
 INPUT:      - hPowerSrvSM                       - handle to the PowerSrvSM object.
 
-OUTPUT: 
+OUTPUT:
 RETURN:    TI_STATUS - TI_OK / TI_NOK
 ****************************************************************************************/
 static TI_STATUS powerSrvSmDoExitPowerSave(TI_HANDLE hPowerSrvSM)
@@ -577,12 +582,12 @@ static TI_STATUS powerSrvSmDoExitPowerSave(TI_HANDLE hPowerSrvSM)
 /****************************************************************************************
  *                        powerSrvSmDoUpdateRequest                                                  *
  *****************************************************************************************
-DESCRIPTION: This function is an action of the state machine to update a request when the SM 
-              is already in the requested state is already 
-                                                                                                                   
+DESCRIPTION: This function is an action of the state machine to update a request when the SM
+              is already in the requested state is already
+
 INPUT:      - hPowerSrvSM                       - handle to the PowerSrvSM object.
 
-OUTPUT: 
+OUTPUT:
 RETURN:    TI_STATUS - TI_OK / TI_NOK
 ****************************************************************************************/
 
@@ -606,12 +611,12 @@ static TI_STATUS powerSrvSmDoUpdateRequest(TI_HANDLE hPowerSrvSM)
 /****************************************************************************************
  *                        powerSrvSmDoPending                                                        *
  *****************************************************************************************
-DESCRIPTION: This function is an action of the state machine returns Pending in case that there is a request 
+DESCRIPTION: This function is an action of the state machine returns Pending in case that there is a request
               waiting to be finished (already sent to FW)
-                                                                                                                   
+
 INPUT:      - hPowerSrvSM                       - handle to the PowerSrvSM object.
 
-OUTPUT: 
+OUTPUT:
 RETURN:    TI_STATUS - PENDING
 ****************************************************************************************/
 
@@ -631,10 +636,10 @@ static TI_STATUS powerSrvSmDoPending(TI_HANDLE hPowerSrvSM)
  *****************************************************************************************
 DESCRIPTION: This function is an action of the state machine stays in the same state since it the requested
               one in the request
-                                                                                                                   
+
 INPUT:      - hPowerSrvSM                       - handle to the PowerSrvSM object.
 
-OUTPUT: 
+OUTPUT:
 RETURN:    TI_STATUS - TI_OK
 ****************************************************************************************/
 static TI_STATUS powerSrvSmDoAllready(TI_HANDLE hPowerSrvSM)
@@ -652,10 +657,10 @@ static TI_STATUS powerSrvSmDoAllready(TI_HANDLE hPowerSrvSM)
  *****************************************************************************************
 DESCRIPTION: This function is an action of the state machine stays in the same state and return that action
               was not expected
-                                                                                                                   
+
 INPUT:      - hPowerSrvSM                       - handle to the PowerSrvSM object.
 
-OUTPUT: 
+OUTPUT:
 RETURN:    TI_STATUS - TI_OK
 ****************************************************************************************/
 static TI_STATUS powerSrvSMActionUnexpected(TI_HANDLE hPowerSrvSM)
@@ -676,13 +681,13 @@ static TI_STATUS powerSrvSMActionUnexpected(TI_HANDLE hPowerSrvSM)
 DESCRIPTION: This function is the manager of the state macine. its move the state machine
               from one state to the other depend on the receive event, and call to the appropriate
               action (function) for the move between the states.
-                                                                                                                   
+
 INPUT:      - pCurrentState
             - event
             - hPowerSrvSM                       - handle to the PowerSrvSM object.
 
-OUTPUT: 
-RETURN:    TI_STATUS 
+OUTPUT:
+RETURN:    TI_STATUS
 ****************************************************************************************/
 static TI_STATUS powerSrvSmSMEvent(TI_UINT8* pCurrentState,
                                    TI_UINT8 event,
@@ -719,12 +724,12 @@ static TI_STATUS powerSrvSmSMEvent(TI_UINT8* pCurrentState,
 *****************************************************************************************
 DESCRIPTION: This function send configuration of the power save option that holds in the command
                 mailbox inner sturcture.
-                                                                                                                  
+
 INPUT:      - hPowerSrvSM                       - handle to the PowerSrvSM object.
            - PS_disableEnable                      - true = PS , false = active
 
-OUTPUT: 
-RETURN:    TI_STATUS 
+OUTPUT:
+RETURN:    TI_STATUS
 ****************************************************************************************/
 static TI_STATUS    powerSrvSMSendMBXConfiguration(TI_HANDLE hPowerSrvSM, TI_BOOL PS_disableEnable)
 {
@@ -748,11 +753,11 @@ static TI_STATUS    powerSrvSMSendMBXConfiguration(TI_HANDLE hPowerSrvSM, TI_BOO
 
     /* that command should be sent to FW just in case we moved from Active to one of the PS modes
      * and vice versa, it shoul not be sent when moving between different PS modes */
-    status = cmdBld_CmdSetPsMode (pPowerSrvSM->hCmdBld, 
+    status = cmdBld_CmdSetPsMode (pPowerSrvSM->hCmdBld,
                                   &powerSaveParams,
                                   (void *)pPowerSrvSM->pSmRequest->powerSaveCmdResponseCB,
                                   (pPowerSrvSM->pSmRequest->powerSaveCmdResponseCB == NULL) ? NULL : pPowerSrvSM->pSmRequest->powerSaveCBObject);
-                                      
+
     if ( status != TI_OK )
     {
         TRACE0(pPowerSrvSM->hReport, REPORT_SEVERITY_ERROR, "Error in configuring Power Manager paramters!\n");
@@ -766,9 +771,9 @@ static TI_STATUS    powerSrvSMSendMBXConfiguration(TI_HANDLE hPowerSrvSM, TI_BOO
 *****************************************************************************************
 DESCRIPTION: This function is called upon timer expiry - when the FW has not returned
              a response within the defined tme (50 ms)
-                                                                                                                  
+
 INPUT:      hPowerSrvSM     - handle to the PowerSrvSM object.
-            bTwdInitOccured - Indicates if TWDriver recovery occured since timer started 
+            bTwdInitOccured - Indicates if TWDriver recovery occured since timer started
 
 OUTPUT:    None
 
@@ -789,16 +794,16 @@ static void powerSrvSMTimerExpired (TI_HANDLE hPowerSrvSM, TI_BOOL bTwdInitOccur
  *                        powerSrvRegisterFailureEventCB                                                    *
  ****************************************************************************************
 DESCRIPTION: Registers a failure event callback for PS SM error notifications.
-                
-                                                                                                                   
-INPUT:      - hPowerSrv         - handle to the PowerSrv object.        
+
+
+INPUT:      - hPowerSrv         - handle to the PowerSrv object.
             - failureEventCB    - the failure event callback function.\n
             - hFailureEventObj - handle to the object passed to the failure event callback function.
 
-OUTPUT: 
+OUTPUT:
 RETURN:    void.
 ****************************************************************************************/
-void powerSrvSM_RegisterFailureEventCB( TI_HANDLE hPowerSrvSM, 
+void powerSrvSM_RegisterFailureEventCB( TI_HANDLE hPowerSrvSM,
                                         void *failureEventCB, TI_HANDLE hFailureEventObj )
 {
     PowerSrvSM_t *pPowerSrvSM = (PowerSrvSM_t*)hPowerSrvSM;

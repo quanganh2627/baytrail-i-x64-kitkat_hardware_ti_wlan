@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * admCtrlWpa.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file admCtrl.c
  *  \brief Admission control API implimentation
  *
@@ -50,9 +55,9 @@
 #include "admCtrl.h"
 #include "admCtrlWpa.h"
 #include "admCtrlWpa2.h"
-#ifdef CCX_MODULE_INCLUDED
-#include "admCtrlCcx.h"
-#include "ccxMngr.h"
+#ifdef XCC_MODULE_INCLUDED
+#include "admCtrlXCC.h"
+#include "XCCMngr.h"
 #endif
 #include "siteMgrApi.h"
 #include "TWDriver.h"
@@ -102,14 +107,14 @@ static TI_BOOL broadcastCipherSuiteValidity[MAX_NETWORK_MODE][MAX_WPA_CIPHER_SUI
 /* table parameters:
     Max unicast cipher in the IE
     Max broadcast cipher in the IE
-    Encryption status 
+    Encryption status
 */
 typedef struct
 {
     TI_STATUS        status;
     ECipherSuite     unicast;
     ECipherSuite     broadcast;
-    TI_UINT8            evaluation; 
+    TI_UINT8            evaluation;
 } admCtrlWpa_validity_t;
 
 static admCtrlWpa_validity_t    admCtrlWpa_validityTable[MAX_WPA_CIPHER_SUITE][MAX_WPA_CIPHER_SUITE][MAX_WPA_CIPHER_SUITE] =
@@ -386,21 +391,21 @@ static TI_STATUS admCtrlWpa_get802_1x_AkmExists (admCtrl_t *pAdmCtrl, TI_BOOL *w
 
 /**
 *
-* admCtrlWpa_config  - Configure CCX admission control.
+* admCtrlWpa_config  - Configure XCC admission control.
 *
-* \b Description: 
+* \b Description:
 *
-* Configure CCX admission control.
+* Configure XCC admission control.
 *
 * \b ARGS:
 *
 *  I   - pAdmCtrl - context \n
-*  
+*
 * \b RETURNS:
 *
 *  TI_OK on success, TI_NOK on failure.
 *
-* \sa 
+* \sa
 */
 TI_STATUS admCtrlWpa_config(admCtrl_t *pAdmCtrl)
 {
@@ -430,12 +435,12 @@ TI_STATUS admCtrlWpa_config(admCtrl_t *pAdmCtrl)
 	pAdmCtrl->startPreAuth	= admCtrl_nullStartPreAuth;
     pAdmCtrl->get802_1x_AkmExists = admCtrlWpa_get802_1x_AkmExists;
 
-    /* set cipher suite */                                  
+    /* set cipher suite */
     switch (pAdmCtrl->externalAuthMode)
     {
     case RSN_EXT_AUTH_MODE_WPA:
     case RSN_EXT_AUTH_MODE_WPAPSK:
-        /* The cipher suite should be set by the External source via 
+        /* The cipher suite should be set by the External source via
         the Encryption field*/
         pAdmCtrl->keyMngSuite = RSN_KEY_MNG_802_1X;
         break;
@@ -473,7 +478,7 @@ TI_STATUS admCtrlWpa_dynamicConfig(admCtrl_t *pAdmCtrl,wpaIeData_t *pWpaData)
     {
     case RSN_EXT_AUTH_MODE_WPA:
     case RSN_EXT_AUTH_MODE_WPAPSK:
-        /* The cipher suite should be set by the External source via 
+        /* The cipher suite should be set by the External source via
         the Encryption field*/
         pAdmCtrl->keyMngSuite = RSN_KEY_MNG_802_1X;
         break;
@@ -499,7 +504,7 @@ TI_STATUS admCtrlWpa_dynamicConfig(admCtrl_t *pAdmCtrl,wpaIeData_t *pWpaData)
 *
 * admCtrlWpa_getInfoElement - Get the current information element.
 *
-* \b Description: 
+* \b Description:
 *
 * Get the current information element.
 *
@@ -508,12 +513,12 @@ TI_STATUS admCtrlWpa_dynamicConfig(admCtrl_t *pAdmCtrl,wpaIeData_t *pWpaData)
 *  I   - pAdmCtrl - context \n
 *  I   - pIe - IE buffer \n
 *  I   - pLength - length of IE \n
-*  
+*
 * \b RETURNS:
 *
 *  TI_OK on success, TI_NOK on failure.
 *
-* \sa 
+* \sa
 */
 
 TI_STATUS admCtrlWpa_getInfoElement(admCtrl_t *pAdmCtrl, TI_UINT8 *pIe, TI_UINT32 *pLength)
@@ -534,24 +539,24 @@ TI_STATUS admCtrlWpa_getInfoElement(admCtrl_t *pAdmCtrl, TI_UINT8 *pIe, TI_UINT3
         return TI_NOK;
     }
 
-    if ((wscMode != TIWLN_SIMPLE_CONFIG_OFF) && 
-        (pAdmCtrl->broadcastSuite == TWD_CIPHER_NONE) && 
+    if ((wscMode != TIWLN_SIMPLE_CONFIG_OFF) &&
+        (pAdmCtrl->broadcastSuite == TWD_CIPHER_NONE) &&
         (pAdmCtrl->unicastSuite == TWD_CIPHER_NONE))
     {
       *pLength = 0;
       return TI_NOK;
     }
-    
+
     /* Check validity of WPA IE */
     if (!broadcastCipherSuiteValidity[pAdmCtrl->networkMode][pAdmCtrl->broadcastSuite])
-    {   /* check Group suite validity */                                          
+    {   /* check Group suite validity */
         *pLength = 0;
         return TI_NOK;
     }
-   
-    
+
+
     if (pAdmCtrl->unicastSuite == TWD_CIPHER_WEP)
-    {   /* check pairwise suite validity */                                       
+    {   /* check pairwise suite validity */
         *pLength = 0;
         return TI_NOK;
     }
@@ -605,7 +610,7 @@ TI_STATUS admCtrlWpa_getInfoElement(admCtrl_t *pAdmCtrl, TI_UINT8 *pIe, TI_UINT3
 		COPY_WLAN_WORD(&pWpaIePacket->authKeyMngSuiteCnt, &tempInt);
 
         os_memoryCopy(pAdmCtrl->hOs, (void *)pWpaIePacket->authKeyMngSuite, wpaIeOuiIe, 3);
-        
+
         switch (pAdmCtrl->externalAuthMode)
         {
         case RSN_EXT_AUTH_MODE_OPEN:
@@ -615,10 +620,10 @@ TI_STATUS admCtrlWpa_getInfoElement(admCtrl_t *pAdmCtrl, TI_UINT8 *pIe, TI_UINT3
             break;
 		case RSN_EXT_AUTH_MODE_WPA:
 			{
-#ifdef CCX_MODULE_INCLUDED
+#ifdef XCC_MODULE_INCLUDED
 				TI_UINT8	akmSuite[DOT11_OUI_LEN+1];
 
-				if (admCtrlCcx_getCckmAkm(pAdmCtrl, akmSuite))
+				if (admCtrlXCC_getCckmAkm(pAdmCtrl, akmSuite))
 				{
 					os_memoryCopy(pAdmCtrl->hOs, (void*)pWpaIePacket->authKeyMngSuite, akmSuite, DOT11_OUI_LEN+1);
 				}
@@ -638,23 +643,23 @@ TI_STATUS admCtrlWpa_getInfoElement(admCtrl_t *pAdmCtrl, TI_UINT8 *pIe, TI_UINT3
             pWpaIePacket->authKeyMngSuite[3] = WPA_IE_KEY_MNG_NONE;
             break;
         }
-         
+
     }
 
-    
+
     if (length>=WPA_IE_MIN_PAIRWISE_SUITE_LENGTH)
-    {  
- 
-#ifdef CCX_MODULE_INCLUDED       
-        if ((pAdmCtrl->pRsn->paeConfig.unicastSuite==TWD_CIPHER_CKIP) || 
+    {
+
+#ifdef XCC_MODULE_INCLUDED
+        if ((pAdmCtrl->pRsn->paeConfig.unicastSuite==TWD_CIPHER_CKIP) ||
             (pAdmCtrl->pRsn->paeConfig.broadcastSuite==TWD_CIPHER_CKIP))
         {
-           admCtrlCcx_getWpaCipherInfo(pAdmCtrl,pWpaIePacket);
+           admCtrlXCC_getWpaCipherInfo(pAdmCtrl,pWpaIePacket);
         }
         else
 #endif
         {
-        
+
             /* build pairwise suite */
 
 			tempInt = 0x0001;
@@ -662,7 +667,7 @@ TI_STATUS admCtrlWpa_getInfoElement(admCtrl_t *pAdmCtrl, TI_UINT8 *pIe, TI_UINT3
 
             os_memoryCopy(pAdmCtrl->hOs, (void *)pWpaIePacket->pairwiseSuite, wpaIeOuiIe, 3);
             pWpaIePacket->pairwiseSuite[3] = (TI_UINT8)pAdmCtrl->pRsn->paeConfig.unicastSuite;
-       
+
             if (length>=WPA_IE_GROUP_SUITE_LENGTH)
             {   /* build group suite */
                 os_memoryCopy(pAdmCtrl->hOs, (void *)pWpaIePacket->groupSuite, wpaIeOuiIe, 3);
@@ -678,7 +683,7 @@ TI_STATUS admCtrlWpa_getInfoElement(admCtrl_t *pAdmCtrl, TI_UINT8 *pIe, TI_UINT3
 *
 * admCtrlWpa_setSite  - Set current primary site parameters for registration.
 *
-* \b Description: 
+* \b Description:
 *
 * Set current primary site parameters for registration.
 *
@@ -688,12 +693,12 @@ TI_STATUS admCtrlWpa_getInfoElement(admCtrl_t *pAdmCtrl, TI_UINT8 *pIe, TI_UINT3
 *  I   - pRsnData - site's RSN data \n
 *  O   - pAssocIe - result IE of evaluation \n
 *  O   - pAssocIeLen - length of result IE of evaluation \n
-*  
+*
 * \b RETURNS:
 *
 *  TI_OK on site is aproved, TI_NOK on site is rejected.
 *
-* \sa 
+* \sa
 */
 TI_STATUS admCtrlWpa_setSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TI_UINT8 *pAssocIe, TI_UINT8 *pAssocIeLen)
 {
@@ -721,7 +726,7 @@ TI_STATUS admCtrlWpa_setSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TI_UINT8 *
 
     if (pRsnData->pIe==NULL)
     {
-		/* configure the MLME module with the 802.11 OPEN authentication suite, 
+		/* configure the MLME module with the 802.11 OPEN authentication suite,
 			THe MLME will configure later the authentication module */
         pParam->paramType = MLME_LEGACY_TYPE_PARAM;
         pParam->content.mlmeLegacyAuthType = AUTH_LEGACY_OPEN_SYSTEM;
@@ -729,10 +734,10 @@ TI_STATUS admCtrlWpa_setSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TI_UINT8 *
         goto adm_ctrl_wpa_end;
     }
 
-#ifdef CCX_MODULE_INCLUDED
+#ifdef XCC_MODULE_INCLUDED
 	/* Check if Aironet IE exists */
-	admCtrlCcx_setExtendedParams(pAdmCtrl, pRsnData);
-#endif /*CCX_MODULE_INCLUDED*/
+	admCtrlXCC_setExtendedParams(pAdmCtrl, pRsnData);
+#endif /*XCC_MODULE_INCLUDED*/
 
     /* Check if any-WPA mode is supported and WPA2 info elem is presented */
     /* If yes - perform WPA2 set site  procedure                          */
@@ -746,10 +751,10 @@ TI_STATUS admCtrlWpa_setSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TI_UINT8 *
                goto adm_ctrl_wpa_end;
         }
     }
-    
+
 	status = admCtrl_parseIe(pAdmCtrl, pRsnData, &pWpaIe, WPA_IE_ID);
-	if (status != TI_OK)                                                         
-	{                                                                                    
+	if (status != TI_OK)
+	{
         goto adm_ctrl_wpa_end;
 	}
     status = admCtrlWpa_parseIe(pAdmCtrl, pWpaIe, &wpaData);
@@ -765,8 +770,8 @@ TI_STATUS admCtrlWpa_setSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TI_UINT8 *
         goto adm_ctrl_wpa_end;
     }
 
-    pAdmCtrl->encrInSw = wpaData.ccxKp;
-    pAdmCtrl->micInSw = wpaData.ccxMic; 
+    pAdmCtrl->encrInSw = wpaData.XCCKp;
+    pAdmCtrl->micInSw = wpaData.XCCMic;
 
     /*Because ckip is a proprietary encryption for Cisco then a different validity check is needed */
     if(wpaData.broadcastSuite == TWD_CIPHER_CKIP || wpaData.unicastSuite[0] ==  TWD_CIPHER_CKIP)
@@ -778,13 +783,13 @@ TI_STATUS admCtrlWpa_setSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TI_UINT8 *
             goto adm_ctrl_wpa_end;
         }
         if (pAdmCtrl->encrInSw)
-            pAdmCtrl->ccxSupport = TI_TRUE;
+            pAdmCtrl->XCCSupport = TI_TRUE;
     }
     else
     {
         /* Check validity of Group suite */
         if (!broadcastCipherSuiteValidity[pAdmCtrl->networkMode][wpaData.broadcastSuite])
-        {   /* check Group suite validity */                                          
+        {   /* check Group suite validity */
             status = TI_NOK;
             goto adm_ctrl_wpa_end;
         }
@@ -804,7 +809,7 @@ TI_STATUS admCtrlWpa_setSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TI_UINT8 *
             status = pAdmCtrlWpa_validity->status;
             goto adm_ctrl_wpa_end;
         }
-   
+
         /* set cipher suites */
         wpaData.unicastSuite[0] = pAdmCtrlWpa_validity->unicast ;/*wpaData.unicastSuite[0];*/
         wpaData.broadcastSuite = pAdmCtrlWpa_validity->broadcast; /*wpaData.broadcastSuite;*/
@@ -816,7 +821,7 @@ TI_STATUS admCtrlWpa_setSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TI_UINT8 *
         pAdmCtrl->externalAuthMode = RSN_EXT_AUTH_MODE_OPEN;
         break;
 	case WPA_IE_KEY_MNG_801_1X:
-#ifdef CCX_MODULE_INCLUDED
+#ifdef XCC_MODULE_INCLUDED
 	case WPA_IE_KEY_MNG_CCKM:
 #endif
         pAdmCtrl->externalAuthMode = RSN_EXT_AUTH_MODE_WPA;
@@ -839,12 +844,12 @@ TI_STATUS admCtrlWpa_setSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TI_UINT8 *
         break;
     }
 
-      
 
-#ifdef CCX_MODULE_INCLUDED
-	pParam->paramType = CCX_CCKM_EXISTS;
-	pParam->content.ccxCckmExists  = (wpaData.KeyMngSuite[0]==WPA_IE_KEY_MNG_CCKM) ? TI_TRUE : TI_FALSE;
-	ccxMngr_setParam(pAdmCtrl->hCcxMngr, pParam);
+
+#ifdef XCC_MODULE_INCLUDED
+	pParam->paramType = XCC_CCKM_EXISTS;
+	pParam->content.XCCCckmExists  = (wpaData.KeyMngSuite[0]==WPA_IE_KEY_MNG_CCKM) ? TI_TRUE : TI_FALSE;
+	XCCMngr_setParam(pAdmCtrl->hXCCMngr, pParam);
 #endif
     /* set replay counter */
     pAdmCtrl->replayCnt = wpaData.replayCounters;
@@ -856,11 +861,11 @@ TI_STATUS admCtrlWpa_setSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TI_UINT8 *
     }
 
 
-    /* Now we configure the MLME module with the 802.11 legacy authentication suite, 
+    /* Now we configure the MLME module with the 802.11 legacy authentication suite,
         THe MLME will configure later the authentication module */
     pParam->paramType = MLME_LEGACY_TYPE_PARAM;
-#ifdef CCX_MODULE_INCLUDED
-	if (pAdmCtrl->networkEapMode!=OS_CCX_NETWORK_EAP_OFF)
+#ifdef XCC_MODULE_INCLUDED
+	if (pAdmCtrl->networkEapMode!=OS_XCC_NETWORK_EAP_OFF)
     {
         pParam->content.mlmeLegacyAuthType = AUTH_LEGACY_RESERVED1;
     }
@@ -869,8 +874,8 @@ TI_STATUS admCtrlWpa_setSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TI_UINT8 *
 	{
 		pParam->content.mlmeLegacyAuthType = AUTH_LEGACY_OPEN_SYSTEM;
 	}
-    
-    
+
+
     status = mlme_setParam(pAdmCtrl->hMlme, pParam);
     if (status != TI_OK)
     {
@@ -886,7 +891,7 @@ TI_STATUS admCtrlWpa_setSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TI_UINT8 *
     }
 
 	/* Configure privacy status in HAL so that HW is prepared to recieve keys */
-	tTwdParam.paramType = TWD_RSN_SECURITY_MODE_PARAM_ID;   
+	tTwdParam.paramType = TWD_RSN_SECURITY_MODE_PARAM_ID;
 	tTwdParam.content.rsnEncryptionStatus = (ECipherSuite)wpaData.unicastSuite[0];
 	status = TWD_SetParam(pAdmCtrl->pRsn->hTWD, &tTwdParam);
 	if (status != TI_OK)
@@ -894,25 +899,25 @@ TI_STATUS admCtrlWpa_setSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TI_UINT8 *
         goto adm_ctrl_wpa_end;
 	}
 
-#ifdef CCX_MODULE_INCLUDED
-	    
+#ifdef XCC_MODULE_INCLUDED
+
 	/* set MIC and KP in HAL  */
-    tTwdParam.paramType = TWD_RSN_CCX_SW_ENC_ENABLE_PARAM_ID; 
-    tTwdParam.content.rsnCcxSwEncFlag = wpaData.ccxKp;
+    tTwdParam.paramType = TWD_RSN_XCC_SW_ENC_ENABLE_PARAM_ID;
+    tTwdParam.content.rsnXCCSwEncFlag = wpaData.XCCKp;
     status = TWD_SetParam(pAdmCtrl->pRsn->hTWD, &tTwdParam);
     if (status != TI_OK)
     {
         goto adm_ctrl_wpa_end;
     }
-    tTwdParam.paramType = TWD_RSN_CCX_MIC_FIELD_ENABLE_PARAM_ID; 
-    tTwdParam.content.rsnCcxMicFieldFlag = wpaData.ccxMic;
+    tTwdParam.paramType = TWD_RSN_XCC_MIC_FIELD_ENABLE_PARAM_ID;
+    tTwdParam.content.rsnXCCMicFieldFlag = wpaData.XCCMic;
     status = TWD_SetParam(pAdmCtrl->pRsn->hTWD, &tTwdParam);
-    
+
     if (status != TI_OK)
     {
         goto adm_ctrl_wpa_end;
     }
-#endif /*CCX_MODULE_INCLUDED*/
+#endif /*XCC_MODULE_INCLUDED*/
 
     /* re-config PAE */
     status = admCtrlWpa_dynamicConfig(pAdmCtrl,&wpaData);
@@ -930,7 +935,7 @@ adm_ctrl_wpa_end:
 *
 * admCtrlWpa_evalSite  - Evaluate site for registration.
 *
-* \b Description: 
+* \b Description:
 *
 * evaluate site RSN capabilities against the station's cap.
 * If the BSS type is infrastructure, the station matches the site only if it's WEP status is same as the site
@@ -941,19 +946,19 @@ adm_ctrl_wpa_end:
 *  I   - pAdmCtrl - Context \n
 *  I   - pRsnData - site's RSN data \n
 *  O   - pEvaluation - Result of evaluation \n
-*  
+*
 * \b RETURNS:
 *
-*  TI_OK 
+*  TI_OK
 *
-* \sa 
+* \sa
 */
 TI_STATUS admCtrlWpa_evalSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TRsnSiteParams *pRsnSiteParams, TI_UINT32 *pEvaluation)
 {
     TI_STATUS               status;
     wpaIeData_t             wpaData;
     admCtrlWpa_validity_t   admCtrlWpa_validity;
-    ECipherSuite            encryptionStatus;    
+    ECipherSuite            encryptionStatus;
     TIWLN_SIMPLE_CONFIG_MODE wscMode;
     TI_UINT8                *pWpaIe;
     TI_UINT8                index;
@@ -971,12 +976,12 @@ TI_STATUS admCtrlWpa_evalSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TRsnSiteP
     {
         return TI_NOK;
     }
-    
+
     if (pRsnSiteParams->bssType != BSS_INFRASTRUCTURE)
     {
         return TI_NOK;
     }
-	
+
     /* Set initial values for admCtrlWpa_validity as none*/
     admCtrlWpa_validity = admCtrlWpa_validityTable[TWD_CIPHER_NONE][TWD_CIPHER_NONE][TWD_CIPHER_NONE];
 
@@ -994,9 +999,9 @@ TI_STATUS admCtrlWpa_evalSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TRsnSiteP
     }
 
 	status = admCtrl_parseIe(pAdmCtrl, pRsnData, &pWpaIe, WPA_IE_ID);
-	if ((status != TI_OK) && (wscMode == TIWLN_SIMPLE_CONFIG_OFF))                                                        
-	{                                                                                    
-		return status;                                                        
+	if ((status != TI_OK) && (wscMode == TIWLN_SIMPLE_CONFIG_OFF))
+	{
+		return status;
 	}
     /* If found WPA Information Element */
     if (pWpaIe != NULL)
@@ -1015,7 +1020,7 @@ TI_STATUS admCtrlWpa_evalSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TRsnSiteP
         status = (pAdmCtrl->externalAuthMode <= RSN_EXT_AUTH_MODE_AUTO_SWITCH) ? TI_OK : TI_NOK;
 		break;
     case WPA_IE_KEY_MNG_801_1X:
-#ifdef CCX_MODULE_INCLUDED
+#ifdef XCC_MODULE_INCLUDED
 	case WPA_IE_KEY_MNG_CCKM:
 		/* CCKM is allowed only in 802.1x auth */
 #endif
@@ -1025,7 +1030,7 @@ TI_STATUS admCtrlWpa_evalSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TRsnSiteP
     case WPA_IE_KEY_MNG_PSK_801_1X:
        TRACE0(pAdmCtrl->hReport, REPORT_SEVERITY_INFORMATION, "admCtrlWpa_evalSite: KeyMngSuite[0]=WPA_IE_KEY_MNG_PSK_801_1X\n");
         status = ((pAdmCtrl->externalAuthMode == RSN_EXT_AUTH_MODE_WPAPSK) ||
-					(wscMode && (pAdmCtrl->externalAuthMode == RSN_EXT_AUTH_MODE_WPA))) ? TI_OK : TI_NOK;        		
+					(wscMode && (pAdmCtrl->externalAuthMode == RSN_EXT_AUTH_MODE_WPA))) ? TI_OK : TI_NOK;
         break;
     default:
         status = TI_NOK;
@@ -1043,7 +1048,7 @@ TI_STATUS admCtrlWpa_evalSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TRsnSiteP
     if(wpaData.broadcastSuite == TWD_CIPHER_CKIP || wpaData.unicastSuite[0] ==  TWD_CIPHER_CKIP)
     {
         pAdmCtrl->getCipherSuite(pAdmCtrl, &encryptionStatus);
-        if (encryptionStatus != TWD_CIPHER_TKIP) 
+        if (encryptionStatus != TWD_CIPHER_TKIP)
             return TI_NOK;
     }
     else
@@ -1074,7 +1079,7 @@ TI_STATUS admCtrlWpa_evalSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TRsnSiteP
 		TRACE0(pAdmCtrl->hReport, REPORT_SEVERITY_INFORMATION,"Dismiss AP - HT with TKIP is not valid");
         return TI_NOK; /* if the encyption is TKIP and the site does support HT(11n) the site can not be a candidate */
 	}
-            
+
 
 	/* Check privacy bit if not in mixed mode */
     if (!pAdmCtrl->mixedMode)
@@ -1108,9 +1113,9 @@ TI_STATUS admCtrlWpa_evalSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TRsnSiteP
 *
 * admCtrlWpa_parseIe  - Parse an WPA information element.
 *
-* \b Description: 
+* \b Description:
 *
-* Parse an WPA information element. 
+* Parse an WPA information element.
 * Builds a structure of the unicast adn broadcast cihper suites,
 * the key management suite and the capabilities.
 *
@@ -1119,13 +1124,13 @@ TI_STATUS admCtrlWpa_evalSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TRsnSiteP
 *  I   - pAdmCtrl - pointer to admCtrl context
 *  I   - pWpaIe - pointer to WPA IE buffer  \n
 *  O   - pWpaData - capabilities structure
-*  
-*  
+*
+*
 * \b RETURNS:
 *
-* TI_OK on success, TI_NOK on failure. 
+* TI_OK on success, TI_NOK on failure.
 *
-* \sa 
+* \sa
 */
 TI_STATUS admCtrlWpa_parseIe(admCtrl_t *pAdmCtrl, TI_UINT8 *pWpaIe, wpaIeData_t *pWpaData)
 {
@@ -1143,12 +1148,12 @@ TI_STATUS admCtrlWpa_parseIe(admCtrl_t *pAdmCtrl, TI_UINT8 *pWpaIe, wpaIeData_t 
 
     if ((wpaIePacket->length < WPA_IE_MIN_LENGTH) ||
         (wpaIePacket->elementid != WPA_IE_ID) ||
-        (wpaIePacket->ouiType > WPA_OUI_MAX_TYPE) || (ENDIAN_HANDLE_WORD(wpaIePacket->version) > WPA_OUI_MAX_VERSION) ||               
+        (wpaIePacket->ouiType > WPA_OUI_MAX_TYPE) || (ENDIAN_HANDLE_WORD(wpaIePacket->version) > WPA_OUI_MAX_VERSION) ||
         (os_memoryCompare(pAdmCtrl->hOs, (TI_UINT8*)wpaIePacket->oui, wpaIeOuiIe, 3)))
     {
         TRACE7(pAdmCtrl->hReport, REPORT_SEVERITY_INFORMATION, "Wpa_ParseIe Error: length=0x%x, elementid=0x%x, ouiType=0x%x, version=0x%x, oui=0x%x, 0x%x, 0x%x\n", wpaIePacket->length,wpaIePacket->elementid, wpaIePacket->ouiType, wpaIePacket->version, wpaIePacket->oui[0], wpaIePacket->oui[1],wpaIePacket->oui[2]);
 
-        return TI_NOK; 
+        return TI_NOK;
     }
     /* Set default values */
     pWpaData->broadcastSuite = TWD_CIPHER_TKIP;
@@ -1159,8 +1164,8 @@ TI_STATUS admCtrlWpa_parseIe(admCtrl_t *pAdmCtrl, TI_UINT8 *pWpaIe, wpaIeData_t 
     pWpaData->bcastForUnicatst = 1;
     pWpaData->replayCounters = 1;
 
-    pWpaData->ccxKp = TI_FALSE;
-    pWpaData->ccxMic = TI_FALSE;
+    pWpaData->XCCKp = TI_FALSE;
+    pWpaData->XCCMic = TI_FALSE;
 
 
     /* Group Suite */
@@ -1173,7 +1178,7 @@ TI_STATUS admCtrlWpa_parseIe(admCtrl_t *pAdmCtrl, TI_UINT8 *pWpaIe, wpaIeData_t 
     {
         return TI_OK;
     }
-    /* Unicast Suite */ 
+    /* Unicast Suite */
     if (wpaIePacket->length >= WPA_IE_MIN_PAIRWISE_SUITE_LENGTH)
     {
         TI_UINT16 pairWiseSuiteCnt = ENDIAN_HANDLE_WORD(wpaIePacket->pairwiseSuiteCnt);
@@ -1192,7 +1197,7 @@ TI_STATUS admCtrlWpa_parseIe(admCtrl_t *pAdmCtrl, TI_UINT8 *pWpaIe, wpaIeData_t 
             {
                 cipherSuite[curCipherSuite] =  TI_TRUE;
             }
-            curWpaIe +=4; 
+            curWpaIe +=4;
         }
         for (index=MAX_WPA_UNICAST_SUITES-1; index>=0; index--)
         {
@@ -1205,7 +1210,7 @@ TI_STATUS admCtrlWpa_parseIe(admCtrl_t *pAdmCtrl, TI_UINT8 *pWpaIe, wpaIeData_t 
         }
         pWpaData->unicastSuiteCnt = unicastSuiteIndex;
         curLength = WPA_IE_MIN_KEY_MNG_SUITE_LENGTH(pairWiseSuiteCnt);
-        
+
     } else
     {
         return TI_OK;
@@ -1226,8 +1231,8 @@ TI_STATUS admCtrlWpa_parseIe(admCtrl_t *pAdmCtrl, TI_UINT8 *pWpaIe, wpaIeData_t 
         {
             ERsnKeyMngSuite curKeyMngSuite;
 
-#ifdef CCX_MODULE_INCLUDED
-            curKeyMngSuite = (ERsnKeyMngSuite)admCtrlCcx_parseCckmSuiteVal(pAdmCtrl, curWpaIe);
+#ifdef XCC_MODULE_INCLUDED
+            curKeyMngSuite = (ERsnKeyMngSuite)admCtrlXCC_parseCckmSuiteVal(pAdmCtrl, curWpaIe);
 			if (curKeyMngSuite == WPA_IE_KEY_MNG_CCKM)
 			{	/* CCKM is the maximum AKM */
 				maxKeyMngSuite =  curKeyMngSuite;
@@ -1249,7 +1254,7 @@ TI_STATUS admCtrlWpa_parseIe(admCtrl_t *pAdmCtrl, TI_UINT8 *pWpaIe, wpaIeData_t 
                 pAdmCtrl->wpaAkmExists = TI_TRUE;
             }
 
-            curWpaIe +=4; 
+            curWpaIe +=4;
 
             /* Include all AP key management supported suites in the wpaData structure */
             pWpaData->KeyMngSuite[index+1] = curKeyMngSuite;
@@ -1330,11 +1335,11 @@ TI_UINT32  admCtrlWpa_parseSuiteVal(admCtrl_t *pAdmCtrl, TI_UINT8* suiteVal, wpa
     }
     if (!os_memoryCompare(pAdmCtrl->hOs, suiteVal, wpaIeOuiIe, 3))
     {
-        suite =  (ECipherSuite)((suiteVal[3]<=maxVal) ? suiteVal[3] : TWD_CIPHER_UNKNOWN); 
+        suite =  (ECipherSuite)((suiteVal[3]<=maxVal) ? suiteVal[3] : TWD_CIPHER_UNKNOWN);
     } else
     {
-#ifdef CCX_MODULE_INCLUDED
-        suite = admCtrlCcx_WpaParseSuiteVal(pAdmCtrl,suiteVal,pWpaData);
+#ifdef XCC_MODULE_INCLUDED
+        suite = admCtrlXCC_WpaParseSuiteVal(pAdmCtrl,suiteVal,pWpaData);
 #else
         suite = TWD_CIPHER_UNKNOWN;
 #endif

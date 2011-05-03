@@ -1,35 +1,40 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * public_event_mbox.h
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /**********************************************************************************************************************
 
   FILENAME:       public_event_mbox.h
- 
+
   DESCRIPTION:    Public header for the Event Mailbox FW<->Driver interface
 
 
@@ -41,20 +46,20 @@
 /******************************************************************************
 
     EVENT MBOX
-     
+
     The event mechanism is based on a pair of event buffers (buffers "A" and "B") in fixed locations
-    in the device's memory. The host processes one buffer (buffer "A") while the other buffer 
-    (buffer "B") continues to collect events. When the host is finished, it begins processing the 
+    in the device's memory. The host processes one buffer (buffer "A") while the other buffer
+    (buffer "B") continues to collect events. When the host is finished, it begins processing the
     other buffer ("B") while the first buffer ("A") collects, and so on.
-    If the host is not processing events, an interrupt is issued to the host signaling that a 
+    If the host is not processing events, an interrupt is issued to the host signaling that a
     buffer is ready. The interrupt that the host receives indicates the appropriate event structure
-    buffer. Once the host finishes processing events from one buffer, 
+    buffer. Once the host finishes processing events from one buffer,
     it signals with an acknowledge interrupt (bit 0 in the INT_TRIG register) that the event buffer
-    is free. This interrupt triggers the device to send the next event structure if there are any 
+    is free. This interrupt triggers the device to send the next event structure if there are any
     collected events in it.
 
     Note: Only one instance (the last) of each type of event is collected.
-       
+
 ******************************************************************************/
 
 
@@ -66,19 +71,19 @@
 
 /*************************************************************************
 
-  Events Enumeration 
+  Events Enumeration
 
 **************************************************************************/
-typedef enum 
+typedef enum
 {
-    RSSI_SNR_TRIGGER_0_EVENT_ID              = BIT_0, 
-    RSSI_SNR_TRIGGER_1_EVENT_ID              = BIT_1, 
-    RSSI_SNR_TRIGGER_2_EVENT_ID              = BIT_2, 
-    RSSI_SNR_TRIGGER_3_EVENT_ID              = BIT_3, 
-    RSSI_SNR_TRIGGER_4_EVENT_ID              = BIT_4, 
-    RSSI_SNR_TRIGGER_5_EVENT_ID              = BIT_5, 
-    RSSI_SNR_TRIGGER_6_EVENT_ID              = BIT_6, 
-    RSSI_SNR_TRIGGER_7_EVENT_ID              = BIT_7, 
+    RSSI_SNR_TRIGGER_0_EVENT_ID              = BIT_0,
+    RSSI_SNR_TRIGGER_1_EVENT_ID              = BIT_1,
+    RSSI_SNR_TRIGGER_2_EVENT_ID              = BIT_2,
+    RSSI_SNR_TRIGGER_3_EVENT_ID              = BIT_3,
+    RSSI_SNR_TRIGGER_4_EVENT_ID              = BIT_4,
+    RSSI_SNR_TRIGGER_5_EVENT_ID              = BIT_5,
+    RSSI_SNR_TRIGGER_6_EVENT_ID              = BIT_6,
+    RSSI_SNR_TRIGGER_7_EVENT_ID              = BIT_7,
 
     MEASUREMENT_START_EVENT_ID               = BIT_8,
     MEASUREMENT_COMPLETE_EVENT_ID            = BIT_9,
@@ -94,9 +99,9 @@ typedef enum
     REGAINED_BSS_EVENT_ID                    = BIT_19,
 #ifdef AP_MODE_ENABLED
 	MAX_TX_RETRY_EVENT_ID                    = BIT_20,
-#else	
+#else
     ROAMING_TRIGGER_MAX_TX_RETRY_EVENT_ID    = BIT_20,
-#endif	
+#endif
     STA_REMOVE_COMPLETE_EVENT                = BIT_21,
     SOFT_GEMINI_SENSE_EVENT_ID               = BIT_22,
 #ifdef AP_MODE_ENABLED
@@ -119,7 +124,7 @@ typedef enum
 
 /*************************************************************************
 
-  Specific Event Parameters 
+  Specific Event Parameters
 
 **************************************************************************/
 typedef enum
@@ -167,7 +172,7 @@ typedef dbgEventId_enum dbgEventId_e;
 
 #define MAX_EVENT_REPORT_PARAMS 5
 typedef struct
-{ 
+{
     dbgEventId_e dbgEventId;  /*uint8*/
     uint8       numberOfRelevantParams;
     uint16      reservedPad16;
@@ -176,7 +181,7 @@ typedef struct
     uint32      eventReportP3;
 }dbgEventRep_t;
 
-typedef struct 
+typedef struct
 {
     uint8       numberOfScanResults;   /* How many results were parsed */
     uint8       scanTag;               /* Tag of scan */
@@ -186,7 +191,7 @@ typedef struct
 
 /*************************************************************************
 
-  The Event Mailbox structure in memory 
+  The Event Mailbox structure in memory
 
 **************************************************************************/
 typedef struct EventMailBox_t
@@ -202,14 +207,14 @@ typedef struct EventMailBox_t
 
     dbgEventRep_t      dbgEventRep;         /* refer to dbgEventRep_t*/
                                             /* [DBG_EVENT_ID]*/
-    
+
     scanCompleteResults_t scanCompleteResults; /* Scan complete results (counter and scan tag) */
-    
+
     uint16 scheduledScanAttendedChannels;   /* Channels scanned by the Scheduled Scan. */
                                             /* [SCHEDULED_SCAN_COMPLETE_EVENT_ID]*/
 
     uint8  softGeminiSenseInfo;             /* Contains the type of the BT Coexistence sense event.*/
-                                            /* [SOFT_GEMINI_SENSE_EVENT_ID]*/    
+                                            /* [SOFT_GEMINI_SENSE_EVENT_ID]*/
 
     uint8  softGeminiProtectiveInfo;        /* Contains information from the BT activity prediction */
                                             /* machine [SOFT_GEMINI_PREDICTION_EVENT_ID]*/
@@ -224,7 +229,7 @@ typedef struct EventMailBox_t
     uint8  scheduledScanStatus;             /* Status of scheduled scan. Refer to */
                                             /* ScheduledScanReportStatus_enum.*/
                                             /* [SCHEDULED_SCAN_COMPLETE_EVENT_ID]*/
-    
+
     uint8  psStatus;                        /* refer to EventsPowerSave_enum.*/
                                             /* [PS_REPORT_EVENT_ID].*/
 
@@ -234,7 +239,7 @@ typedef struct EventMailBox_t
 	uint16 stationTxRetryExceeded;          /* A bitmap of stations (by HLID) which have max Tx retry exceeded  */
     uint8  padding[24];                     /* for alignment to 32 bits boundry*/
 
-    
+
 } EventMailBox_t;
 
 #endif /* PUBLIC_EVENT_MBOX_H*/

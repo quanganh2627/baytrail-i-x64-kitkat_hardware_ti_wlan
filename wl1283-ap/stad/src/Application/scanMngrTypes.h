@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * scanMngrTypes.h
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 #ifndef __SCAN_MNGR_TYPES_API_H__
 #define __SCAN_MNGR_TYPES_API_H__
@@ -37,7 +42,7 @@
  * to be included both by driver and user-mode.
  * \n\n
  */
- 
+
 /* \
  * \date 01-Mar-2005
  */
@@ -73,12 +78,12 @@
  */
 /** \struct TScanProbReqParams
  * \brief Scan Prob Request Parameters
- * 
+ *
  * \par Description
  * This structure defines the probe request parameters used for active scan
- * 
+ *
  * \sa
- */ 
+ */
 typedef struct
 {
 	TI_UINT8					numOfProbeReqs;	/**< Number of probe request frames to be transmitted on each channel	*/
@@ -88,14 +93,14 @@ typedef struct
 
 /** \struct TScanBasicMethodParams
  * \brief Scan Basic Method Parameters
- * 
+ *
  * \par Description
- * This structure defines the argument used for the basic scan operation. 
- * The basic scan is a standard 802.11 scan, which can be active (sending a probe request frame on each channel) 
+ * This structure defines the argument used for the basic scan operation.
+ * The basic scan is a standard 802.11 scan, which can be active (sending a probe request frame on each channel)
  * or passive (without sending probe request frames). For a passive scan, the probe request parameters are ignored
- * 
+ *
  * \sa
- */ 
+ */
 typedef struct
 {
 	TI_UINT32						maxChannelDwellTime;	/**< Maximum time to stay on the channel if some frames are received but the early termination limit is not reached (microseconds)	*/
@@ -107,14 +112,14 @@ typedef struct
 
 /** \struct TScanTidTriggeredMethodParams
  * \brief Scan Tid Triggered Method Parameters
- * 
+ *
  * \par Description
- * This structure defines the policy parameters for an AC triggered scan. 
+ * This structure defines the policy parameters for an AC triggered scan.
  * The Scan is passive or active, in which a single-channel scan is triggered by transmission on the serving channel
- * 
+ *
  * \sa
- */ 
-typedef struct 
+ */
+typedef struct
 {
 	TScanBasicMethodParams			basicMethodParams;	/**< Parameters for the basic scan performed in the AC triggered scan process	*/
 	TI_UINT8						triggeringTid;		/**< Quality-of-service (QoS) AC that triggers the scans in the AC triggered scan process	*/
@@ -122,31 +127,31 @@ typedef struct
 
 /** \struct TScanSPSMethodParams
  * \brief Scan SPS Method Parameters
- * 
+ *
  * \par Description
- * This structure defines the policy parameters for an SPS. 
+ * This structure defines the policy parameters for an SPS.
  * SPS is a passive scan that is timed accurately to beacon transmissions.
- * 
+ *
  * \sa
- */ 
-typedef struct 
+ */
+typedef struct
 {
 	EScanEtCondition    			earlyTerminationEvent;	/**< The cause for early termination */
-	TI_UINT8				      	ETMaxNumberOfApFrames;  /**< Number of frames from the early termination frame types according to the early Termination Event setting, 
-															* after which the scan is stopped on this channel	
+	TI_UINT8				      	ETMaxNumberOfApFrames;  /**< Number of frames from the early termination frame types according to the early Termination Event setting,
+															* after which the scan is stopped on this channel
 															*/
 	TI_UINT32					   	scanDuration;           /**< Time to spend on each channel (in usec) */
 } TScanSPSMethodParams;
 
 /** \struct TScanMethod
  * \brief Scan Method
- * 
+ *
  * \par Description
  * This structure defines the policy parameters for a scan method, which can be any type of scan
- * 
+ *
  * \sa
- */ 
-typedef struct 
+ */
+typedef struct
 {
 	EScanType					scanType;                           /**< Required scan type (active, passive, AC triggered, SPS)	*/
 	/* Scan policy parameters */
@@ -160,12 +165,12 @@ typedef struct
 
 /** \struct TScanBandPolicy
  * \brief Scan Band Policy
- * 
+ *
  * \par Description
  * This structure defines the parameters comprising a scan policy for a single band
- * 
+ *
  * \sa
- */ 
+ */
 typedef struct
 {
 	ERadioBand 				band;	                            	/**< The band (2.4 / 5 GHz) 								*/
@@ -176,15 +181,15 @@ typedef struct
 	TI_UINT8				numOfChannlesForDiscovery;          	/**< Number of channels to scan at each discovery attempt	*/
 	TI_UINT8				numOfChannles;                      	/**< Number of channels to use on this band 				*/
 	TI_UINT8	           	channelList[ MAX_BAND_POLICY_CHANNLES ];/**< All possible channels 									*/
-                                                                    
+
 } TScanBandPolicy;
 
 /** \struct TScanPolicy
  * \brief Scan Policy
- * 
+ *
  * \par Description
  * This structure defines the parameters comprising scan policies on all bands
- * 
+ *
  * \sa
  */
 typedef struct

@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * scr.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file  scr.c
  *  \brief This file include the SCR module implementation
  *
@@ -49,8 +54,8 @@
 /**
  * \brief This array holds configuration values for abort others field for different clients.\n
  */
-static EScrClientId abortOthers[ SCR_RESOURCE_NUM_OF_RESOURCES ][ SCR_CID_NUM_OF_CLIENTS ] = 
-/* APP_SCAN           DRV_FG             CONT_SCAN          CCX_MSR            BASIC_MSR          CONNECT                IMMED_SCN              SWITCH_CHNL*/
+static EScrClientId abortOthers[ SCR_RESOURCE_NUM_OF_RESOURCES ][ SCR_CID_NUM_OF_CLIENTS ] =
+/* APP_SCAN           DRV_FG             CONT_SCAN          XCC_MSR            BASIC_MSR          CONNECT                IMMED_SCN              SWITCH_CHNL*/
 {/* Serving channel resource */
  { SCR_CID_NO_CLIENT, SCR_CID_NO_CLIENT, SCR_CID_NO_CLIENT, SCR_CID_NO_CLIENT, SCR_CID_NO_CLIENT, SCR_CID_BASIC_MEASURE, SCR_CID_BASIC_MEASURE, SCR_CID_BASIC_MEASURE },
  /* periodic scan resource */
@@ -60,15 +65,15 @@ static EScrClientId abortOthers[ SCR_RESOURCE_NUM_OF_RESOURCES ][ SCR_CID_NUM_OF
 /**
  * \brief This array holds configuration values for the client status field for different clients and groups. \n
  */
-static TI_BOOL clientStatus[ SCR_RESOURCE_NUM_OF_RESOURCES ][ SCR_MID_NUM_OF_MODES ][ SCR_GID_NUM_OF_GROUPS ][ SCR_CID_NUM_OF_CLIENTS ] = 
-            { 
+static TI_BOOL clientStatus[ SCR_RESOURCE_NUM_OF_RESOURCES ][ SCR_MID_NUM_OF_MODES ][ SCR_GID_NUM_OF_GROUPS ][ SCR_CID_NUM_OF_CLIENTS ] =
+            {
                 {/* serving channel resource */
                     {/* This is the table for Normal mode  */
                         /* client status for idle group */
                         { TI_FALSE,    /**< client status for SCR_CID_APP_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_DRIVER_FG_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_CONT_SCAN */
-                          TI_FALSE,    /**< client status for SCR_CID_CCX_MEASURE */
+                          TI_FALSE,    /**< client status for SCR_CID_XCC_MEASURE */
                           TI_FALSE,    /**< client status for SCR_CID_BASIC_MEASURE */
                           TI_FALSE,    /**< client status for SCR_CID_CONNECT */
                           TI_FALSE,    /**< client status for SCR_CID_IMMED_SCAN */
@@ -77,7 +82,7 @@ static TI_BOOL clientStatus[ SCR_RESOURCE_NUM_OF_RESOURCES ][ SCR_MID_NUM_OF_MOD
                         { TI_TRUE,     /**< client status for SCR_CID_APP_SCAN */
                           TI_FALSE,     /**< client status for SCR_CID_DRIVER_FG_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_CONT_SCAN */
-                          TI_FALSE,    /**< client status for SCR_CID_CCX_MEASURE */
+                          TI_FALSE,    /**< client status for SCR_CID_XCC_MEASURE */
                           TI_FALSE,    /**< client status for SCR_CID_BASIC_MEASURE */
                           TI_FALSE,    /**< client status for SCR_CID_CONNECT */
                           TI_FALSE,    /**< client status for SCR_CID_IMMED_SCAN */
@@ -86,7 +91,7 @@ static TI_BOOL clientStatus[ SCR_RESOURCE_NUM_OF_RESOURCES ][ SCR_MID_NUM_OF_MOD
                         { TI_TRUE,     /**< client status for SCR_CID_APP_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_DRIVER_FG_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_CONT_SCAN */
-                          TI_FALSE,    /**< client status for SCR_CID_CCX_MEASURE */
+                          TI_FALSE,    /**< client status for SCR_CID_XCC_MEASURE */
                           TI_FALSE,    /**< client status for SCR_CID_BASIC_MEASURE */
                           TI_FALSE,    /**< client status for SCR_CID_CONNECT */
                           TI_FALSE,    /**< client status for SCR_CID_IMMED_SCAN */
@@ -95,16 +100,16 @@ static TI_BOOL clientStatus[ SCR_RESOURCE_NUM_OF_RESOURCES ][ SCR_MID_NUM_OF_MOD
                         { TI_FALSE,    /**< client status for SCR_CID_APP_SCAN */
                           TI_TRUE,     /**< client status for SCR_CID_DRIVER_FG_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_CONT_SCAN */
-                          TI_FALSE,    /**< client status for SCR_CID_CCX_MEASURE */
+                          TI_FALSE,    /**< client status for SCR_CID_XCC_MEASURE */
                           TI_FALSE,    /**< client status for SCR_CID_BASIC_MEASURE */
                           TI_TRUE,     /**< client status for SCR_CID_CONNECT */
                           TI_FALSE,    /**< client status for SCR_CID_IMMED_SCAN */
-                          TI_FALSE,    /**< client status for SCR_CID_SWITCH_CHANNEL */ },                       
+                          TI_FALSE,    /**< client status for SCR_CID_SWITCH_CHANNEL */ },
                        /* client status for connected group */
                         { TI_TRUE,     /**< client status for SCR_CID_APP_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_DRIVER_FG_SCAN */
                           TI_TRUE,     /**< client status for SCR_CID_CONT_SCAN */
-                          TI_TRUE,     /**< client status for SCR_CID_CCX_MEASURE */
+                          TI_TRUE,     /**< client status for SCR_CID_XCC_MEASURE */
                           TI_TRUE,     /**< client status for SCR_CID_BASIC_MEASURE */
                           TI_FALSE,    /**< client status for SCR_CID_CONNECT */
                           TI_FALSE,    /**< client status for SCR_CID_IMMED_SCAN */
@@ -113,7 +118,7 @@ static TI_BOOL clientStatus[ SCR_RESOURCE_NUM_OF_RESOURCES ][ SCR_MID_NUM_OF_MOD
                         { TI_FALSE,    /**< client status for SCR_CID_APP_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_DRIVER_FG_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_CONT_SCAN */
-                          TI_FALSE,    /**< client status for SCR_CID_CCX_MEASURE */
+                          TI_FALSE,    /**< client status for SCR_CID_XCC_MEASURE */
                           TI_FALSE,    /**< client status for SCR_CID_BASIC_MEASURE */
                           TI_TRUE,     /**< client status for SCR_CID_CONNECT */
                           TI_TRUE,     /**< client status for SCR_CID_IMMED_SCAN */
@@ -126,7 +131,7 @@ static TI_BOOL clientStatus[ SCR_RESOURCE_NUM_OF_RESOURCES ][ SCR_MID_NUM_OF_MOD
                         { TI_FALSE,    /**< client status for SCR_CID_APP_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_DRIVER_FG_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_CONT_SCAN */
-                          TI_FALSE,    /**< client status for SCR_CID_CCX_MEASURE */
+                          TI_FALSE,    /**< client status for SCR_CID_XCC_MEASURE */
                           TI_FALSE,    /**< client status for SCR_CID_BASIC_MEASURE */
                           TI_FALSE,    /**< client status for SCR_CID_CONNECT */
                           TI_FALSE,    /**< client status for SCR_CID_IMMED_SCAN */
@@ -135,7 +140,7 @@ static TI_BOOL clientStatus[ SCR_RESOURCE_NUM_OF_RESOURCES ][ SCR_MID_NUM_OF_MOD
                         { TI_TRUE,     /**< client status for SCR_CID_APP_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_DRIVER_FG_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_CONT_SCAN */
-                          TI_FALSE,    /**< client status for SCR_CID_CCX_MEASURE */
+                          TI_FALSE,    /**< client status for SCR_CID_XCC_MEASURE */
                           TI_FALSE,    /**< client status for SCR_CID_BASIC_MEASURE */
                           TI_FALSE,    /**< client status for SCR_CID_CONNECT */
                           TI_FALSE,    /**< client status for SCR_CID_IMMED_SCAN */
@@ -144,7 +149,7 @@ static TI_BOOL clientStatus[ SCR_RESOURCE_NUM_OF_RESOURCES ][ SCR_MID_NUM_OF_MOD
                         { TI_TRUE,     /**< client status for SCR_CID_APP_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_DRIVER_FG_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_CONT_SCAN */
-                          TI_FALSE,    /**< client status for SCR_CID_CCX_MEASURE */
+                          TI_FALSE,    /**< client status for SCR_CID_XCC_MEASURE */
                           TI_FALSE,    /**< client status for SCR_CID_BASIC_MEASURE */
                           TI_FALSE,    /**< client status for SCR_CID_CONNECT */
                           TI_FALSE,    /**< client status for SCR_CID_IMMED_SCAN */
@@ -153,16 +158,16 @@ static TI_BOOL clientStatus[ SCR_RESOURCE_NUM_OF_RESOURCES ][ SCR_MID_NUM_OF_MOD
                         { TI_FALSE,    /**< client status for SCR_CID_APP_SCAN */
                           TI_TRUE,     /**< client status for SCR_CID_DRIVER_FG_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_CONT_SCAN */
-                          TI_FALSE,    /**< client status for SCR_CID_CCX_MEASURE */
+                          TI_FALSE,    /**< client status for SCR_CID_XCC_MEASURE */
                           TI_FALSE,    /**< client status for SCR_CID_BASIC_MEASURE */
                           TI_TRUE,     /**< client status for SCR_CID_CONNECT */
                           TI_FALSE,    /**< client status for SCR_CID_IMMED_SCAN */
-                          TI_FALSE,    /**< client status for SCR_CID_SWITCH_CHANNEL */ },                       
+                          TI_FALSE,    /**< client status for SCR_CID_SWITCH_CHANNEL */ },
                        /* client status for connected group */
                         { TI_TRUE,     /**< client status for SCR_CID_APP_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_DRIVER_FG_SCAN */
                           TI_TRUE,     /**< client status for SCR_CID_CONT_SCAN */
-                          TI_TRUE,     /**< client status for SCR_CID_CCX_MEASURE */
+                          TI_TRUE,     /**< client status for SCR_CID_XCC_MEASURE */
                           TI_TRUE,     /**< client status for SCR_CID_BASIC_MEASURE */
                           TI_FALSE,    /**< client status for SCR_CID_CONNECT */
                           TI_FALSE,    /**< client status for SCR_CID_IMMED_SCAN */
@@ -171,7 +176,7 @@ static TI_BOOL clientStatus[ SCR_RESOURCE_NUM_OF_RESOURCES ][ SCR_MID_NUM_OF_MOD
                         { TI_FALSE,    /**< client status for SCR_CID_APP_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_DRIVER_FG_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_CONT_SCAN */
-                          TI_FALSE,    /**< client status for SCR_CID_CCX_MEASURE */
+                          TI_FALSE,    /**< client status for SCR_CID_XCC_MEASURE */
                           TI_FALSE,    /**< client status for SCR_CID_BASIC_MEASURE */
                           TI_TRUE,     /**< client status for SCR_CID_CONNECT */
                           TI_TRUE,     /**< client status for SCR_CID_IMMED_SCAN */
@@ -184,7 +189,7 @@ static TI_BOOL clientStatus[ SCR_RESOURCE_NUM_OF_RESOURCES ][ SCR_MID_NUM_OF_MOD
                         { TI_FALSE,    /**< client status for SCR_CID_APP_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_DRIVER_FG_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_CONT_SCAN */
-                          TI_FALSE,    /**< client status for SCR_CID_CCX_MEASURE */
+                          TI_FALSE,    /**< client status for SCR_CID_XCC_MEASURE */
                           TI_FALSE,    /**< client status for SCR_CID_BASIC_MEASURE */
                           TI_FALSE,    /**< client status for SCR_CID_CONNECT */
                           TI_FALSE,    /**< client status for SCR_CID_IMMED_SCAN */
@@ -193,7 +198,7 @@ static TI_BOOL clientStatus[ SCR_RESOURCE_NUM_OF_RESOURCES ][ SCR_MID_NUM_OF_MOD
                         { TI_FALSE,     /**< client status for SCR_CID_APP_SCAN */
                           TI_TRUE,     /**< client status for SCR_CID_DRIVER_FG_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_CONT_SCAN */
-                          TI_FALSE,    /**< client status for SCR_CID_CCX_MEASURE */
+                          TI_FALSE,    /**< client status for SCR_CID_XCC_MEASURE */
                           TI_FALSE,    /**< client status for SCR_CID_BASIC_MEASURE */
                           TI_FALSE,    /**< client status for SCR_CID_CONNECT */
                           TI_FALSE,    /**< client status for SCR_CID_IMMED_SCAN */
@@ -202,7 +207,7 @@ static TI_BOOL clientStatus[ SCR_RESOURCE_NUM_OF_RESOURCES ][ SCR_MID_NUM_OF_MOD
                         { TI_TRUE,     /**< client status for SCR_CID_APP_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_DRIVER_FG_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_CONT_SCAN */
-                          TI_FALSE,    /**< client status for SCR_CID_CCX_MEASURE */
+                          TI_FALSE,    /**< client status for SCR_CID_XCC_MEASURE */
                           TI_FALSE,    /**< client status for SCR_CID_BASIC_MEASURE */
                           TI_FALSE,    /**< client status for SCR_CID_CONNECT */
                           TI_FALSE,    /**< client status for SCR_CID_IMMED_SCAN */
@@ -211,16 +216,16 @@ static TI_BOOL clientStatus[ SCR_RESOURCE_NUM_OF_RESOURCES ][ SCR_MID_NUM_OF_MOD
                         { TI_FALSE,    /**< client status for SCR_CID_APP_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_DRIVER_FG_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_CONT_SCAN */
-                          TI_FALSE,    /**< client status for SCR_CID_CCX_MEASURE */
+                          TI_FALSE,    /**< client status for SCR_CID_XCC_MEASURE */
                           TI_FALSE,    /**< client status for SCR_CID_BASIC_MEASURE */
                           TI_TRUE,     /**< client status for SCR_CID_CONNECT */
                           TI_FALSE,    /**< client status for SCR_CID_IMMED_SCAN */
-                          TI_FALSE,    /**< client status for SCR_CID_SWITCH_CHANNEL */ },                       
+                          TI_FALSE,    /**< client status for SCR_CID_SWITCH_CHANNEL */ },
                        /* client status for connected group */
                         { TI_FALSE,    /**< client status for SCR_CID_APP_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_DRIVER_FG_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_CONT_SCAN */
-                          TI_FALSE,    /**< client status for SCR_CID_CCX_MEASURE */
+                          TI_FALSE,    /**< client status for SCR_CID_XCC_MEASURE */
                           TI_FALSE,    /**< client status for SCR_CID_BASIC_MEASURE */
                           TI_FALSE,    /**< client status for SCR_CID_CONNECT */
                           TI_FALSE,    /**< client status for SCR_CID_IMMED_SCAN */
@@ -229,7 +234,7 @@ static TI_BOOL clientStatus[ SCR_RESOURCE_NUM_OF_RESOURCES ][ SCR_MID_NUM_OF_MOD
                         { TI_FALSE,    /**< client status for SCR_CID_APP_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_DRIVER_FG_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_CONT_SCAN */
-                          TI_FALSE,    /**< client status for SCR_CID_CCX_MEASURE */
+                          TI_FALSE,    /**< client status for SCR_CID_XCC_MEASURE */
                           TI_FALSE,    /**< client status for SCR_CID_BASIC_MEASURE */
                           TI_TRUE,     /**< client status for SCR_CID_CONNECT */
                           TI_FALSE,    /**< client status for SCR_CID_IMMED_SCAN */
@@ -242,7 +247,7 @@ static TI_BOOL clientStatus[ SCR_RESOURCE_NUM_OF_RESOURCES ][ SCR_MID_NUM_OF_MOD
                         { TI_FALSE,    /**< client status for SCR_CID_APP_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_DRIVER_FG_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_CONT_SCAN */
-                          TI_FALSE,    /**< client status for SCR_CID_CCX_MEASURE */
+                          TI_FALSE,    /**< client status for SCR_CID_XCC_MEASURE */
                           TI_FALSE,    /**< client status for SCR_CID_BASIC_MEASURE */
                           TI_FALSE,    /**< client status for SCR_CID_CONNECT */
                           TI_FALSE,    /**< client status for SCR_CID_IMMED_SCAN */
@@ -251,7 +256,7 @@ static TI_BOOL clientStatus[ SCR_RESOURCE_NUM_OF_RESOURCES ][ SCR_MID_NUM_OF_MOD
                         { TI_FALSE,    /**< client status for SCR_CID_APP_SCAN */
                           TI_TRUE,     /**< client status for SCR_CID_DRIVER_FG_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_CONT_SCAN */
-                          TI_FALSE,    /**< client status for SCR_CID_CCX_MEASURE */
+                          TI_FALSE,    /**< client status for SCR_CID_XCC_MEASURE */
                           TI_FALSE,    /**< client status for SCR_CID_BASIC_MEASURE */
                           TI_FALSE,    /**< client status for SCR_CID_CONNECT */
                           TI_FALSE,    /**< client status for SCR_CID_IMMED_SCAN */
@@ -260,7 +265,7 @@ static TI_BOOL clientStatus[ SCR_RESOURCE_NUM_OF_RESOURCES ][ SCR_MID_NUM_OF_MOD
                         { TI_TRUE,     /**< client status for SCR_CID_APP_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_DRIVER_FG_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_CONT_SCAN */
-                          TI_FALSE,    /**< client status for SCR_CID_CCX_MEASURE */
+                          TI_FALSE,    /**< client status for SCR_CID_XCC_MEASURE */
                           TI_FALSE,    /**< client status for SCR_CID_BASIC_MEASURE */
                           TI_FALSE,    /**< client status for SCR_CID_CONNECT */
                           TI_FALSE,    /**< client status for SCR_CID_IMMED_SCAN */
@@ -269,16 +274,16 @@ static TI_BOOL clientStatus[ SCR_RESOURCE_NUM_OF_RESOURCES ][ SCR_MID_NUM_OF_MOD
                         { TI_FALSE,    /**< client status for SCR_CID_APP_SCAN */
                           TI_FALSE,     /**< client status for SCR_CID_DRIVER_FG_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_CONT_SCAN */
-                          TI_FALSE,    /**< client status for SCR_CID_CCX_MEASURE */
+                          TI_FALSE,    /**< client status for SCR_CID_XCC_MEASURE */
                           TI_FALSE,    /**< client status for SCR_CID_BASIC_MEASURE */
                           TI_TRUE,     /**< client status for SCR_CID_CONNECT */
                           TI_FALSE,    /**< client status for SCR_CID_IMMED_SCAN */
-                          TI_FALSE,    /**< client status for SCR_CID_SWITCH_CHANNEL */ },                       
+                          TI_FALSE,    /**< client status for SCR_CID_SWITCH_CHANNEL */ },
                        /* client status for connected group */
                         { TI_FALSE,    /**< client status for SCR_CID_APP_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_DRIVER_FG_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_CONT_SCAN */
-                          TI_FALSE,    /**< client status for SCR_CID_CCX_MEASURE */
+                          TI_FALSE,    /**< client status for SCR_CID_XCC_MEASURE */
                           TI_FALSE,    /**< client status for SCR_CID_BASIC_MEASURE */
                           TI_FALSE,    /**< client status for SCR_CID_CONNECT */
                           TI_FALSE,    /**< client status for SCR_CID_IMMED_SCAN */
@@ -287,16 +292,16 @@ static TI_BOOL clientStatus[ SCR_RESOURCE_NUM_OF_RESOURCES ][ SCR_MID_NUM_OF_MOD
                         { TI_FALSE,    /**< client status for SCR_CID_APP_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_DRIVER_FG_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_CONT_SCAN */
-                          TI_FALSE,    /**< client status for SCR_CID_CCX_MEASURE */
+                          TI_FALSE,    /**< client status for SCR_CID_XCC_MEASURE */
                           TI_FALSE,    /**< client status for SCR_CID_BASIC_MEASURE */
                           TI_TRUE,     /**< client status for SCR_CID_CONNECT */
                           TI_FALSE,    /**< client status for SCR_CID_IMMED_SCAN */
                           TI_FALSE,    /**< client status for SCR_CID_SWITCH_CHANNEL */ }
                     }
-                }                
+                }
             };
 
-                
+
 /**
  * \\n
  * \date 01-Dec-2004\n
@@ -344,7 +349,7 @@ void scr_release( TI_HANDLE hScr )
  * \brief Initializes the SCR object
  *
  * \param  pStadHandles  - The driver modules handles
- * \return void  
+ * \return void
  */
 void scr_init (TStadHandlesList *pStadHandles)
 {
@@ -380,7 +385,7 @@ void scr_init (TStadHandlesList *pStadHandles)
         pScr->clientArray[ i ].clientRequestCB = NULL;
         pScr->clientArray[ i ].ClientRequestCBObj = NULL;
     }
-    
+
     TRACE0(pScr->hReport, REPORT_SEVERITY_INIT , ".....SCR configured successfully\n");
 }
 
@@ -395,9 +400,9 @@ void scr_init (TStadHandlesList *pStadHandles)
  * \param callbackFunc - the address of the callback function to use.\n
  * \param callbackObj - the handle of the object to pass to the callback function (the client object).\n
  */
-void scr_registerClientCB( TI_HANDLE hScr, 
+void scr_registerClientCB( TI_HANDLE hScr,
                            EScrClientId client,
-                           TScrCB callbackFunc, 
+                           TScrCB callbackFunc,
                            TI_HANDLE callbackObj )
 {
     TScr    *pScr = (TScr*)hScr;
@@ -497,7 +502,7 @@ void scr_setGroup( TI_HANDLE hScr, EScrGroupId newGroup )
                 /* notify the client of the change, using its callback */
                 if ( NULL != pScr->clientArray[ i ].clientRequestCB )
                 {
-                    pScr->clientArray[ i ].clientRequestCB( pScr->clientArray[ i ].ClientRequestCBObj, 
+                    pScr->clientArray[ i ].clientRequestCB( pScr->clientArray[ i ].ClientRequestCBObj,
                                                             SCR_CRS_PEND, uResourceIndex, SCR_PR_DIFFERENT_GROUP_RUNNING );
                 }
                 else
@@ -506,15 +511,15 @@ void scr_setGroup( TI_HANDLE hScr, EScrGroupId newGroup )
                 }
             }
         }
-    
+
 
         /*
-         * if no client is running call the highest pending client 
+         * if no client is running call the highest pending client
          * (after group change, previously pending clients may be enabled)
          */
         if ( SCR_CID_NO_CLIENT == pScr->runningClient[ uResourceIndex ] )
         {
-            highestPending = scrFindHighest( hScr, SCR_CS_PENDING, uResourceIndex, 
+            highestPending = scrFindHighest( hScr, SCR_CS_PENDING, uResourceIndex,
                                              (SCR_CID_NUM_OF_CLIENTS - 1), 0 );
             if (( SCR_CID_NO_CLIENT != highestPending ) && (highestPending < SCR_CID_NUM_OF_CLIENTS))
             {
@@ -523,7 +528,7 @@ void scr_setGroup( TI_HANDLE hScr, EScrGroupId newGroup )
                 pScr->runningClient[ uResourceIndex ] = (EScrClientId)highestPending;
                 if ( NULL != pScr->clientArray[ highestPending ].clientRequestCB )
                 {
-                    pScr->clientArray[ highestPending ].clientRequestCB( pScr->clientArray[ highestPending ].ClientRequestCBObj, 
+                    pScr->clientArray[ highestPending ].clientRequestCB( pScr->clientArray[ highestPending ].ClientRequestCBObj,
                                                                          SCR_CRS_RUN, uResourceIndex, SCR_PR_NONE );
                 }
                 else
@@ -570,7 +575,7 @@ void scr_setMode( TI_HANDLE hScr, EScrModeId newMode )
     for (uResourceIndex = 0; uResourceIndex < SCR_RESOURCE_NUM_OF_RESOURCES; uResourceIndex++)
     {
         /* Stage I : if someone is running and shouldn't be running in the new mode - Abort it */
-        if ( (SCR_CID_NO_CLIENT != pScr->runningClient[ uResourceIndex ]) && 
+        if ( (SCR_CID_NO_CLIENT != pScr->runningClient[ uResourceIndex ]) &&
              (TI_FALSE == clientStatus[ uResourceIndex ][ pScr->currentMode ][ pScr->currentGroup ][ pScr->runningClient[ uResourceIndex ] ]))
         {
             /* abort the running client */
@@ -588,7 +593,7 @@ void scr_setMode( TI_HANDLE hScr, EScrModeId newMode )
                 TRACE1( pScr->hReport, REPORT_SEVERITY_ERROR, "Trying to call client %d callback, which is NULL\n", pScr->runningClient[ uResourceIndex ]);
             }
         }
-    
+
         /* Stage II : notify escalated pending reason */
         /* for all pending clients */
         for ( i = 0; i < SCR_CID_NUM_OF_CLIENTS; i++ )
@@ -600,12 +605,12 @@ void scr_setMode( TI_HANDLE hScr, EScrModeId newMode )
             {
                 /* mark the new pending reason */
                 pScr->clientArray[ i ].currentPendingReason[ uResourceIndex ] = SCR_PR_DIFFERENT_GROUP_RUNNING;
-                
+
                 /* notify the client of the change, using its callback */
                 if ( NULL != pScr->clientArray[ i ].clientRequestCB )
                 {
-                    pScr->clientArray[ i ].clientRequestCB( pScr->clientArray[ i ].ClientRequestCBObj, 
-                                                            SCR_CRS_PEND, uResourceIndex, 
+                    pScr->clientArray[ i ].clientRequestCB( pScr->clientArray[ i ].ClientRequestCBObj,
+                                                            SCR_CRS_PEND, uResourceIndex,
                                                             SCR_PR_DIFFERENT_GROUP_RUNNING );
                 }
                 else
@@ -614,12 +619,12 @@ void scr_setMode( TI_HANDLE hScr, EScrModeId newMode )
                 }
             }
         }
-    
-       
+
+
         /* Stage III : call Highest Pending Client who is enabled in the new mode   */
         if ( SCR_CID_NO_CLIENT == pScr->runningClient[ uResourceIndex ] )
         {
-            highestPending = scrFindHighest( hScr, SCR_CS_PENDING, uResourceIndex, 
+            highestPending = scrFindHighest( hScr, SCR_CS_PENDING, uResourceIndex,
                                              (SCR_CID_NUM_OF_CLIENTS - 1), 0 );
             if (SCR_CID_NO_CLIENT != highestPending)
             {
@@ -628,7 +633,7 @@ void scr_setMode( TI_HANDLE hScr, EScrModeId newMode )
                 pScr->runningClient[ uResourceIndex ] = (EScrClientId)highestPending;
                 if ( NULL != pScr->clientArray[ highestPending ].clientRequestCB )
                 {
-                    pScr->clientArray[ highestPending ].clientRequestCB( pScr->clientArray[ highestPending ].ClientRequestCBObj, 
+                    pScr->clientArray[ highestPending ].clientRequestCB( pScr->clientArray[ highestPending ].ClientRequestCBObj,
                                                                          SCR_CRS_RUN, uResourceIndex,
                                                                          SCR_PR_NONE );
                 }
@@ -639,7 +644,7 @@ void scr_setMode( TI_HANDLE hScr, EScrModeId newMode )
             }
         }
     }
-#endif	/* SCR_ABORT_NOTIFY_ENABLED */ 
+#endif	/* SCR_ABORT_NOTIFY_ENABLED */
 }
 
 
@@ -677,7 +682,7 @@ EScrClientRequestStatus scr_clientRequest( TI_HANDLE hScr, EScrClientId client,
         return SCR_CRS_PEND;
     }
 #endif
-    
+
     *pPendReason = SCR_PR_NONE;
 
     /* check if already inside a request - shouldn't happen!!! */
@@ -704,7 +709,7 @@ EScrClientRequestStatus scr_clientRequest( TI_HANDLE hScr, EScrClientId client,
                                                 = *pPendReason = SCR_PR_DIFFERENT_GROUP_RUNNING;
         return SCR_CRS_PEND;
     }
-        
+
     /* check if a there's no running client at the moment */
     if ( SCR_CID_NO_CLIENT == pScr->runningClient[ eResource ] )
     {
@@ -714,7 +719,7 @@ EScrClientRequestStatus scr_clientRequest( TI_HANDLE hScr, EScrClientId client,
         pScr->runningClient[ eResource ] = client;
         return SCR_CRS_RUN;
     }
-    
+
     /* check if any client is aborting at the moment */
     if ( SCR_CS_ABORTING == pScr->clientArray[ pScr->runningClient[ eResource ] ].state[ eResource ] )
     {
@@ -723,13 +728,13 @@ EScrClientRequestStatus scr_clientRequest( TI_HANDLE hScr, EScrClientId client,
            notified that it is pending because of this pending client, rather than the one currently aborting.
         */
         EScrClientId highestPending;
-        highestPending = scrFindHighest( hScr, SCR_CS_PENDING, eResource, 
+        highestPending = scrFindHighest( hScr, SCR_CS_PENDING, eResource,
                                          (SCR_CID_NUM_OF_CLIENTS - 1), client );
         if ( (SCR_CID_NO_CLIENT == highestPending) ||
              (highestPending < client))
         {
             /* if the requesting client has higher priority than the current highest priority pending client,
-               the current highest priority pending client should be notified that its pending reason has 
+               the current highest priority pending client should be notified that its pending reason has
                changed (it is no longer waiting for current running client to abort, but for the requesting
                client to finish, once the current has aborted */
             if ( (highestPending != SCR_CID_NO_CLIENT) &&
@@ -755,7 +760,7 @@ EScrClientRequestStatus scr_clientRequest( TI_HANDLE hScr, EScrClientId client,
         pScr->clientArray[ client ].state[ eResource ] = SCR_CS_PENDING;
         return SCR_CRS_PEND;
     }
- 
+
     /* check if a client with higher priority is running */
     if (pScr->runningClient[ eResource ] > client)
     {
@@ -849,14 +854,14 @@ void scr_clientComplete( TI_HANDLE hScr, EScrClientId client, EScrResourceId eRe
     pScr->clientArray[ client ].currentPendingReason[ eResource ] = SCR_PR_NONE;
 
     /* if completing client is running (or aborting) */
-    if ( pScr->runningClient[ eResource ] == client )   
+    if ( pScr->runningClient[ eResource ] == client )
     {
         /* mark no running client */
         pScr->runningClient[ eResource ] = SCR_CID_NO_CLIENT;
 
         /* find the pending client with highest priority */
         highestPending = scrFindHighest( hScr, SCR_CS_PENDING, eResource, (SCR_CID_NUM_OF_CLIENTS-1), 0 );
-    
+
         /* if a pending client exists */
         if (( SCR_CID_NO_CLIENT != highestPending ) && (highestPending < SCR_CID_NUM_OF_CLIENTS))
         {
@@ -864,7 +869,7 @@ void scr_clientComplete( TI_HANDLE hScr, EScrClientId client, EScrResourceId eRe
             pScr->clientArray[ highestPending ].state[ eResource ] = SCR_CS_RUNNING;
             pScr->clientArray[ highestPending ].currentPendingReason[ eResource ] = SCR_PR_NONE;
             pScr->runningClient[ eResource ] = highestPending;
-        
+
             /* if the SCR is not called from within a client request (re-entrance) */
             if ( TI_FALSE == pScr->statusNotficationPending )
             {
@@ -893,7 +898,7 @@ void scr_clientComplete( TI_HANDLE hScr, EScrClientId client, EScrResourceId eRe
  * \param requiredState - the state to match.\n
  * \param eResource - the resource to macth.\n
  * \param startFrom - the highest priority to begin searching from.\n
- * \param endAt - the lowest priority to include in the search 
+ * \param endAt - the lowest priority to include in the search
  * \return the client ID if found, SCR_CID_NO_CLIENT if not found.\n
  */
 EScrClientId scrFindHighest( TI_HANDLE hScr,
@@ -905,7 +910,7 @@ EScrClientId scrFindHighest( TI_HANDLE hScr,
     TScr        *pScr = (TScr*)hScr;
     TI_INT32    i, iStartFrom, iEndAt;
 
-    /* 
+    /*
      * signed indexes are used to avoid an overflow in the for loop when endAt equals zero
      * and the unsigned i is "reduced" to overflow to 4 Billion
      */

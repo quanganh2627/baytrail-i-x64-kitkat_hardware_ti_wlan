@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * keyParserExternal.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file keyParserExternal.c
  * \brief External key parser implementation.
  *
@@ -64,17 +69,17 @@
 *
 * Function  - Init KEY Parser module.
 *
-* \b Description: 
+* \b Description:
 *
-* Called by RSN Manager. 
+* Called by RSN Manager.
 * Registers the function 'rsn_keyParserRecv()' at the distributor to receive KEY frames upon receiving a KEY_RECV event.
 *
 * \b ARGS:
 *
-*  
+*
 * \b RETURNS:
 *
-*  TI_STATUS - 0 on success, any other value on failure. 
+*  TI_STATUS - 0 on success, any other value on failure.
 *
 */
 
@@ -91,11 +96,11 @@ TI_STATUS keyParserExternal_config(struct _keyParser_t *pKeyParser)
 *
 * keyParserExternal_recv
 *
-* \b Description: 
+* \b Description:
 *
 * External key Parser receive function:
 *							- Called by NDIS (Windows)  upon receiving an External Key.
-*							- Filters the following keys:								
+*							- Filters the following keys:
 *								- Keys with invalid key index
 *								- Keys with invalid MAC address
 *
@@ -124,14 +129,14 @@ TI_STATUS keyParserExternal_recv(struct _keyParser_t *pKeyParser,
 	TI_UINT8						broadcastMacAddr[MAC_ADDR_LEN] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
 	TI_UINT8						nullMacAddr[MAC_ADDR_LEN] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
     TI_UINT8                        keyBuffer[MAC_ADDR_LEN+KEY_RSC_LEN+MAX_EXT_KEY_DATA_LENGTH];
-    
 
-    if (pKeyData == NULL)                             
-	{                                                 
+
+    if (pKeyData == NULL)
+	{
 TRACE0(pKeyParser->hReport, REPORT_SEVERITY_ERROR, "EXT_KEY_PARSER: ERROR: NULL KEY Data\n");
 		return TI_NOK;
 	}
-	
+
 	pKeyDesc = (OS_802_11_KEY*)pKeyData;
 
     /* copy the key data, mac address and RSC */
@@ -158,26 +163,26 @@ TRACE0(pKeyParser->hReport, REPORT_SEVERITY_ERROR, "EXT_KEY_PARSER: ERROR: Canno
 	}
 
 	/* check key length */
-	if((pKeyDesc->KeyLength != WEP_KEY_LEN_40) && 
-		(pKeyDesc->KeyLength != WEP_KEY_LEN_104) && 
+	if((pKeyDesc->KeyLength != WEP_KEY_LEN_40) &&
+		(pKeyDesc->KeyLength != WEP_KEY_LEN_104) &&
 		(pKeyDesc->KeyLength != WEP_KEY_LEN_232) &&
-		(pKeyDesc->KeyLength != TKIP_KEY_LEN) && 
+		(pKeyDesc->KeyLength != TKIP_KEY_LEN) &&
 		(pKeyDesc->KeyLength != AES_KEY_LEN) )
-		
+
 	{
 TRACE1(pKeyParser->hReport, REPORT_SEVERITY_ERROR, "EXT_KEY_PARSER: ERROR: Incorrect key length - %d \n", pKeyDesc->KeyLength);
 		return TI_NOK;
 	}
 	if (MAC_EQUAL(macParam.content.ctrlDataCurrentBSSID, pKeyDesc->BSSID))
-	{	
+	{
         macEqual2Associated = TI_TRUE;
    	}
 	if (MAC_EQUAL (pKeyDesc->BSSID, broadcastMacAddr))
-	{	
+	{
         macIsBroadcast = TI_TRUE;
    	}
-	if ((pKeyDesc->KeyLength == WEP_KEY_LEN_40) || 
-		(pKeyDesc->KeyLength == WEP_KEY_LEN_104) || 
+	if ((pKeyDesc->KeyLength == WEP_KEY_LEN_40) ||
+		(pKeyDesc->KeyLength == WEP_KEY_LEN_104) ||
 		(pKeyDesc->KeyLength == WEP_KEY_LEN_232))
 	{	/* In Add WEP the MAC address is nulled, since it's irrelevant */
         macEqual2Associated = TI_TRUE;
@@ -199,12 +204,12 @@ TRACE1(pKeyParser->hReport, REPORT_SEVERITY_ERROR, "EXT_KEY_PARSER: ERROR: Incor
 TRACE0(pKeyParser->hReport, REPORT_SEVERITY_ERROR, "EXT_KEY_PARSER: ERROR: Key index bits 8-27 should be 0 !!!\n");
 		return TI_NOK;
     }
-    
+
     encodedKeyMaterial.pData  = (char *) keyBuffer;
 	/* Check key length according to the cipher suite - TKIP, etc...??? */
     if (wepKey)
     {
-        if (!((pKeyDesc->KeyLength == WEP_KEY_LEN_40) || (pKeyDesc->KeyLength == WEP_KEY_LEN_104) 
+        if (!((pKeyDesc->KeyLength == WEP_KEY_LEN_40) || (pKeyDesc->KeyLength == WEP_KEY_LEN_104)
               || (pKeyDesc->KeyLength == WEP_KEY_LEN_232)))
         {	/*Invalid key length*/
             TRACE1(pKeyParser->hReport, REPORT_SEVERITY_ERROR, "WEP_KEY_PARSER: ERROR: Invalid Key length: %d !!!\n", pKeyDesc->KeyLength);
@@ -213,14 +218,14 @@ TRACE0(pKeyParser->hReport, REPORT_SEVERITY_ERROR, "EXT_KEY_PARSER: ERROR: Key i
 
         os_memoryCopy(pKeyParser->hOs, &keyBuffer[0], pKeyDesc->KeyMaterial, pKeyDesc->KeyLength);
         if (MAC_EQUAL (nullMacAddr, pKeyDesc->BSSID))
-        {   
+        {
             macIsBroadcast = TI_TRUE;
-        } 
+        }
 
         encodedKeyMaterial.keyLen = pKeyDesc->KeyLength;
     }
     else /* this is TKIP or CKIP */
-    {   
+    {
         if ((pKeyDesc->KeyLength == AES_KEY_LEN) && (pKeyParser->pPaeConfig->unicastSuite == TWD_CIPHER_CKIP))
         {
             os_memoryCopy(pKeyParser->hOs, &keyBuffer[0], pKeyDesc->KeyMaterial, pKeyDesc->KeyLength);
@@ -228,9 +233,9 @@ TRACE0(pKeyParser->hReport, REPORT_SEVERITY_ERROR, "EXT_KEY_PARSER: ERROR: Key i
         }
         else
         {
-            os_memoryCopy(pKeyParser->hOs, 
+            os_memoryCopy(pKeyParser->hOs,
                           &keyBuffer[MAC_ADDR_LEN+KEY_RSC_LEN],
-                          pKeyDesc->KeyMaterial, 
+                          pKeyDesc->KeyMaterial,
                           pKeyDesc->KeyLength);
 
             encodedKeyMaterial.keyLen = MAC_ADDR_LEN+KEY_RSC_LEN+pKeyDesc->KeyLength;
@@ -301,7 +306,7 @@ TRACE0(pKeyParser->hReport, REPORT_SEVERITY_WARNING, "EXT_KEY_PARSER: ERROR: Pai
 			{
 				MAC_COPY (keyBuffer, broadcastMacAddr);
 			}
-		 	
+
 			/* set broadcast key */
 			if (pKeyParser->pBcastKey->recvSuccess!=NULL)
 			{
@@ -318,7 +323,7 @@ TRACE0(pKeyParser->hReport, REPORT_SEVERITY_WARNING, "EXT_KEY_PARSER: ERROR: Pai
 			}
 		}
     }
-				  
+
 	return status;
 }
 
@@ -339,7 +344,7 @@ TI_STATUS keyParserExternal_remove(struct _keyParser_t *pKeyParser, TI_UINT8 *pK
 TRACE0(pKeyParser->hReport, REPORT_SEVERITY_ERROR, "EXT_KEY_PARSER: ERROR: NULL KEY Data\n");
 		return TI_NOK;
 	}
-	
+
 	pKeyDesc = (OS_802_11_KEY*)pKeyData;
 
     if (pKeyDesc->KeyIndex & EXT_KEY_TRANSMIT_MASK)
@@ -352,7 +357,7 @@ TRACE0(pKeyParser->hReport, REPORT_SEVERITY_ERROR, "EXT_KEY_PARSER: ERROR: Remov
 TRACE0(pKeyParser->hReport, REPORT_SEVERITY_ERROR, "EXT_KEY_PARSER: ERROR: Remove none zero key index\n");
 		return TI_NOK;
 	}
-	
+
 	encodedKeyMaterial.keyId = pKeyDesc->KeyIndex;
 	encodedKeyMaterial.keyLen = 0;
     encodedKeyMaterial.pData = (char *) keyBuffer;
@@ -362,8 +367,8 @@ TRACE0(pKeyParser->hReport, REPORT_SEVERITY_ERROR, "EXT_KEY_PARSER: ERROR: Remov
 		if (!MAC_EQUAL(pKeyDesc->BSSID, broadcastMacAddr))
 		{
 			MAC_COPY (keyBuffer, pKeyDesc->BSSID);
-		} 
-        else 
+		}
+        else
         {
 			macParam.paramType = CTRL_DATA_CURRENT_BSSID_PARAM;
 			status = ctrlData_getParam(pKeyParser->hCtrlData, &macParam);
@@ -372,7 +377,7 @@ TRACE0(pKeyParser->hReport, REPORT_SEVERITY_ERROR, "EXT_KEY_PARSER: ERROR: Remov
 TRACE0(pKeyParser->hReport, REPORT_SEVERITY_ERROR, "EXT_KEY_PARSER: ERROR: Cannot get MAC address !!!\n");
 				return TI_NOK;
 			}
-			
+
 			MAC_COPY (keyBuffer, macParam.content.ctrlDataCurrentBSSID);
 		}
 

@@ -1,39 +1,44 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * healthMonitor.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file healthMonitor.c
  *  \brief Firmware Recovery Mechanism
  */
 
-/** \file   healthMonitor.c 
+/** \file   healthMonitor.c
  *  \brief  The health monitor module. Gets failures indications and handle them.
  *
- *  For periodic check, use HW watchdog mechanizem instead of local periodic timer check 
+ *  For periodic check, use HW watchdog mechanizem instead of local periodic timer check
  *
  *  \see    healthMonitor.h
  */
@@ -74,7 +79,7 @@ typedef struct
 
     /* Timers handles */
     TI_HANDLE            hFailTimer;             /* failure event timer */
-    
+
     /* Management variables */
     TI_UINT32            numOfHealthTests;       /* number of health tests performed counter */
     healthMonitorState_e state;                  /* health monitor state */
@@ -86,10 +91,10 @@ typedef struct
     TI_UINT32            currentKeepAliveCounter;/* counting how many timer intervals had passed w/o a keep alive */
 
     /* Recoveries Statistics */
-    TI_UINT32          	 recoveryTriggersNumber [MAX_FAILURE_EVENTS];                                                  
+    TI_UINT32          	 recoveryTriggersNumber [MAX_FAILURE_EVENTS];
                                                  /* Number of times each recovery trigger occured */
     TI_UINT32            numOfRecoveryPerformed; /* number of recoveries performed */
-    
+
 } THealthMonitor;
 
 
@@ -98,7 +103,7 @@ static void healthMonitor_proccessFailureEvent (TI_HANDLE hHealthMonitor, TI_BOO
 
 #ifdef REPORT_LOG
 
-static char* sRecoveryTriggersNames [MAX_FAILURE_EVENTS] = 
+static char* sRecoveryTriggersNames [MAX_FAILURE_EVENTS] =
 {
     "NO_SCAN_COMPLETE_FAILURE",
     "MBOX_FAILURE",
@@ -114,21 +119,21 @@ static char* sRecoveryTriggersNames [MAX_FAILURE_EVENTS] =
 #endif
 
 
-/** 
- * \fn     healthMonitor_create 
+/**
+ * \fn     healthMonitor_create
  * \brief  Create module object
- * 
+ *
  * Create module object.
- * 
- * \note    
+ *
+ * \note
  * \param  hOs  - The OS adaptation handle
- * \return The created module handle  
- * \sa     
- */ 
+ * \return The created module handle
+ * \sa
+ */
 TI_HANDLE healthMonitor_create (TI_HANDLE hOs)
 {
     THealthMonitor *pHealthMonitor;
- 
+
     /* Allocate memory for the health monitor object and nullify it */
     pHealthMonitor = (THealthMonitor*)os_memoryAlloc (hOs, sizeof(THealthMonitor));
     if (pHealthMonitor == NULL)
@@ -144,17 +149,17 @@ TI_HANDLE healthMonitor_create (TI_HANDLE hOs)
 }
 
 
-/** 
- * \fn     healthMonitor_init 
+/**
+ * \fn     healthMonitor_init
  * \brief  Init module handles and variables
- * 
+ *
  * Init module handles and variables.
- * 
- * \note    
+ *
+ * \note
  * \param  pStadHandles  - The driver modules handles
- * \return void  
- * \sa     
- */ 
+ * \return void
+ * \sa
+ */
 void healthMonitor_init (TStadHandlesList *pStadHandles)
 {
     THealthMonitor *pHealthMonitor = (THealthMonitor *)(pStadHandles->hHealthMonitor);
@@ -175,25 +180,25 @@ void healthMonitor_init (TStadHandlesList *pStadHandles)
     pHealthMonitor->failureEvent    = (TI_UINT32)NO_FAILURE;
 
     /* Register the failure event callback */
-    TWD_RegisterCb (pHealthMonitor->hTWD, 
-                    TWD_EVENT_FAILURE, 
-                    (void *)healthMonitor_sendFailureEvent, 
+    TWD_RegisterCb (pHealthMonitor->hTWD,
+                    TWD_EVENT_FAILURE,
+                    (void *)healthMonitor_sendFailureEvent,
                     (void *)pHealthMonitor);
 }
 
 
-/** 
- * \fn     healthMonitor_SetDefaults 
+/**
+ * \fn     healthMonitor_SetDefaults
  * \brief  Set module defaults and create timers
- * 
+ *
  * Set module defaults from Ini-file and create timers.
- * 
- * \note    
+ *
+ * \note
  * \param  hHealthMonitor  - The module's handle
  * \param  healthMonitorInitParams  - The module's parameters default values (from Ini-file).
- * \return void  
- * \sa     
- */ 
+ * \return void
+ * \sa
+ */
 TI_STATUS healthMonitor_SetDefaults (TI_HANDLE    hHealthMonitor, healthMonitorInitParams_t *healthMonitorInitParams)
 {
     THealthMonitor *pHealthMonitor = hHealthMonitor;
@@ -222,13 +227,13 @@ TI_STATUS healthMonitor_SetDefaults (TI_HANDLE    hHealthMonitor, healthMonitorI
 /***********************************************************************
  *                        healthMonitor_unload
  ***********************************************************************
-DESCRIPTION: 
-           
-INPUT:      
+DESCRIPTION:
+
+INPUT:
 
 OUTPUT:
 
-RETURN: 
+RETURN:
 
 ************************************************************************/
 TI_STATUS healthMonitor_unload (TI_HANDLE hHealthMonitor)
@@ -256,14 +261,14 @@ TI_STATUS healthMonitor_unload (TI_HANDLE hHealthMonitor)
 /***********************************************************************
  *                        healthMonitor_setState
  ***********************************************************************
-DESCRIPTION: 
-           
+DESCRIPTION:
 
-INPUT:      
+
+INPUT:
 
 OUTPUT:
 
-RETURN: 
+RETURN:
 
 ************************************************************************/
 void healthMonitor_setState (TI_HANDLE hHealthMonitor, healthMonitorState_e state)
@@ -279,13 +284,13 @@ void healthMonitor_setState (TI_HANDLE hHealthMonitor, healthMonitorState_e stat
  ***********************************************************************
 DESCRIPTION: Called periodically by timer every few seconds (depends on connection state),
              or optionally by external application.
-           
+
 INPUT:      hHealthMonitor	-	Module handle.
-            bTwdInitOccured -   Indicates if TWDriver recovery occured since timer started 
+            bTwdInitOccured -   Indicates if TWDriver recovery occured since timer started
 
 OUTPUT:
 
-RETURN: 
+RETURN:
 
 ************************************************************************/
 void healthMonitor_PerformTest (TI_HANDLE hHealthMonitor, TI_BOOL bTwdInitOccured)
@@ -309,13 +314,13 @@ INPUT:          handle - health monitor handle
 
 OUTPUT:
 
-RETURN:    
+RETURN:
 
 ************************************************************************/
 void healthMonitor_sendFailureEvent (TI_HANDLE hHealthMonitor, EFailureEvent failureEvent)
 {
     THealthMonitor *pHealthMonitor = (THealthMonitor*)hHealthMonitor;
-    
+
 	/* Check the recovery process is already running */
     if (pHealthMonitor->failureEvent < MAX_FAILURE_EVENTS)
     {
@@ -326,9 +331,9 @@ void healthMonitor_sendFailureEvent (TI_HANDLE hHealthMonitor, EFailureEvent fai
     else if (pHealthMonitor->recoveryTriggerEnabled[failureEvent])
     {
         pHealthMonitor->failureEvent = failureEvent;
-        /* 
+        /*
          * NOTE: start timer with minimum expiry (1 msec) for recovery will start
-         *       from the top of the stack 
+         *       from the top of the stack
          */
         tmr_StartTimer (pHealthMonitor->hFailTimer,
                         healthMonitor_proccessFailureEvent,
@@ -336,7 +341,7 @@ void healthMonitor_sendFailureEvent (TI_HANDLE hHealthMonitor, EFailureEvent fai
                         1,
                         TI_FALSE);
     }
-    else 
+    else
     {
         TRACE0(pHealthMonitor->hReport, REPORT_SEVERITY_ERROR , ": Recovery trigger  is disabled!\n");
     }
@@ -346,16 +351,16 @@ void healthMonitor_sendFailureEvent (TI_HANDLE hHealthMonitor, EFailureEvent fai
 /***********************************************************************
  *                        healthMonitor_proccessFailureEvent
  ***********************************************************************
-DESCRIPTION:    this is the central error function - will be passed as call back 
-                to the TnetWDriver modules. it will parse the error and dispatch the 
-                relevant action (recovery or not) 
+DESCRIPTION:    this is the central error function - will be passed as call back
+                to the TnetWDriver modules. it will parse the error and dispatch the
+                relevant action (recovery or not)
 
 INPUT:      hHealthMonitor - health monitor handle
-            bTwdInitOccured -   Indicates if TWDriver recovery occured since timer started 
+            bTwdInitOccured -   Indicates if TWDriver recovery occured since timer started
 
 OUTPUT:
 
-RETURN:    
+RETURN:
 
 ************************************************************************/
 void healthMonitor_proccessFailureEvent (TI_HANDLE hHealthMonitor, TI_BOOL bTwdInitOccured)
@@ -392,7 +397,7 @@ void healthMonitor_proccessFailureEvent (TI_HANDLE hHealthMonitor, TI_BOOL bTwdI
     else
     {
         TRACE1(pHealthMonitor->hReport, REPORT_SEVERITY_ERROR , "unsupported failure event = %d\n", pHealthMonitor->failureEvent);
-    }    
+    }
 }
 
 
@@ -428,14 +433,14 @@ void healthMonitor_printFailureEvents(TI_HANDLE hHealthMonitor)
 
 
 /***********************************************************************
- *                        healthMonitor_SetParam									
+ *                        healthMonitor_SetParam
  ***********************************************************************
-DESCRIPTION: Set module parameters from the external command interface	
-                                                                                                   
-INPUT:      hHealthMonitor	-	module handle.
-			pParam	        -	Pointer to the parameter		
+DESCRIPTION: Set module parameters from the external command interface
 
-OUTPUT:		
+INPUT:      hHealthMonitor	-	module handle.
+			pParam	        -	Pointer to the parameter
+
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 ************************************************************************/
@@ -445,13 +450,13 @@ TI_STATUS healthMonitor_SetParam (TI_HANDLE hHealthMonitor, paramInfo_t *pParam)
 	TI_STATUS eStatus = TI_OK;
 
     TRACE1(pHealthMonitor->hReport, REPORT_SEVERITY_INFORMATION, "healthMonitor_SetParam() - %d\n", pParam->paramType);
-	
+
 	switch(pParam->paramType)
 	{
 
 	case HEALTH_MONITOR_CHECK_DEVICE:
         /* Send health check command to FW if we are not disconnceted */
-        if (pHealthMonitor->state != HEALTH_MONITOR_STATE_DISCONNECTED) 
+        if (pHealthMonitor->state != HEALTH_MONITOR_STATE_DISCONNECTED)
         {
             healthMonitor_PerformTest (hHealthMonitor, TI_FALSE);
         }
@@ -466,19 +471,19 @@ TI_STATUS healthMonitor_SetParam (TI_HANDLE hHealthMonitor, paramInfo_t *pParam)
 
 
 /***********************************************************************
- *			      healthMonitor_GetParam									
+ *			      healthMonitor_GetParam
  ***********************************************************************
 DESCRIPTION: Get module parameters from the external command interface
-                                                                                                   
-INPUT:      hHealthMonitor	-	module handle.
-			pParam	        -	Pointer to the parameter		
 
-OUTPUT:		
+INPUT:      hHealthMonitor	-	module handle.
+			pParam	        -	Pointer to the parameter
+
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 ************************************************************************/
 TI_STATUS healthMonitor_GetParam (TI_HANDLE hHealthMonitor, paramInfo_t *pParam)
-{ 
+{
 	return TI_OK;
 }
 

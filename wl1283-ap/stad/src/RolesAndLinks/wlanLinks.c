@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * wlanLinks.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file wlanLinks.c
  *  \brief Wlan Links database
  *
@@ -58,7 +63,7 @@
 
 /* Structures */
 
- 
+
 /* Internal functions prototypes */
 static void ResetLinkInfo(TWlanLinks *pWlanLinks, TI_UINT32 uHlid);
 static void SetLinkInfo(TWlanLinks *pWlanLinks, TWlanLinkInfo *pLinkInfo, TI_UINT32 uHlid);
@@ -67,8 +72,8 @@ static void SetLinkInfo(TWlanLinks *pWlanLinks, TWlanLinkInfo *pLinkInfo, TI_UIN
 
 
 
-/** 
- * \fn     wlanLinks_Create 
+/**
+ * \fn     wlanLinks_Create
  * \brief  create WlanLinks module
  */
 TI_HANDLE wlanLinks_Create(TI_HANDLE hOs)
@@ -78,7 +83,7 @@ TI_HANDLE wlanLinks_Create(TI_HANDLE hOs)
     if ((pWlanLinks = os_memoryAlloc(hOs, sizeof(TWlanLinks))) != NULL)
     {
         pWlanLinks->hOs = hOs;
-    
+
         return pWlanLinks;
     }
     else /* Failed to allocate control block */
@@ -89,14 +94,14 @@ TI_HANDLE wlanLinks_Create(TI_HANDLE hOs)
 }
 
 
-/** 
- * \fn     wlanLinks_Destroy 
+/**
+ * \fn     wlanLinks_Destroy
  * \brief  destroy WlanLinks module
  */
 TI_STATUS wlanLinks_Destroy(TI_HANDLE hwlanLinks)
 {
     TWlanLinks   *pWlanLinks;
-    
+
     if (hwlanLinks != NULL)
     {
         pWlanLinks = (TWlanLinks *)hwlanLinks;
@@ -108,8 +113,8 @@ TI_STATUS wlanLinks_Destroy(TI_HANDLE hwlanLinks)
 }
 
 
-/** 
- * \fn     wlanLinks_Init 
+/**
+ * \fn     wlanLinks_Init
  * \brief  init WlanLinks module
  */
 void wlanLinks_Init (TStadHandlesList *pUwdHandles)
@@ -133,8 +138,8 @@ void wlanLinks_Init (TStadHandlesList *pUwdHandles)
 }
 
 
-/** 
- * \fn     wlanLinks_AllocateNew 
+/**
+ * \fn     wlanLinks_AllocateNew
  * \brief  Allocate new Wlan Link
  */
 TI_STATUS wlanLinks_AllocateNew(TI_HANDLE hwlanLinks, TWlanLinkInfo *pLinkInfo, TI_UINT32 *pHlid)
@@ -175,11 +180,11 @@ TI_STATUS wlanLinks_AllocateNew(TI_HANDLE hwlanLinks, TWlanLinkInfo *pLinkInfo, 
     pLinks[i].bInactive = TI_FALSE;
 
     *pHlid = pLinks[i].uHlid;
-    
+
     return TI_OK;
 }
 
-/** 
+/**
  * \fn     wlanLinks_UpdateLinkInfo
  * \brief  Update Wlan Link data except dynamic parameters
  */
@@ -203,12 +208,12 @@ TI_STATUS wlanLinks_UpdateLinkInfo(TI_HANDLE hwlanLinks, TWlanLinkInfo *pLinkInf
     }
 
     SetLinkInfo(pWlanLinks,pLinkInfo,uHlid);
-    
+
     return TI_OK;
 }
 
-/** 
- * \fn     wlanLinks_FreeLink 
+/**
+ * \fn     wlanLinks_FreeLink
  * \brief  Free Wlan Link
  */
 TI_STATUS wlanLinks_FreeLink(TI_HANDLE hwlanLinks, TI_UINT32 uHlid)
@@ -221,7 +226,7 @@ TI_STATUS wlanLinks_FreeLink(TI_HANDLE hwlanLinks, TI_UINT32 uHlid)
         TRACE2(pWlanLinks->hReport, REPORT_SEVERITY_WARNING ," %s: Failed to free link entry - Invalid uHlid %d!\n", __FUNCTION__, uHlid);
         return TI_NOK;
     }
-    
+
     if (pWlanLinks->nFree == WLANLINKS_MAX_LINKS)
     {
         TRACE2(pWlanLinks->hReport, REPORT_SEVERITY_WARNING ," %s: Failed to free link entry %u - WlanLinks DB inconsistency detected!\n", __FUNCTION__, uHlid);
@@ -235,15 +240,15 @@ TI_STATUS wlanLinks_FreeLink(TI_HANDLE hwlanLinks, TI_UINT32 uHlid)
         TRACE2(pWlanLinks->hReport, REPORT_SEVERITY_WARNING ," %s: Failed to free link entry %u - the entry is already free!\n", __FUNCTION__, uHlid);
         return TI_NOK;
     }
-    
+
     pWlanLinks->nFree++;
     ResetLinkInfo(pWlanLinks, uHlid);
 
     return TI_OK;
 }
 
-/** 
- * \fn     wlanLinks_FindLinkByMac 
+/**
+ * \fn     wlanLinks_FindLinkByMac
  * \brief  Find WlanLink by MAC address
  */
 TI_STATUS wlanLinks_FindLinkByMac(TI_HANDLE hwlanLinks, TI_UINT8 *mac, TI_UINT32 *uHlid)
@@ -267,8 +272,8 @@ TI_STATUS wlanLinks_FindLinkByMac(TI_HANDLE hwlanLinks, TI_UINT8 *mac, TI_UINT32
     return TI_NOK;
 }
 
-/** 
- * \fn     wlanLinks_GetPeerDescr 
+/**
+ * \fn     wlanLinks_GetPeerDescr
  * \brief  Get Peer description of a link
  */
 TI_STATUS wlanLinks_GetPeerDescr(TI_HANDLE hwlanLinks, TI_UINT32 uHlid, TWlanLinkPeerDescr *pPeerDescr)
@@ -294,8 +299,8 @@ TI_STATUS wlanLinks_GetPeerDescr(TI_HANDLE hwlanLinks, TI_UINT32 uHlid, TWlanLin
     return TI_OK;
 }
 
-/** 
- * \fn     wlanLinks_PrintDB 
+/**
+ * \fn     wlanLinks_PrintDB
  * \brief  Print WlanLinks DB
  */
 void wlanLinks_PrintDB(TI_HANDLE hwlanLinks)
@@ -326,7 +331,7 @@ void wlanLinks_PrintDB(TI_HANDLE hwlanLinks)
             os_printf("Deauth Reason = %u\n", pWlanLinks->aLinks[hlid].uDeauthReason);
 
             os_printf("Peer Description:\n");
-            os_printf("MAC = %x:%x:%x:%x:%x:%x\n", pWlanLinks->aLinks[hlid].tPeerDescr.aMacAddr[0], pWlanLinks->aLinks[hlid].tPeerDescr.aMacAddr[1], pWlanLinks->aLinks[hlid].tPeerDescr.aMacAddr[2], 
+            os_printf("MAC = %x:%x:%x:%x:%x:%x\n", pWlanLinks->aLinks[hlid].tPeerDescr.aMacAddr[0], pWlanLinks->aLinks[hlid].tPeerDescr.aMacAddr[1], pWlanLinks->aLinks[hlid].tPeerDescr.aMacAddr[2],
                            pWlanLinks->aLinks[hlid].tPeerDescr.aMacAddr[3], pWlanLinks->aLinks[hlid].tPeerDescr.aMacAddr[4], pWlanLinks->aLinks[hlid].tPeerDescr.aMacAddr[5]);
             /* Use temporary array ssidStr for ssid string presentation */
             os_memoryCopy(pWlanLinks->hOs, ssidStr, pWlanLinks->aLinks[hlid].tPeerDescr.tSsid.str, pWlanLinks->aLinks[hlid].tPeerDescr.tSsid.len);
@@ -342,8 +347,8 @@ void wlanLinks_PrintDB(TI_HANDLE hwlanLinks)
 
 }
 
-/** 
- * \fn     wlanLinks_SetLinkState 
+/**
+ * \fn     wlanLinks_SetLinkState
  * \brief  Set Wlan Link state
  */
 TI_STATUS wlanLinks_SetLinkState(TI_HANDLE hwlanLinks, EWlanLinkState eState, TI_UINT32 uHlid)
@@ -359,7 +364,7 @@ TI_STATUS wlanLinks_SetLinkState(TI_HANDLE hwlanLinks, EWlanLinkState eState, TI
 
 }
 
-/** 
+/**
  * \fn     wlanLinks_GetLinkState
  * \brief  Get Wlan Link state
  */
@@ -379,8 +384,8 @@ TI_STATUS wlanLinks_GetLinkState(TI_HANDLE hwlanLinks, TI_UINT32 uHlid, EWlanLin
 
 }
 
-/** 
- * \fn     wlanLinks_SetLinkInactivity 
+/**
+ * \fn     wlanLinks_SetLinkInactivity
  * \brief  Set Wlan Link inactivity status
  */
 TI_STATUS wlanLinks_SetLinkInactivity(TI_HANDLE hWlanLinks, TI_BOOL bInactivity, TI_UINT32 uHlid)
@@ -395,7 +400,7 @@ TI_STATUS wlanLinks_SetLinkInactivity(TI_HANDLE hWlanLinks, TI_BOOL bInactivity,
 	return TI_OK;
 }
 
-/** 
+/**
  * \fn     wlanLinks_GetLinkInactivity
  * \brief  Get Wlan Link nactivity status
  */
@@ -415,8 +420,8 @@ TI_STATUS wlanLinks_GetLinkInactivity(TI_HANDLE hWlanLinks, TI_UINT32 uHlid, TI_
 
 }
 
-/** 
- * \fn     wlanLinks_SetDeauthReason 
+/**
+ * \fn     wlanLinks_SetDeauthReason
  * \brief  Set Wlan Link deauthentication reason
  */
 TI_STATUS wlanLinks_SetDeauthReason(TI_HANDLE hwlanLinks, TI_UINT32 uReason, TI_UINT32 uHlid)
@@ -431,7 +436,7 @@ TI_STATUS wlanLinks_SetDeauthReason(TI_HANDLE hwlanLinks, TI_UINT32 uReason, TI_
 	return TI_OK;
 }
 
-/** 
+/**
  * \fn     wlanLinks_GetDeauthReason
  * \brief  Get Wlan Link deauthentication reason
  */
@@ -451,7 +456,7 @@ TI_STATUS wlanLinks_GetDeauthReason(TI_HANDLE hwlanLinks, TI_UINT32 *pReason, TI
 
 }
 
-/** 
+/**
  * \fn     wlanLinks_GetLinkSupRates
  * \brief  Get Wlan Link supported rates bitmap
  */
@@ -471,7 +476,7 @@ TI_STATUS wlanLinks_GetLinkSupRates(TI_HANDLE hwlanLinks, TI_UINT32 *pRates, TI_
 
 }
 
-/** 
+/**
  * \fn     wlanLinks_GetLinkType
  * \brief  Get Wlan Link type
  */
@@ -495,10 +500,10 @@ TI_STATUS wlanLinks_GetLinkType(TI_HANDLE hwlanLinks, TI_UINT32 uHlid, EWlanLink
 /*      LOCAL FUNCTIONS                                                   */
 /**************************************************************************/
 
-/** 
- * \fn     ResetLinkInfo 
+/**
+ * \fn     ResetLinkInfo
  * \brief  Reset WlanLink entry data
- * 
+ *
  * Note: The assumption here is that all accesses to WlanLink DB
  *       are performed in signle context
  * \param pwlanLinks - WlanLinks module pointer
@@ -511,10 +516,10 @@ static void ResetLinkInfo(TWlanLinks *pWlanLinks, TI_UINT32 uHlid)
     pWlanLinks->aLinks[uHlid].uHlid = uHlid;
 }
 
-/** 
- * \fn     SetLinkInfo 
+/**
+ * \fn     SetLinkInfo
  * \brief  Set Wlan Link date
- * 
+ *
  * Note 1: The assumption here is that all accesses to WlanLink
  *       DB are performed in signle context
  * Note 2: The function doesn't set dynamic parameters of a

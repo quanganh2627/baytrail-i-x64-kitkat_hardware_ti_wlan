@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * PowerMgrDbgPrint.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file PowerMgrDbgPrint.c
  *  \brief Includes primtoputs for debugging the power manager module.
  *  \
@@ -49,11 +54,11 @@ void powerMgrPrintPriorities( TI_HANDLE hPowerMgr, powerMngModePriority_t* pPrio
 
 
 static char booleanDesc[ 2 ][ MAX_DESC_LENGTH ] = {"no", "yes"};
-static char powerModeDesc[ POWER_MODE_MAX ][ MAX_DESC_LENGTH ] = 
+static char powerModeDesc[ POWER_MODE_MAX ][ MAX_DESC_LENGTH ] =
                         { "Auto", "Active", "Short doze", "Long doze", "PS only" };
-static char powerPolicyDesc[ POWERAUTHO_POLICY_NUM ][ MAX_DESC_LENGTH ] = 
+static char powerPolicyDesc[ POWERAUTHO_POLICY_NUM ][ MAX_DESC_LENGTH ] =
                         { "ELP", "PD", "AWAKE" };
-static char priorityDesc[ POWER_MANAGER_MAX_PRIORITY ][ MAX_DESC_LENGTH ] = 
+static char priorityDesc[ POWER_MANAGER_MAX_PRIORITY ][ MAX_DESC_LENGTH ] =
                         { "User priority", "Soft-Gemini priority" };
 static char psStatusDesc[ POWER_SAVE_STATUS_NUMBER ][ MAX_DESC_LENGTH ]=
                         { "Enter fail", "Enter success", "Exit fail", "Exit succes" };
@@ -62,9 +67,9 @@ static char psStatusDesc[ POWER_SAVE_STATUS_NUMBER ][ MAX_DESC_LENGTH ]=
 *                        PowerMgr_printObject                                                          *
 ****************************************************************************************
 DESCRIPTION: print configuration of the PowerMgr object - use for debug!
-                                                                                                                              
+
 INPUT:          - hPowerMgr             - Handle to the Power Manager
-OUTPUT:     
+OUTPUT:
 RETURN:    void.\n
 ****************************************************************************************/
 void PowerMgr_printObject( TI_HANDLE hPowerMgr )
@@ -75,7 +80,7 @@ void PowerMgr_printObject( TI_HANDLE hPowerMgr )
     WLAN_OS_REPORT(("PS enabled: %s, desired power mode profile: %s, last power mode profile: %s\n",
                     booleanDesc[ pPowerMgr->psEnable ], powerModeDesc[ pPowerMgr->desiredPowerModeProfile ],
                     powerModeDesc[ pPowerMgr->lastPowerModeProfile ]));
-    WLAN_OS_REPORT(("Default power policy: %ss, PS power policy: %s\n", 
+    WLAN_OS_REPORT(("Default power policy: %ss, PS power policy: %s\n",
                     powerPolicyDesc[ pPowerMgr->defaultPowerLevel ],
                     powerPolicyDesc[ pPowerMgr->PowerSavePowerLevel ]));
     WLAN_OS_REPORT(("Current priority: %s\n", priorityDesc[ pPowerMgr->powerMngPriority ]));

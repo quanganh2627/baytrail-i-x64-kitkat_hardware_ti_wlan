@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * convert.h
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 #if !defined _CONVERT_H
 #define _CONVERT_H
 
@@ -58,14 +63,14 @@
 #define TIWLN_802_11_RSSI                       	    TWD_RSSI_LEVEL_PARAM
 #define TIWLN_802_11_TX_POWER_DBM_GET           	    REGULATORY_DOMAIN_CURRENT_TX_POWER_IN_DBM_PARAM
 #define TIWLN_802_11_POWER_MGR_PROFILE          	    POWER_MGR_POWER_MODE
-                                                        
+
 #define TIWLN_SHORT_SLOT_GET	                        SITE_MGR_DESIRED_SLOT_TIME_PARAM
 #define TIWLN_SHORT_SLOT_SET	                        SITE_MGR_DESIRED_SLOT_TIME_PARAM
 #define TIWLN_IBSS_PROTECTION_GET               	    CTRL_DATA_CURRENT_IBSS_PROTECTION_PARAM /* not implemented in CUDK */
 #define TIWLN_IBSS_PROTECTION_SET	                    CTRL_DATA_CURRENT_IBSS_PROTECTION_PARAM /* not implemented in CUDK */
 #define TIWLN_802_11_MIXED_MODE_SET	                    RSN_MIXED_MODE
 #define TIWLN_802_11_MIXED_MODE_GET	                    RSN_MIXED_MODE
-                                                        
+
 #define TIWLN_802_11_GET_AP_QOS_PARAMS	                QOS_MNGR_AP_QOS_PARAMETERS
 #define TIWLN_802_11_GET_AP_QOS_CAPABILITIES	        SITE_MGR_GET_AP_QOS_CAPABILITIES
 #define TIWLN_802_11_ADD_TSPEC	                        QOS_MNGR_ADD_TSPEC_REQUEST
@@ -109,7 +114,7 @@
 #define TIWLN_ADD_RX_DATA_FILTER                        RX_DATA_ADD_RX_DATA_FILTER
 #define TIWLN_REMOVE_RX_DATA_FILTER                     RX_DATA_REMOVE_RX_DATA_FILTER
 #define TIWLN_GET_RX_DATA_FILTERS_STATISTICS            RX_DATA_GET_RX_DATA_FILTERS_STATISTICS /* not implemented in CUDK */
-#define TIWLN_802_11_START_APP_SCAN_SET                 SCAN_CNCN_START_APP_SCAN           
+#define TIWLN_802_11_START_APP_SCAN_SET                 SCAN_CNCN_START_APP_SCAN
 #define TIWLN_802_11_STOP_APP_SCAN_SET                  SCAN_CNCN_STOP_APP_SCAN
 #define TIWLN_802_11_SCAN_POLICY_PARAM_SET              SCAN_MNGR_SET_CONFIGURATION
 #define TIWLN_802_11_SCAN_BSS_LIST_GET                  SCAN_MNGR_BSS_LIST_GET

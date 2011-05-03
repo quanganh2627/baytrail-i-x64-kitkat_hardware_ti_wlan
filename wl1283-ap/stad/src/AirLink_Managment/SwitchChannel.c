@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * SwitchChannel.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file SwitchChannel.c
  *  \brief SwitchChannel module interface
  *
@@ -72,7 +77,7 @@
 /* Enumerations */
 
 /** state machine states */
-typedef enum 
+typedef enum
 {
     SC_STATE_IDLE           = 0,
     SC_STATE_WAIT_4_CMD     = 1,
@@ -82,7 +87,7 @@ typedef enum
 } switchChannel_smStates;
 
 /** State machine events */
-typedef enum 
+typedef enum
 {
     SC_EVENT_START          = 0,
     SC_EVENT_STOP           = 1,
@@ -95,12 +100,12 @@ typedef enum
 } switchChannel_smEvents;
 
 
-#define SC_NUM_STATES       SC_STATE_LAST    
-#define SC_NUM_EVENTS       SC_EVENT_LAST   
+#define SC_NUM_STATES       SC_STATE_LAST
+#define SC_NUM_EVENTS       SC_EVENT_LAST
 
 
 /* Structures */
-typedef struct 
+typedef struct
 {
 
     /* SwitchChannel parameters that can be configured externally */
@@ -118,11 +123,11 @@ typedef struct
     dot11_CHANNEL_SWITCH_t  debugChannelSwitchCmdParams;
     TI_UINT8                    ignoreCancelSwitchChannelCmd;
 #endif
-    
+
     /* SwitchChannel SM */
     fsm_stateMachine_t          *pSwitchChannelSm;
 
-    /* SwitchChannel handles to other objects */                                
+    /* SwitchChannel handles to other objects */
     TI_HANDLE       hTWD;
     TI_HANDLE       hSiteMgr;
     TI_HANDLE       hSCR;
@@ -168,7 +173,7 @@ static void release_module(switchChannel_t *pSwitchChannel, TI_UINT32 initVec);
 static TI_STATUS switchChannel_smEvent(TI_UINT8 *currState, TI_UINT8 event, void* data);
 static void switchChannel_zeroDatabase(switchChannel_t *pSwitchChannel);
 void switchChannel_SwitchChannelCmdCompleteReturn(TI_HANDLE hSwitchChannel);
-void switchChannel_scrStatusCB(TI_HANDLE hSwitchChannel, EScrClientRequestStatus requestStatus, 
+void switchChannel_scrStatusCB(TI_HANDLE hSwitchChannel, EScrClientRequestStatus requestStatus,
                                EScrResourceId eResource, EScePendReason pendReason );
 #ifdef TI_DBG
 static void switchChannel_recvCmd4Debug(TI_HANDLE hSwitchChannel, dot11_CHANNEL_SWITCH_t *channelSwitch, TI_BOOL BeaconPacket, TI_UINT8 channel);
@@ -185,7 +190,7 @@ static void switchChannel_recvCmd4Debug(TI_HANDLE hSwitchChannel, dot11_CHANNEL_
  ************************************************************************/
 /**
 *
-* \b Description: 
+* \b Description:
 *
 * This procedure is called by the config manager when the driver is created.
 * It creates the SwitchChannel object.
@@ -198,7 +203,7 @@ static void switchChannel_recvCmd4Debug(TI_HANDLE hSwitchChannel, dot11_CHANNEL_
 *
 *  Handle to the SwitchChannel object.
 *
-* \sa 
+* \sa
 */
 TI_HANDLE switchChannel_create(TI_HANDLE hOs)
 {
@@ -235,7 +240,7 @@ TI_HANDLE switchChannel_create(TI_HANDLE hOs)
  ************************************************************************/
 /**
 *
-* \b Description: 
+* \b Description:
 *
 * This procedure is called by the DrvMain when the driver is initialized.
 * It initializes the SwitchChannel object's variables and handlers and creates the SwitchChannel SM.
@@ -248,7 +253,7 @@ TI_HANDLE switchChannel_create(TI_HANDLE hOs)
 *
 *  void
 *
-* \sa 
+* \sa
 */
 void switchChannel_init (TStadHandlesList *pStadHandles)
 {
@@ -259,26 +264,26 @@ void switchChannel_init (TStadHandlesList *pStadHandles)
     {
         /* next state and actions for IDLE state */
         {   {SC_STATE_WAIT_4_CMD, switchChannel_smStart},               /* START        */
-            {SC_STATE_IDLE, switchChannel_smNop},                       /* STOP         */ 
+            {SC_STATE_IDLE, switchChannel_smNop},                       /* STOP         */
             {SC_STATE_IDLE, switchChannel_smNop},                       /* SC_CMD      */
-            {SC_STATE_IDLE, switchChannel_smUnexpected},                /* SCR_RUN      */ 
+            {SC_STATE_IDLE, switchChannel_smUnexpected},                /* SCR_RUN      */
             {SC_STATE_IDLE, switchChannel_smUnexpected},                /* SCR_FAIL     */
             {SC_STATE_IDLE, switchChannel_smUnexpected},                /* SC_CMPLT    */
             {SC_STATE_IDLE, switchChannel_smUnexpected}                 /* FW_RESET     */
-        },                                                                              
+        },
 
-        /* next state and actions for WAIT_4_CMD state */    
+        /* next state and actions for WAIT_4_CMD state */
         {   {SC_STATE_WAIT_4_CMD, switchChannel_smNop},                     /* START        */
-            {SC_STATE_IDLE, switchChannel_smStopWhileWait4Cmd},             /* STOP         */ 
+            {SC_STATE_IDLE, switchChannel_smStopWhileWait4Cmd},             /* STOP         */
             {SC_STATE_WAIT_4_SCR, switchChannel_smReqSCR_UpdateCmd},        /* SC_CMD      */
-            {SC_STATE_WAIT_4_CMD, switchChannel_smUnexpected},              /* SCR_RUN      */ 
+            {SC_STATE_WAIT_4_CMD, switchChannel_smUnexpected},              /* SCR_RUN      */
             {SC_STATE_WAIT_4_CMD, switchChannel_smUnexpected},              /* SCR_FAIL     */
             {SC_STATE_WAIT_4_CMD, switchChannel_smUnexpected},              /* SC_CMPLT    */
             {SC_STATE_WAIT_4_CMD, switchChannel_smUnexpected}               /* FW_RESET    */
 
-        },                                                                              
+        },
 
-        /* next state and actions for WAIT_4_SCR state */    
+        /* next state and actions for WAIT_4_SCR state */
         {   {SC_STATE_WAIT_4_SCR, switchChannel_smUnexpected},                  /* START        */
             {SC_STATE_IDLE, switchChannel_smStopWhileWait4Scr},                 /* STOP         */
             {SC_STATE_WAIT_4_SCR, switchChannel_smNop},                         /* SC_CMD      */
@@ -287,7 +292,7 @@ void switchChannel_init (TStadHandlesList *pStadHandles)
             {SC_STATE_WAIT_4_SCR, switchChannel_smUnexpected} ,                 /* SC_CMPLT    */
             {SC_STATE_WAIT_4_CMD, switchChannel_smUnexpected}                   /* FW_RESET    */
 
-        },                                                                              
+        },
 
         /* next state and actions for switchChannel_IN_PROG state */
         {   {SC_STATE_SC_IN_PROG, switchChannel_smUnexpected},                   /* START        */
@@ -297,13 +302,13 @@ void switchChannel_init (TStadHandlesList *pStadHandles)
             {SC_STATE_WAIT_4_CMD, switchChannel_smUnexpected},                   /* SCR_FAIL    */
             {SC_STATE_WAIT_4_CMD, switchChannel_smSwitchChannelCmplt},           /* SC_CMPLT    */
             {SC_STATE_WAIT_4_CMD, switchChannel_smFwResetWhileSCInProg}          /* FW_RESET    */
-        }                                                                             
-    }; 
+        }
+    };
 
-    fsm_Config(pSwitchChannel->pSwitchChannelSm, 
-            &switchChannel_SM[0][0], 
-            SC_NUM_STATES, 
-            SC_NUM_EVENTS, 
+    fsm_Config(pSwitchChannel->pSwitchChannelSm,
+            &switchChannel_SM[0][0],
+            SC_NUM_STATES,
+            SC_NUM_EVENTS,
             switchChannel_smEvent, pSwitchChannel->hOs);
 
     /* init handlers */
@@ -318,7 +323,7 @@ void switchChannel_init (TStadHandlesList *pStadHandles)
 
 
 TI_STATUS switchChannel_SetDefaults (TI_HANDLE hSwitchChannel, SwitchChannelInitParams_t *SwitchChannelInitParams)
-{   
+{
     switchChannel_t       *pSwitchChannel = (switchChannel_t *)hSwitchChannel;
 
     /* init variables */
@@ -328,13 +333,13 @@ TI_STATUS switchChannel_SetDefaults (TI_HANDLE hSwitchChannel, SwitchChannelInit
     pSwitchChannel->switchChannelStarted = TI_FALSE;
 
     /* register to SCR */
-    scr_registerClientCB(pSwitchChannel->hSCR, SCR_CID_SWITCH_CHANNEL, 
+    scr_registerClientCB(pSwitchChannel->hSCR, SCR_CID_SWITCH_CHANNEL,
                          switchChannel_scrStatusCB, pSwitchChannel);
 
     /* register to Switch Channel Complete event in HAL */
-    TWD_RegisterEvent (pSwitchChannel->hTWD, 
-                       TWD_OWN_EVENT_SWITCH_CHANNEL_CMPLT, 
-                       (void *)switchChannel_SwitchChannelCmdCompleteReturn, 
+    TWD_RegisterEvent (pSwitchChannel->hTWD,
+                       TWD_OWN_EVENT_SWITCH_CHANNEL_CMPLT,
+                       (void *)switchChannel_SwitchChannelCmdCompleteReturn,
                        pSwitchChannel);
 
     TWD_EnableEvent (pSwitchChannel->hTWD, TWD_OWN_EVENT_SWITCH_CHANNEL_CMPLT);
@@ -355,7 +360,7 @@ TI_STATUS switchChannel_SetDefaults (TI_HANDLE hSwitchChannel, SwitchChannelInit
  ************************************************************************/
 /**
 *
-* \b Description: 
+* \b Description:
 *
 * This procedure is called by the SME when the state is changed from CONNECTED.
 * It generates a STOP event to the SwitchChannel SM.
@@ -368,7 +373,7 @@ TI_STATUS switchChannel_SetDefaults (TI_HANDLE hSwitchChannel, SwitchChannelInit
 *
 *  TI_OK on success, TI_NOK otherwise
 *
-* \sa 
+* \sa
 */
 TI_STATUS switchChannel_stop(TI_HANDLE hSwitchChannel)
 {
@@ -384,7 +389,7 @@ TI_STATUS switchChannel_stop(TI_HANDLE hSwitchChannel)
  ************************************************************************/
 /**
 *
-* \b Description: 
+* \b Description:
 *
 * This procedure is called by the SME when the state is changed to CONNECTED.
 * It generates a START event to the SwitchChannel SM.
@@ -397,7 +402,7 @@ TI_STATUS switchChannel_stop(TI_HANDLE hSwitchChannel)
 *
 *  TI_OK on success, TI_NOK otherwise
 *
-* \sa 
+* \sa
 */
 TI_STATUS switchChannel_start(TI_HANDLE hSwitchChannel)
 {
@@ -413,7 +418,7 @@ TI_STATUS switchChannel_start(TI_HANDLE hSwitchChannel)
  ************************************************************************/
 /**
 *
-* \b Description: 
+* \b Description:
 *
 * This procedure is called by the config manager when the driver is unloaded.
 * It frees any memory allocated and timers.
@@ -426,7 +431,7 @@ TI_STATUS switchChannel_start(TI_HANDLE hSwitchChannel)
 *
 *  TI_OK on success, TI_NOK otherwise
 *
-* \sa 
+* \sa
 */
 TI_STATUS switchChannel_unload(TI_HANDLE hSwitchChannel)
 {
@@ -452,7 +457,7 @@ TI_STATUS switchChannel_unload(TI_HANDLE hSwitchChannel)
                 performs the following:
                 -   Initializes the switching channel procedure.
                 -   Setting timer to the actual switching time(if needed)
-                
+
 INPUT:      hSwitchChannel      - SwitchChannel handle.
             switchMode          - indicates whether to stop transmission
                                     until the scheduled channel switch.
@@ -501,8 +506,8 @@ void switchChannel_recvCmd(TI_HANDLE hSwitchChannel, dot11_CHANNEL_SWITCH_t *cha
         param.paramType = REGULATORY_DOMAIN_UPDATE_CHANNEL_VALIDITY;
         param.content.channel = channel;
         regulatoryDomain_setParam(pSwitchChannel->hRegulatoryDomain, &param);
-    } 
-    else 
+    }
+    else
     {   /* SC IE exists */
         TRACE3(pSwitchChannel->hReport, REPORT_SEVERITY_INFORMATION, "switchChannel_recvFrame, SwitchChannel cmd was found, channel no=%d, mode=%d, TBTT=%d \n", channelSwitch->channelNumber, channelSwitch->channelSwitchMode, channelSwitch->channelSwitchCount);
 
@@ -510,26 +515,26 @@ void switchChannel_recvCmd(TI_HANDLE hSwitchChannel, dot11_CHANNEL_SWITCH_t *cha
         param.content.channel = channelSwitch->channelNumber;
         param.paramType = REGULATORY_DOMAIN_IS_CHANNEL_SUPPORTED;
         regulatoryDomain_getParam(pSwitchChannel->hRegulatoryDomain,&param);
-        if ( ( !param.content.bIsChannelSupprted )   || 
-            (channelSwitch->channelSwitchCount == 0) || 
+        if ( ( !param.content.bIsChannelSupprted )   ||
+            (channelSwitch->channelSwitchCount == 0) ||
             (channelSwitch->channelSwitchMode == SC_SWITCH_CHANNEL_MODE_TX_SUS))
-        {   /* Trigger Roaming, if TX mode is disabled, the new channel number is invalid, 
+        {   /* Trigger Roaming, if TX mode is disabled, the new channel number is invalid,
                 or the TBTT count is 0 */
 
             TRACE0(pSwitchChannel->hReport, REPORT_SEVERITY_INFORMATION, "report Roaming trigger\n");
-            if (channelSwitch->channelSwitchMode == SC_SWITCH_CHANNEL_MODE_TX_SUS) 
+            if (channelSwitch->channelSwitchMode == SC_SWITCH_CHANNEL_MODE_TX_SUS)
             {
                 param.paramType = REGULATORY_DOMAIN_SET_CHANNEL_VALIDITY;
                 param.content.channelValidity.channelNum = channel;
                 param.content.channelValidity.channelValidity = TI_FALSE;
                 regulatoryDomain_setParam(pSwitchChannel->hRegulatoryDomain, &param);
             }
-            
-            if (TI_TRUE == pSwitchChannel->switchChannelStarted) 
+
+            if (TI_TRUE == pSwitchChannel->switchChannelStarted)
             {
-                   apConn_reportRoamingEvent(pSwitchChannel->hApConn, ROAMING_TRIGGER_SWITCH_CHANNEL, NULL); 
+                   apConn_reportRoamingEvent(pSwitchChannel->hApConn, ROAMING_TRIGGER_SWITCH_CHANNEL, NULL);
             }
-            
+
         }
         else
         {   /* Invoke Switch Channel command */
@@ -550,7 +555,7 @@ void switchChannel_recvCmd(TI_HANDLE hSwitchChannel, dot11_CHANNEL_SWITCH_t *cha
  ************************************************************************/
 /**
 *
-* \b Description: 
+* \b Description:
 *
 * This procedure is called when power save status is returned
 *
@@ -562,7 +567,7 @@ void switchChannel_recvCmd(TI_HANDLE hSwitchChannel, dot11_CHANNEL_SWITCH_t *cha
 *
 *  TI_OK on success, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 void switchChannel_SwitchChannelCmdCompleteReturn(TI_HANDLE hSwitchChannel)
 {
@@ -583,7 +588,7 @@ void switchChannel_SwitchChannelCmdCompleteReturn(TI_HANDLE hSwitchChannel)
  ************************************************************************/
 /**
 *
-* \b Description: 
+* \b Description:
 *
 * This procedure enables or disables the spectrum management
 *
@@ -596,7 +601,7 @@ void switchChannel_SwitchChannelCmdCompleteReturn(TI_HANDLE hSwitchChannel)
 *
 *  TI_OK on success, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 void switchChannel_enableDisableSpectrumMngmt(TI_HANDLE hSwitchChannel, TI_BOOL enableDisable)
 {
@@ -637,7 +642,7 @@ void switchChannel_enableDisableSpectrumMngmt(TI_HANDLE hSwitchChannel, TI_BOOL 
  ************************************************************************/
 /**
 *
-* \b Description: 
+* \b Description:
 *
 * SwitchChannel state machine transition function
 *
@@ -651,7 +656,7 @@ void switchChannel_enableDisableSpectrumMngmt(TI_HANDLE hSwitchChannel, TI_BOOL 
 *
 *  TI_OK on success, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 static TI_STATUS switchChannel_smEvent(TI_UINT8 *currState, TI_UINT8 event, void* data)
 {
@@ -687,7 +692,7 @@ static TI_STATUS switchChannel_smEvent(TI_UINT8 *currState, TI_UINT8 event, void
 /**
 *
 *
-* \b Description: 
+* \b Description:
 *
 * This function is called when the station becomes connected.
  * update the current channel.
@@ -700,7 +705,7 @@ static TI_STATUS switchChannel_smEvent(TI_UINT8 *currState, TI_UINT8 event, void
 *
 *  TI_OK if successful, TI_NOK otherwise.
 *
-* 
+*
 *************************************************************************/
 static TI_STATUS switchChannel_smStart(void *pData)
 {
@@ -711,12 +716,12 @@ static TI_STATUS switchChannel_smStart(void *pData)
     {
         return TI_NOK;
     }
-    
+
     /* get the current channel number */
     param.paramType = SITE_MGR_CURRENT_CHANNEL_PARAM;
     siteMgr_getParam(pSwitchChannel->hSiteMgr, &param);
     pSwitchChannel->currentChannel = param.content.siteMgrCurrentChannel;
-    
+
     TRACE1(pSwitchChannel->hReport, REPORT_SEVERITY_INFORMATION, "switchChannel_smStart, channelNo=%d\n", pSwitchChannel->currentChannel);
     return TI_OK;
 
@@ -728,15 +733,15 @@ static TI_STATUS switchChannel_smStart(void *pData)
 /**
 *
 *
-* \b Description: 
+* \b Description:
 *
 * Update the Switch Channel command parameters.
  * Request SCR and wait for SCR return.
  * if tx status suspend
  *  update regulatory Domain
  *  update tx
- *  start periodic timer 
- 
+ *  start periodic timer
+
 *
 * \b ARGS:
 *
@@ -746,7 +751,7 @@ static TI_STATUS switchChannel_smStart(void *pData)
 *
 *  TI_OK if successful, TI_NOK otherwise.
 *
-* 
+*
 *************************************************************************/
 static TI_STATUS switchChannel_smReqSCR_UpdateCmd(void *pData)
 {
@@ -762,12 +767,12 @@ static TI_STATUS switchChannel_smReqSCR_UpdateCmd(void *pData)
 
 
     /* Save the TS when requesting SCR */
-    pSwitchChannel->SCRRequestTimestamp = os_timeStampMs(pSwitchChannel->hOs); 
-    
+    pSwitchChannel->SCRRequestTimestamp = os_timeStampMs(pSwitchChannel->hOs);
+
     scrStatus = scr_clientRequest(pSwitchChannel->hSCR, SCR_CID_SWITCH_CHANNEL,
                                   SCR_RESOURCE_SERVING_CHANNEL, &scrPendReason);
     if ((scrStatus != SCR_CRS_RUN) && (scrStatus != SCR_CRS_PEND))
-    {   
+    {
         TRACE1(pSwitchChannel->hReport, REPORT_SEVERITY_ERROR, "switchChannel_smReqSCR_UpdateCmd():Abort the switch channel, request Roaming, scrStatus=%d\n", scrStatus);
         return (switchChannel_smEvent((TI_UINT8*)&pSwitchChannel->currentState, SC_EVENT_SCR_FAIL, pSwitchChannel));
 
@@ -793,7 +798,7 @@ static TI_STATUS switchChannel_smReqSCR_UpdateCmd(void *pData)
 /**
 *
 *
-* \b Description: 
+* \b Description:
 *
 * This function is called by the SCR when:
  * the resource is reserved for the SwitchChannel - SCR_CRS_RUN
@@ -811,9 +816,9 @@ static TI_STATUS switchChannel_smReqSCR_UpdateCmd(void *pData)
 *
 *  None.
 *
-* 
+*
 *************************************************************************/
-void switchChannel_scrStatusCB(TI_HANDLE hSwitchChannel, EScrClientRequestStatus requestStatus, 
+void switchChannel_scrStatusCB(TI_HANDLE hSwitchChannel, EScrClientRequestStatus requestStatus,
                                EScrResourceId eResource, EScePendReason pendReason )
 {
     switchChannel_t             *pSwitchChannel = (switchChannel_t*)hSwitchChannel;
@@ -826,7 +831,7 @@ void switchChannel_scrStatusCB(TI_HANDLE hSwitchChannel, EScrClientRequestStatus
 
     switch (requestStatus)
     {
-    case SCR_CRS_RUN: 
+    case SCR_CRS_RUN:
         scEvent = SC_EVENT_SCR_RUN;
         break;
     case SCR_CRS_FW_RESET:
@@ -835,7 +840,7 @@ void switchChannel_scrStatusCB(TI_HANDLE hSwitchChannel, EScrClientRequestStatus
     case SCR_CRS_PEND:
         scEvent = SC_EVENT_SCR_FAIL;
         break;
-    case SCR_CRS_ABORT: 
+    case SCR_CRS_ABORT:
     default:
         TRACE2(pSwitchChannel->hReport, REPORT_SEVERITY_ERROR, "switchChannel_scrStatusCB scrStatus = %d, pendReason=%d\n", requestStatus, pendReason);
         scEvent = SC_EVENT_SCR_FAIL;
@@ -854,10 +859,10 @@ void switchChannel_scrStatusCB(TI_HANDLE hSwitchChannel, EScrClientRequestStatus
 /**
 *
 *
-* \b Description: 
+* \b Description:
 *
 * This function is called once SwitchChannel command was received and the SCR
- * request returned with reason RUN. 
+ * request returned with reason RUN.
  * In this case perform the following:
  *  Set CMD to FW
 
@@ -871,7 +876,7 @@ void switchChannel_scrStatusCB(TI_HANDLE hSwitchChannel, EScrClientRequestStatus
 *
 *  TI_OK if successful, TI_NOK otherwise.
 *
-* 
+*
 *************************************************************************/
 static TI_STATUS switchChannel_smStartSwitchChannelCmd(void *pData)
 {
@@ -902,7 +907,7 @@ static TI_STATUS switchChannel_smStartSwitchChannelCmd(void *pData)
     pSwitchChannelCmd.txFlag        = pSwitchChannel->curChannelSwitchCmdParams.channelSwitchMode;
     pSwitchChannelCmd.flush         = 0;
     TWD_CmdSwitchChannel (pSwitchChannel->hTWD, &pSwitchChannelCmd);
-    
+
     TRACE4(pSwitchChannel->hReport, REPORT_SEVERITY_INFORMATION, "TWD_CmdSwitchChannel:Set the cmd in HAL. Params:\n channelNumber=%d, switchTime=%d, txFlag=%d, flush=%d \n", pSwitchChannelCmd.channelNumber, pSwitchChannelCmd.switchTime, pSwitchChannelCmd.txFlag, pSwitchChannelCmd.flush);
 
     return TI_OK;
@@ -915,9 +920,9 @@ static TI_STATUS switchChannel_smStartSwitchChannelCmd(void *pData)
 /**
 *
 *
-* \b Description: 
+* \b Description:
 *
-* This function is called when Switch Channel command is cancelled. 
+* This function is called when Switch Channel command is cancelled.
  * In this case update TX nad regulatory Domain adn HAL.
  * Release the SCR and exit PS.
 *
@@ -929,7 +934,7 @@ static TI_STATUS switchChannel_smStartSwitchChannelCmd(void *pData)
 *
 *  TI_OK if successful, TI_NOK otherwise.
 *
-* 
+*
 *************************************************************************/
 static TI_STATUS switchChannel_smFwResetWhileSCInProg(void *pData)
 {
@@ -953,7 +958,7 @@ static TI_STATUS switchChannel_smFwResetWhileSCInProg(void *pData)
 
     /* release the SCR */
     scr_clientComplete(pSwitchChannel->hSCR, SCR_CID_SWITCH_CHANNEL, SCR_RESOURCE_SERVING_CHANNEL);
-    
+
     return TI_OK;
 
 }
@@ -965,7 +970,7 @@ static TI_STATUS switchChannel_smFwResetWhileSCInProg(void *pData)
 /**
 *
 *
-* \b Description: 
+* \b Description:
 *
 * This function is called when SwitchChannel command completed in FW.
  * In this case release SCR and update current channel.
@@ -980,18 +985,18 @@ static TI_STATUS switchChannel_smFwResetWhileSCInProg(void *pData)
 *
 *  TI_OK if successful, TI_NOK otherwise.
 *
-* 
+*
 *************************************************************************/
 static TI_STATUS switchChannel_smSwitchChannelCmplt(void *pData)
 {
     switchChannel_t             *pSwitchChannel = (switchChannel_t *)pData;
     paramInfo_t     param;
-    
+
     if (pSwitchChannel == NULL)
     {
         return TI_NOK;
     }
-    
+
     /* Update new current channel */
     param.paramType = SITE_MGR_CURRENT_CHANNEL_PARAM;
     param.content.siteMgrCurrentChannel = pSwitchChannel->curChannelSwitchCmdParams.channelNumber;
@@ -1009,7 +1014,7 @@ static TI_STATUS switchChannel_smSwitchChannelCmplt(void *pData)
 
 }
 
- 
+
 
 /************************************************************************
  *                        switchChannel_smScrFailWhileWait4Scr          *
@@ -1017,12 +1022,12 @@ static TI_STATUS switchChannel_smSwitchChannelCmplt(void *pData)
 /**
 *
 *
-* \b Description: 
+* \b Description:
 *
 * This function is called when recovery occurred, while waiting for SCR due
- * to previous switch channel command. 
+ * to previous switch channel command.
  * Exit PS
- * Release SCR. 
+ * Release SCR.
 *
 * \b ARGS:
 *
@@ -1032,7 +1037,7 @@ static TI_STATUS switchChannel_smSwitchChannelCmplt(void *pData)
 *
 *  TI_OK if successful, TI_NOK otherwise.
 *
-* 
+*
 *************************************************************************/
 static TI_STATUS switchChannel_smScrFailWhileWait4Scr(void *pData)
 {
@@ -1059,7 +1064,7 @@ static TI_STATUS switchChannel_smScrFailWhileWait4Scr(void *pData)
 /**
 *
 *
-* \b Description: 
+* \b Description:
 *
 * This function is called when the station becomes Disconnected and the current
 * state is Wait4Cmd. In this case perfrom:
@@ -1076,7 +1081,7 @@ static TI_STATUS switchChannel_smScrFailWhileWait4Scr(void *pData)
 *
 *  TI_OK if successful, TI_NOK otherwise.
 *
-* 
+*
 *************************************************************************/
 static TI_STATUS switchChannel_smStopWhileWait4Cmd(void *pData)
 {
@@ -1090,7 +1095,7 @@ static TI_STATUS switchChannel_smStopWhileWait4Cmd(void *pData)
     TRACE0(pSwitchChannel->hReport, REPORT_SEVERITY_INFORMATION, "switchChannel_smStopWhileWait4Cmd\n");
 
     switchChannel_zeroDatabase(pSwitchChannel);
-    
+
     return TI_OK;
 }
 
@@ -1100,7 +1105,7 @@ static TI_STATUS switchChannel_smStopWhileWait4Cmd(void *pData)
 /**
 *
 *
-* \b Description: 
+* \b Description:
 *
 * This function is called when the station becomes Disconnected and the current
 * state is Wait4Scr. In this case perfrom:
@@ -1117,7 +1122,7 @@ static TI_STATUS switchChannel_smStopWhileWait4Cmd(void *pData)
 *
 *  TI_OK if successful, TI_NOK otherwise.
 *
-* 
+*
 *************************************************************************/
 static TI_STATUS switchChannel_smStopWhileWait4Scr(void *pData)
 {
@@ -1132,7 +1137,7 @@ static TI_STATUS switchChannel_smStopWhileWait4Scr(void *pData)
 
 
     switchChannel_zeroDatabase(pSwitchChannel);
-    
+
     /* release the SCR */
     scr_clientComplete(pSwitchChannel->hSCR, SCR_CID_SWITCH_CHANNEL, SCR_RESOURCE_SERVING_CHANNEL);
 
@@ -1145,7 +1150,7 @@ static TI_STATUS switchChannel_smStopWhileWait4Scr(void *pData)
 /**
 *
 *
-* \b Description: 
+* \b Description:
 *
 * This function is called when the station becomes Disconnected and the current
 * state is SwitchChannelInProg. In this case perfrom:
@@ -1164,7 +1169,7 @@ static TI_STATUS switchChannel_smStopWhileWait4Scr(void *pData)
 *
 *  TI_OK if successful, TI_NOK otherwise.
 *
-* 
+*
 *************************************************************************/
 static TI_STATUS switchChannel_smStopWhileSwitchChannelInProg(void *pData)
 {
@@ -1184,7 +1189,7 @@ static TI_STATUS switchChannel_smStopWhileSwitchChannelInProg(void *pData)
 
     TWD_CmdSwitchChannelCancel (pSwitchChannel->hTWD, pSwitchChannel->currentChannel);
     switchChannel_zeroDatabase(pSwitchChannel);
-    
+
     /* release the SCR */
     scr_clientComplete(pSwitchChannel->hSCR, SCR_CID_SWITCH_CHANNEL, SCR_RESOURCE_SERVING_CHANNEL);
 
@@ -1200,7 +1205,7 @@ static TI_STATUS switchChannel_smStopWhileSwitchChannelInProg(void *pData)
 /**
 *
 *
-* \b Description: 
+* \b Description:
 *
 * This function is called when the SwitchChannel internal database should be zero.
  * The following parameters are zerod:
@@ -1217,7 +1222,7 @@ static TI_STATUS switchChannel_smStopWhileSwitchChannelInProg(void *pData)
 *
 *  None.
 *
-* 
+*
 *************************************************************************/
 static void switchChannel_zeroDatabase(switchChannel_t *pSwitchChannel)
 {
@@ -1233,16 +1238,16 @@ static void switchChannel_zeroDatabase(switchChannel_t *pSwitchChannel)
 }
 
 /***********************************************************************
- *                        release_module                               
+ *                        release_module
  ***********************************************************************/
-/* 
+/*
 DESCRIPTION:    Called by the destroy function or by the create function (on failure)
                 Go over the vector, for each bit that is set, release the corresponding module.
-                                                                                                   
+
 INPUT:      pSwitchChannel  -   SwitchChannel pointer.
             initVec -   Vector that contains a bit set for each module thah had been initiualized
 
-OUTPUT:     
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
@@ -1271,7 +1276,7 @@ static void release_module(switchChannel_t *pSwitchChannel, TI_UINT32 initVec)
 *
 * switchChannel_smNop - Do nothing
 *
-* \b Description: 
+* \b Description:
 *
 * Do nothing in the SM.
 *
@@ -1283,7 +1288,7 @@ static void release_module(switchChannel_t *pSwitchChannel, TI_UINT32 initVec)
 *
 *  TI_OK if successful, TI_NOK otherwise.
 *
-* 
+*
 */
 static TI_STATUS switchChannel_smNop(void *pData)
 {
@@ -1303,7 +1308,7 @@ static TI_STATUS switchChannel_smNop(void *pData)
 *
 * switchChannel_smUnexpected - Unexpected event
 *
-* \b Description: 
+* \b Description:
 *
 * Unexpected event in the SM.
 *
@@ -1315,7 +1320,7 @@ static TI_STATUS switchChannel_smNop(void *pData)
 *
 *  TI_OK if successful, TI_NOK otherwise.
 *
-* 
+*
 */
 static TI_STATUS switchChannel_smUnexpected(void *pData)
 {
@@ -1332,7 +1337,7 @@ static TI_STATUS switchChannel_smUnexpected(void *pData)
 }
 
 /*******************************************************************************
-***********                         Debug functions                  ***********               
+***********                         Debug functions                  ***********
 *******************************************************************************/
 #ifdef TI_DBG
 
@@ -1345,7 +1350,7 @@ static TI_STATUS switchChannel_smUnexpected(void *pData)
                 performs the following:
                 -   Initializes the switching channel procedure.
                 -   Setting timer to the actual switching time(if needed)
-                
+
 INPUT:      hSwitchChannel              -   SwitchChannel handle.
             switchMode          - indicates whether to stop transmission
                                 until the scheduled channel switch.
@@ -1381,7 +1386,7 @@ static void switchChannel_recvCmd4Debug(TI_HANDLE hSwitchChannel, dot11_CHANNEL_
             pSwitchChannel->curChannelSwitchCmdParams.channelNumber = channelSwitch->channelNumber;
             pSwitchChannel->curChannelSwitchCmdParams.channelSwitchCount = channelSwitch->channelSwitchCount;
             pSwitchChannel->curChannelSwitchCmdParams.channelSwitchMode = channelSwitch->channelSwitchMode;
-            
+
             pSwitchChannel->ignoreCancelSwitchChannelCmd = 2;
         }
         else if (channelSwitch->channelSwitchCount>0)
@@ -1389,14 +1394,14 @@ static void switchChannel_recvCmd4Debug(TI_HANDLE hSwitchChannel, dot11_CHANNEL_
             channelSwitch->channelSwitchCount --;
         }
         else
-        {   
+        {
             pSwitchChannel->ignoreCancelSwitchChannelCmd = 0;
         }
 
 
         /* search in the buffer pointer to the beginning of the
             Switch Cahnnel Announcement IE according to the IE ID */
-        
+
         /* SC IE exists on the serving channel */
         TRACE3(pSwitchChannel->hReport, REPORT_SEVERITY_INFORMATION, "switchChannel_recvFrame, SwitchChannel cmd was found, channel no=%d, mode=%d, TBTT=%d \n", channelSwitch->channelNumber, channelSwitch->channelSwitchMode, channelSwitch->channelSwitchCount);
 
@@ -1404,10 +1409,10 @@ static void switchChannel_recvCmd4Debug(TI_HANDLE hSwitchChannel, dot11_CHANNEL_
         param.content.channel = channelSwitch->channelNumber;
         param.paramType = REGULATORY_DOMAIN_IS_CHANNEL_SUPPORTED;
         regulatoryDomain_getParam(pSwitchChannel->hRegulatoryDomain,&param);
-        if (( !param.content.bIsChannelSupprted ) || 
-            (channelSwitch->channelSwitchCount == 0) || 
+        if (( !param.content.bIsChannelSupprted ) ||
+            (channelSwitch->channelSwitchCount == 0) ||
             (channelSwitch->channelSwitchMode == SC_SWITCH_CHANNEL_MODE_TX_SUS))
-        {   /* Trigger Roaming, if TX mode is disabled, the new channel number is invalid, 
+        {   /* Trigger Roaming, if TX mode is disabled, the new channel number is invalid,
                 or the TBTT count is 0 */
             apConn_reportRoamingEvent(pSwitchChannel->hApConn, ROAMING_TRIGGER_SWITCH_CHANNEL, NULL);
         }
@@ -1431,7 +1436,7 @@ void switchChannelDebug_setCmdParams(TI_HANDLE hSwitchChannel, SC_switchChannelC
     {
         return;
     }
-    
+
     switch (switchChannelCmdParam)
     {
     case SC_SWITCH_CHANNEL_NUM:
@@ -1461,7 +1466,7 @@ void switchChannelDebug_SwitchChannelCmdTest(TI_HANDLE hSwitchChannel, TI_BOOL B
     {
         return;
     }
-    
+
     WLAN_OS_REPORT(("SwitchChannelDebug_SwitchChannelCmdTest, BeaconPacket=%d \n cmd params: channelNumber=%d, channelSwitchCount=%d, channelSwitchMode=%d \n",
                     BeaconPacket,
                     pSwitchChannel->debugChannelSwitchCmdParams.channelNumber,
@@ -1482,7 +1487,7 @@ void switchChannelDebug_CancelSwitchChannelCmdTest(TI_HANDLE hSwitchChannel, TI_
     {
         return;
     }
-    
+
     WLAN_OS_REPORT(("SwitchChannelDebug_SwitchChannelCmdTest, BeaconPacket=%d \n",BeaconPacket));
 
     pSwitchChannel->ignoreCancelSwitchChannelCmd= 0;
@@ -1498,9 +1503,9 @@ void switchChannelDebug_printStatus(TI_HANDLE hSwitchChannel)
     {
         return;
     }
-    
-    WLAN_OS_REPORT(("SwitchChannel debug params are: channelNumber=%d, channelSwitchCount=%d , channelSwitchMode=%d \n", 
-                    pSwitchChannel->debugChannelSwitchCmdParams.channelNumber, 
+
+    WLAN_OS_REPORT(("SwitchChannel debug params are: channelNumber=%d, channelSwitchCount=%d , channelSwitchMode=%d \n",
+                    pSwitchChannel->debugChannelSwitchCmdParams.channelNumber,
                     pSwitchChannel->debugChannelSwitchCmdParams.channelSwitchCount,
                     pSwitchChannel->debugChannelSwitchCmdParams.channelSwitchMode));
 

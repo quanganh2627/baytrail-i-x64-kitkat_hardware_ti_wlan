@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * admCtrl.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file admCtrl.c
  *  \brief Admission control API implimentation
  *
@@ -55,7 +60,7 @@
 #include "admCtrlNone.h"
 #include "admCtrlWep.h"
 #include "EvHandler.h"
- 
+
 /* Constants */
 
 /* Enumerations */
@@ -94,7 +99,7 @@ TI_STATUS admCtrl_getMixedMode(admCtrl_t *pAdmCtrl, TI_BOOL *pMixedMode);
 
 TI_STATUS admCtrl_setMixedMode(admCtrl_t *pAdmCtrl, TI_BOOL mixedMode);
 
-TI_STATUS admCtrl_getAuthEncrCapability(admCtrl_t *pAdmCtrl, 
+TI_STATUS admCtrl_getAuthEncrCapability(admCtrl_t *pAdmCtrl,
                    rsnAuthEncrCapability_t   *authEncrCapability);
 
 TI_STATUS admCtrl_getPromoteFlags(admCtrl_t *pAdmCtrl, TI_UINT32 *WPAPromoteFlags);
@@ -105,17 +110,17 @@ TI_STATUS admCtrl_getWPAMixedModeSupport(admCtrl_t *pAdmCtrl, TI_UINT32 *support
 
 TI_STATUS admCtrl_checkSetSuite(admCtrl_t *pAdmCtrl, ECipherSuite suite, TI_BOOL Broadcast);
 
-#ifdef CCX_MODULE_INCLUDED
-TI_STATUS admCtrl_setNetworkEap(admCtrl_t *pAdmCtrl, OS_CCX_NETWORK_EAP networkEap);
+#ifdef XCC_MODULE_INCLUDED
+TI_STATUS admCtrl_setNetworkEap(admCtrl_t *pAdmCtrl, OS_XCC_NETWORK_EAP networkEap);
 
-TI_STATUS admCtrl_getNetworkEap(admCtrl_t *pAdmCtrl, OS_CCX_NETWORK_EAP *networkEap);
+TI_STATUS admCtrl_getNetworkEap(admCtrl_t *pAdmCtrl, OS_XCC_NETWORK_EAP *networkEap);
 #endif
 
 /**
 *
 * admCtrl_create
 *
-* \b Description: 
+* \b Description:
 *
 * Create the admission control context.
 *
@@ -123,12 +128,12 @@ TI_STATUS admCtrl_getNetworkEap(admCtrl_t *pAdmCtrl, OS_CCX_NETWORK_EAP *network
 *
 *  I   - role - admission cotrol role (AP or Station)  \n
 *  I   - authSuite - authentication suite to work with \n
-*  
+*
 * \b RETURNS:
 *
 *  TI_OK on success, TI_NOK on failure.
 *
-* \sa 
+* \sa
 */
 admCtrl_t* admCtrl_create(TI_HANDLE hOs)
 {
@@ -152,7 +157,7 @@ admCtrl_t* admCtrl_create(TI_HANDLE hOs)
 *
 * admCtrl_unload
 *
-* \b Description: 
+* \b Description:
 *
 * Unload admission control module from memory
 *
@@ -172,7 +177,7 @@ TI_STATUS admCtrl_unload (admCtrl_t *pAdmCtrl)
     {
         return TI_NOK;
     }
-    
+
     /* Destroy the wpa2 pre-authentication timer and free the module's memory */
 	if (pAdmCtrl->hPreAuthTimerWpa2)
 	{
@@ -187,7 +192,7 @@ TI_STATUS admCtrl_unload (admCtrl_t *pAdmCtrl)
 *
 * admCtrl_config
 *
-* \b Description: 
+* \b Description:
 *
 * Configure the admission control module.
 *
@@ -195,12 +200,12 @@ TI_STATUS admCtrl_unload (admCtrl_t *pAdmCtrl)
 *
 *  I   - role - admission cotrol role (AP or Station)  \n
 *  I   - authSuite - authentication suite to work with \n
-*  
+*
 * \b RETURNS:
 *
 *  TI_OK on success, TI_NOK on failure.
 *
-* \sa 
+* \sa
 */
 TI_STATUS admCtrl_config (TI_HANDLE hAdmCtrl,
                           TI_HANDLE hMlme,
@@ -208,7 +213,7 @@ TI_STATUS admCtrl_config (TI_HANDLE hAdmCtrl,
                           TI_HANDLE hReport,
                           TI_HANDLE hOs,
                           struct _rsn_t *pRsn,
-                          TI_HANDLE hCcxMngr,
+                          TI_HANDLE hXCCMngr,
                           TI_HANDLE hPowerMgr,
                           TI_HANDLE hEvHandler,
                           TI_HANDLE hTimer,
@@ -222,7 +227,7 @@ TI_STATUS admCtrl_config (TI_HANDLE hAdmCtrl,
     {
         return TI_NOK;
     }
-    
+
     pAdmCtrl = (admCtrl_t*)hAdmCtrl;
 
     pAdmCtrl->pRsn = pRsn;
@@ -230,7 +235,7 @@ TI_STATUS admCtrl_config (TI_HANDLE hAdmCtrl,
     pAdmCtrl->hRx = hRx;
     pAdmCtrl->hReport = hReport;
     pAdmCtrl->hOs = hOs;
-    pAdmCtrl->hCcxMngr = hCcxMngr;
+    pAdmCtrl->hXCCMngr = hXCCMngr;
     pAdmCtrl->hPowerMgr = hPowerMgr;
     pAdmCtrl->hEvHandler = hEvHandler;
     pAdmCtrl->hTimer = hTimer;
@@ -242,7 +247,7 @@ TI_STATUS admCtrl_config (TI_HANDLE hAdmCtrl,
     pAdmCtrl->authSuite = pInitParam->authSuite;
     pAdmCtrl->externalAuthMode = pInitParam->externalAuthMode;
     pAdmCtrl->mixedMode = pInitParam->mixedMode;
-    
+
     if (pInitParam->privacyOn)
     {
         pAdmCtrl->broadcastSuite = TWD_CIPHER_WEP;
@@ -277,10 +282,10 @@ TI_STATUS admCtrl_config (TI_HANDLE hAdmCtrl,
     pAdmCtrl->getPromoteFlags = admCtrl_getPromoteFlags;
     pAdmCtrl->setPromoteFlags = admCtrl_setPromoteFlags;
     pAdmCtrl->getWPAMixedModeSupport = admCtrl_getWPAMixedModeSupport;
-#ifdef CCX_MODULE_INCLUDED
+#ifdef XCC_MODULE_INCLUDED
     pAdmCtrl->setNetworkEap = admCtrl_setNetworkEap;
     pAdmCtrl->getNetworkEap = admCtrl_getNetworkEap;
-    pAdmCtrl->networkEapMode = OS_CCX_NETWORK_EAP_OFF;
+    pAdmCtrl->networkEapMode = OS_XCC_NETWORK_EAP_OFF;
 #endif
 
     pAdmCtrl->getPreAuthStatus = admCtrl_nullGetPreAuthStatus;
@@ -305,19 +310,19 @@ TI_STATUS admCtrl_config (TI_HANDLE hAdmCtrl,
 *
 * admCtrl_subConfig
 *
-* \b Description: 
+* \b Description:
 *
 * Configure the admission control module according to the Privacy Mode.
 *
 * \b ARGS:
 *
 *  I   - pAdmCtrl - pointer to admission cotrol context  \n
-*  
+*
 * \b RETURNS:
 *
 *  TI_OK on success, TI_NOK on failure.
 *
-* \sa 
+* \sa
 */
 TI_STATUS admCtrl_subConfig(TI_HANDLE hAdmCtrl)
 
@@ -350,7 +355,7 @@ TI_STATUS admCtrl_subConfig(TI_HANDLE hAdmCtrl)
         break;
 
     }
-    
+
     return status;
 
 }
@@ -359,7 +364,7 @@ TI_STATUS admCtrl_subConfig(TI_HANDLE hAdmCtrl)
 *
 * admCtrl_setNetworkMode - Change current network mode.
 *
-* \b Description: 
+* \b Description:
 *
 * Change current network mode.
 *
@@ -367,12 +372,12 @@ TI_STATUS admCtrl_subConfig(TI_HANDLE hAdmCtrl)
 *
 *  I   - pAdmCtrl - context \n
 *  I   - mode - network association mode (Infustrucure/IBSS) \n
-*  
+*
 * \b RETURNS:
 *
 *  TI_OK on success, TI_NOK on failure.
 *
-* \sa 
+* \sa
 */
 TI_STATUS admCtrl_setNetworkMode(admCtrl_t *pAdmCtrl, ERsnNetworkMode mode)
 {
@@ -385,7 +390,7 @@ TI_STATUS admCtrl_setNetworkMode(admCtrl_t *pAdmCtrl, ERsnNetworkMode mode)
 *
 * admCtrl_setAuthSuite - Change current authentication suite.
 *
-* \b Description: 
+* \b Description:
 *
 * Change current authentication suite.
 *
@@ -393,12 +398,12 @@ TI_STATUS admCtrl_setNetworkMode(admCtrl_t *pAdmCtrl, ERsnNetworkMode mode)
 *
 *  I   - pAdmCtrl - context \n
 *  I   - authSuite - authentication suite to work with \n
-*  
+*
 * \b RETURNS:
 *
 *  TI_OK on success, TI_NOK on failure.
 *
-* \sa 
+* \sa
 */
 TI_STATUS admCtrl_setAuthSuite(admCtrl_t *pAdmCtrl, EAuthSuite authSuite)
 {
@@ -429,7 +434,7 @@ TI_STATUS admCtrl_setAuthSuite(admCtrl_t *pAdmCtrl, EAuthSuite authSuite)
 *
 * admCtrl_getAuthSuite  - Get current authentication suite.
 *
-* \b Description: 
+* \b Description:
 *
 * Get current authentication suite.
 *
@@ -437,12 +442,12 @@ TI_STATUS admCtrl_setAuthSuite(admCtrl_t *pAdmCtrl, EAuthSuite authSuite)
 *
 *  I   - pAdmCtrl - context \n
 *  O   - suite - key management suite to work with \n
-*  
+*
 * \b RETURNS:
 *
 *  TI_OK on success, TI_NOK on failure.
 *
-* \sa 
+* \sa
 */
 TI_STATUS admCtrl_getAuthSuite(admCtrl_t *pAdmCtrl, EAuthSuite *pSuite)
 {
@@ -460,7 +465,7 @@ TI_STATUS admCtrl_getAuthSuite(admCtrl_t *pAdmCtrl, EAuthSuite *pSuite)
 *
 * admCtrl_setExtAuthMode  - Set current External authentication Mode Status.
 *
-* \b Description: 
+* \b Description:
 *
 * Set current External authentication Mode Status.
 *
@@ -468,12 +473,12 @@ TI_STATUS admCtrl_getAuthSuite(admCtrl_t *pAdmCtrl, EAuthSuite *pSuite)
 *
 *  I   - pAdmCtrl - context \n
 *  I   - extAuthMode - External authentication Mode \n
-*  
+*
 * \b RETURNS:
 *
 *  TI_OK on success, TI_NOK on failure.
 *
-* \sa 
+* \sa
 */
 TI_STATUS admCtrl_setExtAuthMode(admCtrl_t *pAdmCtrl, EExternalAuthMode extAuthMode)
 {
@@ -497,7 +502,7 @@ TI_STATUS admCtrl_setExtAuthMode(admCtrl_t *pAdmCtrl, EExternalAuthMode extAuthM
     {
         pAdmCtrl->authSuite = RSN_AUTH_OPEN;
     }
-    
+
     return (admCtrl_subConfig(pAdmCtrl));
 }
 
@@ -505,20 +510,20 @@ TI_STATUS admCtrl_setExtAuthMode(admCtrl_t *pAdmCtrl, EExternalAuthMode extAuthM
 *
 * admCtrl_getExtAuthMode  - Get current External authentication Mode Status.
 *
-* \b Description: 
+* \b Description:
 *
 * Get current External Mode Status.
 *
 * \b ARGS:
 *
 *  I   - pAdmCtrl - context \n
-*  I   - pExtAuthMode - CCX External Mode Status \n
-*  
+*  I   - pExtAuthMode - XCC External Mode Status \n
+*
 * \b RETURNS:
 *
 *  TI_OK on success, TI_NOK on failure.
 *
-* \sa 
+* \sa
 */
 TI_STATUS admCtrl_getExtAuthMode(admCtrl_t *pAdmCtrl, EExternalAuthMode *pExtAuthMode)
 {
@@ -532,7 +537,7 @@ TI_STATUS admCtrl_getExtAuthMode(admCtrl_t *pAdmCtrl, EExternalAuthMode *pExtAut
 *
 * admCtrl_checkSetSuite -
 *
-* \b Description: 
+* \b Description:
 *
 * Check the validity/support of the cipher suite according to
 * the admission control parameters
@@ -541,17 +546,17 @@ TI_STATUS admCtrl_getExtAuthMode(admCtrl_t *pAdmCtrl, EExternalAuthMode *pExtAut
 *
 *  I   - pAdmCtrl - context \n
 *  I   - suite - cipher suite to check \n
-*  
+*
 * \b RETURNS:
 *
 *  TI_OK on success, TI_NOK on failure.
 *
-* \sa 
+* \sa
 */
 TI_STATUS admCtrl_checkSetSuite(admCtrl_t *pAdmCtrl, ECipherSuite suite, TI_BOOL Broadcast)
 {
     if (pAdmCtrl->externalAuthMode<=RSN_EXT_AUTH_MODE_AUTO_SWITCH)
-    {   
+    {
         if ((suite==TWD_CIPHER_NONE) || (suite==TWD_CIPHER_WEP) || (suite==TWD_CIPHER_WEP104))
         {
             return TI_OK;
@@ -565,7 +570,7 @@ TI_STATUS admCtrl_checkSetSuite(admCtrl_t *pAdmCtrl, ECipherSuite suite, TI_BOOL
     }
     else
     {
-        if ((suite==TWD_CIPHER_TKIP) || (suite==TWD_CIPHER_WEP) || 
+        if ((suite==TWD_CIPHER_TKIP) || (suite==TWD_CIPHER_WEP) ||
             (suite==TWD_CIPHER_WEP104) || (suite==TWD_CIPHER_AES_CCMP))
         {
             return TI_OK;
@@ -588,7 +593,7 @@ TI_STATUS admCtrl_checkSetSuite(admCtrl_t *pAdmCtrl, ECipherSuite suite, TI_BOOL
 *
 * admCtrl_setUcastSuite  - Set current unicast cipher suite support.
 *
-* \b Description: 
+* \b Description:
 *
 * Set current unicast cipher suite support.
 *
@@ -596,12 +601,12 @@ TI_STATUS admCtrl_checkSetSuite(admCtrl_t *pAdmCtrl, ECipherSuite suite, TI_BOOL
 *
 *  I   - pAdmCtrl - context \n
 *  I   - suite - cipher suite to work with \n
-*  
+*
 * \b RETURNS:
 *
 *  TI_OK on success, TI_NOK on failure.
 *
-* \sa 
+* \sa
 */
 TI_STATUS admCtrl_setUcastSuite(admCtrl_t *pAdmCtrl, ECipherSuite suite)
 {
@@ -625,7 +630,7 @@ TI_STATUS admCtrl_setUcastSuite(admCtrl_t *pAdmCtrl, ECipherSuite suite)
 *
 * admCtrl_setBcastSuite  - Set current broadcast cipher suite support.
 *
-* \b Description: 
+* \b Description:
 *
 * Set current broadcast cipher suite support.
 *
@@ -633,12 +638,12 @@ TI_STATUS admCtrl_setUcastSuite(admCtrl_t *pAdmCtrl, ECipherSuite suite)
 *
 *  I   - pAdmCtrl - context \n
 *  I   - suite - cipher suite to work with \n
-*  
+*
 * \b RETURNS:
 *
 *  TI_OK on success, TI_NOK on failure.
 *
-* \sa 
+* \sa
 */
 TI_STATUS admCtrl_setBcastSuite(admCtrl_t *pAdmCtrl, ECipherSuite suite)
 {
@@ -663,7 +668,7 @@ TI_STATUS admCtrl_setBcastSuite(admCtrl_t *pAdmCtrl, ECipherSuite suite)
 *
 * admCtrl_getCipherSuite  - Set current broadcast cipher suite support.
 *
-* \b Description: 
+* \b Description:
 *
 * Set current broadcast cipher suite support.
 *
@@ -671,12 +676,12 @@ TI_STATUS admCtrl_setBcastSuite(admCtrl_t *pAdmCtrl, ECipherSuite suite)
 *
 *  I   - pAdmCtrl - context \n
 *  O   - suite - cipher suite to work with \n
-*  
+*
 * \b RETURNS:
 *
 *  TI_OK on success, TI_NOK on failure.
 *
-* \sa 
+* \sa
 */
 TI_STATUS admCtrl_getCipherSuite(admCtrl_t *pAdmCtrl, ECipherSuite *pSuite)
 {
@@ -686,15 +691,15 @@ TI_STATUS admCtrl_getCipherSuite(admCtrl_t *pAdmCtrl, ECipherSuite *pSuite)
     }
 
     *pSuite = (pAdmCtrl->broadcastSuite > pAdmCtrl->unicastSuite) ? pAdmCtrl->broadcastSuite :pAdmCtrl->unicastSuite;
-     
+
     return TI_OK;
 }
-    
+
 /**
 *
 * admCtrl_setKeyMngSuite  - Set current key management suite support.
 *
-* \b Description: 
+* \b Description:
 *
 * Set current key management suite support.
 *
@@ -702,12 +707,12 @@ TI_STATUS admCtrl_getCipherSuite(admCtrl_t *pAdmCtrl, ECipherSuite *pSuite)
 *
 *  I   - pAdmCtrl - context \n
 *  I   - suite - key management suite to work with \n
-*  
+*
 * \b RETURNS:
 *
 *  TI_OK on success, TI_NOK on failure.
 *
-* \sa 
+* \sa
 */
 TI_STATUS admCtrl_setKeyMngSuite(admCtrl_t *pAdmCtrl, ERsnKeyMngSuite suite)
 {
@@ -721,9 +726,9 @@ TI_STATUS admCtrl_setKeyMngSuite(admCtrl_t *pAdmCtrl, ERsnKeyMngSuite suite)
 *
 * admCtrl_parseIe  - Parse a required information element.
 *
-* \b Description: 
+* \b Description:
 *
-* Parse an Aironet information element. 
+* Parse an Aironet information element.
 * Builds a structure of all the capabilities described in the Aironet IE.
 * We look at Flags field only to determine KP and MIC bits value
 *
@@ -732,13 +737,13 @@ TI_STATUS admCtrl_setKeyMngSuite(admCtrl_t *pAdmCtrl, ERsnKeyMngSuite suite)
 *  I   - pAdmCtrl - pointer to admCtrl context
 *  I   - pAironetIe - pointer to Aironet IE buffer  \n
 *  O   - pAironetData - capabilities structure
-*  
-*  
+*
+*
 * \b RETURNS:
 *
-* TI_OK on success, TI_NOK on failure. 
+* TI_OK on success, TI_NOK on failure.
 *
-* \sa 
+* \sa
 */
 TI_STATUS admCtrl_parseIe(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TI_UINT8 **pIe, TI_UINT8 IeId)
 {
@@ -752,22 +757,22 @@ TI_STATUS admCtrl_parseIe(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TI_UINT8 **pI
 
     if ((pRsnData == NULL) || (pRsnData->ieLen==0))
     {
-       return TI_OK;    
+       return TI_OK;
     }
 
     pCurIe = pRsnData->pIe;
-    
+
     length = pRsnData->ieLen;
     while (length>0)
     {
         eleHdr = (dot11_eleHdr_t*)pCurIe;
-        
+
         if (length<((*eleHdr)[1] + 2))
         {
             TRACE2(pAdmCtrl->hReport, REPORT_SEVERITY_INFORMATION, "admCtrl_parseIe ERROR: pRsnData->ieLen=%d, length=%d\n\n", pRsnData->ieLen,length);
             return TI_OK;
         }
-        
+
         if ((*eleHdr)[0] == IeId)
         {
             *pIe = (TI_UINT8*)eleHdr;
@@ -783,7 +788,7 @@ TI_STATUS admCtrl_parseIe(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TI_UINT8 **pI
 *
 * admCtrl_setMixedMode  - Set current mixed Mode Status.
 *
-* \b Description: 
+* \b Description:
 *
 * Set current mixed Mode Status.
 *
@@ -791,12 +796,12 @@ TI_STATUS admCtrl_parseIe(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TI_UINT8 **pI
 *
 *  I   - pAdmCtrl - context \n
 *  I   - authMode - mixed Mode \n
-*  
+*
 * \b RETURNS:
 *
 *  TI_OK on success, TI_NOK on failure.
 *
-* \sa 
+* \sa
 */
 TI_STATUS admCtrl_setMixedMode(admCtrl_t *pAdmCtrl, TI_BOOL mixedMode)
 {
@@ -814,7 +819,7 @@ TI_STATUS admCtrl_setMixedMode(admCtrl_t *pAdmCtrl, TI_BOOL mixedMode)
 *
 * admCtrl_getMixedMode  - Get current mixed Mode Status.
 *
-* \b Description: 
+* \b Description:
 *
 * Get current mixed Mode Status.
 *
@@ -822,12 +827,12 @@ TI_STATUS admCtrl_setMixedMode(admCtrl_t *pAdmCtrl, TI_BOOL mixedMode)
 *
 *  I   - pAdmCtrl - context \n
 *  I   - pAuthMode - mixed Mode Status \n
-*  
+*
 * \b RETURNS:
 *
 *  TI_OK on success, TI_NOK on failure.
 *
-* \sa 
+* \sa
 */
 TI_STATUS admCtrl_getMixedMode(admCtrl_t *pAdmCtrl, TI_BOOL *pMixedMode)
 {
@@ -839,7 +844,7 @@ TI_STATUS admCtrl_getMixedMode(admCtrl_t *pAdmCtrl, TI_BOOL *pMixedMode)
 
 
 /* This table presents supported pairs of auth.mode/cipher type */
-static  authEncrPairList_t  supportedAuthEncrPairs[MAX_AUTH_ENCR_PAIR] = 
+static  authEncrPairList_t  supportedAuthEncrPairs[MAX_AUTH_ENCR_PAIR] =
 {
     {RSN_EXT_AUTH_MODE_OPEN,       TWD_CIPHER_NONE},
     {RSN_EXT_AUTH_MODE_OPEN,       TWD_CIPHER_WEP},
@@ -861,7 +866,7 @@ static  authEncrPairList_t  supportedAuthEncrPairs[MAX_AUTH_ENCR_PAIR] =
 * admCtrl_getAuthEncrCapability  - Get all supported pais of
 *                                  authenticationmode/cipher suite
 *
-* \b Description: 
+* \b Description:
 *
 *    Returns all supported pais of authenticationmode/cipher suite
 *
@@ -869,15 +874,15 @@ static  authEncrPairList_t  supportedAuthEncrPairs[MAX_AUTH_ENCR_PAIR] =
 *
 *  I   - pAdmCtrl - context \n
 *  I   - authEncrCapability - ptr to list of auth.mode/cipher pairs \n
-*  
+*
 * \b RETURNS:
 *
 *  TI_OK on success, TI_NOK on failure.
 *
-* \sa 
+* \sa
 */
 
-TI_STATUS admCtrl_getAuthEncrCapability(admCtrl_t *pAdmCtrl, 
+TI_STATUS admCtrl_getAuthEncrCapability(admCtrl_t *pAdmCtrl,
                                         rsnAuthEncrCapability_t   *authEncrCapability)
 {
     int i = 0;
@@ -896,14 +901,14 @@ TI_STATUS admCtrl_getAuthEncrCapability(admCtrl_t *pAdmCtrl,
     /* Copy the hardcoded table of the auth.mode/cipher type */
     for (i = 0; i < MAX_AUTH_ENCR_PAIR; i++)
     {
-        authEncrCapability->authEncrPairs[i].authenticationMode = 
+        authEncrCapability->authEncrPairs[i].authenticationMode =
             supportedAuthEncrPairs[i].authenticationMode;
-        authEncrCapability->authEncrPairs[i].cipherSuite        = 
+        authEncrCapability->authEncrPairs[i].cipherSuite        =
             supportedAuthEncrPairs[i].cipherSuite;
 
         TRACE3(pAdmCtrl->hReport, REPORT_SEVERITY_INFORMATION, "admCtrl get AuthEncr pair list: i = %d, auth mode = %d , cipher suite = %d \n", i, authEncrCapability->authEncrPairs[i].authenticationMode, authEncrCapability->authEncrPairs[i].cipherSuite);
     }
-    
+
     return TI_OK;
 }
 
@@ -930,7 +935,7 @@ TI_STATUS admCtrl_resetPMKIDlist(admCtrl_t *pAdmCtrl)
 
 TI_STATUS admCtrl_getWPAMixedModeSupport(admCtrl_t *pAdmCtrl, TI_UINT32 *support)
 {
-    
+
     if(pAdmCtrl->WPAMixedModeEnable)
        *support = ADMCTRL_WPA_OPTION_MAXVALUE;
     else
@@ -991,13 +996,13 @@ void admCtrl_notifyPreAuthStatus (admCtrl_t *pAdmCtrl, preAuthStatusEvent_e newS
 
 }
 
-#ifdef CCX_MODULE_INCLUDED
+#ifdef XCC_MODULE_INCLUDED
 
 /**
 *
 * admCtrl_setNetworkEap  - Set current Network EAP Mode Status.
 *
-* \b Description: 
+* \b Description:
 *
 * Set current Network EAP Mode Status..
 *
@@ -1010,9 +1015,9 @@ void admCtrl_notifyPreAuthStatus (admCtrl_t *pAdmCtrl, preAuthStatusEvent_e newS
 *
 *  TI_OK on success, TI_NOK on failure.
 *
-* \sa 
+* \sa
 */
-TI_STATUS admCtrl_setNetworkEap(admCtrl_t *pAdmCtrl, OS_CCX_NETWORK_EAP networkEap)
+TI_STATUS admCtrl_setNetworkEap(admCtrl_t *pAdmCtrl, OS_XCC_NETWORK_EAP networkEap)
 {
     if (pAdmCtrl==NULL)
         return TI_NOK;
@@ -1022,7 +1027,7 @@ TI_STATUS admCtrl_setNetworkEap(admCtrl_t *pAdmCtrl, OS_CCX_NETWORK_EAP networkE
         return TI_OK;
     }
     pAdmCtrl->networkEapMode = networkEap;
-    
+
     return TI_OK;
 }
 
@@ -1030,7 +1035,7 @@ TI_STATUS admCtrl_setNetworkEap(admCtrl_t *pAdmCtrl, OS_CCX_NETWORK_EAP networkE
 *
 * admCtrl_getNetworkEap  - Get current Network EAP Mode Status.
 *
-* \b Description: 
+* \b Description:
 *
 * Get current Network EAP Mode Status.
 *
@@ -1038,16 +1043,16 @@ TI_STATUS admCtrl_setNetworkEap(admCtrl_t *pAdmCtrl, OS_CCX_NETWORK_EAP networkE
 *
 *  I   - pAdmCtrl - context \n
 *  I   - networkEap - Network EAP Mode \n
-*  
+*
 * \b RETURNS:
 *
 *  TI_OK on success, TI_NOK on failure.
 *
-* \sa 
+* \sa
 */
-TI_STATUS admCtrl_getNetworkEap(admCtrl_t *pAdmCtrl, OS_CCX_NETWORK_EAP *networkEap)
+TI_STATUS admCtrl_getNetworkEap(admCtrl_t *pAdmCtrl, OS_XCC_NETWORK_EAP *networkEap)
 {
-    
+
     if (pAdmCtrl==NULL)
     {
         return TI_NOK;
@@ -1055,13 +1060,13 @@ TI_STATUS admCtrl_getNetworkEap(admCtrl_t *pAdmCtrl, OS_CCX_NETWORK_EAP *network
 
     switch (pAdmCtrl->networkEapMode)
     {
-    case OS_CCX_NETWORK_EAP_OFF: 
-        *networkEap = OS_CCX_NETWORK_EAP_OFF;
-        break; 
-    case OS_CCX_NETWORK_EAP_ON:      
-    case OS_CCX_NETWORK_EAP_ALLOWED:
-    case OS_CCX_NETWORK_EAP_PREFERRED:
-        *networkEap = OS_CCX_NETWORK_EAP_ON;
+    case OS_XCC_NETWORK_EAP_OFF:
+        *networkEap = OS_XCC_NETWORK_EAP_OFF;
+        break;
+    case OS_XCC_NETWORK_EAP_ON:
+    case OS_XCC_NETWORK_EAP_ALLOWED:
+    case OS_XCC_NETWORK_EAP_PREFERRED:
+        *networkEap = OS_XCC_NETWORK_EAP_ON;
         break;
     default:
         return TI_NOK;
@@ -1070,5 +1075,5 @@ TI_STATUS admCtrl_getNetworkEap(admCtrl_t *pAdmCtrl, OS_CCX_NETWORK_EAP *network
 
     return TI_OK;
 }
-#endif /* CCX_MODULE_INCLUDED*/
+#endif /* XCC_MODULE_INCLUDED*/
 

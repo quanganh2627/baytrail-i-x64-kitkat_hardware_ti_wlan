@@ -1,36 +1,41 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * CmdBldCfgIE.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
-/** \file  CmdBldCfgIE.c 
+
+/** \file  CmdBldCfgIE.c
  *  \brief Command builder. Configuration commands information elements
  *
- *  \see   CmdBld.h 
+ *  \see   CmdBld.h
  */
 #define __FILE_ID__  FILE_ID_92
 #include "osApi.h"
@@ -52,11 +57,11 @@
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CfgIeConfigMemory (TI_HANDLE hCmdBld, TDmaParams *pDmaParams, void *fCb, TI_HANDLE hCb)
-{   
+{
     TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
     ACXConfigMemory_t AcxElm_ConfigMemory;
     ACXConfigMemory_t *pCfg = &AcxElm_ConfigMemory;
-    
+
     os_memoryZero(pCmdBld->hOs, (void *)pCfg, sizeof(*pCfg));
 
     /*
@@ -93,7 +98,7 @@ TI_STATUS cmdBld_CfgIeConfigMemory (TI_HANDLE hCmdBld, TDmaParams *pDmaParams, v
  *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
-TI_STATUS cmdBld_CfgIeSlotTime (TI_HANDLE hCmdBld, TI_UINT8 apSlotTime, void *fCb, TI_HANDLE hCb)                                
+TI_STATUS cmdBld_CfgIeSlotTime (TI_HANDLE hCmdBld, TI_UINT8 apSlotTime, void *fCb, TI_HANDLE hCb)
 {
     TCmdBld    *pCmdBld = (TCmdBld *)hCmdBld;
     ACXSlot_t   AcxElm_SlotTime;
@@ -178,7 +183,7 @@ TI_STATUS cmdBld_CfgIeRx (TI_HANDLE hCmdBld, TI_UINT32 apRxConfigOption, TI_UINT
 *****************************************************************************
 * DESCRIPTION: Enables or disables Rx data filtering.
 *
-* INPUTS:  enabled             - 0 to disable data filtering, any other value to enable 
+* INPUTS:  enabled             - 0 to disable data filtering, any other value to enable
 *          defaultAction       - The default action to take on non-matching packets.
 *
 * OUTPUT:  None
@@ -224,14 +229,14 @@ TI_STATUS cmdBld_CfgIeEnableRxDataFilter (TI_HANDLE hCmdBld, TI_BOOL enabled, fi
 *
 * RETURNS: TI_OK or TI_NOK
 ****************************************************************************/
-TI_STATUS cmdBld_CfgIeRxDataFilter (TI_HANDLE hCmdBld, 
-                                    TI_UINT8 index, 
-                                    TI_UINT8 command, 
-                                    filter_e action, 
-                                    TI_UINT8 numFieldPatterns, 
-                                    TI_UINT8 lenFieldPatterns, 
-                                    TI_UINT8 *pFieldPatterns, 
-                                    void *fCb, 
+TI_STATUS cmdBld_CfgIeRxDataFilter (TI_HANDLE hCmdBld,
+                                    TI_UINT8 index,
+                                    TI_UINT8 command,
+                                    filter_e action,
+                                    TI_UINT8 numFieldPatterns,
+                                    TI_UINT8 lenFieldPatterns,
+                                    TI_UINT8 *pFieldPatterns,
+                                    void *fCb,
                                     TI_HANDLE hCb)
 {
     TCmdBld       *pCmdBld = (TCmdBld *)hCmdBld;
@@ -285,10 +290,10 @@ TI_STATUS cmdBld_CfgIeRxDataFilter (TI_HANDLE hCmdBld,
  *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
-TI_STATUS cmdBld_CfgIeArpIpFilter (TI_HANDLE hCmdBld, 
+TI_STATUS cmdBld_CfgIeArpIpFilter (TI_HANDLE hCmdBld,
                                    TIpAddr   tIpAddr,
-                                   EArpFilterType  filterType, 
-                                   void      *fCb, 
+                                   EArpFilterType  filterType,
+                                   void      *fCb,
                                    TI_HANDLE hCb)
 {
     TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
@@ -300,13 +305,13 @@ TI_STATUS cmdBld_CfgIeArpIpFilter (TI_HANDLE hCmdBld,
     pCfg->EleHdr.len = sizeof(ACXConfigureIP_t) - sizeof(EleHdrStruct);
 
     pCfg->arpFilterEnable = (TI_UINT8)filterType;
-        
+
     /* IP address */
     /* Note that in the case of IPv4 it is assumed that the extra two bytes are zero */
     IP_COPY (pCfg->address, tIpAddr);
 
     TRACE3(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, "ID=%u: ip=%x, enable=%u\n", pCfg->EleHdr.id, *((TI_UINT32*)pCfg->address), filterType);
-      			  
+
     return cmdQueue_SendCommand (pCmdBld->hCmdQueue, CMD_CONFIGURE, pCfg, sizeof(ACXConfigureIP_t), fCb, hCb, NULL);
 }
 
@@ -322,11 +327,11 @@ TI_STATUS cmdBld_CfgIeArpIpFilter (TI_HANDLE hCmdBld,
  *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
-TI_STATUS cmdBld_CfgIeGroupAdressTable (TI_HANDLE       hCmdBld, 
-                                        TI_UINT8        numGroupAddrs, 
-                                        TMacAddr        *pGroupAddr, 
-                                        TI_BOOL         bEnabled, 
-                                        void            *fCb, 
+TI_STATUS cmdBld_CfgIeGroupAdressTable (TI_HANDLE       hCmdBld,
+                                        TI_UINT8        numGroupAddrs,
+                                        TMacAddr        *pGroupAddr,
+                                        TI_BOOL         bEnabled,
+                                        void            *fCb,
                                         TI_HANDLE       hCb)
 {
     TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
@@ -334,20 +339,20 @@ TI_STATUS cmdBld_CfgIeGroupAdressTable (TI_HANDLE       hCmdBld,
     TI_UINT8   *tmpLoc = NULL;
     dot11MulticastGroupAddrStart_t  AcxElm_CmdConfigureMulticastIp;
     dot11MulticastGroupAddrStart_t* pCfg = &AcxElm_CmdConfigureMulticastIp;
-      
+
     os_memoryZero (pCmdBld->hOs, (void *)pCfg, sizeof(dot11MulticastGroupAddrStart_t));
 
     /* Set information element header */
     pCfg->EleHdr.id = DOT11_GROUP_ADDRESS_TBL;
     pCfg->EleHdr.len = sizeof(*pCfg) - sizeof(EleHdrStruct);
-     
+
     pCfg->numOfGroups = numGroupAddrs;
     pCfg->fltrState = bEnabled;
     tmpLoc = pCfg->dataLocation;
-        
+
     if (NULL != pGroupAddr)
     {
-        for (i = 0; i < numGroupAddrs; i++) 
+        for (i = 0; i < numGroupAddrs; i++)
         {
             MAC_COPY (&tmpLoc[MAC_ADDR_LEN * i], *(pGroupAddr + i));
 
@@ -356,14 +361,14 @@ TI_STATUS cmdBld_CfgIeGroupAdressTable (TI_HANDLE       hCmdBld,
     }
 
     return cmdQueue_SendCommand (pCmdBld->hCmdQueue, CMD_CONFIGURE, pCfg, sizeof(dot11MulticastGroupAddrStart_t), fCb, hCb, NULL);
-    
+
 }
 
 
 /****************************************************************************
  *                      cmdBld_CfgIeSgEnable()
  ****************************************************************************
- * DESCRIPTION: Enable/Disable the BTH-WLAN  
+ * DESCRIPTION: Enable/Disable the BTH-WLAN
  *
  * INPUTS:  Enable flag
  *
@@ -393,9 +398,9 @@ TI_STATUS cmdBld_CfgIeSgEnable (TI_HANDLE hCmdBld, ESoftGeminiEnableModes SoftGe
 /****************************************************************************
  *                      cmdBld_CfgIeSg()
  ****************************************************************************
- * DESCRIPTION: Configure the BTH-WLAN co-exsistance   
+ * DESCRIPTION: Configure the BTH-WLAN co-exsistance
  *
- * INPUTS:  Configuration structure pointer 
+ * INPUTS:  Configuration structure pointer
  *
  * OUTPUT:  None
  *
@@ -407,7 +412,7 @@ TI_STATUS cmdBld_CfgIeSg (TI_HANDLE hCmdBld, TSoftGeminiParams *pSoftGeminiParam
     ACXBluetoothWlanCoParamsStruct  AcxElm_BluetoothWlanEnable;
     ACXBluetoothWlanCoParamsStruct *pCfg = &AcxElm_BluetoothWlanEnable;
 	int i=0;
-    
+
     TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, "cmdBld_CfgIeSg. \n");
 
     /* Set information element header */
@@ -421,7 +426,7 @@ TI_STATUS cmdBld_CfgIeSg (TI_HANDLE hCmdBld, TSoftGeminiParams *pSoftGeminiParam
 	{
 		pCfg->softGeminiParams.coexParams[i] = pSoftGeminiParam->coexParams[i];
 	}
-	
+
     /* Rate conversion is done in the HAL */
     pCfg->softGeminiParams.coexParams[SOFT_GEMINI_RATE_ADAPT_THRESH] = rateNumberToBitmap((TI_UINT8)pSoftGeminiParam->coexParams[SOFT_GEMINI_RATE_ADAPT_THRESH]);
 
@@ -439,9 +444,9 @@ TI_STATUS cmdBld_CfgIeSg (TI_HANDLE hCmdBld, TSoftGeminiParams *pSoftGeminiParam
 /****************************************************************************
  *                      cmdBld_CfgIeFmCoex()
  ****************************************************************************
- * DESCRIPTION: Configure the FM-WLAN co-exsistance parameters  
+ * DESCRIPTION: Configure the FM-WLAN co-exsistance parameters
  *
- * INPUTS:  Configuration structure pointer 
+ * INPUTS:  Configuration structure pointer
  *
  * OUTPUT:  None
  *
@@ -452,7 +457,7 @@ TI_STATUS cmdBld_CfgIeFmCoex (TI_HANDLE hCmdBld, TFmCoexParams *pFmCoexParams, v
     TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
     ACXWlanFmCoexStruct  tFmWlanCoex;
     ACXWlanFmCoexStruct *pCfg = &tFmWlanCoex;
-    
+
     TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, "cmdBld_CfgIeFmCoex\n");
 
     /* Set information element header */
@@ -460,16 +465,16 @@ TI_STATUS cmdBld_CfgIeFmCoex (TI_HANDLE hCmdBld, TFmCoexParams *pFmCoexParams, v
     pCfg->EleHdr.len = sizeof(*pCfg) - sizeof(EleHdrStruct);
 
     /* Set parameters with endianess handling */
-    pCfg->enable                   = pFmCoexParams->uEnable;                   
-    pCfg->swallowPeriod            = pFmCoexParams->uSwallowPeriod;            
-    pCfg->nDividerFrefSet1         = pFmCoexParams->uNDividerFrefSet1;         
-    pCfg->nDividerFrefSet2         = pFmCoexParams->uNDividerFrefSet2;         
-    pCfg->mDividerFrefSet1         = ENDIAN_HANDLE_WORD(pFmCoexParams->uMDividerFrefSet1);         
-    pCfg->mDividerFrefSet2         = ENDIAN_HANDLE_WORD(pFmCoexParams->uMDividerFrefSet2);         
-    pCfg->coexPllStabilizationTime = ENDIAN_HANDLE_LONG(pFmCoexParams->uCoexPllStabilizationTime); 
-    pCfg->ldoStabilizationTime     = ENDIAN_HANDLE_WORD(pFmCoexParams->uLdoStabilizationTime);     
-    pCfg->fmDisturbedBandMargin    = pFmCoexParams->uFmDisturbedBandMargin;    
-    pCfg->swallowClkDif            = pFmCoexParams->uSwallowClkDif;    
+    pCfg->enable                   = pFmCoexParams->uEnable;
+    pCfg->swallowPeriod            = pFmCoexParams->uSwallowPeriod;
+    pCfg->nDividerFrefSet1         = pFmCoexParams->uNDividerFrefSet1;
+    pCfg->nDividerFrefSet2         = pFmCoexParams->uNDividerFrefSet2;
+    pCfg->mDividerFrefSet1         = ENDIAN_HANDLE_WORD(pFmCoexParams->uMDividerFrefSet1);
+    pCfg->mDividerFrefSet2         = ENDIAN_HANDLE_WORD(pFmCoexParams->uMDividerFrefSet2);
+    pCfg->coexPllStabilizationTime = ENDIAN_HANDLE_LONG(pFmCoexParams->uCoexPllStabilizationTime);
+    pCfg->ldoStabilizationTime     = ENDIAN_HANDLE_WORD(pFmCoexParams->uLdoStabilizationTime);
+    pCfg->fmDisturbedBandMargin    = pFmCoexParams->uFmDisturbedBandMargin;
+    pCfg->swallowClkDif            = pFmCoexParams->uSwallowClkDif;
 
     /* Send the configuration command */
     return cmdQueue_SendCommand (pCmdBld->hCmdQueue, CMD_CONFIGURE, pCfg, sizeof(*pCfg), fCb, hCb, NULL);
@@ -606,7 +611,7 @@ TI_STATUS cmdBld_CfgIeSleepAuth (TI_HANDLE hCmdBld, EPowerPolicy eMinPowerLevel,
     EElpCtrlMode eElpCtrlMode;
 
     /* Set the ELP control according to the new power policy */
-    switch (eMinPowerLevel) 
+    switch (eMinPowerLevel)
     {
     case POWERAUTHO_POLICY_AWAKE:   eElpCtrlMode = ELPCTRL_MODE_KEEP_AWAKE;  break;
     case POWERAUTHO_POLICY_PD:      eElpCtrlMode = ELPCTRL_MODE_KEEP_AWAKE;  break;
@@ -794,7 +799,7 @@ TI_STATUS cmdBld_CfgIeStatisitics (TI_HANDLE hCmdBld, void *fCb, TI_HANDLE hCb)
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CfgIeTid (TI_HANDLE hCmdBld, TQueueTrafficParams* pQtrafficParams, void *fCb, TI_HANDLE hCb)
-                                          
+
 {
     TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
     ACXTIDConfig_t    TrafficCategoryCfg;
@@ -816,7 +821,7 @@ TI_STATUS cmdBld_CfgIeTid (TI_HANDLE hCmdBld, TQueueTrafficParams* pQtrafficPara
     pCfg->queueID       = pQtrafficParams->queueID;
     pCfg->channelType   = pQtrafficParams->channelType;
     pCfg->tsid          = pQtrafficParams->tsid;
-    pCfg->psScheme      = pQtrafficParams->psScheme; 
+    pCfg->psScheme      = pQtrafficParams->psScheme;
     pCfg->APSDConf[0]   = pQtrafficParams->APSDConf[0];
     pCfg->APSDConf[1]   = pQtrafficParams->APSDConf[1];
 
@@ -915,7 +920,7 @@ TI_STATUS cmdBld_CfgIePsRxStreaming (TI_HANDLE hCmdBld, TPsRxStreaming *pPsRxStr
  ****************************************************************************
  * DESCRIPTION:  Set the PacketDetection threshold
  *
- * INPUTS:  
+ * INPUTS:
  *
  * OUTPUT:  None
  *
@@ -964,7 +969,7 @@ TI_STATUS cmdBld_CfgIeBeaconFilterOpt (TI_HANDLE hCmdBld, TI_UINT8 beaconFilteri
     TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
     ACXStaBeaconFilterOptions_t  ACXBeaconFilterOptions;
     ACXStaBeaconFilterOptions_t *pCfg = &ACXBeaconFilterOptions;
-    
+
     pCfg->enable = beaconFilteringStatus;
     pCfg->maxNumOfBeaconsStored = numOfBeaconsToBuffer;
 
@@ -1028,7 +1033,7 @@ TI_STATUS cmdBld_CfgIeRateMngDbg (TI_HANDLE hCmdBld, RateMangeParams_t *pRateMng
     pCfg->EleHdr.id = ACX_SET_RATE_MAMAGEMENT_PARAMS;
     pCfg->EleHdr.len = sizeof(AcxRateMangeParams) - sizeof(EleHdrStruct);
 
-    
+
     TRACE2(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "ID=%u, index=%d \n",pCfg->EleHdr.id,pRateMngParams->paramIndex);
 
 	pCfg->paramIndex = pRateMngParams->paramIndex;
@@ -1052,7 +1057,7 @@ TI_STATUS cmdBld_CfgIeRateMngDbg (TI_HANDLE hCmdBld, RateMangeParams_t *pRateMng
 	{
 		pCfg->RateRetryPolicy[i] = pRateMngParams->RateRetryPolicy[i];
 	}
-   
+
     return cmdQueue_SendCommand (pCmdBld->hCmdQueue, CMD_CONFIGURE, pCfg, sizeof(AcxRateMangeParams), fCb, hCb, NULL);
 }
 
@@ -1070,29 +1075,29 @@ TI_STATUS cmdBld_CfgIeRateMngDbg (TI_HANDLE hCmdBld, RateMangeParams_t *pRateMng
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CfgIeBeaconFilterTable (TI_HANDLE hCmdBld,
-                                         TI_UINT8   uNumberOfIEs, 
+                                         TI_UINT8   uNumberOfIEs,
                                          TI_UINT8  *pIETable,
-                                         TI_UINT8   uIETableSize, 
-                                         void      *fCb, 
+                                         TI_UINT8   uIETableSize,
+                                         void      *fCb,
                                          TI_HANDLE  hCb)
 {
     TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
     ACXBeaconFilterIETable_t beaconFilterIETableStruct;
     ACXBeaconFilterIETable_t *pCfg = &beaconFilterIETableStruct;
     TI_UINT32 counter;
-    
-    if (NULL == pIETable) 
+
+    if (NULL == pIETable)
     {
         return PARAM_VALUE_NOT_VALID;
     }
 
     pCfg->EleHdr.id = ACX_BEACON_FILTER_TABLE;
-    pCfg->EleHdr.len = uIETableSize + 1; 
+    pCfg->EleHdr.len = uIETableSize + 1;
     pCfg->NumberOfIEs = uNumberOfIEs;
-        
+
     os_memoryZero (pCmdBld->hOs, (void *)pCfg->IETable, BEACON_FILTER_TABLE_MAX_SIZE);
     os_memoryCopy (pCmdBld->hOs, (void *)pCfg->IETable, (void *)pIETable, uIETableSize);
-        
+
     TRACE3(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "ID=%u: num-ie=%u, table-size=%u\n", pCfg->EleHdr.id, uNumberOfIEs, uIETableSize);
 
 TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, "Beacon IE Table:\n");
@@ -1101,14 +1106,14 @@ TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, "Beacon IE Table:\n");
 TRACE1(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, "%2x ", pIETable[counter]);
 	}
 TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, "\n");
-        
+
     return cmdQueue_SendCommand (pCmdBld->hCmdQueue, CMD_CONFIGURE, pCfg, sizeof(ACXBeaconFilterIETable_t), fCb, hCb, NULL);
 }
- 
+
 /****************************************************************************
  *                     cmdBld_CfgCoexActivity
  ****************************************************************************
- * DESCRIPTION: Configure/Interrogate the Coex activity IE 
+ * DESCRIPTION: Configure/Interrogate the Coex activity IE
  *
  * INPUTS:
  *
@@ -1118,21 +1123,21 @@ TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, "\n");
  ****************************************************************************/
 TI_STATUS cmdBld_CfgIeCoexActivity (TI_HANDLE hCmdBld,
                                          TCoexActivity  *pCoexActivity,
-                                         void      *fCb, 
+                                         void      *fCb,
                                          TI_HANDLE  hCb)
 {
     TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
     ACXCoexActivityIE_t coexActivityIEStruct;
     ACXCoexActivityIE_t *pCfg = &coexActivityIEStruct;
-    
-    if (NULL == pCoexActivity) 
+
+    if (NULL == pCoexActivity)
     {
         return PARAM_VALUE_NOT_VALID;
     }
 
     pCfg->EleHdr.id = ACX_COEX_ACTIVITY;
     pCfg->EleHdr.len = sizeof(ACXCoexActivityIE_t) - sizeof(EleHdrStruct);
-        
+
     TRACE1(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, "CoexActivity: ID=0x%x\n", pCfg->EleHdr.id);
 
     pCfg->coexIp          = pCoexActivity->coexIp;
@@ -1142,14 +1147,14 @@ TI_STATUS cmdBld_CfgIeCoexActivity (TI_HANDLE hCmdBld,
     pCfg->minService      = ENDIAN_HANDLE_WORD(pCoexActivity->minService);
     pCfg->maxService      = ENDIAN_HANDLE_WORD(pCoexActivity->maxService);
 
-    TRACE6(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, "CoexActivity: 0x%02x 0x%02x - 0x%02x 0x%02x 0x%04x 0x%04x\n", 
+    TRACE6(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, "CoexActivity: 0x%02x 0x%02x - 0x%02x 0x%02x 0x%04x 0x%04x\n",
             pCfg->coexIp,
             pCfg->activityId,
             pCfg->defaultPriority,
             pCfg->raisedPriority,
             pCfg->minService,
             pCfg->maxService);
- 
+
     return cmdQueue_SendCommand (pCmdBld->hCmdQueue, CMD_CONFIGURE, pCfg, sizeof(*pCfg), fCb, hCb, NULL);
 }
 
@@ -1173,7 +1178,7 @@ TI_STATUS cmdBld_CfgIeCcaThreshold (TI_HANDLE hCmdBld, TI_UINT16 ccaThreshold, v
     /* Set information element header */
     pCfg->EleHdr.id = ACX_CCA_THRESHOLD;
     pCfg->EleHdr.len = sizeof(*pCfg) - sizeof(EleHdrStruct);
-    
+
     pCfg->rxCCAThreshold = ENDIAN_HANDLE_WORD(ccaThreshold);
 
     return cmdQueue_SendCommand (pCmdBld->hCmdQueue, CMD_CONFIGURE, pCfg, sizeof(*pCfg), fCb, hCb, NULL);
@@ -1184,9 +1189,9 @@ TI_STATUS cmdBld_CfgIeCcaThreshold (TI_HANDLE hCmdBld, TI_UINT16 ccaThreshold, v
  *                      cmdBld_CfgIeEventMask()
  ****************************************************************************
  * DESCRIPTION: Change the Event Vector Mask in the FW
- * 
+ *
  * INPUTS: MaskVector   The Updated Vector Mask
- * 
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CfgIeEventMask (TI_HANDLE hCmdBld, TI_UINT32 mask, void *fCb, TI_HANDLE hCb)
@@ -1197,7 +1202,7 @@ TI_STATUS cmdBld_CfgIeEventMask (TI_HANDLE hCmdBld, TI_UINT32 mask, void *fCb, T
     ACXEventMboxMask_t *pCfg = &EventMboxData;
 
     /* Set information element header*/
-    pCfg->EleHdr.id = ACX_EVENT_MBOX_MASK; 
+    pCfg->EleHdr.id = ACX_EVENT_MBOX_MASK;
     pCfg->EleHdr.len = sizeof(*pCfg) - sizeof(EleHdrStruct);
     pCfg->lowEventMask = ENDIAN_HANDLE_LONG(mask);
     pCfg->highEventMask = ENDIAN_HANDLE_LONG(0xffffffff); /* Not in Use */
@@ -1221,7 +1226,7 @@ TI_STATUS cmdBld_CfgIeEventMask (TI_HANDLE hCmdBld, TI_UINT32 mask, void *fCb, T
  ****************************************************************************/
 TI_STATUS cmdBld_CfgIeMaxTxRetry (TI_HANDLE hCmdBld,
                                   TRroamingTriggerParams *pRoamingTriggerCmd,
-                                  void      *fCb, 
+                                  void      *fCb,
                                   TI_HANDLE hCb)
 {
     TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
@@ -1256,7 +1261,7 @@ TI_STATUS cmdBld_CfgIeMaxTxRetry (TI_HANDLE hCmdBld,
  *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
-TI_STATUS cmdBld_CfgIeConnMonitParams (TI_HANDLE hCmdBld, TRroamingTriggerParams *pRoamingTriggerCmd, void *fCb, TI_HANDLE hCb)                                           
+TI_STATUS cmdBld_CfgIeConnMonitParams (TI_HANDLE hCmdBld, TRroamingTriggerParams *pRoamingTriggerCmd, void *fCb, TI_HANDLE hCb)
 {
     TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
     AcxConnectionMonitorOptions  AcxElm_SetBssLossTsfThreshold;
@@ -1268,7 +1273,7 @@ TI_STATUS cmdBld_CfgIeConnMonitParams (TI_HANDLE hCmdBld, TRroamingTriggerParams
     /* Set information element header */
     pCfg->EleHdr.id  = ACX_CONN_MONIT_PARAMS;
     pCfg->EleHdr.len = sizeof(*pCfg) - sizeof(EleHdrStruct);
-    
+
     return cmdQueue_SendCommand (pCmdBld->hCmdQueue, CMD_CONFIGURE, pCfg, sizeof(*pCfg), fCb, hCb, NULL);
 }
 
@@ -1276,7 +1281,7 @@ TI_STATUS cmdBld_CfgIeConnMonitParams (TI_HANDLE hCmdBld, TRroamingTriggerParams
 /****************************************************************************
  *                      cmdBld_CfgIeTxRatePolicy()
  ****************************************************************************
- * DESCRIPTION: Write the TxRateClass configuration 
+ * DESCRIPTION: Write the TxRateClass configuration
  *
  * INPUTS:
  *
@@ -1291,7 +1296,7 @@ TI_STATUS cmdBld_CfgIeTxRatePolicy (TI_HANDLE hCmdBld, TTxRatePolicy *pTxRatePol
     ACXTxAttrClasses_t  TxClassCfg;
     ACXTxAttrClasses_t *pCfg  = &TxClassCfg;
     TI_UINT8 PolicyId;
-    
+
     os_memoryZero (pCmdBld->hOs, (void *)pCfg, sizeof(*pCfg));
 
     /*
@@ -1309,13 +1314,13 @@ TI_STATUS cmdBld_CfgIeTxRatePolicy (TI_HANDLE hCmdBld, TTxRatePolicy *pTxRatePol
                        (void *)&(pTxRatePolicy->rateClass[PolicyId]),
                        sizeof(TTxRateClass));
     }
-    
+
     return cmdQueue_SendCommand (pCmdBld->hCmdQueue, CMD_CONFIGURE, pCfg, sizeof(*pCfg), fCb, hCb, NULL);
 #else
     TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
     ACXTxAttrRatePolicy_t  tTxRatePolicy;
     ACXTxAttrRatePolicy_t *pCfg  = &tTxRatePolicy;
-    
+
     os_memoryZero (pCmdBld->hOs, (void *)pCfg, sizeof(*pCfg));
 
     /*
@@ -1327,9 +1332,9 @@ TI_STATUS cmdBld_CfgIeTxRatePolicy (TI_HANDLE hCmdBld, TTxRatePolicy *pTxRatePol
     pCfg->ratePolicyIndex = pTxRatePolicy->ratePolicyIndex;
 
     os_memoryCopy (pCmdBld->hOs, &pCfg->ratePolicy, &pTxRatePolicy->ratePolicy, sizeof(TTxRateClass));
-    
+
     return cmdQueue_SendCommand (pCmdBld->hCmdQueue, CMD_CONFIGURE, pCfg, sizeof(*pCfg), fCb, hCb, NULL);
-	
+
 #endif
 }
 
@@ -1398,10 +1403,10 @@ TI_STATUS cmdBld_CfgIeFragmentThreshold (TI_HANDLE hCmdBld, TI_UINT16 uFragmentT
  *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
-TI_STATUS cmdBld_CfgIePmConfig (TI_HANDLE   hCmdBld, 
+TI_STATUS cmdBld_CfgIePmConfig (TI_HANDLE   hCmdBld,
                                 TI_UINT32   uHostClkSettlingTime,
-                                TI_UINT8    uHostFastWakeupSupport, 
-                                void *      fCb, 
+                                TI_UINT8    uHostFastWakeupSupport,
+                                void *      fCb,
                                 TI_HANDLE   hCb)
 {
     TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
@@ -1433,7 +1438,7 @@ TI_STATUS cmdBld_CfgIePmConfig (TI_HANDLE   hCmdBld,
 TI_STATUS cmdBld_CfgIeTxCmpltPacing (TI_HANDLE  hCmdBld,
                                      TI_UINT16  uTxCompletePacingThreshold,
                                      TI_UINT16  uTxCompletePacingTimeout,
-                                     void *     fCb, 
+                                     void *     fCb,
                                      TI_HANDLE  hCb)
 {
     TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
@@ -1465,7 +1470,7 @@ TI_STATUS cmdBld_CfgIeTxCmpltPacing (TI_HANDLE  hCmdBld,
 TI_STATUS cmdBld_CfgIeRxIntrPacing (TI_HANDLE  hCmdBld,
                                     TI_UINT16  uRxIntrPacingThreshold,
                                     TI_UINT16  uRxIntrPacingTimeout,
-                                    void *     fCb, 
+                                    void *     fCb,
                                     TI_HANDLE  hCb)
 {
     TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
@@ -1497,7 +1502,7 @@ TI_STATUS cmdBld_CfgIeRxIntrPacing (TI_HANDLE  hCmdBld,
  ****************************************************************************/
 TI_STATUS cmdBld_CfgIeGenFwCmd (TI_HANDLE  hCmdBld,
                                     TI_UINT8  *pGenFwCmd,
-                                    void *     fCb, 
+                                    void *     fCb,
                                     TI_HANDLE  hCb)
 {
     TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
@@ -1512,9 +1517,9 @@ TI_STATUS cmdBld_CfgIeGenFwCmd (TI_HANDLE  hCmdBld,
     for (i=0; i<GEN_FW_CMD_SIZE; i++)
         pCfg->genFwCmdBytes[i] = ENDIAN_HANDLE_LONG(pGenFwCmd[i]);
 
-    WLAN_OS_REPORT(("cmdBld_CfgIeGenFwCmd: bytes 00..07 = %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x\n", 
+    WLAN_OS_REPORT(("cmdBld_CfgIeGenFwCmd: bytes 00..07 = %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x\n",
         pCfg->genFwCmdBytes[0], pCfg->genFwCmdBytes[1], pCfg->genFwCmdBytes[2], pCfg->genFwCmdBytes[3], pCfg->genFwCmdBytes[4], pCfg->genFwCmdBytes[5], pCfg->genFwCmdBytes[6], pCfg->genFwCmdBytes[7]));
-    WLAN_OS_REPORT(("cmdBld_CfgIeGenFwCmd: bytes 08..15 = %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x\n", 
+    WLAN_OS_REPORT(("cmdBld_CfgIeGenFwCmd: bytes 08..15 = %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x\n",
         pCfg->genFwCmdBytes[8], pCfg->genFwCmdBytes[9], pCfg->genFwCmdBytes[10], pCfg->genFwCmdBytes[11], pCfg->genFwCmdBytes[12], pCfg->genFwCmdBytes[13], pCfg->genFwCmdBytes[14], pCfg->genFwCmdBytes[15]));
 
     return cmdQueue_SendCommand (pCmdBld->hCmdQueue, CMD_CONFIGURE, pCfg, sizeof(*pCfg), fCb, hCb, NULL);
@@ -1532,7 +1537,7 @@ TI_STATUS cmdBld_CfgIeGenFwCmd (TI_HANDLE  hCmdBld,
  ****************************************************************************/
 TI_STATUS cmdBld_CfgIeHostIfCfgBitmap (TI_HANDLE  hCmdBld,
                                     TI_UINT32  uHostIfCfgBitmap,
-                                    void *     fCb, 
+                                    void *     fCb,
                                     TI_HANDLE  hCb)
 {
     TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
@@ -1616,7 +1621,7 @@ TI_STATUS cmdBld_CfgIeRxMsduLifeTime (TI_HANDLE hCmdBld, TI_UINT32 RxMsduLifeTim
  *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
-TI_STATUS cmdBld_CfgIeServicePeriodTimeout (TI_HANDLE hCmdBld, TRxTimeOut* pRxTimeOut, void *fCb, TI_HANDLE hCb)                            
+TI_STATUS cmdBld_CfgIeServicePeriodTimeout (TI_HANDLE hCmdBld, TRxTimeOut* pRxTimeOut, void *fCb, TI_HANDLE hCb)
 {
     TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
     ACXRxTimeout_t AcxElm_rxTimeOut;
@@ -1638,9 +1643,9 @@ TI_STATUS cmdBld_CfgIeServicePeriodTimeout (TI_HANDLE hCmdBld, TRxTimeOut* pRxTi
  ****************************************************************************
  * DESCRIPTION: Configure The PS for WMM
  *
- * INPUTS:   TI_TRUE  - Configure PS to work on WMM mode - do not send the NULL/PS_POLL 
+ * INPUTS:   TI_TRUE  - Configure PS to work on WMM mode - do not send the NULL/PS_POLL
  *                   packets even if TIM is set.
- *           TI_FALSE - Configure PS to work on Non-WMM mode - work according to the 
+ *           TI_FALSE - Configure PS to work on Non-WMM mode - work according to the
  *                   standard
  *
  * RETURNS: TI_OK or TI_NOK
@@ -1665,7 +1670,7 @@ TI_STATUS cmdBld_CfgIePsWmm (TI_HANDLE hCmdBld, TI_BOOL enableWA, void *fCb, TI_
         TRACE0(pCmdBld->hReport, REPORT_SEVERITY_CONSOLE, "cmdBld_CfgIePsWmm: PS is on WMM mode\n");
         WLAN_OS_REPORT(("%s PS is on WMM mode\n",__FUNCTION__));
     }
-    
+
     return cmdQueue_SendCommand (pCmdBld->hCmdQueue, CMD_CONFIGURE, pCfg, sizeof(*pCfg), fCb, hCb, NULL);
 }
 
@@ -1686,21 +1691,21 @@ TI_STATUS cmdBld_CfgIeRssiSnrTrigger (TI_HANDLE hCmdBld, RssiSnrTriggerCfg_t *pT
     ACXRssiSnrTriggerCfg_t  tAcxTriggerParameters;
     ACXRssiSnrTriggerCfg_t *pCfg = &tAcxTriggerParameters;
 
-    pCfg->param.index       = pTriggerParam->index    ;        
-    pCfg->param.threshold   = pTriggerParam->threshold;        
-    pCfg->param.pacing      = pTriggerParam->pacing   ;        
-    pCfg->param.metric      = pTriggerParam->metric   ;        
-    pCfg->param.type        = pTriggerParam->type     ;        
-    pCfg->param.direction   = pTriggerParam->direction;        
-    pCfg->param.hystersis   = pTriggerParam->hystersis;        
-    pCfg->param.enable      = pTriggerParam->enable   ;        
+    pCfg->param.index       = pTriggerParam->index    ;
+    pCfg->param.threshold   = pTriggerParam->threshold;
+    pCfg->param.pacing      = pTriggerParam->pacing   ;
+    pCfg->param.metric      = pTriggerParam->metric   ;
+    pCfg->param.type        = pTriggerParam->type     ;
+    pCfg->param.direction   = pTriggerParam->direction;
+    pCfg->param.hystersis   = pTriggerParam->hystersis;
+    pCfg->param.enable      = pTriggerParam->enable   ;
 
     /* Set information element header */
     pCfg->EleHdr.id = ACX_RSSI_SNR_TRIGGER;
     pCfg->EleHdr.len = sizeof(*pCfg) - sizeof(EleHdrStruct);
 
     TRACE8(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "ID=%u: threshold=%u, pacing=%u, metric=%u, type=%u, dir=%u, hyst=%u, enable=%u\n", pTriggerParam->index, pTriggerParam->threshold, pTriggerParam->pacing, pTriggerParam->metric, pTriggerParam->type, pTriggerParam->direction, pTriggerParam->hystersis, pTriggerParam->enable);
-                                             
+
     /* Send the configuration command */
     return cmdQueue_SendCommand (pCmdBld->hCmdQueue, CMD_CONFIGURE, pCfg, sizeof(*pCfg), fCb, hCb, NULL);
 }
@@ -1722,10 +1727,10 @@ TI_STATUS cmdBld_CfgIeRssiSnrWeights (TI_HANDLE hCmdBld, RssiSnrAverageWeights_t
     ACXRssiSnrAverageWeights_t  tAcxAverageWeights;
     ACXRssiSnrAverageWeights_t *pCfg = &tAcxAverageWeights;
 
-    pCfg->param.rssiBeaconAverageWeight = pWeightsParam->rssiBeaconAverageWeight;        
-    pCfg->param.rssiPacketAverageWeight = pWeightsParam->rssiPacketAverageWeight;        
-    pCfg->param.snrBeaconAverageWeight  = pWeightsParam->snrBeaconAverageWeight ;        
-    pCfg->param.snrPacketAverageWeight  = pWeightsParam->snrPacketAverageWeight ;        
+    pCfg->param.rssiBeaconAverageWeight = pWeightsParam->rssiBeaconAverageWeight;
+    pCfg->param.rssiPacketAverageWeight = pWeightsParam->rssiPacketAverageWeight;
+    pCfg->param.snrBeaconAverageWeight  = pWeightsParam->snrBeaconAverageWeight ;
+    pCfg->param.snrPacketAverageWeight  = pWeightsParam->snrPacketAverageWeight ;
 
     /* Set information element header */
     pCfg->EleHdr.id = ACX_RSSI_SNR_WEIGHTS;
@@ -1781,7 +1786,7 @@ TI_STATUS cmdBld_CfgIeBet (TI_HANDLE hCmdBld, TI_UINT8 Enable, TI_UINT8 MaximumC
  *          trigType    - send keep alive when TX is idle or always
  *          interval    - keep-alive interval
  *          fCB         - callback function for command complete
- *          hCb         - handle to be apssed to callback function    
+ *          hCb         - handle to be apssed to callback function
  *
  * OUTPUT:  None
  *
@@ -1821,7 +1826,7 @@ TI_STATUS cmdBld_CmdIeConfigureKeepAliveParams (TI_HANDLE hCmdBld, TI_UINT8 uInd
  *
  * RETURNS: OK or NOK
  ****************************************************************************/
-TI_STATUS cmdBld_CmdIeConfigureKeepAliveEnaDis (TI_HANDLE hCmdBld, TI_UINT8 enaDisFlag, 
+TI_STATUS cmdBld_CmdIeConfigureKeepAliveEnaDis (TI_HANDLE hCmdBld, TI_UINT8 enaDisFlag,
                                                 void *fCb, TI_HANDLE hCb)
 {
     TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
@@ -1840,20 +1845,20 @@ TI_STATUS cmdBld_CmdIeConfigureKeepAliveEnaDis (TI_HANDLE hCmdBld, TI_UINT8 enaD
     return cmdQueue_SendCommand (pCmdBld->hCmdQueue, CMD_CONFIGURE, &ACXKeepAliveMode, sizeof(AcxKeepAliveMode), fCb, hCb, NULL);
 }
 
-/** 
- * \fn     cmdBld_CfgIeSetFwHtCapabilities 
- * \brief  set the current AP HT Capabilities to the FW. 
+/**
+ * \fn     cmdBld_CfgIeSetFwHtCapabilities
+ * \brief  set the current AP HT Capabilities to the FW.
  *
- * \note    
- * \return TI_OK on success or TI_NOK on failure 
- * \sa 
- */ 
+ * \note
+ * \return TI_OK on success or TI_NOK on failure
+ * \sa
+ */
 TI_STATUS cmdBld_CfgIeSetFwHtCapabilities (TI_HANDLE hCmdBld,
                                            TI_UINT32 uHtCapabilites,
                                            TMacAddr  tMacAddress,
                                            TI_UINT8  uAmpduMaxLeng,
                                            TI_UINT8  uAmpduMinSpac,
-                                           void      *fCb, 
+                                           void      *fCb,
                                            TI_HANDLE hCb)
 {
     TCmdBld                         *pCmdBld = (TCmdBld *)hCmdBld;
@@ -1868,28 +1873,28 @@ TI_STATUS cmdBld_CfgIeSetFwHtCapabilities (TI_HANDLE hCmdBld,
     pCfg->uHtCapabilites = uHtCapabilites;
     pCfg->uAmpduMaxLength = uAmpduMaxLeng;
     pCfg->uAmpduMinSpacing = uAmpduMinSpac;
- 
+
     TRACE9(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, "cmdBld_CfgIeSetFwHtCapabilities: HtCapabilites=0x%x, AmpduMaxLength=%d, AmpduMinSpac=%d, MAC: %x:%x:%x:%x:%x:%x\n", uHtCapabilites, uAmpduMaxLeng, uAmpduMinSpac, pCfg->aMacAddress[0], pCfg->aMacAddress[1], pCfg->aMacAddress[2], pCfg->aMacAddress[3], pCfg->aMacAddress[4], pCfg->aMacAddress[5]);
 
     return cmdQueue_SendCommand (pCmdBld->hCmdQueue, CMD_CONFIGURE, pCfg, sizeof(TAxcHtCapabilitiesIeFwInterface), fCb, hCb, NULL);
-    
+
 }
 
-/** 
- * \fn     cmdBld_CfgIeSetFwHtInformation 
- * \brief  set the current AP HT Information to the FW. 
+/**
+ * \fn     cmdBld_CfgIeSetFwHtInformation
+ * \brief  set the current AP HT Information to the FW.
  *
- * \note    
- * \return TI_OK on success or TI_NOK on failure 
- * \sa 
- */ 
+ * \note
+ * \return TI_OK on success or TI_NOK on failure
+ * \sa
+ */
 TI_STATUS cmdBld_CfgIeSetFwHtInformation (TI_HANDLE hCmdBld,
-                                          TI_UINT8  uRifsMode,           
-                                          TI_UINT8  uHtProtection,       
-                                          TI_UINT8  uGfProtection,       
-                                          TI_UINT8  uHtTxBurstLimit,     
-                                          TI_UINT8  uDualCtsProtection,  
-                                          void      *fCb, 
+                                          TI_UINT8  uRifsMode,
+                                          TI_UINT8  uHtProtection,
+                                          TI_UINT8  uGfProtection,
+                                          TI_UINT8  uHtTxBurstLimit,
+                                          TI_UINT8  uDualCtsProtection,
+                                          void      *fCb,
                                           TI_HANDLE hCb)
 {
     TCmdBld                        *pCmdBld = (TCmdBld *)hCmdBld;
@@ -1905,28 +1910,28 @@ TI_STATUS cmdBld_CfgIeSetFwHtInformation (TI_HANDLE hCmdBld,
     pCfg->uGfProtection = uGfProtection;
     pCfg->uHtTxBurstLimit = uHtTxBurstLimit;
     pCfg->uDualCtsProtection = uDualCtsProtection;
- 
+
     TRACE5(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, "cmdBld_CfgIeSetFwHtInformation: RifsMode=0x%x, HtProtection=0x%x, GfProtection=0x%x, HtTxBurstLimit=0x%x, DualCtsProtection=0x%x\n", uRifsMode, uHtProtection, uGfProtection, uHtTxBurstLimit, uDualCtsProtection);
 
     return cmdQueue_SendCommand (pCmdBld->hCmdQueue, CMD_CONFIGURE, pCfg, sizeof(TAxcHtInformationIeFwInterface), fCb, hCb, NULL);
 }
 
-/** 
- * \fn     cmdBld_CfgIeSetBaSession 
- * \brief  configure BA session initiator\receiver parameters setting in the FW. 
+/**
+ * \fn     cmdBld_CfgIeSetBaSession
+ * \brief  configure BA session initiator\receiver parameters setting in the FW.
  *
- * \note    
- * \return TI_OK on success or TI_NOK on failure 
- * \sa 
- */ 
-TI_STATUS cmdBld_CfgIeSetBaSession (TI_HANDLE hCmdBld, 
+ * \note
+ * \return TI_OK on success or TI_NOK on failure
+ * \sa
+ */
+TI_STATUS cmdBld_CfgIeSetBaSession (TI_HANDLE hCmdBld,
                                     InfoElement_e eBaType,
-                                    TI_UINT8 uTid,               
-                                    TI_UINT8 uState,             
-                                    TMacAddr tRa,                
-                                    TI_UINT16 uWinSize,          
+                                    TI_UINT8 uTid,
+                                    TI_UINT8 uState,
+                                    TMacAddr tRa,
+                                    TI_UINT16 uWinSize,
                                     TI_UINT16 uInactivityTimeout,
-                                    void *fCb, 
+                                    void *fCb,
                                     TI_HANDLE hCb)
 {
     TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
@@ -1964,14 +1969,14 @@ TI_STATUS cmdBld_CfgIeSetBaSession (TI_HANDLE hCmdBld,
     return cmdQueue_SendCommand (pCmdBld->hCmdQueue, CMD_CONFIGURE, pCfg, sizeof(TAxcBaSessionInitiatorResponderPolicy), fCb, hCb, NULL);
 }
 
-/** 
- * \fn     cmdBld_CfgIeRadioParams 
- * \brief  configure radio parameters setting in the FW. 
+/**
+ * \fn     cmdBld_CfgIeRadioParams
+ * \brief  configure radio parameters setting in the FW.
  *
- * \note    
- * \return TI_OK on success or TI_NOK on failure 
- * \sa 
- */ 
+ * \note
+ * \return TI_OK on success or TI_NOK on failure
+ * \sa
+ */
 TI_STATUS cmdBld_CfgIeRadioParams (TI_HANDLE hCmdBld, IniFileRadioParam *pIniFileRadioParams, void *fCb, TI_HANDLE hCb)
 {
     TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
@@ -1994,27 +1999,27 @@ TI_STATUS cmdBld_CfgIeRadioParams (TI_HANDLE hCmdBld, IniFileRadioParam *pIniFil
 
     os_memoryCopy(pCmdBld->hOs, &pTestCmd->testCmd_u.IniFileRadioParams, &pIniFileRadioParams[uFemIndex], sizeof(IniFileRadioParam));
 
-    status = cmdQueue_SendCommand (pCmdBld->hCmdQueue, 
-                             CMD_TEST, 
-                             (void *)pTestCmd, 
+    status = cmdQueue_SendCommand (pCmdBld->hCmdQueue,
+                             CMD_TEST,
+                             (void *)pTestCmd,
                              sizeof(IniFileRadioParam) + 4,
-                             fCb, 
-                             hCb, 
+                             fCb,
+                             hCb,
                              NULL);
     os_memoryFree(pCmdBld->hOs, pTestCmd, sizeof(TTestCmd));
     return status;
 }
 
 
-/** 
- * \fn     cmdBld_CfgIeExtendedRadioParams 
+/**
+ * \fn     cmdBld_CfgIeExtendedRadioParams
  * \brief  configure extended radio parameters setting in the
  * FW.
  *
- * \note    
- * \return TI_OK on success or TI_NOK on failure 
- * \sa 
- */ 
+ * \note
+ * \return TI_OK on success or TI_NOK on failure
+ * \sa
+ */
 TI_STATUS cmdBld_CfgIeExtendedRadioParams (TI_HANDLE hCmdBld,
 										   IniFileExtendedRadioParam *pIniFileExtRadioParams,
 										   void *fCb,
@@ -2036,16 +2041,16 @@ TI_STATUS cmdBld_CfgIeExtendedRadioParams (TI_HANDLE hCmdBld,
     uFemIndex = pCmdBld->tDb.tPlatformGenParams.TXBiPFEMManufacturer;
 
     TRACE1(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, ": cmdBld_CfgIeExtendedRadioParams - FEM type = %d.\n", uFemIndex);
-    
+
     os_memoryCopy(pCmdBld->hOs, &pTestCmd->testCmd_u.IniFileExtendedRadioParams,
 				  &pIniFileExtRadioParams[uFemIndex], sizeof(IniFileExtendedRadioParam));
 
-    status = cmdQueue_SendCommand (pCmdBld->hCmdQueue, 
-                             CMD_TEST, 
-                             (void *)pTestCmd, 
+    status = cmdQueue_SendCommand (pCmdBld->hCmdQueue,
+                             CMD_TEST,
+                             (void *)pTestCmd,
                              sizeof(IniFileExtendedRadioParam) + 4,
-                             fCb, 
-                             hCb, 
+                             fCb,
+                             hCb,
                              NULL);
     os_memoryFree(pCmdBld->hOs, pTestCmd, sizeof(TTestCmd));
     return status;
@@ -2070,13 +2075,13 @@ static void autoDetectCb(TI_HANDLE hCmdBld, TI_UINT16 status, void *pItrBuf)
     uint8 uFemIndexResult = ((TTestCmd *)((uint32)pItrBuf))->testCmd_u.IniFileGeneralParams.TXBiPFEMManufacturer;
 
     /* If valid, update DB according to result from FW */
-    if (uFemIndexResult < NUMBER_OF_FEM_TYPES_E) 
+    if (uFemIndexResult < NUMBER_OF_FEM_TYPES_E)
     {
         pCmdBld->tDb.tPlatformGenParams.TXBiPFEMManufacturer = uFemIndexResult;
     }
     else
     {
-        TRACE1(pCmdBld->hReport, REPORT_SEVERITY_ERROR, "autoDetectCb: Invalid TXBiPFEMManufacturer - %d", uFemIndexResult); 
+        TRACE1(pCmdBld->hReport, REPORT_SEVERITY_ERROR, "autoDetectCb: Invalid TXBiPFEMManufacturer - %d", uFemIndexResult);
     }
 
     if (pCmdBld->fInitSeqCB != NULL)
@@ -2105,18 +2110,18 @@ TI_STATUS cmdBld_CfgPlatformGenParams (TI_HANDLE hCmdBld, IniFileGeneralParam *p
 
     pTestCmd->testCmdId = TEST_CMD_INI_FILE_GENERAL_PARAM;
 
- 
+
     os_memoryCopy(pCmdBld->hOs, &pTestCmd->testCmd_u.IniFileGeneralParams, pGenParams, sizeof(IniFileGeneralParam));
 
     if (pGenParams->TXBiPFEMAutoDetect == 0) /* Manual detection */
     {
         TRACE1(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, ": Manual FEM detection. FEM type = %d\n", pGenParams->TXBiPFEMManufacturer);
-        status = cmdQueue_SendCommand (pCmdBld->hCmdQueue, 
-                          CMD_TEST, 
-                          (void *)pTestCmd, 
+        status = cmdQueue_SendCommand (pCmdBld->hCmdQueue,
+                          CMD_TEST,
+                          (void *)pTestCmd,
                           sizeof(IniFileGeneralParam) + 4,
-                          fCb, 
-                          hCb, 
+                          fCb,
+                          hCb,
                           NULL);
 
         os_memoryFree(pCmdBld->hOs, pTestCmd, sizeof(TTestCmd));
@@ -2125,12 +2130,12 @@ TI_STATUS cmdBld_CfgPlatformGenParams (TI_HANDLE hCmdBld, IniFileGeneralParam *p
     {
         TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, ": Auto FEM detection. Fem type unknown yet.\n");
 
-        status = cmdQueue_SendCommand (pCmdBld->hCmdQueue, 
-                      CMD_TEST, 
-                      (void *)pTestCmd, 
+        status = cmdQueue_SendCommand (pCmdBld->hCmdQueue,
+                      CMD_TEST,
+                      (void *)pTestCmd,
                       sizeof(IniFileGeneralParam) + 4, /* 4 bytes are for ID and padding of TTestCmd struct*/
-                      (void*)autoDetectCb, 
-                      hCb, 
+                      (void*)autoDetectCb,
+                      hCb,
                       (void *)pTestCmd);
         /* In this case we free pTestCmd in the CB function */
     }
@@ -2147,7 +2152,7 @@ TI_STATUS cmdBld_CfgPlatformGenParams (TI_HANDLE hCmdBld, IniFileGeneralParam *p
  * INPUTS:  hCmdBld     - handle to command builder object
  *          bEnabled    - is enabled flag
  *          fCB         - callback function for command complete
- *          hCb         - handle to be apssed to callback function    
+ *          hCb         - handle to be apssed to callback function
  *
  * OUTPUT:  None
  *
@@ -2178,7 +2183,7 @@ TI_STATUS cmdBld_CfgIeBurstMode (TI_HANDLE hCmdBld, TI_BOOL bEnabled, void *fCb,
  * INPUTS:  hCmdBld     - handle to command builder object
  *          bEnabled    - is enabled flag
  *          fCB         - callback function for command complete
- *          hCb         - handle to be apssed to callback function    
+ *          hCb         - handle to be apssed to callback function
  *
  * OUTPUT:  None
  *
@@ -2190,7 +2195,7 @@ TI_STATUS cmdBld_CfgIeSRState (TI_HANDLE hCmdBld, uint8 SRstate, void *fCb, TI_H
     TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
     ACXSmartReflexState_t tSmartReflexState;
     ACXSmartReflexState_t *pCfg = &tSmartReflexState;
-           
+
     /* set IE header */
     pCfg->EleHdr.id = ACX_SET_SMART_REFLEX_STATE;
     pCfg->EleHdr.len = sizeof(*pCfg) - sizeof(EleHdrStruct);
@@ -2200,7 +2205,7 @@ TI_STATUS cmdBld_CfgIeSRState (TI_HANDLE hCmdBld, uint8 SRstate, void *fCb, TI_H
 
     /* send the command to the FW */
     return cmdQueue_SendCommand (pCmdBld->hCmdQueue, CMD_CONFIGURE, pCfg, sizeof(*pCfg), fCb, hCb, NULL);
-       
+
 }
 
 /****************************************************************************
@@ -2210,7 +2215,7 @@ TI_STATUS cmdBld_CfgIeSRState (TI_HANDLE hCmdBld, uint8 SRstate, void *fCb, TI_H
  * INPUTS:  hCmdBld     - handle to command builder object
  *          bEnabled    - is enabled flag
  *          fCB         - callback function for command complete
- *          hCb         - handle to be apssed to callback function    
+ *          hCb         - handle to be apssed to callback function
  *
  * OUTPUT:  None
  *
@@ -2221,7 +2226,7 @@ TI_STATUS cmdBld_CfgIeSRDebug (TI_HANDLE hCmdBld, ACXSmartReflexDebugParams_t *p
     TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
     ACXSmartReflexDebugParams_t tSmartReflexDebug;
     ACXSmartReflexDebugParams_t *pCfg = &tSmartReflexDebug;
-   
+
    /* send this command to FW just in case it's initialize in ini file */
     if (pSRDebug->senNRN == 0) {
         return TI_NOK;
@@ -2233,7 +2238,7 @@ TI_STATUS cmdBld_CfgIeSRDebug (TI_HANDLE hCmdBld, ACXSmartReflexDebugParams_t *p
    /* set IE header */
     pCfg->EleHdr.id = ACX_SET_SMART_REFLEX_DEBUG;
     pCfg->EleHdr.len = sizeof(*pCfg) - sizeof(EleHdrStruct);
-   
+
     /* send the command to the FW */
     return cmdQueue_SendCommand (pCmdBld->hCmdQueue, CMD_CONFIGURE, pCfg, sizeof(*pCfg), fCb, hCb, NULL);
 
@@ -2255,7 +2260,7 @@ TI_STATUS cmdBld_CfgIeDcoItrimParams (TI_HANDLE hCmdBld, TI_BOOL enable, TI_UINT
     TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
     ACXDCOItrimParams_t ACXBeaconFilterOptions;
     ACXDCOItrimParams_t *pCfg = &ACXBeaconFilterOptions;
-    
+
     pCfg->enable = enable;
     pCfg->moderation_timeout_usec = moderationTimeoutUsec;
 
@@ -2286,16 +2291,16 @@ TI_STATUS cmdBld_CfgIeConnectPhase (TI_HANDLE hCmdBld, TMacAddr aMacAddr, void *
     ACXInConnectionSTA_t ACXInConnectionSTAParam;
     ACXInConnectionSTA_t *pCfg = &ACXInConnectionSTAParam;
 
-    
+
     /* Set information element header */
     pCfg->EleHdr.id = ACX_UPDATE_INCONNECTION_STA_LIST;
     pCfg->EleHdr.len = sizeof(ACXInConnectionSTAParam) - sizeof(EleHdrStruct);
     os_memoryCopy(pCmdBld->hOs, pCfg->mac_address, aMacAddr, sizeof(TMacAddr));
-    
+
     TRACE7(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "ID=%u: MAC: %x:%x:%x:%x:%x:%x\n", pCfg->EleHdr.id, pCfg->mac_address[0], pCfg->mac_address[1], pCfg->mac_address[2], pCfg->mac_address[3], pCfg->mac_address[4], pCfg->mac_address[5]);
-    
+
     return cmdQueue_SendCommand (pCmdBld->hCmdQueue, CMD_CONFIGURE, pCfg, sizeof(ACXInConnectionSTA_t), fCb, hCb, NULL);
 }
 
-							   
-    
+
+

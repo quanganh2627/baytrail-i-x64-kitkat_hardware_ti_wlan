@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * mainSecNull.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file mainSecSm.c
  *  \brief 802.1X finite state machine header file
  *
@@ -73,7 +78,7 @@
 *
 * rsn_mainSecSmFullInit
 *
-* \b Description: 
+* \b Description:
 *
 * Init main security state machine state machine
 *
@@ -85,9 +90,9 @@
 *
 *  TI_OK on success, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
-TI_STATUS mainSecSmNull_config(mainSec_t *pMainSec, 
+TI_STATUS mainSecSmNull_config(mainSec_t *pMainSec,
                             TRsnPaeConfig *pPaeConfig)
 {
     pMainSec->start = (mainSecSmStart_t)mainSecSmNull_start;
@@ -106,7 +111,7 @@ TI_STATUS mainSecSmNull_config(mainSec_t *pMainSec,
 *
 * mainSecSmNull_Start
 *
-* \b Description: 
+* \b Description:
 *
 * Start the NULL main security SM. Reports success to the rsn module immediately.
 *
@@ -118,14 +123,14 @@ TI_STATUS mainSecSmNull_config(mainSec_t *pMainSec,
 *
 *  TI_OK on success, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 TI_STATUS mainSecSmNull_start(mainSec_t *pMainSec)
 {
     TI_STATUS status;
 
-    status = rsn_reportStatus(pMainSec->pParent, TI_OK); 
-    
+    status = rsn_reportStatus(pMainSec->pParent, TI_OK);
+
     return status;
 }
 
@@ -133,7 +138,7 @@ TI_STATUS mainSecSmNull_start(mainSec_t *pMainSec)
 *
 * mainSecSmNull_Stop
 *
-* \b Description: 
+* \b Description:
 *
 * Start the NULL main security SM. Reports success to the rsn module immediately.
 *
@@ -145,7 +150,7 @@ TI_STATUS mainSecSmNull_start(mainSec_t *pMainSec)
 *
 *  TI_OK on success, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 TI_STATUS mainSecSmNull_stop(mainSec_t *pMainSec)
 {
@@ -156,7 +161,7 @@ TI_STATUS mainSecSmNull_stop(mainSec_t *pMainSec)
 *
 * mainSecNull_reportKeysStatus
 *
-* \b Description: 
+* \b Description:
 *
 * Start the NULL main security SM. Reports success to the rsn module immediately.
 *
@@ -168,18 +173,18 @@ TI_STATUS mainSecSmNull_stop(mainSec_t *pMainSec)
 *
 *  TI_OK on success, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 TI_STATUS mainSecNull_reportKeysStatus(mainSec_t *pMainSec, TI_STATUS keysStatus)
 {
 
 	return TI_OK;
-} 
+}
 /**
 *
-* mainSecKeysOnly_getAuthState:  \n 
+* mainSecKeysOnly_getAuthState:  \n
 *
-* \b Description: 
+* \b Description:
 *
 * Get authentication state from supp1x SM.
 *
@@ -192,12 +197,12 @@ TI_STATUS mainSecNull_reportKeysStatus(mainSec_t *pMainSec, TI_STATUS keysStatus
 *
 *  TI_OK if successful, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 
 TI_STATUS mainSecNull_getAuthState(mainSec_t *pMainSec, TIWLN_SECURITY_STATE *secState)
 {
-	*secState = eSecurityStateHalted; 
+	*secState = eSecurityStateHalted;
 	return TI_OK;
 
 } /*mainSecKeysOnly_getAuthState*/
@@ -210,7 +215,7 @@ TI_STATUS mainSecSmNull_nop(mainSec_t *pMainSec)
 } /*mainSecKeysOnly_getAuthState*/
 
 
-TI_STATUS mainSecNull_reportAuthFailure(mainSec_t *pMainSec, EAuthStatus authStatus) 
+TI_STATUS mainSecNull_reportAuthFailure(mainSec_t *pMainSec, EAuthStatus authStatus)
 {
     return TI_OK;
 }

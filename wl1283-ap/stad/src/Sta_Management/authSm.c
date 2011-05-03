@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * authSm.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file authSM.c
  *  \brief 802.11 authentication SM source
  *
@@ -54,7 +59,7 @@
 #include "sharedKeyAuthSm.h"
 #include "DrvMainModules.h"
 
-/* Constants */ 
+/* Constants */
 
 /** number of states in the state machine */
 #define	AUTH_SM_MAX_NUM_STATES		4
@@ -82,7 +87,7 @@
 *
 * auth_create - allocate memory for authentication SM
 *
-* \b Description: 
+* \b Description:
 *
 * Allocate memory for authentication SM. \n
 * 		Allocates memory for Association context. \n
@@ -110,11 +115,11 @@ TI_HANDLE auth_create(TI_HANDLE hOs)
 	{
 		return NULL;
 	}
-	
+
 	os_memoryZero(hOs, pHandle, sizeof(auth_t));
 
 	pHandle->hOs = hOs;
-    
+
 	/* allocate memory for authentication state machine */
 	status = fsm_Create(hOs, &pHandle->pAuthSm, AUTH_SM_MAX_NUM_STATES, AUTH_SM_MAX_NUM_EVENTS);
 	if (status != TI_OK)
@@ -131,7 +136,7 @@ TI_HANDLE auth_create(TI_HANDLE hOs)
 *
 * auth_unload - unload authentication SM from memory
 *
-* \b Description: 
+* \b Description:
 *
 * Unload authentication SM from memory
 *
@@ -158,12 +163,12 @@ TI_STATUS auth_unload(TI_HANDLE hAuth)
 		/* report failure but don't stop... */
 TRACE0(pHandle->hReport, REPORT_SEVERITY_ERROR, "AUTH_SM: Error releasing FSM memory \n");
 	}
-	
+
 	if (pHandle->hAuthSmTimer)
 	{
 		tmr_DestroyTimer (pHandle->hAuthSmTimer);
 	}
-	
+
 	os_memoryFree(pHandle->hOs, pHandle, sizeof(auth_t));
 
 	return TI_OK;
@@ -173,7 +178,7 @@ TRACE0(pHandle->hReport, REPORT_SEVERITY_ERROR, "AUTH_SM: Error releasing FSM me
 *
 * auth_init - Init required handles and module variables,
 *
-* \b Description: 
+* \b Description:
 *
 * Init required handles and module variables,
 *
@@ -190,7 +195,7 @@ TRACE0(pHandle->hReport, REPORT_SEVERITY_ERROR, "AUTH_SM: Error releasing FSM me
 void auth_init (TStadHandlesList *pStadHandles)
 {
 	auth_t *pHandle = (auth_t*)(pStadHandles->hAuth);
-	
+
 	pHandle->hMlme   = pStadHandles->hMlmeSm;
 	pHandle->hRsn    = pStadHandles->hRsn;
 	pHandle->hReport = pStadHandles->hReport;
@@ -205,7 +210,7 @@ TI_STATUS auth_SetDefaults (TI_HANDLE hAuth, authInitParams_t *pAuthInitParams)
 
 	pHandle->timeout = pAuthInitParams->authResponseTimeout;
 	pHandle->maxCount = pAuthInitParams->authMaxRetryCount;
-	
+
 	pHandle->retryCount = 0;
 	pHandle->authRejectCount = 0;
 	pHandle->authTimeoutCount = 0;
@@ -228,7 +233,7 @@ TI_STATUS auth_SetDefaults (TI_HANDLE hAuth, authInitParams_t *pAuthInitParams)
 *
 * auth_start - Start event for the authentication SM
 *
-* \b Description: 
+* \b Description:
 *
 * Start event for the authentication SM
 *
@@ -259,7 +264,7 @@ TI_STATUS auth_start(TI_HANDLE hAuth)
 
 	switch (pHandle->authType)
 	{
-    case AUTH_LEGACY_RESERVED1: 
+    case AUTH_LEGACY_RESERVED1:
 	case AUTH_LEGACY_OPEN_SYSTEM:
 		return auth_osSMEvent(&pHandle->currentState, OPEN_AUTH_SM_EVENT_START, pHandle);
 
@@ -276,7 +281,7 @@ TI_STATUS auth_start(TI_HANDLE hAuth)
 *
 * auth_stop - Stop event for the authentication SM
 *
-* \b Description: 
+* \b Description:
 *
 * Stop event for the authentication SM
 *
@@ -298,7 +303,7 @@ TI_STATUS auth_stop(TI_HANDLE hAuth, TI_BOOL sendDeAuth, mgmtStatus_e reason )
 
 	if (pHandle == NULL)
 		return TI_NOK;
-	
+
 	if (pHandle->authType == AUTH_LEGACY_NONE)
 		return TI_NOK;
 
@@ -327,7 +332,7 @@ TI_STATUS auth_stop(TI_HANDLE hAuth, TI_BOOL sendDeAuth, mgmtStatus_e reason )
 *
 * auth_recv - Recive a message from the AP
 *
-* \b Description: 
+* \b Description:
 *
 * Parse a message form the AP and perform the appropriate event.
 *
@@ -349,7 +354,7 @@ TI_STATUS auth_recv(TI_HANDLE hAuth, mlmeFrameInfo_t *pFrame)
 
 	if (pHandle == NULL)
 		return TI_NOK;
-	
+
 	if (pFrame->subType != AUTH)
 		return TI_NOK;
 
@@ -377,7 +382,7 @@ TI_STATUS auth_recv(TI_HANDLE hAuth, mlmeFrameInfo_t *pFrame)
 *
 * auth_getParam - Get a specific parameter from the authentication SM
 *
-* \b Description: 
+* \b Description:
 *
 * Get a specific parameter from the authentication SM.
 *
@@ -429,7 +434,7 @@ TI_STATUS auth_getParam(TI_HANDLE hAuth, paramInfo_t *pParam)
 *
 * auth_setParam - Set a specific parameter to the authentication SM
 *
-* \b Description: 
+* \b Description:
 *
 * Set a specific parameter to the authentication SM.
 *
@@ -481,8 +486,8 @@ TI_STATUS auth_setParam(TI_HANDLE hAuth, paramInfo_t *pParam)
 			(pParam->content.authResponseTimeout <= AUTH_RESPONSE_TIMEOUT_MAX))
 		{
 			pHandle->timeout = pParam->content.authResponseTimeout;
-		} 
-		else 
+		}
+		else
 		{
 			return TI_NOK;
 		}
@@ -499,7 +504,7 @@ TI_STATUS auth_setParam(TI_HANDLE hAuth, paramInfo_t *pParam)
 *
 * auth_smTimeout - Set a specific parameter to the authentication SM
 *
-* \b Description: 
+* \b Description:
 *
 * Set a specific parameter to the authentication SM.
 *
@@ -522,7 +527,7 @@ void auth_smTimeout (TI_HANDLE hAuth, TI_BOOL bTwdInitOccured)
 
 	if (pHandle == NULL)
 		return;
-	
+
 	if (pHandle->authType == AUTH_LEGACY_NONE)
 		return;
 
@@ -554,7 +559,7 @@ void auth_smTimeout (TI_HANDLE hAuth, TI_BOOL bTwdInitOccured)
 *
 * auth_smMsgBuild - Build an authentication message and send it to the mlme builder
 *
-* \b Description: 
+* \b Description:
 *
 * Build an authentication message and send it to the mlme builder.
 *
@@ -581,7 +586,7 @@ TI_STATUS auth_smMsgBuild(auth_t *pCtx, TI_UINT16 seq, TI_UINT16 statusCode, TI_
 	wepOpt = 0;
 
 	pAuthMsg = (authMsg_t*)authMsg;
-	
+
 	/* insert algorithm */
 	pAuthMsg->authAlgo = (TI_UINT16)pCtx->authType;
 

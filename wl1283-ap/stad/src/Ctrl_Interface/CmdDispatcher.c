@@ -1,35 +1,40 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * CmdDispatcher.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
-/** \file   CmdDispatcher.c 
+
+/** \file   CmdDispatcher.c
  *  \brief  The CmdDispatcher module. Handles user commbands dispatching to the driver modules.
- *  
+ *
  *  \see    CmdDispatcher.h
  */
 
@@ -58,8 +63,8 @@
 
 #include "roleAP.h"
 
-#ifdef CCX_MODULE_INCLUDED
-#include "ccxMngr.h"
+#ifdef XCC_MODULE_INCLUDED
+#include "XCCMngr.h"
 #endif
 
 
@@ -68,9 +73,9 @@ typedef TI_STATUS (*TParamFunc) (TI_HANDLE handle, paramInfo_t *pParam);
 
 typedef struct
 {
-    TParamFunc          set; 
-    TParamFunc          get; 
-    TI_HANDLE           handle; 
+    TParamFunc          set;
+    TParamFunc          get;
+    TI_HANDLE           handle;
 
 } TParamAccess;
 
@@ -104,12 +109,12 @@ typedef struct
 
     TI_HANDLE    hRoleAP;
 
-#ifdef CCX_MODULE_INCLUDED
-    TI_HANDLE    hCcxMngr;
+#ifdef XCC_MODULE_INCLUDED
+    TI_HANDLE    hXCCMngr;
 #endif
 
     /* Table of params set/get functions */
-    TParamAccess paramAccessTable[MAX_PARAM_MODULE_NUMBER]; 
+    TParamAccess paramAccessTable[MAX_PARAM_MODULE_NUMBER];
 
 #ifdef TI_DBG
     TStadHandlesList *pStadHandles;  /* Save modules list pointer just for the debug functions */
@@ -130,24 +135,24 @@ static TI_STATUS cmdDispatch_DebugFuncGet (TI_HANDLE hCmdDispatch, paramInfo_t *
 
 
 
-/** 
+/**
  * \fn     cmdDispatch_Create
  * \brief  Create the module
- * 
+ *
  * Create the Command-Dispatcher module
- * 
- * \note   
- * \param  hOs - Handle to the Os Abstraction Layer                           
- * \return Handle to the allocated module (NULL if failed) 
- * \sa     
- */ 
+ *
+ * \note
+ * \param  hOs - Handle to the Os Abstraction Layer
+ * \return Handle to the allocated module (NULL if failed)
+ * \sa
+ */
 TI_HANDLE cmdDispatch_Create (TI_HANDLE hOs)
 {
     TCmdDispatchObj *pCmdDispatch;
 
     /* allocate CmdDispatcher module */
     pCmdDispatch = os_memoryAlloc (hOs, (sizeof(TCmdDispatchObj)));
-    
+
     if (!pCmdDispatch)
     {
         WLAN_OS_REPORT(("Error allocating the CmdDispatcher Module\n"));
@@ -163,22 +168,22 @@ TI_HANDLE cmdDispatch_Create (TI_HANDLE hOs)
 }
 
 
-/** 
+/**
  * \fn     cmdDispatch_Init
  * \brief  Save modules handles and fill the configuration table
- * 
- * Save other modules handles, and fill the configuration table 
+ *
+ * Save other modules handles, and fill the configuration table
  *     with the Get/Set functions.
- * 
- * \note   
+ *
+ * \note
  * \param  pStadHandles  - The driver modules handles
- * \return void  
- * \sa     
- */ 
+ * \return void
+ * \sa
+ */
 void cmdDispatch_Init (TStadHandlesList *pStadHandles)
 {
     TCmdDispatchObj *pCmdDispatch = (TCmdDispatchObj *)(pStadHandles->hCmdDispatch);
-    
+
     /* Save modules handles */
     pCmdDispatch->hReport           = pStadHandles->hReport;
     pCmdDispatch->hAuth             = pStadHandles->hAuth;
@@ -192,7 +197,7 @@ void cmdDispatch_Init (TStadHandlesList *pStadHandles)
     pCmdDispatch->hSme              = pStadHandles->hSme;
     pCmdDispatch->hScanCncn         = pStadHandles->hScanCncn;
     pCmdDispatch->hScanMngr         = pStadHandles->hScanMngr;
-    pCmdDispatch->hMlmeSm           = pStadHandles->hMlmeSm; 
+    pCmdDispatch->hMlmeSm           = pStadHandles->hMlmeSm;
     pCmdDispatch->hRegulatoryDomain = pStadHandles->hRegulatoryDomain;
     pCmdDispatch->hMeasurementMgr   = pStadHandles->hMeasurementMgr;
     pCmdDispatch->hRoamingMngr      = pStadHandles->hRoamingMngr;
@@ -204,32 +209,32 @@ void cmdDispatch_Init (TStadHandlesList *pStadHandles)
     pCmdDispatch->hCurrBss          = pStadHandles->hCurrBss;
     pCmdDispatch->hRoleAP           = pStadHandles->hRoleAP;
 
-#ifdef CCX_MODULE_INCLUDED
-    pCmdDispatch->hCcxMngr          = pStadHandles->hCcxMngr;
+#ifdef XCC_MODULE_INCLUDED
+    pCmdDispatch->hXCCMngr          = pStadHandles->hXCCMngr;
 #endif
 
 #ifdef TI_DBG
     pCmdDispatch->pStadHandles = pStadHandles;  /* Save modules list pointer just for the debug functions */
 #endif
 
-    
+
 
     /* Fill the configuration table with the Get/Set functions */
     cmdDispatch_ConfigParamsAccessTable (pCmdDispatch);
 }
 
 
-/** 
+/**
  * \fn     cmdDispatch_Destroy
  * \brief  Destroy the module object
- * 
+ *
  * Destroy the module object.
- * 
- * \note   
- * \param  hCmdDispatch - The object                                          
- * \return TI_OK - Unload succesfull, TI_NOK - Unload unsuccesfull 
- * \sa     
- */ 
+ *
+ * \note
+ * \param  hCmdDispatch - The object
+ * \return TI_OK - Unload succesfull, TI_NOK - Unload unsuccesfull
+ * \sa
+ */
 TI_STATUS cmdDispatch_Destroy (TI_HANDLE hCmdDispatch)
 {
     TCmdDispatchObj  *pCmdDispatch = (TCmdDispatchObj *)hCmdDispatch;
@@ -241,23 +246,23 @@ TI_STATUS cmdDispatch_Destroy (TI_HANDLE hCmdDispatch)
 }
 
 
-/** 
+/**
  * \fn     cmdDispatch_ConfigParamsAccessTable
  * \brief  Fill the configuration table with the Get/Set functions
- * 
+ *
  * Called in the configuration phase by the driver, performs the following:
- *   - for each module that supply a Get/Set services to his parameters, 
+ *   - for each module that supply a Get/Set services to his parameters,
  *        fill the corresponding entry in the params access table with the following:
  *          - Get function
  *          - Set function
  *          - Handle to the module
  * This table is used when Getting/Setting a parameter from the OS abstraction layer.
- * 
- * \note   
- * \param  pCmdDispatch - The object                                          
+ *
+ * \note
+ * \param  pCmdDispatch - The object
  * \return void
- * \sa     
- */ 
+ * \sa
+ */
 static void cmdDispatch_ConfigParamsAccessTable (TCmdDispatchObj *pCmdDispatch)
 {
     pCmdDispatch->paramAccessTable[GET_PARAM_MODULE_NUMBER(AUTH_MODULE_PARAM) - 1].set = auth_setParam;
@@ -307,11 +312,11 @@ static void cmdDispatch_ConfigParamsAccessTable (TCmdDispatchObj *pCmdDispatch)
     pCmdDispatch->paramAccessTable[GET_PARAM_MODULE_NUMBER(SCAN_CNCN_PARAM) - 1].set = scanCncnApp_SetParam;
     pCmdDispatch->paramAccessTable[GET_PARAM_MODULE_NUMBER(SCAN_CNCN_PARAM) - 1].get = scanCncnApp_GetParam;
     pCmdDispatch->paramAccessTable[GET_PARAM_MODULE_NUMBER(SCAN_CNCN_PARAM) - 1].handle = pCmdDispatch->hScanCncn;
-    
+
     pCmdDispatch->paramAccessTable[GET_PARAM_MODULE_NUMBER(SCAN_MNGR_PARAM) - 1].set = scanMngr_setParam;
     pCmdDispatch->paramAccessTable[GET_PARAM_MODULE_NUMBER(SCAN_MNGR_PARAM) - 1].get = scanMngr_getParam;
     pCmdDispatch->paramAccessTable[GET_PARAM_MODULE_NUMBER(SCAN_MNGR_PARAM) - 1].handle = pCmdDispatch->hScanMngr;
-    
+
     pCmdDispatch->paramAccessTable[GET_PARAM_MODULE_NUMBER(MLME_SM_MODULE_PARAM) - 1].set = mlme_setParam;
     pCmdDispatch->paramAccessTable[GET_PARAM_MODULE_NUMBER(MLME_SM_MODULE_PARAM) - 1].get = mlme_getParam;
     pCmdDispatch->paramAccessTable[GET_PARAM_MODULE_NUMBER(MLME_SM_MODULE_PARAM) - 1].handle = pCmdDispatch->hMlmeSm;
@@ -324,10 +329,10 @@ static void cmdDispatch_ConfigParamsAccessTable (TCmdDispatchObj *pCmdDispatch)
     pCmdDispatch->paramAccessTable[GET_PARAM_MODULE_NUMBER(MEASUREMENT_MODULE_PARAM) - 1].get = measurementMgr_getParam;
     pCmdDispatch->paramAccessTable[GET_PARAM_MODULE_NUMBER(MEASUREMENT_MODULE_PARAM) - 1].handle = pCmdDispatch->hMeasurementMgr;
 
-#ifdef CCX_MODULE_INCLUDED
-    pCmdDispatch->paramAccessTable[GET_PARAM_MODULE_NUMBER(CCX_MANAGER_MODULE_PARAM) - 1].set = ccxMngr_setParam;
-    pCmdDispatch->paramAccessTable[GET_PARAM_MODULE_NUMBER(CCX_MANAGER_MODULE_PARAM) - 1].get = ccxMngr_getParam;
-    pCmdDispatch->paramAccessTable[GET_PARAM_MODULE_NUMBER(CCX_MANAGER_MODULE_PARAM) - 1].handle = pCmdDispatch->hCcxMngr;
+#ifdef XCC_MODULE_INCLUDED
+    pCmdDispatch->paramAccessTable[GET_PARAM_MODULE_NUMBER(XCC_MANAGER_MODULE_PARAM) - 1].set = XCCMngr_setParam;
+    pCmdDispatch->paramAccessTable[GET_PARAM_MODULE_NUMBER(XCC_MANAGER_MODULE_PARAM) - 1].get = XCCMngr_getParam;
+    pCmdDispatch->paramAccessTable[GET_PARAM_MODULE_NUMBER(XCC_MANAGER_MODULE_PARAM) - 1].handle = pCmdDispatch->hXCCMngr;
 #endif
 
     pCmdDispatch->paramAccessTable[GET_PARAM_MODULE_NUMBER(ROAMING_MANAGER_MODULE_PARAM) - 1].set = roamingMngr_setParam;
@@ -350,7 +355,7 @@ static void cmdDispatch_ConfigParamsAccessTable (TCmdDispatchObj *pCmdDispatch)
     pCmdDispatch->paramAccessTable[GET_PARAM_MODULE_NUMBER(MISC_MODULE_PARAM) - 1].set = cmdDispatch_DebugFuncSet;
     pCmdDispatch->paramAccessTable[GET_PARAM_MODULE_NUMBER(MISC_MODULE_PARAM) - 1].get = cmdDispatch_DebugFuncGet;	/*yael - this function is not in use*/
     pCmdDispatch->paramAccessTable[GET_PARAM_MODULE_NUMBER(MISC_MODULE_PARAM) - 1].handle = (TI_HANDLE)pCmdDispatch;
-#endif 
+#endif
 
     pCmdDispatch->paramAccessTable[GET_PARAM_MODULE_NUMBER(HEALTH_MONITOR_MODULE_PARAM) - 1].set = healthMonitor_SetParam;
     pCmdDispatch->paramAccessTable[GET_PARAM_MODULE_NUMBER(HEALTH_MONITOR_MODULE_PARAM) - 1].get = healthMonitor_GetParam;
@@ -366,22 +371,22 @@ static void cmdDispatch_ConfigParamsAccessTable (TCmdDispatchObj *pCmdDispatch)
 }
 
 
-/** 
+/**
  * \fn     cmdDispatch_SetParam
  * \brief  Set a driver parameter
- * 
+ *
  * Called by the OS abstraction layer in order to set a parameter in the driver.
  * If the parameter can not be set from outside the driver it returns a failure status.
  * The parameters is set to the module that uses as its father in the system
  *     (refer to the file paramOut.h for more explanations).
- * 
- * \note   
- * \param  hCmdDispatch - The object                                          
- * \param  param        - The parameter information                                          
- * \return result of parameter setting 
- * \sa     
- */ 
-TI_STATUS cmdDispatch_SetParam (TI_HANDLE hCmdDispatch, void *param)                          
+ *
+ * \note
+ * \param  hCmdDispatch - The object
+ * \param  param        - The parameter information
+ * \return result of parameter setting
+ * \sa
+ */
+TI_STATUS cmdDispatch_SetParam (TI_HANDLE hCmdDispatch, void *param)
 {
     TCmdDispatchObj *pCmdDispatch = (TCmdDispatchObj *)hCmdDispatch;
     paramInfo_t     *pParam = (paramInfo_t *)param;
@@ -389,7 +394,7 @@ TI_STATUS cmdDispatch_SetParam (TI_HANDLE hCmdDispatch, void *param)
 
     moduleNumber = GET_PARAM_MODULE_NUMBER(pParam->paramType);
 
- 
+
     if  (moduleNumber > MAX_PARAM_MODULE_NUMBER)
     {
         return PARAM_MODULE_NUMBER_INVALID;
@@ -410,21 +415,21 @@ TI_STATUS cmdDispatch_SetParam (TI_HANDLE hCmdDispatch, void *param)
 }
 
 
-/** 
+/**
  * \fn     cmdDispatch_GetParam
  * \brief  Get a driver parameter
- * 
+ *
  * Called by the OS abstraction layer in order to get a parameter the driver.
  * If the parameter can not be get from outside the driver it returns a failure status.
  * The parameter is get from the module that uses as its father in the system
  *    (refer to the file paramOut.h for more explanations).
- * 
- * \note   
- * \param  hCmdDispatch - The object                                          
- * \param  param        - The parameter information                                          
- * \return result of parameter getting 
- * \sa     
- */ 
+ *
+ * \note
+ * \param  hCmdDispatch - The object
+ * \param  param        - The parameter information
+ * \return result of parameter getting
+ * \sa
+ */
 TI_STATUS cmdDispatch_GetParam (TI_HANDLE hCmdDispatch, void *param)
 {
     TCmdDispatchObj *pCmdDispatch = (TCmdDispatchObj *) hCmdDispatch;
@@ -451,22 +456,22 @@ TI_STATUS cmdDispatch_GetParam (TI_HANDLE hCmdDispatch, void *param)
 
     status = pCmdDispatch->paramAccessTable[moduleNumber - 1].get(pCmdDispatch->paramAccessTable[moduleNumber - 1].handle, pParam);
 
-    return status;    
+    return status;
 }
 
 
-/** 
+/**
  * \fn     cmdDispatch_SetTwdParam / cmdDispatch_GetParam
  * \brief  Set/Get a TWD parameter
- * 
+ *
  * Set/Get a TWD parameter.
- * 
- * \note   
- * \param  hCmdDispatch - The object                                          
- * \param  param        - The parameter information                                          
+ *
+ * \note
+ * \param  hCmdDispatch - The object
+ * \param  param        - The parameter information
  * \return parameter set/get result
- * \sa     
- */ 
+ * \sa
+ */
 static TI_STATUS cmdDispatch_SetTwdParam (TI_HANDLE hCmdDispatch, paramInfo_t *pParam)
 {
     TCmdDispatchObj *pCmdDispatch = (TCmdDispatchObj *)hCmdDispatch;
@@ -488,25 +493,25 @@ static TI_STATUS cmdDispatch_GetTwdParam (TI_HANDLE hCmdDispatch, paramInfo_t *p
 
 
 
-/** 
+/**
  * \fn     cmdDispatch_DebugFuncSet / cmdDispatch_DebugFuncGet
  * \brief  Set/Get a debug function parameter
- * 
+ *
  * Set/Get a debug function parameter.
- * 
- * \note   
- * \param  hCmdDispatch - The object                                          
- * \param  param        - The parameter information                                          
+ *
+ * \note
+ * \param  hCmdDispatch - The object
+ * \param  param        - The parameter information
  * \return parameter set/get result
- * \sa     
- */ 
+ * \sa
+ */
 
 #ifdef TI_DBG
 
 static TI_STATUS cmdDispatch_DebugFuncSet (TI_HANDLE hCmdDispatch, paramInfo_t *pParam)
 {
     TCmdDispatchObj *pCmdDispatch = (TCmdDispatchObj *)hCmdDispatch;
-    
+
     if (hCmdDispatch == NULL || pParam == NULL)
     {
         return TI_NOK;
@@ -515,8 +520,8 @@ static TI_STATUS cmdDispatch_DebugFuncSet (TI_HANDLE hCmdDispatch, paramInfo_t *
     switch (pParam->paramType)
     {
 	case DEBUG_ACTIVATE_FUNCTION:
-		debugFunction (pCmdDispatch->pStadHandles, 
-					   *(TI_UINT32*)&pParam->content, 
+		debugFunction (pCmdDispatch->pStadHandles,
+					   *(TI_UINT32*)&pParam->content,
                        (void*)((TI_UINT32*)&pParam->content + 1));
 		break;
 	default:
@@ -524,7 +529,7 @@ TRACE1(pCmdDispatch->hReport, REPORT_SEVERITY_ERROR, "cmdDispatch_DebugFuncSet b
 		break;
     }
     return TI_OK;
-}       
+}
 
 
 

@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * qosMngr_API.h
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file qosMngr_API.h
  *  \brief QOS manager module external header file
  *
@@ -48,13 +53,13 @@
 #define USER_PRIORITY_4 (WMEQosTagToACTable[4])
 #define USER_PRIORITY_6 (WMEQosTagToACTable[6])
 
-/* User priority is in second byte of tsInfoField (that follows 8 bytes from beginning of the TSPEC IE) */ 
+/* User priority is in second byte of tsInfoField (that follows 8 bytes from beginning of the TSPEC IE) */
 #define GET_USER_PRIORITY_FROM_WME_TSPEC_IE(pTspecIe)   \
     (( *(((TI_UINT8 *)pData) + 9) & TS_INFO_1_USER_PRIORITY_MASK) >> USER_PRIORITY_SHIFT)
 
 
 
-typedef struct 
+typedef struct
 {
     EAcTrfcType         AC;
     TI_UINT8            tid;
@@ -72,7 +77,7 @@ typedef struct
     TI_UINT8            statusCode;
 }tspecInfo_t;
 
-typedef enum 
+typedef enum
 {
     STATUS_TRAFFIC_ADM_REQUEST_ACCEPT       = 0,
     STATUS_TRAFFIC_ADM_REQUEST_REJECT       = 1,
@@ -110,7 +115,7 @@ TI_UINT8 qosMngr_evalSite(TI_HANDLE hQosMngr, TI_BOOL siteAPSDSupport);
 
 TI_STATUS qosMngr_getQosCapabiltyInfeElement(TI_HANDLE  hQosMngr, TI_UINT8 *pQosIe, TI_UINT32 *pLen);
 
-TI_STATUS qosMngr_requestAdmission(TI_HANDLE            hQosMngr, 
+TI_STATUS qosMngr_requestAdmission(TI_HANDLE            hQosMngr,
                                    OS_802_11_QOS_TSPEC_PARAMS *addTspecParams);
 
 TI_STATUS qosMngr_deleteAdmission(TI_HANDLE hQosMngr, OS_802_11_QOS_DELETE_TSPEC_PARAMS *delAdmissionParams);
@@ -122,7 +127,7 @@ TI_STATUS qosMngr_setAcPsDeliveryMode(TI_HANDLE  hQosMngr);
 TI_STATUS qosMngr_sendUnexpectedTSPECResponseEvent(TI_HANDLE    hQosMngr,
                                    tspecInfo_t  *pTspecInfo);
 
-TI_STATUS qosMngr_setAdmissionInfo(TI_HANDLE    hQosMngr, 
+TI_STATUS qosMngr_setAdmissionInfo(TI_HANDLE    hQosMngr,
                                    TI_UINT8     acID,
                                    tspecInfo_t  *pTspecInfo,
                                    trafficAdmRequestStatus_e trafficAdmRequestStatus);

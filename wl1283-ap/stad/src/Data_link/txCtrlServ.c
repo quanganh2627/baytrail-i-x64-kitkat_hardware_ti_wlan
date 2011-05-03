@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * txCtrlServ.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 /****************************************************************************/
 /*                                                                          */
@@ -138,14 +143,14 @@ TI_STATUS txCtrlServ_buildWlanHeader(TI_HANDLE hTxCtrl, TI_UINT8* pFrame, TI_UIN
     dot11_header_t   *pDot11Header = (dot11_header_t*)(tPktCtrlBlk.aPktHdr);
     Wlan_LlcHeader_T *pWlanSnapHeader;
 
-    /* 
+    /*
      * If QoS is used, add two bytes padding before the header for 4-bytes alignment.
      * Note that the header length doesn't include it, so the txCtrl detects the pad existence
-     *   by checking if the header-length is a multiple of 4. 
+     *   by checking if the header-length is a multiple of 4.
      */
     qosMngr_getParamsActiveProtocol(pTxCtrl->hQosMngr, &qosProt);
 
-    if (qosProt == QOS_WME)  
+    if (qosProt == QOS_WME)
     {
         headerLength = WLAN_QOS_HDR_LEN;
         headerFlags  = DOT11_FC_DATA_QOS | DOT11_FC_TO_DS;
@@ -157,12 +162,12 @@ TI_STATUS txCtrlServ_buildWlanHeader(TI_HANDLE hTxCtrl, TI_UINT8* pFrame, TI_UIN
         headerFlags  = DOT11_FC_DATA | DOT11_FC_TO_DS;
     }
 
-    /* 
+    /*
      * Handle encryption if needed (decision was done at RSN and is provided by TxCtrl):
      *   - Set WEP bit in header.
-     *   - Add padding for FW security overhead: 4 bytes for TKIP, 8 for AES.  
+     *   - Add padding for FW security overhead: 4 bytes for TKIP, 8 for AES.
      */
-    txCtrlParams_getCurrentEncryptionInfo (hTxCtrl, 
+    txCtrlParams_getCurrentEncryptionInfo (hTxCtrl,
                                            &currentPrivacyInvokedMode,
                                            &encryptionFieldSize);
     if (currentPrivacyInvokedMode)
@@ -170,7 +175,7 @@ TI_STATUS txCtrlServ_buildWlanHeader(TI_HANDLE hTxCtrl, TI_UINT8* pFrame, TI_UIN
         headerFlags |= DOT11_FC_WEP;
         headerLength += encryptionFieldSize;
     }
-    
+
     COPY_WLAN_WORD (&pDot11Header->fc, &headerFlags); /* copy with endianess handling. */
 
     /* Get the Destination MAC address */
@@ -204,15 +209,15 @@ TI_STATUS txCtrlServ_buildWlanHeader(TI_HANDLE hTxCtrl, TI_UINT8* pFrame, TI_UIN
 
     /* Set the SNAP header pointer right after the other header parts handled above. */
     pWlanSnapHeader = (Wlan_LlcHeader_T *)&(tPktCtrlBlk.aPktHdr[headerLength]);
-    
+
    	pWlanSnapHeader->DSAP = SNAP_CHANNEL_ID;
    	pWlanSnapHeader->SSAP = SNAP_CHANNEL_ID;
    	pWlanSnapHeader->Control = LLC_CONTROL_UNNUMBERED_INFORMATION;
 
     /* add RFC1042. */
-	pWlanSnapHeader->OUI[0] = SNAP_OUI_RFC1042_BYTE0; 
-	pWlanSnapHeader->OUI[1] = SNAP_OUI_RFC1042_BYTE1; 
-	pWlanSnapHeader->OUI[2] = SNAP_OUI_RFC1042_BYTE2; 
+	pWlanSnapHeader->OUI[0] = SNAP_OUI_RFC1042_BYTE0;
+	pWlanSnapHeader->OUI[1] = SNAP_OUI_RFC1042_BYTE1;
+	pWlanSnapHeader->OUI[2] = SNAP_OUI_RFC1042_BYTE2;
 
     /* set ETH type to IP */
     pWlanSnapHeader->Type = HTOWLANS(ETHERTYPE_IP);

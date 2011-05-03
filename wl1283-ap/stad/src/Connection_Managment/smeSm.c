@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * smeSm.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file  smeSm.c
  *  \brief SME state machine implementation
  *
@@ -47,7 +52,7 @@
 #include "DrvMain.h"
 
 
-static OS_802_11_DISASSOCIATE_REASON_E eDisassocConvertTable[ MGMT_STATUS_MAX_NUM +1] = 
+static OS_802_11_DISASSOCIATE_REASON_E eDisassocConvertTable[ MGMT_STATUS_MAX_NUM +1] =
 {
     OS_DISASSOC_STATUS_UNSPECIFIED,
     OS_DISASSOC_STATUS_UNSPECIFIED,
@@ -67,7 +72,7 @@ static OS_802_11_DISASSOCIATE_REASON_E eDisassocConvertTable[ MGMT_STATUS_MAX_NU
     OS_DISASSOC_STATUS_UNSPECIFIED
 };
 
-#define SME_CONVERT_DISASSOC_CODES(disassocReason)     (eDisassocConvertTable[ (disassocReason) ]) 
+#define SME_CONVERT_DISASSOC_CODES(disassocReason)     (eDisassocConvertTable[ (disassocReason) ])
 
 static void smeSm_Start (TI_HANDLE hSme);
 static void smeSm_Stop (TI_HANDLE hSme);
@@ -90,14 +95,14 @@ static void sme_updateScanCycles (TI_HANDLE hSme,
                                   TI_BOOL bConstantScan);
 static void sme_CalculateCyclesNumber (TI_HANDLE hSme, TI_UINT32 uTotalTimeMs);
 
-TGenSM_actionCell tSmMatrix[ SME_SM_NUMBER_OF_STATES ][ SME_SM_NUMBER_OF_EVENTS ] = 
+TGenSM_actionCell tSmMatrix[ SME_SM_NUMBER_OF_STATES ][ SME_SM_NUMBER_OF_EVENTS ] =
     {
         { /* SME_SM_STATE_IDLE */
             { SME_SM_STATE_WAIT_CONNECT, smeSm_Start },             /* SME_SM_EVENT_START */
             { SME_SM_STATE_IDLE, smeSm_ActionUnexpected },          /* SME_SM_EVENT_STOP */
             { SME_SM_STATE_IDLE, smeSm_ActionUnexpected },          /* SME_SM_EVENT_CONNECT */
             { SME_SM_STATE_IDLE, smeSm_ActionUnexpected },          /* SME_SM_EVENT_CONNECT_SUCCESS */
-            { SME_SM_STATE_IDLE, smeSm_ActionUnexpected },          /* SME_SM_EVENT_CONNECT_FAILURE */ 
+            { SME_SM_STATE_IDLE, smeSm_ActionUnexpected },          /* SME_SM_EVENT_CONNECT_FAILURE */
             { SME_SM_STATE_IDLE, smeSm_CheckStartConditions },          /* SME_SM_EVENT_DISCONNECT */
         },
         { /* SME_SM_STATE_WAIT_CONNECT */
@@ -105,7 +110,7 @@ TGenSM_actionCell tSmMatrix[ SME_SM_NUMBER_OF_STATES ][ SME_SM_NUMBER_OF_EVENTS 
             { SME_SM_STATE_IDLE, smeSm_Stop },                      /* SME_SM_EVENT_STOP */
             { SME_SM_STATE_SCANNING, smeSm_PreConnect },            /* SME_SM_EVENT_CONNECT */
             { SME_SM_STATE_WAIT_CONNECT, smeSm_ActionUnexpected },  /* SME_SM_EVENT_CONNECT_SUCCESS */
-            { SME_SM_STATE_WAIT_CONNECT, smeSm_ActionUnexpected },  /* SME_SM_EVENT_CONNECT_FAILURE */ 
+            { SME_SM_STATE_WAIT_CONNECT, smeSm_ActionUnexpected },  /* SME_SM_EVENT_CONNECT_FAILURE */
             { SME_SM_STATE_WAIT_CONNECT, smeSm_Start },             /* SME_SM_EVENT_DISCONNECT */
         },
         { /* SME_SM_STATE_SCANNING */
@@ -113,7 +118,7 @@ TGenSM_actionCell tSmMatrix[ SME_SM_NUMBER_OF_STATES ][ SME_SM_NUMBER_OF_EVENTS 
             { SME_SM_STATE_DISCONNECTING, smeSm_StopScan },         /* SME_SM_EVENT_STOP */
             { SME_SM_STATE_CONNECTING, smeSm_Connect },             /* SME_SM_EVENT_CONNECT */
             { SME_SM_STATE_SCANNING, smeSm_ActionUnexpected },      /* SME_SM_EVENT_CONNECT_SUCCESS */
-            { SME_SM_STATE_WAIT_CONNECT, smeSm_DisconnectDone },    /* SME_SM_EVENT_CONNECT_FAILURE */ 
+            { SME_SM_STATE_WAIT_CONNECT, smeSm_DisconnectDone },    /* SME_SM_EVENT_CONNECT_FAILURE */
             { SME_SM_STATE_DISCONNECTING, smeSm_StopScan },         /* SME_SM_EVENT_DISCONNECT */
         },
         { /* SME_SM_STATE_CONNECTING */
@@ -121,7 +126,7 @@ TGenSM_actionCell tSmMatrix[ SME_SM_NUMBER_OF_STATES ][ SME_SM_NUMBER_OF_EVENTS 
             { SME_SM_STATE_DISCONNECTING, smeSm_StopConnect },      /* SME_SM_EVENT_STOP */
             { SME_SM_STATE_CONNECTING, smeSm_ConnWhenConnecting },  /* SME_SM_EVENT_CONNECT */
             { SME_SM_STATE_CONNECTED, smeSm_ConnectSuccess },       /* SME_SM_EVENT_CONNECT_SUCCESS */
-            { SME_SM_STATE_WAIT_CONNECT, smeSm_DisconnectDone },    /* SME_SM_EVENT_CONNECT_FAILURE */ 
+            { SME_SM_STATE_WAIT_CONNECT, smeSm_DisconnectDone },    /* SME_SM_EVENT_CONNECT_FAILURE */
             { SME_SM_STATE_DISCONNECTING, smeSm_StopConnect },      /* SME_SM_EVENT_DISCONNECT */
         },
         { /* SME_SM_STATE_CONNECTED */
@@ -129,7 +134,7 @@ TGenSM_actionCell tSmMatrix[ SME_SM_NUMBER_OF_STATES ][ SME_SM_NUMBER_OF_EVENTS 
             { SME_SM_STATE_DISCONNECTING, smeSm_Disconnect },       /* SME_SM_EVENT_STOP */
             { SME_SM_STATE_CONNECTED, smeSm_ActionUnexpected },     /* SME_SM_EVENT_CONNECT */
             { SME_SM_STATE_CONNECTED, smeSm_ActionUnexpected },     /* SME_SM_EVENT_CONNECT_SUCCESS */
-            { SME_SM_STATE_WAIT_CONNECT, smeSm_DisconnectDone },    /* SME_SM_EVENT_CONNECT_FAILURE */ 
+            { SME_SM_STATE_WAIT_CONNECT, smeSm_DisconnectDone },    /* SME_SM_EVENT_CONNECT_FAILURE */
             { SME_SM_STATE_DISCONNECTING, smeSm_Disconnect },       /* SME_SM_EVENT_DISCONNECT */
         },
         { /* SME_SM_STATE_DISCONNECTING */
@@ -137,12 +142,12 @@ TGenSM_actionCell tSmMatrix[ SME_SM_NUMBER_OF_STATES ][ SME_SM_NUMBER_OF_EVENTS 
             { SME_SM_STATE_DISCONNECTING, smeSm_ActionUnexpected }, /* SME_SM_EVENT_STOP */
             { SME_SM_STATE_DISCONNECTING, smeSm_ActionUnexpected }, /* SME_SM_EVENT_CONNECT */
             { SME_SM_STATE_DISCONNECTING, smeSm_ActionUnexpected }, /* SME_SM_EVENT_CONNECT_SUCCESS */
-            { SME_SM_STATE_WAIT_CONNECT, smeSm_DisconnectDone },    /* SME_SM_EVENT_CONNECT_FAILURE */ 
+            { SME_SM_STATE_WAIT_CONNECT, smeSm_DisconnectDone },    /* SME_SM_EVENT_CONNECT_FAILURE */
             { SME_SM_STATE_DISCONNECTING, smeSm_NopAction }, /* SME_SM_EVENT_DISCONNECT */
         }
     };
 
-TI_INT8*  uStateDescription[] = 
+TI_INT8*  uStateDescription[] =
     {
         "IDLE",
         "WAIT_CONNECT",
@@ -152,7 +157,7 @@ TI_INT8*  uStateDescription[] =
         "DISCONNECTING"
     };
 
-TI_INT8*  uEventDescription[] = 
+TI_INT8*  uEventDescription[] =
     {
         "START",
         "STOP",
@@ -162,16 +167,16 @@ TI_INT8*  uEventDescription[] =
         "DISCONNECT"
     };
 
-/** 
+/**
  * \fn     smeSm_Start
  * \brief  Starts STA opeartion by moving SCR out of idle group and starting connection process
- * 
+ *
  * Starts STA opeartion by moving SCR out of idle group and starting connection process
- * 
+ *
  * \param  hSme - handle to the SME object
  * \return None
- * \sa     smeSm_Stop, sme_start 
- */ 
+ * \sa     smeSm_Stop, sme_start
+ */
 void smeSm_Start (TI_HANDLE hSme)
 {
     TSme    *pSme = (TSme*)hSme;
@@ -188,7 +193,7 @@ void smeSm_Start (TI_HANDLE hSme)
         scr_setGroup (pSme->hScr, SCR_GID_APP_SCAN);
     }
 
-    if ((TI_FALSE == pSme->bRadioOn) || (TI_FALSE == pSme->bRunning)) 
+    if ((TI_FALSE == pSme->bRadioOn) || (TI_FALSE == pSme->bRunning))
     {
         /* Radio is off so send stop event */
         genSM_Event (pSme->hSmeSm, SME_SM_EVENT_STOP, hSme);
@@ -200,16 +205,16 @@ void smeSm_Start (TI_HANDLE hSme)
     }
 }
 
-/** 
+/**
  * \fn     smeSm_Stop
  * \brief  Turns off the STA
- * 
+ *
  * Turns off the STA by moving the SCr to idle
- * 
+ *
  * \param  hSme - handle to the SME object
  * \return None
  * \sa     smeSm_Start, sme_Stop
- */ 
+ */
 void smeSm_Stop (TI_HANDLE hSme)
 {
     TSme    *pSme = (TSme*)hSme;
@@ -224,16 +229,16 @@ void smeSm_Stop (TI_HANDLE hSme)
     }
 }
 
-/** 
+/**
  * \fn     smeSm_PreConnect
  * \brief  Initiates the connection process
- * 
+ *
  * Initiates the connection process - for automatic mode, start scan, for manual mode - triggers connection
- * 
+ *
  * \param  hSme - handle to the SME object
  * \return None
  * \sa     smeSm_Connect, smeSm_ConnectSuccess
- */ 
+ */
 void smeSm_PreConnect (TI_HANDLE hSme)
 {
     TSme *pSme = (TSme *)hSme;
@@ -242,7 +247,7 @@ void smeSm_PreConnect (TI_HANDLE hSme)
 
     /* set the connection mode with which this connection attempt is starting */
     pSme->eLastConnectMode = pSme->eConnectMode;
- 
+
     /* mark that no authentication/assocaition was yet sent */
     pSme->bAuthSent = TI_FALSE;
 
@@ -273,14 +278,14 @@ void smeSm_PreConnect (TI_HANDLE hSme)
             }
 
         }
-        else		/* Manual mode */ 
-        { 
+        else		/* Manual mode */
+        {
 			/* for IBSS or any, if no entries where found, add the self site */
 			if (pSme->eBssType == BSS_INFRASTRUCTURE)
             {
                 /* makr whether we need to stop the attempt connection in manual mode */
                 pSme->bConnectRequired = TI_FALSE;
-    
+
                 TRACE0(pSme->hReport, REPORT_SEVERITY_INFORMATION , "smeSm_PreConnect: No candidate available, sending connect failure\n");
                 /* manual mode and no connection candidate is available - connection failed */
                 genSM_Event (pSme->hSmeSm, SME_SM_EVENT_CONNECT_FAILURE, hSme);
@@ -288,7 +293,7 @@ void smeSm_PreConnect (TI_HANDLE hSme)
 
 			else		/* IBSS */
 			{
-				TI_UINT8     uDesiredChannel;     
+				TI_UINT8     uDesiredChannel;
                 TI_BOOL     channelValidity;
 		        pSme->bConnectRequired = TI_FALSE;
 
@@ -305,8 +310,8 @@ void smeSm_PreConnect (TI_HANDLE hSme)
 				if (uDesiredChannel >= SITE_MGR_CHANNEL_A_MIN)
 				{
 				   pParam->content.channelCapabilityReq.band = RADIO_BAND_5_0_GHZ;
-				} 
-				else 
+				}
+				else
 				{
 				   pParam->content.channelCapabilityReq.band = RADIO_BAND_2_4_GHZ;
 				}
@@ -342,7 +347,7 @@ void smeSm_PreConnect (TI_HANDLE hSme)
 				   return;
 				}
 
-#ifdef REPORT_LOG    
+#ifdef REPORT_LOG
 				TRACE6(pSme->hReport, REPORT_SEVERITY_CONSOLE,"%%%%%%%%%%%%%%	SELF SELECT SUCCESS, bssid: %X-%X-%X-%X-%X-%X	%%%%%%%%%%%%%%\n\n", pSme->pCandidate->bssid[0], pSme->pCandidate->bssid[1], pSme->pCandidate->bssid[2], pSme->pCandidate->bssid[3], pSme->pCandidate->bssid[4], pSme->pCandidate->bssid[5]);
                 WLAN_OS_REPORT (("%%%%%%%%%%%%%%	SELF SELECT SUCCESS, bssid: %02x.%02x.%02x.%02x.%02x.%02x %%%%%%%%%%%%%%\n\n", pSme->pCandidate->bssid[0], pSme->pCandidate->bssid[1], pSme->pCandidate->bssid[2], pSme->pCandidate->bssid[3], pSme->pCandidate->bssid[4], pSme->pCandidate->bssid[5]));
 #endif
@@ -353,16 +358,16 @@ void smeSm_PreConnect (TI_HANDLE hSme)
     }
 }
 
-/** 
+/**
  * \fn     smeSm_Connect
  * \brief  Starts a connection process with the selected network
- * 
+ *
  * Starts a connection process with the selected network
- * 
+ *
  * \param  hSme - handle to the SME object
  * \return None
  * \sa     smeSm_PreConnect, smeSm_ConnectSuccess
- */ 
+ */
 void smeSm_Connect (TI_HANDLE hSme)
 {
     TSme        *pSme = (TSme*)hSme;
@@ -376,7 +381,7 @@ void smeSm_Connect (TI_HANDLE hSme)
         genSM_Event (pSme->hSmeSm, SME_SM_EVENT_CONNECT_FAILURE, hSme);
     }
     else
-    {      
+    {
         pParam = (paramInfo_t *)os_memoryAlloc(pSme->hOS, sizeof(paramInfo_t));
         if (!pParam)
         {
@@ -390,7 +395,7 @@ void smeSm_Connect (TI_HANDLE hSme)
        }
 
        /***************** Config Connection *************************/
-       pParam->paramType = CONN_TYPE_PARAM;	
+       pParam->paramType = CONN_TYPE_PARAM;
        if (BSS_INDEPENDENT == pSme->pCandidate->bssType)
            if (SITE_SELF == pSme->pCandidate->siteType)
            {
@@ -402,7 +407,7 @@ void smeSm_Connect (TI_HANDLE hSme)
            }
        else
             pParam->content.connType = CONNECTION_INFRA;
-       conn_setParam(pSme->hConn, pParam);   
+       conn_setParam(pSme->hConn, pParam);
        os_memoryFree(pSme->hOS, pParam, sizeof(paramInfo_t));
 
        /* start the connection process */
@@ -414,16 +419,16 @@ void smeSm_Connect (TI_HANDLE hSme)
     }
 }
 
-/** 
+/**
  * \fn     smeSm_ConnectSuccess
  * \brief  Handles connection success indication
- * 
+ *
  * Handles connection success indication - starts AP conn and set SCR group to connected
- * 
+ *
  * \param  hSme - handle to the SME object
  * \return None
  * \sa     smeSm_PreConnect, smeSm_Connect
- */ 
+ */
 void smeSm_ConnectSuccess (TI_HANDLE hSme)
 {
     TSme        *pSme = (TSme*)hSme;
@@ -434,7 +439,7 @@ void smeSm_ConnectSuccess (TI_HANDLE hSme)
     if (BSS_INFRASTRUCTURE == pSme->pCandidate->bssType)
     {
         /* Start the AP connection */
-        apConn_start (pSme->hApConn, 
+        apConn_start (pSme->hApConn,
                       (pSme->tSsid.len != 0) && !OS_802_11_SSID_JUNK (pSme->tSsid.str, pSme->tSsid.len));
     }
 
@@ -442,16 +447,16 @@ void smeSm_ConnectSuccess (TI_HANDLE hSme)
     scr_setGroup (pSme->hScr, SCR_GID_CONNECTED);
 }
 
-/** 
+/**
  * \fn     smeSm_Disconnect
  * \brief  Starts a disconnect by calling the AP connection or connect modules
- * 
+ *
  * Starts a disconnect by calling the AP connection or connect modules
- * 
+ *
  * \param  hSme - handle to the SME object
  * \return None
  * \sa     smeSm_DisconnectDone
- */ 
+ */
 void smeSm_Disconnect (TI_HANDLE hSme)
 {
     TSme        *pSme = (TSme*)hSme;
@@ -465,9 +470,9 @@ void smeSm_Disconnect (TI_HANDLE hSme)
 		 /* Call the AP connection to perform disconnect */
 		 tStatus = apConn_stop (pSme->hApConn, TI_TRUE);
 	}
-	else 
+	else
 	{
-	    /* In IBSS disconnect is done directly with the connection SM */ 
+	    /* In IBSS disconnect is done directly with the connection SM */
 		tStatus = conn_stop(pSme->hConn, DISCONNECT_DE_AUTH, STATUS_UNSPECIFIED,
 						   TI_TRUE, sme_ReportConnStatus, hSme);
 		if (tStatus != TI_OK)
@@ -477,16 +482,16 @@ TRACE1(pSme->hReport, REPORT_SEVERITY_ERROR , "smeSm_Disconnect: conn_stop retru
     }
 }
 
-/** 
+/**
  * \fn     smeSm_DisconnectDone
  * \brief  Finish a disconnect process
- * 
+ *
  * Finish a disconnect process by sending the appropriate event and restarting the state-machine
- * 
+ *
  * \param  hSme - handle to the SME object
  * \return None
  * \sa     smeSm_Disconnect
- */ 
+ */
 void smeSm_DisconnectDone (TI_HANDLE hSme)
 {
     TSme        *pSme = (TSme*)hSme;
@@ -509,21 +514,21 @@ void smeSm_DisconnectDone (TI_HANDLE hSme)
     }
 
     siteMgr_disSelectSite (pSme->hSiteMgr);
-    
+
     /* try to reconnect */
     smeSm_Start (hSme);
 }
 
-/** 
+/**
  * \fn     smeSm_StopScan
  * \brief  Stops the SME scan operation
- * 
+ *
  * Stops the SME scan operation
- * 
+ *
  * \param  hSme - handle to the SME object
  * \return None
  * \sa     smeSm_PreConnect, sme_StartScan
- */ 
+ */
 void smeSm_StopScan (TI_HANDLE hSme)
 {
     TSme        *pSme = (TSme*)hSme;
@@ -531,16 +536,16 @@ void smeSm_StopScan (TI_HANDLE hSme)
     scanCncn_StopPeriodicScan (pSme->hScanCncn, SCAN_SCC_DRIVER);
 }
 
-/** 
+/**
  * \fn     smeSm_StopConnect
  * \brief  Stops the connect module
- * 
+ *
  * Stops the connect module (if the SME is stopped during a connect attempt
- * 
+ *
  * \param  hSme - handle to the SME object
  * \return None
  * \sa     smeSm_Connect
- */ 
+ */
 void smeSm_StopConnect (TI_HANDLE hSme)
 {
     TSme        *pSme = (TSme*)hSme;
@@ -555,16 +560,16 @@ void smeSm_StopConnect (TI_HANDLE hSme)
     }
 }
 
-/** 
- * \fn     smeSm_ConnWhenConnecting 
+/**
+ * \fn     smeSm_ConnWhenConnecting
  * \brief  Starts the connect process again
- * 
+ *
  * Starts the connect process again
- * 
+ *
  * \param  hSme - handle to the SME object
  * \return None
  * \sa     smeSm_Connect
- */ 
+ */
 void smeSm_ConnWhenConnecting (TI_HANDLE hSme)
 {
     TSme        *pSme = (TSme*)hSme;
@@ -578,15 +583,15 @@ void smeSm_ConnWhenConnecting (TI_HANDLE hSme)
     }
 }
 
-/** 
+/**
  * \fn     smeSm_ActionUnexpected
  * \brief  Called when an unexpected event (for current state) is received
- * 
+ *
  * Called when an unexpected event (for current state) is received
- * 
+ *
  * \param  hSme - handle to the SME object
  * \return None
- */ 
+ */
 void smeSm_ActionUnexpected (TI_HANDLE hSme)
 {
     TSme        *pSme = (TSme*)hSme;
@@ -594,13 +599,13 @@ void smeSm_ActionUnexpected (TI_HANDLE hSme)
     TRACE0(pSme->hReport, REPORT_SEVERITY_ERROR , "smeSm_ActionUnexpected called\n");
 }
 
-/** 
+/**
  * \fn     smeSm_NopAction
  * \brief  Called when event call and don't need to do nothing.
- * 
+ *
  * \param  hSme - handle to the SME object
  * \return None
- */ 
+ */
 void smeSm_NopAction (TI_HANDLE hSme)
 {
     TSme        *pSme = (TSme*)hSme;
@@ -622,21 +627,21 @@ void smeSm_CheckStartConditions (TI_HANDLE hSme)
 
 /* do we need to verify G only / A only / dual-band with site mgr? or rely on channels only? */
 
-/** 
+/**
  * \fn     sme_StartScan
  * \brief  Set scan parameters and calls scan concnetartor to start the scan operation.
- * 
+ *
  * Set scan parameters and calls scan concnetartor to start the scan operation.
- * 
+ *
  * Scan parameters are set according to scan target - find country IE, find desired SSID, or both
  * (one on each band). To find country IE we use passive scan forever, to find the desired SSID we
  * use active scan until the current country IE expires. In addition, we take into account the WSC PB
  * mode - scan constantly for two minutes (but under the country validity and expiry constraints)
- * 
+ *
  * \param  hSme - handle to the SME object
  * \return TI_OK if scan started successfully, TI_NOK otherwise
  * \sa     smeSm_PreConnect
- */ 
+ */
 TI_STATUS sme_StartScan (TI_HANDLE hSme)
 {
     TSme            *pSme = (TSme*)hSme;
@@ -667,7 +672,7 @@ TI_STATUS sme_StartScan (TI_HANDLE hSme)
         bBandCountryFound[ uIndex ] = pParam->content.bIsCountryFound;
         /* also nullify the channel exist indication for this band */
         bBandChannelExist[ uIndex ] = TI_FALSE;
-    }  
+    }
     os_memoryFree(pSme->hOS, pParam, sizeof(paramInfo_t));
 
     /* First fill the channels */
@@ -681,7 +686,7 @@ TI_STATUS sme_StartScan (TI_HANDLE hSme)
         pSme->tScanParams.tChannels[ uIndex ].uTxPowerLevelDbm = DEF_TX_POWER;
 
         /* if 802.11d is disabled, or country is available for this band */
-        if ((TI_FALSE == bDEnabled) || 
+        if ((TI_FALSE == bDEnabled) ||
             (TI_TRUE == bBandCountryFound[ pSme->tInitParams.tChannelList[ uIndex ].eBand ]))
         {
             /* set active scan */
@@ -693,9 +698,9 @@ TI_STATUS sme_StartScan (TI_HANDLE hSme)
             /* set passive scan */
             pSme->tScanParams.tChannels[ uIndex ].eScanType = SCAN_TYPE_NORMAL_PASSIVE;
 
-            /* 
-             * in order to fined country set uMaxDwellTimeMs ( that at passive scan set the passiveScanDuration ) 
-             * to significant value 
+            /*
+             * in order to fined country set uMaxDwellTimeMs ( that at passive scan set the passiveScanDuration )
+             * to significant value
              */
             pSme->tScanParams.tChannels[ uIndex ].uMaxDwellTimeMs = SCAN_CNCN_REGULATORY_DOMAIN_PASSIVE_DWELL_TIME_DEF;
         }
@@ -710,10 +715,10 @@ TI_STATUS sme_StartScan (TI_HANDLE hSme)
     pSme->tScanParams.iRssiThreshold = pSme->tInitParams.iRssiThreshold;
     pSme->tScanParams.iSnrThreshold = pSme->tInitParams.iSnrThreshold;
     pSme->tScanParams.bTerminateOnReport = TI_TRUE;
-    pSme->tScanParams.uFrameCountReportThreshold = 1; 
+    pSme->tScanParams.uFrameCountReportThreshold = 1;
 
-    /* 
-     * if for at least one band country is known and scan is performed on this band - means we need to 
+    /*
+     * if for at least one band country is known and scan is performed on this band - means we need to
      * take into consideration country expiry, plus we are scanning for the desired SSID
      */
     bCountryValid = ((TI_TRUE == bBandChannelExist[ RADIO_BAND_2_4_GHZ ]) && (TI_TRUE == bBandCountryFound[ RADIO_BAND_2_4_GHZ ])) ||
@@ -737,7 +742,7 @@ TI_STATUS sme_StartScan (TI_HANDLE hSme)
             pSme->tScanParams.uSsidNum = 1;
             pSme->tScanParams.uSsidListFilterEnabled = 1;
 
-#ifdef CCX_MODULE_INCLUDED
+#ifdef XCC_MODULE_INCLUDED
             pSme->tScanParams.uSsidListFilterEnabled = (TI_UINT8)TI_FALSE;
             pSme->tScanParams.uSsidNum = 2;
             pSme->tScanParams.tDesiredSsid[ 1 ].tSsid.len = 0;
@@ -754,8 +759,8 @@ TI_STATUS sme_StartScan (TI_HANDLE hSme)
         /* we already know that at least on one band we know the country IE, so we scan for our SSID */
         pSme->tScanParams.tDesiredSsid[ 0 ].eVisability = SCAN_SSID_VISABILITY_HIDDEN;
         os_memoryCopy (pSme->hOS, &(pSme->tScanParams.tDesiredSsid[ 0 ].tSsid), &(pSme->tSsid), sizeof (TSsid));
-        /* 
-         * if, in addition, we scan the other band to find its country, and the desired SSDI is not any SSID, 
+        /*
+         * if, in addition, we scan the other band to find its country, and the desired SSDI is not any SSID,
          * add an empty SSID
          */
         if ((SSID_TYPE_ANY != pSme->eSsidType) &&
@@ -766,7 +771,7 @@ TI_STATUS sme_StartScan (TI_HANDLE hSme)
             pSme->tScanParams.tDesiredSsid[ 1 ].tSsid.len = 0;
             pSme->tScanParams.uSsidNum = 2;
             pSme->tScanParams.uSsidListFilterEnabled = 1;
-            /* 
+            /*
              * since we are also looking for an AP with country IE (not include in IBSS), we need to make sure
              * the desired BSS type include infrastructure BSSes.
              */
@@ -812,10 +817,10 @@ TI_STATUS sme_StartScan (TI_HANDLE hSme)
     return TI_OK;
 }
 
-/** 
+/**
  * \fn     sme_updateScanCycles
  * \brief  Updates the scan intervals and cycle number according to 802.11d status, country availability and WSC PB mode
- * 
+ *
  * Updates the scan intervals and cycle number according to 802.11d status, country availability and WSC PB mode.
  * Possible scenarios - D disabled - WSC PB off - scan forever with supplied intervals
  *                    - D enabled - country unknown - WSC PB off - scan forever with supplied intervals
@@ -823,14 +828,14 @@ TI_STATUS sme_StartScan (TI_HANDLE hSme)
  *                    - D enabled - country unknown - WSC PB on - scan for two minutes with zero intervals
  *                    - D enabled - country known - WSC PB off - scan until country expiry with supplied intervals
  *                    - D enabled - country known - WSC PB on - scan for the minimu of two minutes and country expiry with zero intervals
- * 
+ *
  * \param  hSme - handle to the SME object
  * \param  bDEnabled - TRUE if 802.11d is enabled
  * \param  bCountryValid - TRUE if a country IE is valid for a band on which we scan
  * \param  bConstantScan - TRUE if WSC PB mode is on
  * \return None
  * \sa     sme_CalculateCyclesNumber, sme_StartScan
- */ 
+ */
 void sme_updateScanCycles (TI_HANDLE hSme,
                            TI_BOOL bDEnabled,
                            TI_BOOL bCountryValid,
@@ -846,9 +851,9 @@ void sme_updateScanCycles (TI_HANDLE hSme,
         /* WSC PB mode is disabled */
         if (TI_FALSE == bConstantScan)
         {
-            /* 
+            /*
              * copy intervals
-             * In order to avoid tight loop of scan-select or scan-select-connecting operation, 
+             * In order to avoid tight loop of scan-select or scan-select-connecting operation,
              * the prepare scan function takes into account the value of the scan_count when setting the 16 periods in the scan command
              */
             os_memoryCopy (pSme->hOS, &(pSme->tScanParams.uCycleIntervalMsec[ 0 ]),
@@ -865,7 +870,7 @@ void sme_updateScanCycles (TI_HANDLE hSme,
         /* WSC PB mode is enabled */
         else
         {
-           
+
             /* nullify all intervals */
             os_memoryZero (pSme->hOS, &(pSme->tScanParams.uCycleIntervalMsec[ 0 ]),
                            sizeof (TI_UINT32) * PERIODIC_SCAN_MAX_INTERVAL_NUM);
@@ -897,9 +902,9 @@ void sme_updateScanCycles (TI_HANDLE hSme,
         /* WSC PB mode is disabled */
         if (TI_FALSE == bConstantScan)
         {
-            /* 
+            /*
              * copy intervals
-             * In order to avoid tight loop of scan-select or scan-select-connecting operation, 
+             * In order to avoid tight loop of scan-select or scan-select-connecting operation,
              * the prepare scan function takes into account the value of the scan_count when setting the 16 periods in the scan command
              */
             os_memoryCopy (pSme->hOS, &(pSme->tScanParams.uCycleIntervalMsec[ 0 ]),
@@ -909,7 +914,7 @@ void sme_updateScanCycles (TI_HANDLE hSme,
             {
                 pSme->tScanParams.uCycleIntervalMsec[ uIndex ] = pSme->tInitParams.uScanIntervals[ PERIODIC_SCAN_MAX_INTERVAL_NUM - 1 ];
             }
- 
+
             /* set cycle number according to country expiry time */
             sme_CalculateCyclesNumber (hSme, pParam->content.uTimeToCountryExpiryMs);
         }
@@ -942,7 +947,7 @@ void sme_updateScanCycles (TI_HANDLE hSme,
             {
                 pSme->tScanParams.uCycleNum = pSme->tInitParams.uCycleNum;
             }
-        }   
+        }
         os_memoryFree(pSme->hOS, pParam, sizeof(paramInfo_t));
     }
 
@@ -953,25 +958,25 @@ void sme_updateScanCycles (TI_HANDLE hSme,
     }
 }
 
-/** 
+/**
  * \fn     sme_CalculateCyclesNumber
  * \brief  Calculates the cycle number required for a gicen time, according to scan intervals
- * 
+ *
  * Calculates the cycle number required for a gicen time, according to scan intervals. First check the 16
  * different intervals, and if more time is available, find how many cycles still fit. Write the result
  * to the SME scan command
- * 
+ *
  * \param  hSme - handle to the SME object
  * \param  uToTalTimeMs - the total periodic scan operation duartion
  * \return None
  * \sa     sme_updateScanCycles, sme_StartScan
- */ 
+ */
 void sme_CalculateCyclesNumber (TI_HANDLE hSme, TI_UINT32 uTotalTimeMs)
 {
     TSme            *pSme = (TSme*)hSme;
     TI_UINT32       uIndex, uCurrentTimeMs = 0;
 
-    /* 
+    /*
      * the total time should exceed country code expiration by one interval (so that next scan wouldn't
      * have a valid country code)
      */
@@ -979,7 +984,7 @@ void sme_CalculateCyclesNumber (TI_HANDLE hSme, TI_UINT32 uTotalTimeMs)
     /* nullify cycle number */
     pSme->tScanParams.uCycleNum = 0;
     /* now find how many cycles fit within this time. First, check if all first 16 configured intervals fit */
-    for (uIndex = 0; 
+    for (uIndex = 0;
          (uIndex < PERIODIC_SCAN_MAX_INTERVAL_NUM) && (uCurrentTimeMs < uTotalTimeMs);
          uIndex++)
     {
@@ -989,11 +994,11 @@ void sme_CalculateCyclesNumber (TI_HANDLE hSme, TI_UINT32 uTotalTimeMs)
     /* now find out how many more cycles with the last interval still fits */
     if (uCurrentTimeMs < uTotalTimeMs)
     {
-        /* 
+        /*
          * divide the reamining time (time until expiry minus the total time calculated so far)
          * by the last interval time, to get how many more scans would fit after the first 16 intervals
          */
-        pSme->tScanParams.uCycleNum += (uTotalTimeMs - uCurrentTimeMs) / 
+        pSme->tScanParams.uCycleNum += (uTotalTimeMs - uCurrentTimeMs) /
                                             pSme->tScanParams.uCycleIntervalMsec[ PERIODIC_SCAN_MAX_INTERVAL_NUM - 1];
         /* and add one, to compensate for the reminder */
         pSme->tScanParams.uCycleNum++;

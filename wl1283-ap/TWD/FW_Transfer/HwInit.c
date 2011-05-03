@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * HwInit.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 
 /*******************************************************************************/
@@ -69,34 +74,34 @@ extern void cmdBld_FinalizeDownload (TI_HANDLE hCmdBld, TBootAttr *pBootAttr, Fw
  ************************************************************************/
 
 /* Download phase partition */
-#define PARTITION_DOWN_MEM_ADDR       0                 
-#define PARTITION_DOWN_MEM_SIZE       0x177C0           
-#define PARTITION_DOWN_REG_ADDR       REGISTERS_BASE	
-#define PARTITION_DOWN_REG_SIZE       0x8800            
+#define PARTITION_DOWN_MEM_ADDR       0
+#define PARTITION_DOWN_MEM_SIZE       0x177C0
+#define PARTITION_DOWN_REG_ADDR       REGISTERS_BASE
+#define PARTITION_DOWN_REG_SIZE       0x8800
 
 /* Working phase partition */
 #define PARTITION_WORK_MEM_ADDR1       0x40000
 #define PARTITION_WORK_MEM_SIZE1       0x14FC0
-#define PARTITION_WORK_MEM_ADDR2       REGISTERS_BASE    
-#define PARTITION_WORK_MEM_SIZE2       0xA000   
-#define PARTITION_WORK_MEM_ADDR3       0x3004F8     
-#define PARTITION_WORK_MEM_SIZE3       0x4   
-#define PARTITION_WORK_MEM_ADDR4       0x40404   
+#define PARTITION_WORK_MEM_ADDR2       REGISTERS_BASE
+#define PARTITION_WORK_MEM_SIZE2       0xA000
+#define PARTITION_WORK_MEM_ADDR3       0x3004F8
+#define PARTITION_WORK_MEM_SIZE3       0x4
+#define PARTITION_WORK_MEM_ADDR4       0x40404
 
 /* DRPW setting partition */
 #define PARTITION_DRPW_MEM_ADDR       0x40000
 #define PARTITION_DRPW_MEM_SIZE       0x14FC0
-#define PARTITION_DRPW_REG_ADDR       DRPW_BASE         
-#define PARTITION_DRPW_REG_SIZE       0x6000	        
+#define PARTITION_DRPW_REG_ADDR       DRPW_BASE
+#define PARTITION_DRPW_REG_SIZE       0x6000
 
 /* Total range of bus addresses range */
 #define PARTITION_TOTAL_ADDR_RANGE    0x1FFC0
 
 /* Maximal block size in a single SDIO transfer --> Firmware image load chunk size */
 #ifdef _VLCT_
-#define MAX_SDIO_BLOCK					(4000)	
+#define MAX_SDIO_BLOCK					(4000)
 #else
-#define MAX_SDIO_BLOCK					(500)	
+#define MAX_SDIO_BLOCK					(500)
 #endif
 
 #define ACX_EEPROMLESS_IND_REG        (SCR_PAD4)
@@ -152,7 +157,7 @@ extern void cmdBld_FinalizeDownload (TI_HANDLE hCmdBld, TBootAttr *pBootAttr, Fw
 							  aNVS[25]=0x00; aNVS[26]=0x00; aNVS[27]=0x00;
 
 #else
-#define SET_DEF_NVS(aNVS)     aNVS[0]=0x01; aNVS[1]=0x6d; aNVS[2]=0x54; aNVS[3]=0x58; aNVS[4]=0x03; \
+#define SET_DEF_NVS(aNVS)     aNVS[0]=0x01; aNVS[1]=0x6d; aNVS[2]=0x54; aNVS[3]=0x69; aNVS[4]=0x69; \
                               aNVS[5]=0x12; aNVS[6]=0x28; aNVS[7]=0x01; aNVS[8]=0x71; aNVS[9]=0x54; \
                               aNVS[10]=0x00; aNVS[11]=0x08; aNVS[12]=0x00; aNVS[13]=0x00; aNVS[14]=0x00; \
                               aNVS[15]=0x00; aNVS[16]=0x00; aNVS[17]=0x00; aNVS[18]=0x00; aNVS[19]=0x00; \
@@ -168,7 +173,7 @@ extern void cmdBld_FinalizeDownload (TI_HANDLE hCmdBld, TBootAttr *pBootAttr, Fw
                     ((TPartition*)pPartition)[1].uMemSize = uMemSize2; \
                     ((TPartition*)pPartition)[2].uMemAdrr = uAddr3; \
                     ((TPartition*)pPartition)[2].uMemSize = uMemSize3; \
-                    ((TPartition*)pPartition)[3].uMemAdrr = uAddr4; 
+                    ((TPartition*)pPartition)[3].uMemAdrr = uAddr4;
 
 #define HW_INIT_PTXN_SET(pHwInit, pTxn)  pTxn = (TTxnStruct*)&(pHwInit->aHwInitTxn[pHwInit->uTxnIndex].tTxnStruct);
 
@@ -269,23 +274,23 @@ enum
     LUT_PARAM_NUM                   = 6
 };
 
-typedef struct 
+typedef struct
 {
     TTxnStruct              tTxnStruct;
-    TI_UINT32               uData; 
+    TI_UINT32               uData;
 
 } THwInitTxn;
 
-typedef struct 
+typedef struct
 {
     TTxnStruct              tTxnStruct;
-    FwStaticData_t          tFwStaticInfo; 
+    FwStaticData_t          tFwStaticInfo;
 
 } TFwStaticTxn;
 
 
 /* The HW Init module object */
-typedef struct 
+typedef struct
 {
     /* Handles */
     TI_HANDLE               hOs;
@@ -298,16 +303,16 @@ typedef struct
     TEndOfHwInitCb          fInitHwCb;
 
     /* Firmware image ptr */
-    TI_UINT8               *pFwBuf;       
+    TI_UINT8               *pFwBuf;
     /* Firmware image length */
     TI_UINT32               uFwLength;
     TI_UINT32               uFwAddress;
-    TI_UINT32               bFwBufLast;  
-    TI_UINT32               uFwLastAddr;  
+    TI_UINT32               bFwBufLast;
+    TI_UINT32               uFwLastAddr;
     /* EEPROM image ptr */
-    TI_UINT8               *pEEPROMBuf;   
+    TI_UINT8               *pEEPROMBuf;
     /* EEPROM image length */
-    TI_UINT32               uEEPROMLen;   
+    TI_UINT32               uEEPROMLen;
 
     TI_UINT8               *pEEPROMCurPtr;
     TI_UINT32               uEEPROMCurLen;
@@ -315,24 +320,24 @@ typedef struct
     TI_HANDLE               hHwCtrl;
     ETxnStatus              DownloadStatus;
     /* Upper module callback for the init stage */
-    fnotify_t               fCb;          
+    fnotify_t               fCb;
     /* Upper module handle for the init stage */
-    TI_HANDLE               hCb;          
+    TI_HANDLE               hCb;
     /* Init stage */
-    TI_UINT32               uInitStage;   
-    /* Reset statge */ 
-    TI_UINT32               uResetStage;  
+    TI_UINT32               uInitStage;
+    /* Reset statge */
+    TI_UINT32               uResetStage;
     /* EEPROM burst stage */
-    TI_UINT32               uEEPROMStage; 
+    TI_UINT32               uEEPROMStage;
     /* Init state machine temporary data */
-    TI_UINT32               uInitData;    
+    TI_UINT32               uInitData;
     /* ELP command image */
-    TI_UINT32               uElpCmd;      
+    TI_UINT32               uElpCmd;
     /* Chip ID */
-    TI_UINT32               uChipId;      
-    TI_BOOL                 bIsFREFClock;     
+    TI_UINT32               uChipId;
+    TI_BOOL                 bIsFREFClock;
     /* Boot state machine temporary data */
-    TI_UINT32               uBootData;    
+    TI_UINT32               uBootData;
     TI_UINT32               uSelfClearTime;
     TI_UINT8                uEEPROMBurstLen;
     TI_UINT8                uEEPROMBurstLoop;
@@ -343,7 +348,7 @@ typedef struct
     TI_UINT32               uNVSNumByte;
     TI_STATUS               uNVSStatus;
     TI_UINT32               uScrPad6;
-    TI_UINT32               uRefFreq; 
+    TI_UINT32               uRefFreq;
     TI_UINT32               uInitSeqStage;
     TI_STATUS               uInitSeqStatus;
     TI_UINT32               uLoadStage;
@@ -352,7 +357,7 @@ typedef struct
     TI_UINT32               uPartitionLimit;
     TI_UINT32               uFinStage;
     TI_UINT32               uFinData;
-    TI_UINT32               uFinLoop; 
+    TI_UINT32               uFinLoop;
      TI_UINT32               uRegStage;
     TI_UINT32               uRegLoop;
     TI_UINT32               uRegSeqStage;
@@ -372,8 +377,8 @@ typedef struct
 
     TFinalizeCb             fFinalizeDownload;
     TI_HANDLE               hFinalizeDownload;
-    /* Size of the Fw image, retrieved from the image itself */         
-    TI_UINT32               uFwDataLen; 
+    /* Size of the Fw image, retrieved from the image itself */
+    TI_UINT32               uFwDataLen;
     TI_UINT8                aDefaultNVS[DEF_NVS_SIZE];
     TI_UINT8                uTxnIndex;
     THwInitTxn              aHwInitTxn[MAX_HW_INIT_CONSECUTIVE_TXN];
@@ -381,11 +386,11 @@ typedef struct
 
 #ifdef TNETW1283
     /* PLL config stage */
-    TI_UINT32               uPllStage; 
-    TI_UINT32               uPllPendingFlag; 
-    TI_UINT32               uClockConfig; 
+    TI_UINT32               uPllStage;
+    TI_UINT32               uPllPendingFlag;
+    TI_UINT32               uClockConfig;
 #endif
-    TI_UINT32               uSavedDataForWspiHdr;  /* For saving the 4 bytes before the NVS data for WSPI case 
+    TI_UINT32               uSavedDataForWspiHdr;  /* For saving the 4 bytes before the NVS data for WSPI case
                                                         where they are overrun by the WSPI BusDrv */
     TPartition              aPartition[NUM_OF_PARTITION];
 } THwInit;
@@ -394,13 +399,13 @@ typedef struct
 /************************************************************************
  * Local Functions Prototypes
  ************************************************************************/
-static void      hwInit_SetPartition                (THwInit   *pHwInit, 
+static void      hwInit_SetPartition                (THwInit   *pHwInit,
                                                      TPartition *pPartition);
 static TI_STATUS hwInit_BootSm                      (TI_HANDLE hHwInit);
 static TI_STATUS hwInit_ResetSm                     (TI_HANDLE hHwInit);
-static TI_STATUS hwInit_EepromlessStartBurstSm      (TI_HANDLE hHwInit);                                                   
+static TI_STATUS hwInit_EepromlessStartBurstSm      (TI_HANDLE hHwInit);
 static TI_STATUS hwInit_LoadFwImageSm               (TI_HANDLE hHwInit);
-static TI_STATUS hwInit_FinalizeDownloadSm          (TI_HANDLE hHwInit);                                             
+static TI_STATUS hwInit_FinalizeDownloadSm          (TI_HANDLE hHwInit);
 #ifndef FPGA_SKIP_TOP_INIT
 static TI_STATUS hwInit_TopRegisterRead(TI_HANDLE hHwInit);
 static TI_STATUS hwInit_InitTopRegisterRead(TI_HANDLE hHwInit, TI_UINT32 uAddress);
@@ -425,13 +430,13 @@ static void      hwInit_StallTimerCb                (TI_HANDLE hHwInit, TI_BOOL 
 * DESCRIPTION:  This function initializes the HwInit module.
 *
 * INPUT:        hOs - handle to Os Abstraction Layer
-*               
+*
 * RETURN:       Handle to the allocated HwInit module
 *************************************************************************/
 TI_HANDLE hwInit_Create (TI_HANDLE hOs)
 {
     THwInit *pHwInit;
-  
+
     /* Allocate HwInit module */
     pHwInit = os_memoryAlloc (hOs, sizeof(THwInit));
 
@@ -453,7 +458,7 @@ TI_HANDLE hwInit_Create (TI_HANDLE hOs)
 /***************************************************************************
 *                           hwInit_Destroy                                 *
 ****************************************************************************
-* DESCRIPTION:  This function unload the HwInit module. 
+* DESCRIPTION:  This function unload the HwInit module.
 *
 * INPUTS:       hHwInit - the object
 *
@@ -471,7 +476,7 @@ TI_STATUS hwInit_Destroy (TI_HANDLE hHwInit)
 		tmr_DestroyTimer (pHwInit->hStallTimer);
 #endif
 
-    }        
+    }
 
     /* Free HwInit Module */
     os_memoryFree (pHwInit->hOs, pHwInit, sizeof(THwInit));
@@ -491,8 +496,8 @@ TI_STATUS hwInit_Destroy (TI_HANDLE hHwInit)
 TI_STATUS hwInit_Init (TI_HANDLE      hHwInit,
                          TI_HANDLE      hReport,
                          TI_HANDLE      hTWD,
-                         TI_HANDLE 	hFinalizeDownload, 
-			 TFinalizeCb    fFinalizeDownload, 
+                         TI_HANDLE 	hFinalizeDownload,
+			 TFinalizeCb    fFinalizeDownload,
                          TEndOfHwInitCb fInitHwCb)
 {
     THwInit   *pHwInit = (THwInit *)hHwInit;
@@ -517,14 +522,14 @@ TI_STATUS hwInit_Init (TI_HANDLE      hHwInit,
     }
 #ifdef DOWNLOAD_TIMER_REQUIERD
 	pHwInit->hStallTimer = tmr_CreateTimer (hTimer);
-	if (pHwInit->hStallTimer == NULL) 
+	if (pHwInit->hStallTimer == NULL)
 	{
 		return TI_NOK;
 	}
 #endif
 
     TRACE0(pHwInit->hReport, REPORT_SEVERITY_INIT, ".....HwInit configured successfully\n");
-    
+
     return TI_OK;
 }
 
@@ -534,7 +539,7 @@ TI_STATUS hwInit_SetNvsImage (TI_HANDLE hHwInit, TI_UINT8 *pbuf, TI_UINT32 lengt
     THwInit   *pHwInit = (THwInit *)hHwInit;
 
     pHwInit->pEEPROMBuf = pbuf;
-    pHwInit->uEEPROMLen = length; 
+    pHwInit->uEEPROMLen = length;
 
     return TI_OK;
 }
@@ -558,27 +563,27 @@ TI_STATUS hwInit_SetFwImage (TI_HANDLE hHwInit, TFileInfo *pFileInfo)
 }
 
 
-/** 
+/**
  * \fn     hwInit_SetPartition
  * \brief  Set HW addresses partition
- * 
+ *
  * Set the HW address ranges for download or working memory and registers access.
  * Generate and configure the bus access address mapping table.
- * The partition is split between register (fixed partition of 24KB size, exists in all modes), 
+ * The partition is split between register (fixed partition of 24KB size, exists in all modes),
  *     and memory (dynamically changed during init and gets constant value in run-time, 104KB size).
- * The TwIf configures the memory mapping table on the device by issuing write transaction to 
- *     table address (note that the TxnQ and bus driver see this as a regular transaction). 
- * 
- * \note In future versions, a specific bus may not support partitioning (as in wUART), 
- *       In this case the HwInit module shall not call this function (will learn the bus 
+ * The TwIf configures the memory mapping table on the device by issuing write transaction to
+ *     table address (note that the TxnQ and bus driver see this as a regular transaction).
+ *
+ * \note In future versions, a specific bus may not support partitioning (as in wUART),
+ *       In this case the HwInit module shall not call this function (will learn the bus
  *       configuration from the INI file).
  *
  * \param  pHwInit   - The module's object
  * \param  pPartition  - all partition base address
  * \return void
- * \sa     
- */ 
-static void hwInit_SetPartition (THwInit   *pHwInit, 
+ * \sa
+ */
+static void hwInit_SetPartition (THwInit   *pHwInit,
                                  TPartition *pPartition)
 {
    TRACE7(pHwInit->hReport, REPORT_SEVERITY_INFORMATION, "hwInit_SetPartition: uMemAddr1=0x%x, MemSize1=0x%x uMemAddr2=0x%x, MemSize2=0x%x, uMemAddr3=0x%x, MemSize3=0x%x, uMemAddr4=0x%x, MemSize4=0x%x\n",pPartition[0].uMemAdrr, pPartition[0].uMemSize,pPartition[1].uMemAdrr, pPartition[1].uMemSize,pPartition[2].uMemAdrr, pPartition[2].uMemSize,pPartition[3].uMemAdrr );
@@ -593,15 +598,15 @@ static void hwInit_SetPartition (THwInit   *pHwInit,
  ****************************************************************************
  * DESCRIPTION: Start HW init sequence which writes and reads some HW registers
  *                  that are needed prior to FW download.
- * 
- * INPUTS:  None    
- * 
+ *
+ * INPUTS:  None
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS hwInit_Boot (TI_HANDLE hHwInit)
-{ 
+{
     THwInit      *pHwInit = (THwInit *)hHwInit;
     TTwd         *pTWD = (TTwd *)pHwInit->hTWD;
     TWlanParams  *pWlanParams = &DB_WLAN(pTWD->hCmdBld);
@@ -611,8 +616,8 @@ TI_STATUS hwInit_Boot (TI_HANDLE hHwInit)
     tBootAttr.ArmClock = pWlanParams->ArmClock;
 
     /*
-     * Initialize the status of download to  pending 
-     * It will be set to TXN_STATUS_COMPLETE at the FinalizeDownload function 
+     * Initialize the status of download to  pending
+     * It will be set to TXN_STATUS_COMPLETE at the FinalizeDownload function
      */
     pHwInit->DownloadStatus = TXN_STATUS_PENDING;
 
@@ -624,11 +629,11 @@ TI_STATUS hwInit_Boot (TI_HANDLE hHwInit)
     hwInit_BootSm (hHwInit);
 
     /*
-     * If it returns the status of the StartInstance only then we can here query for the download status 
+     * If it returns the status of the StartInstance only then we can here query for the download status
      * and then return the status up to the TNETW_Driver.
      * This return value will go back up to the TNETW Driver layer so that the init from OS will know
      * if to wait for the InitComplte or not in case of TXN_STATUS_ERROR.
-     * This value will always be pending since the SPI is ASYNC 
+     * This value will always be pending since the SPI is ASYNC
      * and in SDIOa timer is set so it will be ASync also in anyway.
      */
     return pHwInit->DownloadStatus;
@@ -637,12 +642,12 @@ TI_STATUS hwInit_Boot (TI_HANDLE hHwInit)
 
  /****************************************************************************
  * DESCRIPTION: Firmware boot state machine
- * 
- * INPUTS:  
- * 
+ *
+ * INPUTS:
+ *
  * OUTPUT:  None
- * 
- * RETURNS: TI_OK 
+ *
+ * RETURNS: TI_OK
  ****************************************************************************/
 static TI_STATUS hwInit_BootSm (TI_HANDLE hHwInit)
 {
@@ -670,8 +675,8 @@ static TI_STATUS hwInit_BootSm (TI_HANDLE hHwInit)
         hwInit_SetPartition (pHwInit,pHwInit->aPartition);
 
 #ifdef _VLCT_
-         /* Set FW to test mode */    
-         BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, SCR_PAD8, 0xBABABABE, 
+         /* Set FW to test mode */
+         BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, SCR_PAD8, 0xBABABABE,
                                 REGISTER_SIZE, TXN_DIRECTION_WRITE, NULL, NULL)
          twIf_Transact(pHwInit->hTwIf, pTxn);
          pHwInit->uTxnIndex++;
@@ -692,7 +697,7 @@ static TI_STATUS hwInit_BootSm (TI_HANDLE hHwInit)
             pHwInit->uPllPendingFlag = 0;
             pHwInit->uClockConfig = 0;
             status = hwInit_PllConfigSm(pHwInit);
-        
+
             WLAN_OS_REPORT(("hwInit_BootSm: hwInit_PllConfigSm return status = %d\n", status));
 
             EXCEPT (pHwInit, status)
@@ -713,24 +718,24 @@ static TI_STATUS hwInit_BootSm (TI_HANDLE hHwInit)
         WLAN_OS_REPORT(("CHIP VERSION... set 1273 chip top registers\n"));
 #ifdef FPGA_SKIP_TOP_INIT
             WLAN_OS_REPORT(("hwInit_BootSm: SKIP TOP INIT\n"));
-            /* 
-             * Don't Access PLL registers 
+            /*
+             * Don't Access PLL registers
              * Replace with SCR_PAD2 just not to break the boot states
              */
-            BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, SCR_PAD2, 0, 
+            BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, SCR_PAD2, 0,
                                    REGISTER_SIZE, TXN_DIRECTION_READ,(TTxnDoneCb)hwInit_BootSm, hHwInit)
             status = twIf_Transact(pHwInit->hTwIf, pTxn);
             pHwInit->uTxnIndex++;
 #else
-        /* set the reference clock freq' to be used (pll_selinpfref field) */        
+        /* set the reference clock freq' to be used (pll_selinpfref field) */
         BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, PLL_PARAMETERS, clkVal,
                                REGISTER_SIZE, TXN_DIRECTION_WRITE, NULL, NULL)
         twIf_Transact(pHwInit->hTwIf, pTxn);
 
         pHwInit->uTxnIndex++;
 
-        /* read the PAUSE value to highest threshold */        
-        BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, PLL_PARAMETERS, 0, 
+        /* read the PAUSE value to highest threshold */
+        BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, PLL_PARAMETERS, 0,
                                REGISTER_SIZE, TXN_DIRECTION_READ, (TTxnDoneCb)hwInit_BootSm, hHwInit)
         status = twIf_Transact(pHwInit->hTwIf, pTxn);
 #endif
@@ -758,9 +763,9 @@ static TI_STATUS hwInit_BootSm (TI_HANDLE hHwInit)
         /* Now we can zero the index */
         pHwInit->uTxnIndex = 0;
 
-        /* set the the PAUSE value to highest threshold */        
+        /* set the the PAUSE value to highest threshold */
         uData |= WU_COUNTER_PAUSE_VAL;
-        BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, WU_COUNTER_PAUSE, uData, 
+        BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, WU_COUNTER_PAUSE, uData,
                                REGISTER_SIZE, TXN_DIRECTION_WRITE, NULL, NULL)
         twIf_Transact(pHwInit->hTwIf, pTxn);
 
@@ -768,7 +773,7 @@ static TI_STATUS hwInit_BootSm (TI_HANDLE hHwInit)
         }
 
         /* Continue the ELP wake up sequence */
-        BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, WELP_ARM_COMMAND, WELP_ARM_COMMAND_VAL, 
+        BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, WELP_ARM_COMMAND, WELP_ARM_COMMAND_VAL,
                                REGISTER_SIZE, TXN_DIRECTION_WRITE, NULL, NULL)
         twIf_Transact(pHwInit->hTwIf, pTxn);
 
@@ -777,26 +782,26 @@ static TI_STATUS hwInit_BootSm (TI_HANDLE hHwInit)
         os_StalluSec (pHwInit->hOs, 500);
 
 #ifdef FPGA_SKIP_DRPW
-        /* 
-         * Don't Access DRPW registers 
+        /*
+         * Don't Access DRPW registers
          * Replace with SCR_PAD2 just not to break the boot states
          */
         WLAN_OS_REPORT(("hwInit_BootSm 1: skip set_partition and skip read DRPW reg 0x%x\n", DRPW_SCRATCH_START));
-        BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, SCR_PAD2, 0, 
+        BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, SCR_PAD2, 0,
                                REGISTER_SIZE, TXN_DIRECTION_READ,(TTxnDoneCb)hwInit_BootSm, hHwInit)
         status = twIf_Transact(pHwInit->hTwIf, pTxn);
         pHwInit->uTxnIndex++;
         /* Skip to next phase */
 #else
         /* Set the bus addresses partition to DRPw registers region */
-        SET_DRP_PARTITION(pHwInit->aPartition)        
+        SET_DRP_PARTITION(pHwInit->aPartition)
         hwInit_SetPartition (pHwInit,pHwInit->aPartition);
 
         pHwInit->uTxnIndex++;
 
-        /* Read-modify-write DRPW_SCRATCH_START register (see next state) to be used by DRPw FW. 
+        /* Read-modify-write DRPW_SCRATCH_START register (see next state) to be used by DRPw FW.
            The RTRIM value will be added  by the FW before taking DRPw out of reset */
-        BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, DRPW_SCRATCH_START, 0, 
+        BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, DRPW_SCRATCH_START, 0,
                                REGISTER_SIZE, TXN_DIRECTION_READ,(TTxnDoneCb)hwInit_BootSm, hHwInit)
         status = twIf_Transact(pHwInit->hTwIf, pTxn);
 #endif
@@ -812,7 +817,7 @@ static TI_STATUS hwInit_BootSm (TI_HANDLE hHwInit)
         /* Then, move it 4 places to the right, to alter Fref relevant bits in register 0x2c */
         clkVal = pHwInit->aHwInitTxn[pHwInit->uTxnIndex].uData;
         pHwInit->uTxnIndex = 0; /* Reset index only after getting the last read value! */
-#ifdef TNETW1283 
+#ifdef TNETW1283
 WLAN_OS_REPORT(("\n **** in BootSM, setting clkVal,  pHwInit->bIsFREFClock=%d  *****\n", pHwInit->bIsFREFClock));
         if (pHwInit->bIsFREFClock == TI_TRUE)
         {
@@ -829,11 +834,11 @@ WLAN_OS_REPORT(("\n **** in BootSM, setting clkVal,  pHwInit->bIsFREFClock=%d  *
         if ((pGenParams->GeneralSettings[0] & DRPw_MASK_CHECK) > 0)
 #else
         if ((pGenParams->GeneralSettings & DRPw_MASK_CHECK) > 0)
-#endif            
+#endif
         {
             clkVal |= DRPw_MASK_SET;
         }
-        BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, DRPW_SCRATCH_START, clkVal, 
+        BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, DRPW_SCRATCH_START, clkVal,
                                REGISTER_SIZE, TXN_DIRECTION_WRITE, NULL, NULL)
         twIf_Transact(pHwInit->hTwIf, pTxn);
 #endif
@@ -844,24 +849,24 @@ WLAN_OS_REPORT(("\n **** in BootSM, setting clkVal,  pHwInit->bIsFREFClock=%d  *
         SET_WORK_PARTITION(pHwInit->aPartition)
         hwInit_SetPartition (pHwInit,pHwInit->aPartition);
 
-        /* 
+        /*
          * end of CHIP init seq.
          */
 
         /* Disable interrupts */
-        BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, ACX_REG_INTERRUPT_MASK, ACX_INTR_ALL, 
+        BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, ACX_REG_INTERRUPT_MASK, ACX_INTR_ALL,
                                REGISTER_SIZE, TXN_DIRECTION_WRITE, NULL, NULL)
         twIf_Transact(pHwInit->hTwIf, pTxn);
 
         pHwInit->uTxnIndex++;
 
         /* Read the CHIP ID to get an indication that the bus is TI_OK */
-        BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, CHIP_ID, 0, 
+        BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, CHIP_ID, 0,
                                REGISTER_SIZE, TXN_DIRECTION_READ,(TTxnDoneCb)hwInit_BootSm, hHwInit)
         status = twIf_Transact(pHwInit->hTwIf, pTxn);
 
         EXCEPT (pHwInit, status)
-        
+
     case 3:
         pHwInit->uInitStage ++;
 
@@ -881,7 +886,7 @@ WLAN_OS_REPORT(("\n **** in BootSM, setting clkVal,  pHwInit->bIsFREFClock=%d  *
         {
             WLAN_OS_REPORT(("Working on a 1283 PG 1.0 board.\n"));
         }
-        else 
+        else
         {
             WLAN_OS_REPORT (("Error!! Found unknown Chip Id = 0x%x\n", pHwInit->uChipId));
 
@@ -889,14 +894,14 @@ WLAN_OS_REPORT(("\n **** in BootSM, setting clkVal,  pHwInit->bIsFREFClock=%d  *
              * NOTE: no exception because of forward compatibility
              */
         }
-    
+
         /*
-         * Soft reset 
+         * Soft reset
          */
         pHwInit->uResetStage = 0;
         pHwInit->uSelfClearTime = 0;
         pHwInit->uBootData = 0;
-        status = hwInit_ResetSm (pHwInit);    
+        status = hwInit_ResetSm (pHwInit);
 
         EXCEPT (pHwInit, status)
 
@@ -911,13 +916,13 @@ WLAN_OS_REPORT(("\n **** in BootSM, setting clkVal,  pHwInit->bIsFREFClock=%d  *
          * Start EEPROM/NVS burst
          */
 
-        if (pHwInit->pEEPROMBuf) 
+        if (pHwInit->pEEPROMBuf)
         {
             /* NVS file exists (EEPROM-less support) */
             pHwInit->uEEPROMCurLen = pHwInit->uEEPROMLen;
 
             TRACE2(pHwInit->hReport, REPORT_SEVERITY_INIT , "EEPROM Image addr=0x%x, EEPROM Len=0x0x%x\n", pHwInit->pEEPROMBuf, pHwInit->uEEPROMLen);
-            WLAN_OS_REPORT (("NVS found, EEPROM Image addr=0x%x, EEPROM Len=0x0x%x\n", 
+            WLAN_OS_REPORT (("NVS found, EEPROM Image addr=0x%x, EEPROM Len=0x0x%x\n",
             (TI_UINT32)pHwInit->pEEPROMBuf, pHwInit->uEEPROMLen));
         }
         else
@@ -935,15 +940,15 @@ WLAN_OS_REPORT(("\n **** in BootSM, setting clkVal,  pHwInit->bIsFREFClock=%d  *
         status = hwInit_EepromlessStartBurstSm (hHwInit);
 
         EXCEPT (pHwInit, status)
-        
-    case 5: 
+
+    case 5:
         pHwInit->uInitStage ++;
         pHwInit->uTxnIndex = 0;
 
-        if (pHwInit->pEEPROMBuf) 
+        if (pHwInit->pEEPROMBuf)
         {
             /* Signal FW that we are eeprom less */
-            BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, ACX_EEPROMLESS_IND_REG, ACX_EEPROMLESS_IND_REG, 
+            BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, ACX_EEPROMLESS_IND_REG, ACX_EEPROMLESS_IND_REG,
                                REGISTER_SIZE, TXN_DIRECTION_WRITE, NULL, NULL)
             twIf_Transact(pHwInit->hTwIf, pTxn);
 
@@ -951,10 +956,10 @@ WLAN_OS_REPORT(("\n **** in BootSM, setting clkVal,  pHwInit->bIsFREFClock=%d  *
         }
         else
         {
-	    /* 1273 - EEPROM is not support by FPGA yet */ 
+	    /* 1273 - EEPROM is not support by FPGA yet */
             /*
              * Start ACX EEPROM
-             */     
+             */
             /*pHwInit->uRegister = START_EEPROM_MGR;
             TXN_PARAM_SET(pTxn, TXN_LOW_PRIORITY, TXN_FUNC_ID_WLAN, TXN_DIRECTION_WRITE, TXN_INC_ADDR)
             BUILD_TTxnStruct(pTxn, ACX_REG_EE_START, &pHwInit->uRegister, REGISTER_SIZE, 0, NULL, NULL)
@@ -962,10 +967,10 @@ WLAN_OS_REPORT(("\n **** in BootSM, setting clkVal,  pHwInit->bIsFREFClock=%d  *
 
             /*
              * The stall is needed so the EEPROM NVS burst read will complete
-             */     
+             */
             os_StalluSec (pHwInit->hOs, 40000);
 
-            BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, ACX_EEPROMLESS_IND_REG, USE_EEPROM, 
+            BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, ACX_EEPROMLESS_IND_REG, USE_EEPROM,
                                REGISTER_SIZE, TXN_DIRECTION_WRITE, NULL, NULL)
             twIf_Transact(pHwInit->hTwIf, pTxn);
 
@@ -975,7 +980,7 @@ WLAN_OS_REPORT(("\n **** in BootSM, setting clkVal,  pHwInit->bIsFREFClock=%d  *
         pHwInit->uTxnIndex++;
 
         /* Read Chip ID */
-        BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn,  CHIP_ID, 0, 
+        BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn,  CHIP_ID, 0,
                                REGISTER_SIZE, TXN_DIRECTION_READ,(TTxnDoneCb)hwInit_BootSm, hHwInit)
         status = twIf_Transact(pHwInit->hTwIf, pTxn);
 
@@ -993,14 +998,14 @@ WLAN_OS_REPORT(("\n **** in BootSM, setting clkVal,  pHwInit->bIsFREFClock=%d  *
         if (pHwInit->uBootData == 0)
         {
          WLAN_OS_REPORT(("Cannot read ChipID stopping %x\n", pHwInit->uBootData));
-         TWD_FinalizeOnFailure (pHwInit->hTWD); 
-         return TXN_STATUS_ERROR; 
+         TWD_FinalizeOnFailure (pHwInit->hTWD);
+         return TXN_STATUS_ERROR;
         }
 
 
-		
+
         /* Read Scr2 to verify that the HW is ready */
-        BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, SCR_PAD2, 0, 
+        BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, SCR_PAD2, 0,
                                REGISTER_SIZE, TXN_DIRECTION_READ,(TTxnDoneCb)hwInit_BootSm, hHwInit)
         status = twIf_Transact(pHwInit->hTwIf, pTxn);
         EXCEPT (pHwInit, status)
@@ -1032,8 +1037,8 @@ WLAN_OS_REPORT(("\n **** in BootSM, setting clkVal,  pHwInit->bIsFREFClock=%d  *
 #endif
         pHwInit->uInitStage++;
         if ((pGenParams->RefClk & FREF_CLK_TYPE_MASK) != 0x0)
-        {            
-            status = hwInit_InitTopRegisterRead(hHwInit, 0x448);            
+        {
+            status = hwInit_InitTopRegisterRead(hHwInit, 0x448);
             EXCEPT (pHwInit, status)
         }
 
@@ -1041,7 +1046,7 @@ WLAN_OS_REPORT(("\n **** in BootSM, setting clkVal,  pHwInit->bIsFREFClock=%d  *
         pHwInit->uInitStage++;
 
         if ((pGenParams->RefClk & FREF_CLK_TYPE_MASK) != 0x0)
-        { 
+        {
 			pHwInit->uTopRegValue &= FREF_CLK_TYPE_BITS;
             pHwInit->uTopRegValue |= CLK_REQ_PRCM;
 			status =  hwInit_InitTopRegisterWrite( hHwInit, 0x448, pHwInit->uTopRegValue);
@@ -1049,22 +1054,22 @@ WLAN_OS_REPORT(("\n **** in BootSM, setting clkVal,  pHwInit->bIsFREFClock=%d  *
         }
 
     case 10:
-        pHwInit->uInitStage++; 
+        pHwInit->uInitStage++;
 #ifndef TNETW1283
 		if ((pGenParams->RefClk & FREF_CLK_POLARITY_MASK) == 0x0)
-        {            
-            status = hwInit_InitTopRegisterRead(hHwInit, 0xCB2);            
+        {
+            status = hwInit_InitTopRegisterRead(hHwInit, 0xCB2);
             EXCEPT (pHwInit, status)
         }
 #endif
 
     case 11:
-        pHwInit->uInitStage++;        
-#ifndef TNETW1283     
+        pHwInit->uInitStage++;
+#ifndef TNETW1283
         if ((pGenParams->RefClk & FREF_CLK_POLARITY_MASK) == 0x0)
-        {    
+        {
             pHwInit->uTopRegValue &= FREF_CLK_POLARITY_BITS;
-            pHwInit->uTopRegValue |= CLK_REQ_OUTN_SEL;            
+            pHwInit->uTopRegValue |= CLK_REQ_OUTN_SEL;
             status =  hwInit_InitTopRegisterWrite( hHwInit, 0xCB2, pHwInit->uTopRegValue);
             EXCEPT (pHwInit, status)
         }
@@ -1076,7 +1081,7 @@ WLAN_OS_REPORT(("\n **** in BootSM, setting clkVal,  pHwInit->bIsFREFClock=%d  *
         WLAN_OS_REPORT(("hwInit_BootSm: SKIP TOP INIT, now in stage 12\n"));
 #endif
         pHwInit->uInitStage = 0;
-        
+
         /* Set the Download Status to COMPLETE */
         pHwInit->DownloadStatus = TXN_STATUS_COMPLETE;
 
@@ -1093,7 +1098,7 @@ WLAN_OS_REPORT(("\n **** in BootSM, setting clkVal,  pHwInit->bIsFREFClock=%d  *
 }
 
 #ifdef TNETW1283
-/* 
+/*
  * New PLL Configuration Algorithm
  * -------------------------------
  */
@@ -1112,12 +1117,12 @@ WLAN_OS_REPORT(("\n **** in BootSM, setting clkVal,  pHwInit->bIsFREFClock=%d  *
 
  /****************************************************************************
  * DESCRIPTION: PLL configuration state machine
- * 
- * INPUTS:  
- * 
+ *
+ * INPUTS:
+ *
  * OUTPUT:  None
- * 
- * RETURNS: TI_OK 
+ *
+ * RETURNS: TI_OK
  ****************************************************************************/
 static TI_STATUS hwInit_PllConfigSm (TI_HANDLE hHwInit)
 {
@@ -1130,13 +1135,13 @@ static TI_STATUS hwInit_PllConfigSm (TI_HANDLE hHwInit)
     TWlanParams             *pWlanParams = &DB_WLAN(pTWD->hCmdBld);
     TTxnStruct              *pTxn;
     pHwInit->uTxnIndex =    0;
-    
+
 
     pHwInit->bIsFREFClock = TI_FALSE;
-    
+
     WLAN_OS_REPORT(("NEW PLL ALGO - hwInit_PllConfigSm: entry, uPllStage=%d\n", pHwInit->uPllStage));
     /*
-     * Select FREF or TCXO clock 
+     * Select FREF or TCXO clock
      */
     while (TI_TRUE)
     {
@@ -1150,12 +1155,12 @@ static TI_STATUS hwInit_PllConfigSm (TI_HANDLE hHwInit)
          */
         case 0:
             pHwInit->uPllStage++;
-            
+
             /* ead CHIP ID in pllConfig */
             BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, CHIP_ID, 0, REGISTER_SIZE, TXN_DIRECTION_READ,(TTxnDoneCb)hwInit_PllConfigSm, hHwInit)
             status = twIf_Transact(pHwInit->hTwIf, pTxn);
             EXCEPT (pHwInit, status)
-            
+
         /*
          * 1. TCXO Frequency Detection
          * ---------------------------
@@ -1166,27 +1171,27 @@ static TI_STATUS hwInit_PllConfigSm (TI_HANDLE hHwInit)
             pHwInit->uChipId = pHwInit->aHwInitTxn[pHwInit->uTxnIndex].uData;
             os_StalluSec (pHwInit->hOs, 60000);
 
-            
-            
+
+
             WLAN_OS_REPORT(("\n TCXO CLOCK=%d, FREF CLOCK=%d !!!!!! \n", pWlanParams->TcxoRefClk, pGenParams->RefClk));
             WLAN_OS_REPORT(("\n CHIP ID Found --->>>  0x%x !!!!!! \n", pHwInit->uChipId));
-            
 
-            
-            if (CHIP_ID_1283_PG10 == pHwInit->uChipId) 
+
+
+            if (CHIP_ID_1283_PG10 == pHwInit->uChipId)
             {
                 WLAN_OS_REPORT(("\n CHIP PG1.0 Detected !!!!!!!!!!!!! \n"));
             }
-            else if (CHIP_ID_1283_PG20 == pHwInit->uChipId) 
+            else if (CHIP_ID_1283_PG20 == pHwInit->uChipId)
             {
                 WLAN_OS_REPORT(("\n CHIP PG2.0 Detected !!!!!!!!!!!!1! \n"));
             }
             else
             {
                 WLAN_OS_REPORT(("\n ERROR!!!!!!!!: unrecognized chip ID found!!! \n"));
-            }   
+            }
 
-            
+
 			/*
 			 *	if working on XTAL-only mode goto directly to TCXO TO FREF SWITCH
 			 */
@@ -1195,15 +1200,15 @@ static TI_STATUS hwInit_PllConfigSm (TI_HANDLE hHwInit)
 				pHwInit->uPllStage = 3; //TCXO TO FREF SWITCH
 				continue;
 			}
-            
-            
-            
+
+
+
             WLAN_OS_REPORT(("NEW PLL ALGO - hwInit_PllConfigSm(1): read SYS_CLK_CFG_REG\n"));
 
-            /* 
-             * Read clock source FREF or TCXO 
+            /*
+             * Read clock source FREF or TCXO
              */
-            status = hwInit_InitTopRegisterRead(hHwInit, SYS_CLK_CFG_REG);            
+            status = hwInit_InitTopRegisterRead(hHwInit, SYS_CLK_CFG_REG);
             if (status == TXN_STATUS_PENDING) pHwInit->uPllPendingFlag = 1;
 
             EXCEPT (pHwInit, status)
@@ -1212,23 +1217,23 @@ static TI_STATUS hwInit_PllConfigSm (TI_HANDLE hHwInit)
             pHwInit->uPllStage++;
             pHwInit->uClockConfig = pHwInit->uTopRegValue;
             pHwInit->uTxnIndex = 0;
-            
-            /* 
-             * Check the clock source in bit 4 from SYS_CLK_CFG_REG 
+
+            /*
+             * Check the clock source in bit 4 from SYS_CLK_CFG_REG
              */
             if (pHwInit->uClockConfig & PRCM_CM_EN_MUX_WLAN_FREF)
             {
                 pHwInit->bIsFREFClock = TI_TRUE;
-                /* 
+                /*
                  * if bit 4 is set - working with FREF clock, skip to FREF wait 15 msec stage
                  */
                 WLAN_OS_REPORT(("NEW PLL ALGO - hwInit_BootSm(2): bit 4 is set(SYS_CLK_CFG_REG=0x%x), working with FREF clock!!!\n", pHwInit->uClockConfig));
-                if (CHIP_ID_1283_PG10 == pHwInit->uChipId) 
+                if (CHIP_ID_1283_PG10 == pHwInit->uChipId)
                 {
                     WLAN_OS_REPORT(("\n CHIP PG1.0 Detected, Moving to stage 6 (FREF Detection)!!! \n"));
-                    pHwInit->uPllStage = 6; 
+                    pHwInit->uPllStage = 6;
                 }
-                else if (CHIP_ID_1283_PG20 == pHwInit->uChipId) 
+                else if (CHIP_ID_1283_PG20 == pHwInit->uChipId)
                 {
                     WLAN_OS_REPORT(("\n CHIP PG2.0 Detected!!! \n"));
                 }
@@ -1236,28 +1241,28 @@ static TI_STATUS hwInit_PllConfigSm (TI_HANDLE hHwInit)
                 {
                     WLAN_OS_REPORT(("\n ERROR!!!!!!!!: unrecognized chip ID found!!! \n"));
                     continue;
-                }   
-                
+                }
+
                 pHwInit->uPllStage = 4;
                 continue;
             }
 
-            /* 
+            /*
              * if bit 3 is clear - working with TCXO clock
              */
             WLAN_OS_REPORT(("NEW PLL ALGO - hwInit_BootSm(2): bit 3 is clear(SYS_CLK_CFG_REG=0x%x), working with TCXO clock, read TCXO_CLK_DETECT_REG\n", pHwInit->uClockConfig));
             continue;
 
 #ifndef TNETW1283
-            /* 
-             * Read the status of the TXCO detection mechanism 
+            /*
+             * Read the status of the TXCO detection mechanism
              */
-            status = hwInit_InitTopRegisterRead(hHwInit, TCXO_CLK_DETECT_REG);            
+            status = hwInit_InitTopRegisterRead(hHwInit, TCXO_CLK_DETECT_REG);
             if (status == TXN_STATUS_PENDING) pHwInit->uPllPendingFlag = 1;
 
             EXCEPT (pHwInit, status)
 #endif
-            
+
         case 3:
             pHwInit->uPllStage++;
             /* register val is in high word */
@@ -1266,54 +1271,54 @@ static TI_STATUS hwInit_PllConfigSm (TI_HANDLE hHwInit)
 
 
             WLAN_OS_REPORT(("\n In stage 3, pWlanParams->TcxoRefClk=%d \n", pWlanParams->TcxoRefClk));
-            
-#ifndef TNETW1283            
-            /* 
+
+#ifndef TNETW1283
+            /*
              * check bit 4 from TCXO_CLK_DETECT_REG
              */
             if (uData & TCXO_DET_FAILED)
             {
-                /* 
+                /*
                  * if bit 4 is set - TCXO detect failure
                  */
                 WLAN_OS_REPORT(("NEW PLL ALGO - hwInit_BootSm(3): ERROR !!!!!!!! bit 4 is set, TCXO Detect failed\n"));
             }
 #endif
 
-            /* 
+            /*
              * check TXCO clock config from INI file
              */
             if ((pWlanParams->TcxoRefClk != CLOCK_CONFIG_16_368_M) && (pWlanParams->TcxoRefClk != CLOCK_CONFIG_32_736_M))
             {
-                /* 
+                /*
                  * not 16.368Mhz and not 32.736Mhz - skip to configure ELP stage
                  */
                 WLAN_OS_REPORT(("NEW PLL ALGO - hwInit_BootSm(3): TcxoRefClk=%d - not 16.368Mhz and not 32.736Mhz - skip to configure ELP stage\n", pWlanParams->TcxoRefClk));
                 pHwInit->uPllStage = 6;
                 continue;
             }
-        
+
             /*
              * 2. TCXO to FREF switch
              * ----------------------
              */
             WLAN_OS_REPORT(("NEW PLL ALGO - hwInit_BootSm(3): TcxoRefClk=%d - 16.368Mhz or 32.736Mhz - TCXO to FREF switch started: \n", pWlanParams->TcxoRefClk));
 
-            /* 
-             * Write enable FREF_CLK_REQ 
+            /*
+             * Write enable FREF_CLK_REQ
              */
             if (CHIP_ID_1283_PG10 == pHwInit->uChipId)
-            {     
+            {
                 pHwInit->uClockConfig |= WL_CLK_REQ_TYPE_FREF;
-                status = hwInit_InitTopRegisterWrite(hHwInit, SYS_CLK_CFG_REG, pHwInit->uClockConfig);            
-                pHwInit->uTxnIndex++; 
+                status = hwInit_InitTopRegisterWrite(hHwInit, SYS_CLK_CFG_REG, pHwInit->uClockConfig);
+                pHwInit->uTxnIndex++;
             }
-            else if (CHIP_ID_1283_PG20 == pHwInit->uChipId) 
+            else if (CHIP_ID_1283_PG20 == pHwInit->uChipId)
             {
                 uData = 0x68; /* setting bits 3,5 & 6 */
                 status = hwInit_InitTopRegisterWrite(hHwInit, WL_SPARE_REG, uData);
 
-                status = hwInit_InitTopRegisterWrite(hHwInit, SYS_CLK_CFG_REG, 0x0D);            
+                status = hwInit_InitTopRegisterWrite(hHwInit, SYS_CLK_CFG_REG, 0x0D);
                 pHwInit->uTxnIndex++;
             }
 
@@ -1335,16 +1340,16 @@ static TI_STATUS hwInit_PllConfigSm (TI_HANDLE hHwInit)
             os_StalluSec (pHwInit->hOs, pGenParams->SettlingTime*1000);
 #endif
 
-#ifndef TNETW1283 
-            /* 
-             * Read the status of the FREF detection mechanism 
+#ifndef TNETW1283
+            /*
+             * Read the status of the FREF detection mechanism
              */
-            status = hwInit_InitTopRegisterRead(hHwInit, FREF_CLK_DETECT_REG);            
+            status = hwInit_InitTopRegisterRead(hHwInit, FREF_CLK_DETECT_REG);
             if (status == TXN_STATUS_PENDING) pHwInit->uPllPendingFlag = 1;
-            
+
             EXCEPT (pHwInit, status)
 #endif
-            
+
         case 5:
             pHwInit->uPllStage++;
             /* register val is in high word */
@@ -1352,84 +1357,84 @@ static TI_STATUS hwInit_PllConfigSm (TI_HANDLE hHwInit)
             pHwInit->uTxnIndex = 0;
 
 #ifndef TNETW1283
-            /* 
+            /*
              * check bit 4 from FREF_CLK_DETECT_REG
              */
             if (uData & FREF_CLK_DETECT_FAIL)
             {
-                /* 
+                /*
                  * if bit 4 is set - FREF detect failure
                  */
                 WLAN_OS_REPORT(("NEW PLL ALGO - hwInit_BootSm(5): FREF_CLK_DETECT_REG=0x%x, ERROR !!!!!!!! bit 4 is set, FREF Detect failed\n", uData));
             }
 #endif
 
-            /* 
+            /*
              * Configure the MCS PLL's input to be FREF -  MCS_PLL_CLK_SEL_FREF
              * Configure WLAN's clock supply and DRPw's to be FREF -  PRCM_CM_EN_MUX_WLAN_FREF
              */
             if (CHIP_ID_1283_PG10 == pHwInit->uChipId)
             {
                 pHwInit->uClockConfig |= (MCS_PLL_CLK_SEL_FREF | PRCM_CM_EN_MUX_WLAN_FREF);
-                status = hwInit_InitTopRegisterWrite(hHwInit, SYS_CLK_CFG_REG, pHwInit->uClockConfig); 
-                WLAN_OS_REPORT(("\n NEW PLL ALGO - hwInit_BootSm(5): Configure MCS and WLAN to FREF. uClockConfig=0x%x \n", pHwInit->uClockConfig));           
-                
+                status = hwInit_InitTopRegisterWrite(hHwInit, SYS_CLK_CFG_REG, pHwInit->uClockConfig);
+                WLAN_OS_REPORT(("\n NEW PLL ALGO - hwInit_BootSm(5): Configure MCS and WLAN to FREF. uClockConfig=0x%x \n", pHwInit->uClockConfig));
+
             }
             continue;
-            
+
         case 6:
-            /* 
-             * 3. Configure MCS PLL settings to TCXO/FREF Freq 
+            /*
+             * 3. Configure MCS PLL settings to TCXO/FREF Freq
              * -----------------------------------------------
              */
             pHwInit->uPllStage++;
             pHwInit->uTxnIndex = 0;
 
-            
-            /* 
+
+            /*
              * Set the values that determine the time elapse since the PLL's get their enable signal until the lock indication is set
              */
-            if (CHIP_ID_1283_PG10 == pHwInit->uChipId) 
+            if (CHIP_ID_1283_PG10 == pHwInit->uChipId)
             {
                 WLAN_OS_REPORT(("NEW PLL ALGO - hwInit_BootSm(6): Configure PLL_LOCK_COUNTERS_REG for PG1.0 only \n"));
                 uData = PLL_LOCK_COUNTERS_COEX | PLL_LOCK_COUNTERS_MCS;
-                status = hwInit_InitTopRegisterWrite(hHwInit, PLL_LOCK_COUNTERS_REG, uData);            
-                pHwInit->uTxnIndex++;  
+                status = hwInit_InitTopRegisterWrite(hHwInit, PLL_LOCK_COUNTERS_REG, uData);
+                pHwInit->uTxnIndex++;
             }
 
-            /* 
+            /*
              * Read MCS PLL in order to set only bits[6:4]
              */
-            
+
             WLAN_OS_REPORT(("\n NEW PLL ALGO - hwInit_BootSm(6): Read MCS PLL in order to set only bits[6:4]\n"));
-            status = hwInit_InitTopRegisterRead(hHwInit, MCS_PLL_CONFIG_REG);            
+            status = hwInit_InitTopRegisterRead(hHwInit, MCS_PLL_CONFIG_REG);
             if (status == TXN_STATUS_PENDING) pHwInit->uPllPendingFlag = 1;
-    
-            EXCEPT (pHwInit, status)            
-    
-            
+
+            EXCEPT (pHwInit, status)
+
+
 
         case 7:
             pHwInit->uPllStage++;
             /* the data ins in the high word */
-            uData = pHwInit->uTopRegValue; 
+            uData = pHwInit->uTopRegValue;
             pHwInit->uTxnIndex = 0;
 
             WLAN_OS_REPORT(("\n [stage 7]: MCS_PLL_CONFIG_REG=0x%x ****** \n", pHwInit->uTopRegValue));
-            
 
 
-            if (CHIP_ID_1283_PG20 == pHwInit->uChipId) 
+
+            if (CHIP_ID_1283_PG20 == pHwInit->uChipId)
             {
                 WLAN_OS_REPORT(("\n Setting bit 2 in spare register to avoid illegal access \n"));
-                uData = WL_SPARE_VAL; 
-                status = hwInit_InitTopRegisterWrite(hHwInit, WL_SPARE_REG, uData);  
+                uData = WL_SPARE_VAL;
+                status = hwInit_InitTopRegisterWrite(hHwInit, WL_SPARE_REG, uData);
 
-                if (TI_FALSE == pHwInit->bIsFREFClock) 
+                if (TI_FALSE == pHwInit->bIsFREFClock)
                 {
-                    if ((CLOCK_CONFIG_16_8_M == pGenParams->TcxoRefClk) || (CLOCK_CONFIG_33_6_M == pGenParams->TcxoRefClk)) 
+                    if ((CLOCK_CONFIG_16_8_M == pGenParams->TcxoRefClk) || (CLOCK_CONFIG_33_6_M == pGenParams->TcxoRefClk))
                     {
-                        WLAN_OS_REPORT(("\n 16_8_M or 33_6_M TCXO detected so configure the MCS PLL settings manually!!!! \n")); 
+                        WLAN_OS_REPORT(("\n 16_8_M or 33_6_M TCXO detected so configure the MCS PLL settings manually!!!! \n"));
                         status = hwInit_InitTopRegisterWrite(hHwInit, MCS_PLL_M_REG, MCS_PLL_M_REG_VAL);
                         status = hwInit_InitTopRegisterWrite(hHwInit, MCS_PLL_N_REG, MCS_PLL_N_REG_VAL);
                         status = hwInit_InitTopRegisterWrite(hHwInit, MCS_PLL_CONFIG_REG, MCS_PLL_CONFIG_REG_VAL);
@@ -1440,38 +1445,38 @@ static TI_STATUS hwInit_PllConfigSm (TI_HANDLE hHwInit)
 
             if (pHwInit->bIsFREFClock == TI_TRUE)
             {
-            /* 
+            /*
              * Set the MCS PLL input frequency value according to the FREF/TCXO value detected/read
              */
                 WLAN_OS_REPORT(("!!!!!!!!    FREF CLOCK     !!!!!!!!!!\n"));
                 uMcsPllConfig = HW_CONFIG_19_2_M; /* default */
                 if (pGenParams->RefClk == CLOCK_CONFIG_19_2_M)
-                {               
+                {
                     uMcsPllConfig = HW_CONFIG_19_2_M;
                     WLAN_OS_REPORT(("uMcsPllConfig = %d (HW_CONFIG_19_2_M)\n",uMcsPllConfig));
                 }
                 if (pGenParams->RefClk == CLOCK_CONFIG_26_M)
-                {                
-                   uMcsPllConfig = HW_CONFIG_26_M; 
+                {
+                   uMcsPllConfig = HW_CONFIG_26_M;
                    WLAN_OS_REPORT(("uMcsPllConfig = %d (HW_CONFIG_26_M)\n",uMcsPllConfig));
                 }
-                if (pGenParams->RefClk == CLOCK_CONFIG_38_4_M) 
-                {                
+                if (pGenParams->RefClk == CLOCK_CONFIG_38_4_M)
+                {
                     uMcsPllConfig = HW_CONFIG_38_4_M;
                     WLAN_OS_REPORT(("uMcsPllConfig = %d (HW_CONFIG_38_4_M)\n",uMcsPllConfig));
                 }
                 if (pGenParams->RefClk == CLOCK_CONFIG_52_M)
-                {                   
+                {
                     uMcsPllConfig = HW_CONFIG_52_M;
                     WLAN_OS_REPORT(("uMcsPllConfig = %d (HW_CONFIG_52_M)\n",uMcsPllConfig));
                 }
 #ifdef TNETW1283
                 if (pGenParams->RefClk == CLOCK_CONFIG_38_4_M)
-                {                
+                {
                     uMcsPllConfig = HW_CONFIG_19_2_M;
                     WLAN_OS_REPORT(("uMcsPllConfig = %d (HW_CONFIG_19_2_M)\n",uMcsPllConfig));
                 }
-                if (pGenParams->RefClk == CLOCK_CONFIG_52_M)  
+                if (pGenParams->RefClk == CLOCK_CONFIG_52_M)
                 {
                     uMcsPllConfig = HW_CONFIG_26_M;
                     WLAN_OS_REPORT(("uMcsPllConfig = %d (HW_CONFIG_26_M)\n",uMcsPllConfig));
@@ -1484,43 +1489,43 @@ static TI_STATUS hwInit_PllConfigSm (TI_HANDLE hHwInit)
                 WLAN_OS_REPORT(("!!!!!!!!    TCXO CLOCK     !!!!!!!!!!\n"));
                 uMcsPllConfig = HW_CONFIG_19_2_M;
                 if (pGenParams->TcxoRefClk == CLOCK_CONFIG_19_2_M)
-                {  
+                {
                     uMcsPllConfig = HW_CONFIG_19_2_M;
                     WLAN_OS_REPORT(("uMcsPllConfig = %d (HW_CONFIG_19_2_M)\n",uMcsPllConfig));
                 }
-                if (pGenParams->TcxoRefClk == CLOCK_CONFIG_26_M)  
-                {  
-                    uMcsPllConfig = HW_CONFIG_26_M;
-                    WLAN_OS_REPORT(("uMcsPllConfig = %d (HW_CONFIG_26_M)\n",uMcsPllConfig));
-                }
-                if (pGenParams->TcxoRefClk == CLOCK_CONFIG_38_4_M)
-                {  
-                    uMcsPllConfig = HW_CONFIG_38_4_M;
-                    WLAN_OS_REPORT(("uMcsPllConfig = %d (HW_CONFIG_38_4_M)\n",uMcsPllConfig));
-                }
-                if (pGenParams->TcxoRefClk == CLOCK_CONFIG_52_M)   
-                { 
-                    uMcsPllConfig = HW_CONFIG_52_M;
-                    WLAN_OS_REPORT(("uMcsPllConfig = %d (HW_CONFIG_52_M)\n",uMcsPllConfig));
-                }
-#ifdef TNETW1283
-                if (pGenParams->TcxoRefClk == CLOCK_CONFIG_38_4_M) 
-                { 
-                    uMcsPllConfig = HW_CONFIG_19_2_M;
-                    WLAN_OS_REPORT(("uMcsPllConfig = %d (HW_CONFIG_19_2_M)\n",uMcsPllConfig));
-                }
-                if (pGenParams->TcxoRefClk == CLOCK_CONFIG_52_M)    
+                if (pGenParams->TcxoRefClk == CLOCK_CONFIG_26_M)
                 {
                     uMcsPllConfig = HW_CONFIG_26_M;
                     WLAN_OS_REPORT(("uMcsPllConfig = %d (HW_CONFIG_26_M)\n",uMcsPllConfig));
                 }
-#endif          
+                if (pGenParams->TcxoRefClk == CLOCK_CONFIG_38_4_M)
+                {
+                    uMcsPllConfig = HW_CONFIG_38_4_M;
+                    WLAN_OS_REPORT(("uMcsPllConfig = %d (HW_CONFIG_38_4_M)\n",uMcsPllConfig));
+                }
+                if (pGenParams->TcxoRefClk == CLOCK_CONFIG_52_M)
+                {
+                    uMcsPllConfig = HW_CONFIG_52_M;
+                    WLAN_OS_REPORT(("uMcsPllConfig = %d (HW_CONFIG_52_M)\n",uMcsPllConfig));
+                }
+#ifdef TNETW1283
+                if (pGenParams->TcxoRefClk == CLOCK_CONFIG_38_4_M)
+                {
+                    uMcsPllConfig = HW_CONFIG_19_2_M;
+                    WLAN_OS_REPORT(("uMcsPllConfig = %d (HW_CONFIG_19_2_M)\n",uMcsPllConfig));
+                }
+                if (pGenParams->TcxoRefClk == CLOCK_CONFIG_52_M)
+                {
+                    uMcsPllConfig = HW_CONFIG_26_M;
+                    WLAN_OS_REPORT(("uMcsPllConfig = %d (HW_CONFIG_26_M)\n",uMcsPllConfig));
+                }
+#endif
             }
-           
+
 
             uData &= ~MCS_SEL_IN_FREQ_MASK; /* Zero any read bits */
             uData |= (uMcsPllConfig << (MCS_SEL_IN_FREQ_SHIFT)) & (MCS_SEL_IN_FREQ_MASK); /* Bits[6:4]  */
-            if (CHIP_ID_1283_PG10 == pHwInit->uChipId) 
+            if (CHIP_ID_1283_PG10 == pHwInit->uChipId)
             {
                 WLAN_OS_REPORT(("\n Configuring MCS_PLL for CHIP_ID_1283_PG10!!!!! \n"));
                 uData |= 0x02;
@@ -1530,16 +1535,16 @@ static TI_STATUS hwInit_PllConfigSm (TI_HANDLE hHwInit)
                 WLAN_OS_REPORT(("\n Configuring MCS_PLL for CHIP_ID_1283_PG20!!!!! \n"));
                 uData |= 0x03;
             }
-           
-            
+
+
             WLAN_OS_REPORT(("\n NEW PLL ALGO - hwInit_BootSm(6): Write to MCS_PLL_CONFIG_REG value of (Data=0x%x), McsPllConfig=%d\n", uData, uMcsPllConfig));
-            status = hwInit_InitTopRegisterWrite(hHwInit, MCS_PLL_CONFIG_REG, uData);            
+            status = hwInit_InitTopRegisterWrite(hHwInit, MCS_PLL_CONFIG_REG, uData);
             continue;
 
         case 8: /* was case 7 */
             pHwInit->uPllStage = 0;
 
-            
+
             if (pHwInit->uPllPendingFlag == 1)
             {
                 WLAN_OS_REPORT(("NEW PLL ALGO - hwInit_BootSm(7): back to bootSm\n"));
@@ -1573,7 +1578,7 @@ TI_STATUS hwInit_LoadFw (TI_HANDLE hHwInit)
     {
         TRACE0(pHwInit->hReport, REPORT_SEVERITY_INIT , "CPU halt -> download code\n");
 
-        /* Load firmware image */ 
+        /* Load firmware image */
         pHwInit->uLoadStage = 0;
         status = hwInit_LoadFwImageSm (pHwInit);
 
@@ -1593,31 +1598,31 @@ TI_STATUS hwInit_LoadFw (TI_HANDLE hHwInit)
         }
 
         EXCEPT (pHwInit, status);
-    }   
+    }
     else
     {
         TRACE0(pHwInit->hReport, REPORT_SEVERITY_INIT , "Firmware not downloaded...\n");
 
         EXCEPT (pHwInit, TXN_STATUS_ERROR)
     }
-            
+
     WLAN_OS_REPORT (("FW download OK...\n"));
     return TI_OK;
-}                                                  
-    
+}
+
 
 /****************************************************************************
  *                      hwInit_FinalizeDownloadSm()
  ****************************************************************************
  * DESCRIPTION: Run the Hardware firmware
  *              Wait for Init Complete
- *              Configure the Bus Access with Addresses available on the scratch pad register 
+ *              Configure the Bus Access with Addresses available on the scratch pad register
  *              Change the SDIO/SPI partitions to be able to see all the memory addresses
- * 
- * INPUTS:  None    
- * 
+ *
+ * INPUTS:  None
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: None
  ****************************************************************************/
 static TI_STATUS hwInit_FinalizeDownloadSm (TI_HANDLE hHwInit)
@@ -1638,7 +1643,7 @@ static TI_STATUS hwInit_FinalizeDownloadSm (TI_HANDLE hHwInit)
             /*
              * Run the firmware (I) - Read current value from ECPU Control Reg.
              */
-            BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, ACX_REG_ECPU_CONTROL, 0, 
+            BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, ACX_REG_ECPU_CONTROL, 0,
                                REGISTER_SIZE, TXN_DIRECTION_READ, (TTxnDoneCb)hwInit_FinalizeDownloadSm, hHwInit)
             status = twIf_Transact(pHwInit->hTwIf, pTxn);
 
@@ -1654,19 +1659,19 @@ static TI_STATUS hwInit_FinalizeDownloadSm (TI_HANDLE hHwInit)
             /*
              * Run the firmware (II) - Take HW out of reset (write ECPU_CONTROL_HALT to ECPU Control Reg.)
              */
-            BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, ACX_REG_ECPU_CONTROL, (pHwInit->uFinData | ECPU_CONTROL_HALT), 
+            BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, ACX_REG_ECPU_CONTROL, (pHwInit->uFinData | ECPU_CONTROL_HALT),
                                REGISTER_SIZE, TXN_DIRECTION_WRITE, NULL, NULL)
             twIf_Transact(pHwInit->hTwIf, pTxn);
 
             WLAN_OS_REPORT (("Firmware running.\n"));
 
-            /* 
+            /*
              * CHIP ID Debug
-             */     
+             */
 
-            pHwInit->uTxnIndex++;                  
+            pHwInit->uTxnIndex++;
 
-            BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, CHIP_ID, 0, 
+            BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, CHIP_ID, 0,
                                REGISTER_SIZE, TXN_DIRECTION_READ, (TTxnDoneCb)hwInit_FinalizeDownloadSm, hHwInit)
             status = twIf_Transact(pHwInit->hTwIf, pTxn);
 
@@ -1678,7 +1683,7 @@ static TI_STATUS hwInit_FinalizeDownloadSm (TI_HANDLE hHwInit)
 
             /* We don't zero pHwInit->uTxnIndex at the begining because we need it's value to the next transaction */
             pHwInit->uFinData = pHwInit->aHwInitTxn[pHwInit->uTxnIndex].uData;
-                               
+
             TRACE1(pHwInit->hReport, REPORT_SEVERITY_INIT , "CHIP ID IS %x\n", pHwInit->uFinData);
 
             TRACE0(pHwInit->hReport, REPORT_SEVERITY_INIT , "Wait init complete\n");
@@ -1686,11 +1691,11 @@ static TI_STATUS hwInit_FinalizeDownloadSm (TI_HANDLE hHwInit)
         case 3:
             pHwInit->uTxnIndex = 0;
 
-            /* 
-             * Wait for init complete 
+            /*
+             * Wait for init complete
              */
             if (pHwInit->uFinLoop < FIN_LOOP)
-            {           
+            {
                 pHwInit->uFinStage = 4;
 
 #ifndef DOWNLOAD_TIMER_REQUIERD
@@ -1698,7 +1703,7 @@ static TI_STATUS hwInit_FinalizeDownloadSm (TI_HANDLE hHwInit)
 #endif
 
                 /* Read interrupt status register */
-                BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, ACX_REG_INTERRUPT_NO_CLEAR, 0, 
+                BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, ACX_REG_INTERRUPT_NO_CLEAR, 0,
                                REGISTER_SIZE, TXN_DIRECTION_READ, (TTxnDoneCb)hwInit_FinalizeDownloadSm, hHwInit)
                 status = twIf_Transact(pHwInit->hTwIf, pTxn);
 
@@ -1707,7 +1712,7 @@ static TI_STATUS hwInit_FinalizeDownloadSm (TI_HANDLE hHwInit)
             else
 			{
 				pHwInit->uFinStage = 5;
-			}                
+			}
             continue;
 
         case 4:
@@ -1715,7 +1720,7 @@ static TI_STATUS hwInit_FinalizeDownloadSm (TI_HANDLE hHwInit)
             pHwInit->uFinData = pHwInit->aHwInitTxn[pHwInit->uTxnIndex].uData;
             /* Now we can zero the index */
             pHwInit->uTxnIndex = 0;
-            
+
             if (pHwInit->uFinData == 0xffffffff) /* error */
             {
                 TRACE0(pHwInit->hReport, REPORT_SEVERITY_ERROR , "Error reading hardware complete init indication\n");
@@ -1729,7 +1734,7 @@ static TI_STATUS hwInit_FinalizeDownloadSm (TI_HANDLE hHwInit)
                 pHwInit->uFinStage = 5;
 
                 /* Interrupt ACK */
-                BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, ACX_REG_INTERRUPT_ACK, ACX_INTR_INIT_COMPLETE, 
+                BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, ACX_REG_INTERRUPT_ACK, ACX_INTR_INIT_COMPLETE,
                                REGISTER_SIZE, TXN_DIRECTION_WRITE, NULL, NULL)
                 twIf_Transact(pHwInit->hTwIf, pTxn);
 
@@ -1749,7 +1754,7 @@ static TI_STATUS hwInit_FinalizeDownloadSm (TI_HANDLE hHwInit)
             continue;
 #endif
 
-        case 5:  
+        case 5:
             pHwInit->uFinStage++;
 
             if (pHwInit->uFinLoop >= FIN_LOOP)
@@ -1759,29 +1764,29 @@ static TI_STATUS hwInit_FinalizeDownloadSm (TI_HANDLE hHwInit)
                 pHwInit->DownloadStatus = TXN_STATUS_ERROR;
                 EXCEPT (pHwInit, TXN_STATUS_ERROR);
             }
-        
+
             TRACE0(pHwInit->hReport, REPORT_SEVERITY_INIT , "Firmware init complete...\n");
 
-            /* 
-             * There are valid addresses of the command and event mailbox 
-             * on the scratch pad registers 
+            /*
+             * There are valid addresses of the command and event mailbox
+             * on the scratch pad registers
              */
             /* Hardware config command mail box */
             status = cmdMbox_ConfigHw (pTWD->hCmdMbox,
-                                       (fnotify_t)hwInit_FinalizeDownloadSm, 
+                                       (fnotify_t)hwInit_FinalizeDownloadSm,
                                        hHwInit);
             EXCEPT (pHwInit, status)
-            
-        case 6:  
+
+        case 6:
             pHwInit->uFinStage++;
 
             /* Hardware config event mail box */
             status = eventMbox_InitMboxAddr (pTWD->hEventMbox,
-                                         (fnotify_t)hwInit_FinalizeDownloadSm, 
+                                         (fnotify_t)hwInit_FinalizeDownloadSm,
                                          hHwInit);
             EXCEPT (pHwInit, status);
-            
-        case 7: 
+
+        case 7:
             pHwInit->uFinStage++;
             pHwInit->uTxnIndex = 0;
 
@@ -1802,7 +1807,7 @@ static TI_STATUS hwInit_FinalizeDownloadSm (TI_HANDLE hHwInit)
             continue;
 
         case 8:
-            
+
             pHwInit->uFinStage = 0;
 
             cmdBld_FinalizeDownload (pTWD->hCmdBld, &pHwInit->tBootAttr, &(pHwInit->tFwStaticTxn.tFwStaticInfo));
@@ -1823,11 +1828,11 @@ static TI_STATUS hwInit_FinalizeDownloadSm (TI_HANDLE hHwInit)
  *                      hwInit_ResetSm()
  ****************************************************************************
  * DESCRIPTION: Reset hardware state machine
- * 
- * INPUTS:  None    
- * 
+ *
+ * INPUTS:  None
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 static TI_STATUS hwInit_ResetSm (TI_HANDLE hHwInit)
@@ -1839,14 +1844,14 @@ static TI_STATUS hwInit_ResetSm (TI_HANDLE hHwInit)
     pHwInit->uTxnIndex = 0;
 
         /* Disable Rx/Tx */
-    BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, REG_ENABLE_TX_RX, 0x0, 
+    BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, REG_ENABLE_TX_RX, 0x0,
                                REGISTER_SIZE, TXN_DIRECTION_WRITE, NULL, NULL)
     status = twIf_Transact(pHwInit->hTwIf, pTxn);
 
     pHwInit->uTxnIndex++;
 
         /* Disable auto calibration on start */
-    BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, SPARE_A2, 0xFFFF, 
+    BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, SPARE_A2, 0xFFFF,
                                REGISTER_SIZE, TXN_DIRECTION_WRITE,(TTxnDoneCb)hwInit_BootSm, hHwInit)
     status = twIf_Transact(pHwInit->hTwIf, pTxn);
 
@@ -1858,12 +1863,12 @@ static TI_STATUS hwInit_ResetSm (TI_HANDLE hHwInit)
  *                      hwInit_EepromlessStartBurstSm()
  ****************************************************************************
  * DESCRIPTION: prepare eepromless configuration before boot
- * 
- * INPUTS:  
- * 
- * OUTPUT:  
- * 
- * RETURNS: 
+ *
+ * INPUTS:
+ *
+ * OUTPUT:
+ *
+ * RETURNS:
  ****************************************************************************/
 static TI_STATUS hwInit_EepromlessStartBurstSm (TI_HANDLE hHwInit)
 {
@@ -1879,16 +1884,16 @@ static TI_STATUS hwInit_EepromlessStartBurstSm (TI_HANDLE hHwInit)
     {
         switch (pHwInit->uEEPROMStage)
         {
-        /* 
-         * Stages 0, 1 handles the eeprom format parameters: 
+        /*
+         * Stages 0, 1 handles the eeprom format parameters:
          * ------------------------------------------------
          * Length  - 8bit       --> The length is counted in 32bit words
          * Address - 16bit
          * Data    - (Length * 4) bytes
-         * 
+         *
          * Note: The nvs is in big endian format and we need to change it to little endian
          */
-        case 0: 
+        case 0:
             /* Check if address LSB = 1 --> Register address */
             if ((pHwInit->uEEPROMRegAddr = pHwInit->pEEPROMCurPtr[1]) & 1)
             {
@@ -1899,10 +1904,10 @@ static TI_STATUS hwInit_EepromlessStartBurstSm (TI_HANDLE hHwInit)
                 /* Length of burst data */
                 pHwInit->uEEPROMBurstLen = pHwInit->pEEPROMCurPtr[0];
                 pHwInit->pEEPROMCurPtr += 3;
-                pHwInit->uEEPROMBurstLoop = 0; 
-                /* 
+                pHwInit->uEEPROMBurstLoop = 0;
+                /*
                  * We've finished reading the burst information.
-                 * Go to stage 1 in order to write it 
+                 * Go to stage 1 in order to write it
                  */
                 pHwInit->uEEPROMStage = 1;
             }
@@ -1919,23 +1924,23 @@ static TI_STATUS hwInit_EepromlessStartBurstSm (TI_HANDLE hHwInit)
                 /* End of Burst transaction, go to TLV section */
                 pHwInit->uEEPROMStage = 2;
             }
-            continue;            
+            continue;
 
-        case 1: 
+        case 1:
             if (pHwInit->uEEPROMBurstLoop < pHwInit->uEEPROMBurstLen)
             {
                 /* Change the data's endian */
-                TI_UINT32 val = (pHwInit->pEEPROMCurPtr[0] | 
-                                (pHwInit->pEEPROMCurPtr[1] << 8) | 
-                                (pHwInit->pEEPROMCurPtr[2] << 16) | 
+                TI_UINT32 val = (pHwInit->pEEPROMCurPtr[0] |
+                                (pHwInit->pEEPROMCurPtr[1] << 8) |
+                                (pHwInit->pEEPROMCurPtr[2] << 16) |
                                 (pHwInit->pEEPROMCurPtr[3] << 24));
 
                 TRACE2(pHwInit->hReport, REPORT_SEVERITY_INIT , "NVS::BurstRead: *(%08x) = %x\n", pHwInit->uEEPROMRegAddr, val);
 
-                BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, (REGISTERS_BASE+pHwInit->uEEPROMRegAddr), val, 
+                BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, (REGISTERS_BASE+pHwInit->uEEPROMRegAddr), val,
                                REGISTER_SIZE, TXN_DIRECTION_WRITE, (TTxnDoneCb)hwInit_EepromlessStartBurstSm, hHwInit)
                 status = twIf_Transact(pHwInit->hTwIf, pTxn);
- 
+
                 pHwInit->uEEPROMStatus = status;
                 pHwInit->uEEPROMRegAddr += WORD_SIZE;
                 pHwInit->pEEPROMCurPtr +=  WORD_SIZE;
@@ -1950,20 +1955,20 @@ static TI_STATUS hwInit_EepromlessStartBurstSm (TI_HANDLE hHwInit)
                 /* If end of burst return to stage 0 to read the next one */
                 pHwInit->uEEPROMStage = 0;
             }
-             
+
             continue;
 
         case 2:
 
 
             pHwInit->uEEPROMStage = 3;
-    
+
 
             /* Set the bus addresses partition to its "running" mode */
             SET_WORK_PARTITION(pHwInit->aPartition)
             hwInit_SetPartition (pHwInit,pHwInit->aPartition);
             continue;
- 
+
         case 3:
             TRACE0(pHwInit->hReport, REPORT_SEVERITY_INIT , "Reached TLV section\n");
 
@@ -1987,16 +1992,16 @@ static TI_STATUS hwInit_EepromlessStartBurstSm (TI_HANDLE hHwInit)
                 /* Prepare the Txn structure for the NVS transaction to the CMD_MBOX */
                 HW_INIT_PTXN_SET(pHwInit, pTxn)
                 TXN_PARAM_SET_DIRECTION(pTxn, TXN_DIRECTION_WRITE);
-                BUILD_TTxnStruct(pTxn, CMD_MBOX_ADDRESS, pHwInit->pEEPROMCurPtr, pHwInit->uEEPROMCurLen, 
+                BUILD_TTxnStruct(pTxn, CMD_MBOX_ADDRESS, pHwInit->pEEPROMCurPtr, pHwInit->uEEPROMCurLen,
                                  (TTxnDoneCb)hwInit_EepromlessStartBurstSm, hHwInit)
 
                 /* Transact the NVS data to the CMD_MBOX */
                 status = twIf_Transact(pHwInit->hTwIf, pTxn);
-                
+
                 pHwInit->uEEPROMCurLen = 0;
                 pHwInit->uNVSStatus = status;
 
-                EXCEPT (pHwInit, status); 
+                EXCEPT (pHwInit, status);
             }
             else
             {
@@ -2004,7 +2009,7 @@ static TI_STATUS hwInit_EepromlessStartBurstSm (TI_HANDLE hHwInit)
                 *(TI_UINT32 *)(pHwInit->pEEPROMCurPtr - WSPI_PAD_LEN_WRITE) = pHwInit->uSavedDataForWspiHdr;
 
                 /* Call the upper level state machine */
-                if (pHwInit->uEEPROMStatus == TXN_STATUS_PENDING || 
+                if (pHwInit->uEEPROMStatus == TXN_STATUS_PENDING ||
                     pHwInit->uNVSStatus == TXN_STATUS_PENDING)
                 {
                     hwInit_BootSm (hHwInit);
@@ -2013,19 +2018,19 @@ static TI_STATUS hwInit_EepromlessStartBurstSm (TI_HANDLE hHwInit)
                 return TXN_STATUS_COMPLETE;
             }
         } /* End switch */
- 
+
     } /* End while */
 }
 
 /****************************************************************************
  *                      hwInit_LoadFwImageSm()
  ****************************************************************************
- * DESCRIPTION: Load image from the host and download into the hardware 
- * 
- * INPUTS:  None    
- * 
+ * DESCRIPTION: Load image from the host and download into the hardware
+ *
+ * INPUTS:  None
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 
@@ -2047,7 +2052,7 @@ static TI_STATUS hwInit_LoadFwImageSm (TI_HANDLE hHwInit)
         switch (pHwInit->uLoadStage)
         {
 		case 0:
-            pHwInit->uLoadStage = 1; 
+            pHwInit->uLoadStage = 1;
 
 			/* Check the Downloaded FW alignment */
 			if ((pHwInit->uFwLength % ADDRESS_SIZE) != 0)
@@ -2070,7 +2075,7 @@ static TI_STATUS hwInit_LoadFwImageSm (TI_HANDLE hHwInit)
 			/* if initial size is smaller than MAX_SDIO_BLOCK - go strait to stage 4 to write partial block */
 			if (pHwInit->uFwLength < MAX_SDIO_BLOCK)
 			{
-				pHwInit->uLoadStage = 4; 
+				pHwInit->uLoadStage = 4;
 			}
 
 			pHwInit->uBlockReadNum 		= 0;
@@ -2078,18 +2083,18 @@ static TI_STATUS hwInit_LoadFwImageSm (TI_HANDLE hHwInit)
 			pHwInit->uPartitionLimit 	= pHwInit->uFwAddress + uMaxPartitionSize;
 
             continue;
-                    
+
         case 2:
 
             /* Load firmware by blocks */
  			if (pHwInit->uBlockReadNum < (pHwInit->uFwLength / MAX_SDIO_BLOCK))
-            {            
+            {
                 pHwInit->uLoadStage = 3;
 
                 /* Change partition */
-				/* The +2 is for the last block and the block remainder */  
+				/* The +2 is for the last block and the block remainder */
 				if ( ((pHwInit->uBlockWriteNum + 2) * MAX_SDIO_BLOCK + pHwInit->uFwAddress) > pHwInit->uPartitionLimit)
-                {                					
+                {
 					pHwInit->uFwAddress += pHwInit->uBlockWriteNum * MAX_SDIO_BLOCK;
 					/* update uPartitionLimit */
 					pHwInit->uPartitionLimit = pHwInit->uFwAddress + uMaxPartitionSize;
@@ -2099,7 +2104,7 @@ static TI_STATUS hwInit_LoadFwImageSm (TI_HANDLE hHwInit)
                     TxnStatus = TXN_STATUS_OK;
 					pHwInit->uBlockWriteNum = 0;
                     TRACE1(pHwInit->hReport, REPORT_SEVERITY_INIT , "Change partition to address offset = 0x%x\n", 									   pHwInit->uFwAddress + pHwInit->uBlockWriteNum * MAX_SDIO_BLOCK);
-                    EXCEPT_L (pHwInit, TxnStatus);                                                     
+                    EXCEPT_L (pHwInit, TxnStatus);
                 }
             }
             else
@@ -2109,7 +2114,7 @@ static TI_STATUS hwInit_LoadFwImageSm (TI_HANDLE hHwInit)
             }
             continue;
 
-        case 3:        
+        case 3:
             pHwInit->uLoadStage = 2;
 
             pHwInit->uTxnIndex = 0;
@@ -2130,14 +2135,14 @@ static TI_STATUS hwInit_LoadFwImageSm (TI_HANDLE hHwInit)
             if (TxnStatus == TXN_STATUS_ERROR)
             {
                 TRACE1(pHwInit->hReport, REPORT_SEVERITY_ERROR , "hwInit_LoadFwImageSm: twIf_Transact retruned status=0x%x\n", TxnStatus);
-            } 
+            }
 
 			pHwInit->uBlockWriteNum ++;
 			pHwInit->uBlockReadNum ++;
             EXCEPT_L (pHwInit, TxnStatus);
             continue;
 
-        case 4:    
+        case 4:
 			pHwInit->uLoadStage 	= 5;
 
             pHwInit->uTxnIndex = 0;
@@ -2174,8 +2179,8 @@ static TI_STATUS hwInit_LoadFwImageSm (TI_HANDLE hHwInit)
 
 			/*If end of overall FW Download Process: Finalize download (run firmware)*/
 			if ( pHwInit->bFwBufLast == TI_TRUE )
-			{			
-				/* The download has completed */ 
+			{
+				/* The download has completed */
 				WLAN_OS_REPORT (("Finished downloading firmware.\n"));
 				status = hwInit_FinalizeDownloadSm (hHwInit);
 			}
@@ -2210,17 +2215,17 @@ static TI_STATUS hwInit_LoadFwImageSm (TI_HANDLE hHwInit)
 /****************************************************************************
  *                      hwInit_InitPoalrity()
  ****************************************************************************
- * DESCRIPTION: hwInit_ReadRadioParamsSm 
+ * DESCRIPTION: hwInit_ReadRadioParamsSm
  * initalizie hwInit_ReadRadioParamsSm parmaeters
   ****************************************************************************/
-   
+
 TI_STATUS hwInit_InitPolarity(TI_HANDLE hHwInit)
 {
   THwInit      *pHwInit = (THwInit *)hHwInit;
 
   pHwInit->uRegStage = 0;
   pHwInit->uRegSeqStage = 0;
- 
+
   return hwInit_WriteIRQPolarity (hHwInit);
 }
 
@@ -2230,10 +2235,10 @@ TI_STATUS hwInit_InitPolarity(TI_HANDLE hHwInit)
  *                      hwInit_WriteIRQPolarity ()
  ****************************************************************************
  * DESCRIPTION: hwInit_WriteIRQPolarity
-  * INPUTS:  None    
- * 
+  * INPUTS:  None
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
  TI_STATUS hwInit_WriteIRQPolarity(TI_HANDLE hHwInit)
@@ -2245,24 +2250,24 @@ TI_STATUS hwInit_InitPolarity(TI_HANDLE hHwInit)
      TI_STATUS   status = 0;
 
    /*  To write to a top level address from the WLAN IP:
-       Write the top level address to the OCP_POR_CTR register. 
-       Divide the top address by 2, and add 0x30000 to the result – for example for top address 0xC00, write to the OCP_POR_CTR 0x30600
+       Write the top level address to the OCP_POR_CTR register.
+       Divide the top address by 2, and add 0x30000 to the result Â– for example for top address 0xC00, write to the OCP_POR_CTR 0x30600
        Write the data to the OCP_POR_WDATA register
-       Write 0x1 to the OCP_CMD register. 
+       Write 0x1 to the OCP_CMD register.
 
       To read from a top level address:
       Write the top level address to the OCP_POR_CTR register.
-      Divide the top address by 2, and add 0x30000 to the result – for example for top address 0xC00, write to the OCP_POR_CTR 0x30600 
-      Write 0x2 to the OCP_CMD register. 
+      Divide the top address by 2, and add 0x30000 to the result Â– for example for top address 0xC00, write to the OCP_POR_CTR 0x30600
+      Write 0x2 to the OCP_CMD register.
       Poll bit [18] of OCP_DATA_RD for data valid indication
       Check bits 17:16 of OCP_DATA_RD:
-      00 – no response
-      01 – data valid / accept
-      10 – request failed
-      11 – response error
+      00 Â– no response
+      01 Â– data valid / accept
+      10 Â– request failed
+      11 Â– response error
       Read the data from the OCP_DATA_RD register
    */
-      
+
      while (TI_TRUE)
      {
          switch (pHwInit->uRegStage)
@@ -2279,27 +2284,27 @@ TI_STATUS hwInit_InitPolarity(TI_HANDLE hHwInit)
              val |= BIT_16 | BIT_17;
 
              /* Write IRQ Polarity address register to OCP_POR_CTR*/
-             BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, OCP_POR_CTR, val, 
+             BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, OCP_POR_CTR, val,
                                 REGISTER_SIZE, TXN_DIRECTION_WRITE, NULL, NULL)
 
              twIf_Transact(pHwInit->hTwIf, pTxn);
 
-             pHwInit->uTxnIndex++;  
+             pHwInit->uTxnIndex++;
 
              /* Write read (2)command to the OCP_CMD register. */
 
-             BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, OCP_CMD, 0x2, 
+             BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, OCP_CMD, 0x2,
                                 REGISTER_SIZE, TXN_DIRECTION_WRITE, NULL, NULL)
              twIf_Transact(pHwInit->hTwIf, pTxn);
 
              continue;
 
          case 1:
-             
-             pHwInit->uRegStage ++;
-             pHwInit->uTxnIndex++; 
 
-             BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, OCP_DATA_RD, 0, 
+             pHwInit->uRegStage ++;
+             pHwInit->uTxnIndex++;
+
+             BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, OCP_DATA_RD, 0,
                                 REGISTER_SIZE, TXN_DIRECTION_READ, (TTxnDoneCb)hwInit_WriteIRQPolarity, hHwInit)
              status = twIf_Transact(pHwInit->hTwIf, pTxn);
 
@@ -2321,7 +2326,7 @@ TI_STATUS hwInit_InitPolarity(TI_HANDLE hHwInit)
                    pHwInit->uRegLoop = 0;
 
                }
-               else 
+               else
                {
                  TRACE0(pHwInit->hReport, REPORT_SEVERITY_ERROR , "can't writing bt_func7_sel\n");
                  TWD_FinalizePolarityRead(pHwInit->hTWD);
@@ -2336,7 +2341,7 @@ TI_STATUS hwInit_InitPolarity(TI_HANDLE hHwInit)
                   pHwInit->uRegStage = 1;
                   pHwInit->uRegLoop++;
                }
-               else 
+               else
                {
 
                  TRACE0(pHwInit->hReport, REPORT_SEVERITY_ERROR , "Timeout waiting for writing bt_func7_sel\n");
@@ -2358,38 +2363,38 @@ TI_STATUS hwInit_InitPolarity(TI_HANDLE hHwInit)
                 value |= BIT_16 | BIT_17;
 
                 /* Write IRQ Polarity address register to OCP_POR_CTR*/
-               
-                BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, OCP_POR_CTR, value, 
+
+                BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, OCP_POR_CTR, value,
                                    REGISTER_SIZE, TXN_DIRECTION_WRITE, NULL, NULL)
 
                 twIf_Transact(pHwInit->hTwIf, pTxn);
 
-                pHwInit->uTxnIndex++;  
+                pHwInit->uTxnIndex++;
 
 #ifdef USE_IRQ_ACTIVE_HIGH
                 TRACE0(pHwInit->hReport, REPORT_SEVERITY_INFORMATION , "Hwinit IRQ polarity active high\n");
                 val |= 0x0<<1;
-                    
+
 #else
                 TRACE0(pHwInit->hReport, REPORT_SEVERITY_INFORMATION , "Hwinit IRQ polarity active low\n");
                 val |= 0x01<<1;
 #endif
 
               /* Write the new IRQ polarity value to the OCP_POR_WDATA register */
-                BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, OCP_POR_WDATA, val, 
+                BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, OCP_POR_WDATA, val,
                                    REGISTER_SIZE, TXN_DIRECTION_WRITE, NULL, NULL)
                 twIf_Transact(pHwInit->hTwIf, pTxn);
 
-                pHwInit->uTxnIndex++; 
+                pHwInit->uTxnIndex++;
 
                /* Write write (1)command to the OCP_CMD register. */
-                BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, OCP_CMD, 0x1, 
+                BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, OCP_CMD, 0x1,
                                    REGISTER_SIZE, TXN_DIRECTION_WRITE, (TTxnDoneCb)hwInit_WriteIRQPolarity, hHwInit)
                 status = twIf_Transact(pHwInit->hTwIf, pTxn);
 
-                pHwInit->uTxnIndex++; 
+                pHwInit->uTxnIndex++;
 
-                EXCEPT (pHwInit, status)              
+                EXCEPT (pHwInit, status)
                 continue;
 
          case 4:
@@ -2398,7 +2403,7 @@ TI_STATUS hwInit_InitPolarity(TI_HANDLE hHwInit)
 
               return TI_OK;
 
-          
+
          } /* End switch */
 
      } /* End while */
@@ -2410,10 +2415,10 @@ TI_STATUS hwInit_InitPolarity(TI_HANDLE hHwInit)
 /****************************************************************************
  *                      hwInit_InitTopRegisterWrite()
  ****************************************************************************
- * DESCRIPTION: hwInit_InitTopRegisterWrite 
+ * DESCRIPTION: hwInit_InitTopRegisterWrite
  * initalizie hwInit_TopRegisterWrite SM parmaeters
   ****************************************************************************/
-   
+
 TI_STATUS hwInit_InitTopRegisterWrite(TI_HANDLE hHwInit, TI_UINT32 uAddress, TI_UINT32 uValue)
 {
   THwInit      *pHwInit = (THwInit *)hHwInit;
@@ -2421,10 +2426,10 @@ TI_STATUS hwInit_InitTopRegisterWrite(TI_HANDLE hHwInit, TI_UINT32 uAddress, TI_
   WLAN_OS_REPORT(("hwInit_InitTopRegisterWrite: address = 0x%x, value = 0x%x\n", uAddress, uValue));
   pHwInit->uTopStage = 0;
   uAddress = (TI_UINT32)(uAddress / 2);
-  uAddress = (uAddress & TOP_REG_ADDR_MASK);  
+  uAddress = (uAddress & TOP_REG_ADDR_MASK);
   uAddress|= BIT_16 | BIT_17;
   pHwInit->uTopRegAddr = uAddress;
-  pHwInit->uTopRegValue = uValue & 0xffff;  
+  pHwInit->uTopRegValue = uValue & 0xffff;
   return hwInit_TopRegisterWrite (hHwInit);
 }
 
@@ -2433,23 +2438,23 @@ TI_STATUS hwInit_InitTopRegisterWrite(TI_HANDLE hHwInit, TI_UINT32 uAddress, TI_
  *                      hwInit_TopRegisterWrite ()
  ****************************************************************************
  * DESCRIPTION: Generic function that writes to the top registers area
-  * INPUTS:  None    
- * 
+  * INPUTS:  None
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
  TI_STATUS hwInit_TopRegisterWrite(TI_HANDLE hHwInit)
  {
      /*  To write to a top level address from the WLAN IP:
-         Write the top level address to the OCP_POR_CTR register. 
-         Divide the top address by 2, and add 0x30000 to the result – for example for top address 0xC00, write to the OCP_POR_CTR 0x30600
+         Write the top level address to the OCP_POR_CTR register.
+         Divide the top address by 2, and add 0x30000 to the result Â– for example for top address 0xC00, write to the OCP_POR_CTR 0x30600
          Write the data to the OCP_POR_WDATA register
-         Write 0x1 to the OCP_CMD register. 
-     */ 
+         Write 0x1 to the OCP_CMD register.
+     */
      THwInit *pHwInit = (THwInit *)hHwInit;
      TTxnStruct *pTxn;
-        
+
      while (TI_TRUE)
      {
          switch (pHwInit->uTopStage)
@@ -2465,32 +2470,32 @@ TI_STATUS hwInit_InitTopRegisterWrite(TI_HANDLE hHwInit, TI_UINT32 uAddress, TI_
 
              pHwInit->uTxnIndex++;
              /* Write the new value to the OCP_POR_WDATA register */
-             BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, OCP_POR_WDATA, pHwInit->uTopRegValue, 
+             BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, OCP_POR_WDATA, pHwInit->uTopRegValue,
                                     REGISTER_SIZE, TXN_DIRECTION_WRITE, NULL, NULL)
              twIf_Transact(pHwInit->hTwIf, pTxn);
 
-             pHwInit->uTxnIndex++; 
+             pHwInit->uTxnIndex++;
              /* Write write (1)command to the OCP_CMD register. */
-             BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, OCP_CMD, 0x1, 
+             BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, OCP_CMD, 0x1,
                                     REGISTER_SIZE, TXN_DIRECTION_WRITE, (TTxnDoneCb)hwInit_TopRegisterWrite, hHwInit)
              pHwInit->uTopStatus = twIf_Transact(pHwInit->hTwIf, pTxn);
 
              pHwInit->uTxnIndex++;
 
-             EXCEPT (pHwInit, pHwInit->uTopStatus)              
+             EXCEPT (pHwInit, pHwInit->uTopStatus)
              continue;
 
          case 1:
 
              pHwInit->uTxnIndex = 0;
-             
-             if (pHwInit->uTopStatus == TXN_STATUS_PENDING) 
+
+             if (pHwInit->uTopStatus == TXN_STATUS_PENDING)
              {
                  hwInit_BootSm (hHwInit);
              }
-             
+
              return TI_OK;
-         
+
          } /* End switch */
 
      } /* End while */
@@ -2501,10 +2506,10 @@ TI_STATUS hwInit_InitTopRegisterWrite(TI_HANDLE hHwInit, TI_UINT32 uAddress, TI_
  /****************************************************************************
  *                      hwInit_InitTopRegisterRead()
  ****************************************************************************
- * DESCRIPTION: hwInit_InitTopRegisterRead 
+ * DESCRIPTION: hwInit_InitTopRegisterRead
  * initalizie hwInit_InitTopRegisterRead SM parmaeters
   ****************************************************************************/
-   
+
 TI_STATUS hwInit_InitTopRegisterRead(TI_HANDLE hHwInit, TI_UINT32 uAddress)
 {
   THwInit      *pHwInit = (THwInit *)hHwInit;
@@ -2512,7 +2517,7 @@ TI_STATUS hwInit_InitTopRegisterRead(TI_HANDLE hHwInit, TI_UINT32 uAddress)
   WLAN_OS_REPORT(("hwInit_InitTopRegisterRead: address = 0x%x\n", uAddress));
   pHwInit->uTopStage = 0;
   uAddress = (TI_UINT32)(uAddress / 2);
-  uAddress = (uAddress & TOP_REG_ADDR_MASK);  
+  uAddress = (uAddress & TOP_REG_ADDR_MASK);
   uAddress|= BIT_16 | BIT_17;
   pHwInit->uTopRegAddr = uAddress;
 
@@ -2524,19 +2529,19 @@ TI_STATUS hwInit_InitTopRegisterRead(TI_HANDLE hHwInit, TI_UINT32 uAddress)
  *                      hwInit_TopRegisterRead ()
  ****************************************************************************
  * DESCRIPTION: Generic function that reads the top registers area
-  * INPUTS:  None    
- * 
+  * INPUTS:  None
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
  TI_STATUS hwInit_TopRegisterRead(TI_HANDLE hHwInit)
  {
-     /*  
+     /*
         To read from a top level address:
         Write the top level address to the OCP_POR_CTR register.
-        Divide the top address by 2, and add 0x30000 to the result – for example for top address 0xC00, write to the OCP_POR_CTR 0x30600 
-        Write 0x2 to the OCP_CMD register. 
+        Divide the top address by 2, and add 0x30000 to the result Â– for example for top address 0xC00, write to the OCP_POR_CTR 0x30600
+        Write 0x2 to the OCP_CMD register.
         Poll bit [18] of OCP_DATA_RD for data valid indication
         Check bits 17:16 of OCP_DATA_RD:
         00 - no response
@@ -2548,7 +2553,7 @@ TI_STATUS hwInit_InitTopRegisterRead(TI_HANDLE hHwInit, TI_UINT32 uAddress)
 
      THwInit *pHwInit = (THwInit *)hHwInit;
      TTxnStruct *pTxn;
-        
+
      while (TI_TRUE)
      {
          switch (pHwInit->uTopStage)
@@ -2563,8 +2568,8 @@ TI_STATUS hwInit_InitTopRegisterRead(TI_HANDLE hHwInit, TI_UINT32 uAddress)
                                     REGISTER_SIZE, TXN_DIRECTION_WRITE, NULL, NULL)
              twIf_Transact(pHwInit->hTwIf, pTxn);
 
-             pHwInit->uTxnIndex++;  
-             BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, OCP_CMD, 0x2, 
+             pHwInit->uTxnIndex++;
+             BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, OCP_CMD, 0x2,
                                     REGISTER_SIZE, TXN_DIRECTION_WRITE, NULL, NULL)
              twIf_Transact(pHwInit->hTwIf, pTxn);
 
@@ -2572,39 +2577,39 @@ TI_STATUS hwInit_InitTopRegisterRead(TI_HANDLE hHwInit, TI_UINT32 uAddress)
 
          case 1:
              pHwInit->uTopStage ++;
-             pHwInit->uTxnIndex++; 
+             pHwInit->uTxnIndex++;
 
-             BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, OCP_DATA_RD, 0, 
+             BUILD_HW_INIT_TXN_DATA(pHwInit, pTxn, OCP_DATA_RD, 0,
                                     REGISTER_SIZE, TXN_DIRECTION_READ, (TTxnDoneCb)hwInit_TopRegisterRead, hHwInit)
              pHwInit->uTopStatus = twIf_Transact(pHwInit->hTwIf, pTxn);
-             
+
              EXCEPT (pHwInit, pHwInit->uTopStatus)
 
          case 2:
              /* get the value from  IRQ Polarity register*/
              pHwInit->uTopRegValue = pHwInit->aHwInitTxn[pHwInit->uTxnIndex].uData;
-            
+
              pHwInit->uTxnIndex = 0;
 
              /*Poll bit 18 of OCP_DATA_RD for data valid indication*/
              if (pHwInit->uTopRegValue & BIT_18)
              {
                if ((pHwInit->uTopRegValue & BIT_16) && (!(pHwInit->uTopRegValue & BIT_17)))
-               {                   
+               {
                    pHwInit->uTopRegValue &= 0xffff;
-                   
+
                    pHwInit->uTxnIndex = 0;
                    pHwInit->uRegLoop = 0;
-                   if (pHwInit->uTopStatus == TXN_STATUS_PENDING) 
+                   if (pHwInit->uTopStatus == TXN_STATUS_PENDING)
                    {
                        hwInit_BootSm (hHwInit);
                    }
                    return TI_OK;
                }
-               else 
+               else
                {
-                 TRACE0(pHwInit->hReport, REPORT_SEVERITY_ERROR , "can't write bt_func7_sel\n");                 
-                 if (pHwInit->uTopStatus == TXN_STATUS_PENDING) 
+                 TRACE0(pHwInit->hReport, REPORT_SEVERITY_ERROR , "can't write bt_func7_sel\n");
+                 if (pHwInit->uTopStatus == TXN_STATUS_PENDING)
                  {
                        hwInit_BootSm (hHwInit);
                  }
@@ -2618,10 +2623,10 @@ TI_STATUS hwInit_InitTopRegisterRead(TI_HANDLE hHwInit, TI_UINT32 uAddress)
                   pHwInit->uTopStage = 1;
                   pHwInit->uRegLoop++;
                }
-               else 
+               else
                {
-                 TRACE0(pHwInit->hReport, REPORT_SEVERITY_ERROR , "Timeout waiting for writing bt_func7_sel\n");                 
-                 if (pHwInit->uTopStatus == TXN_STATUS_PENDING) 
+                 TRACE0(pHwInit->hReport, REPORT_SEVERITY_ERROR , "Timeout waiting for writing bt_func7_sel\n");
+                 if (pHwInit->uTopStatus == TXN_STATUS_PENDING)
                  {
                        hwInit_BootSm (hHwInit);
                  }
@@ -2630,7 +2635,7 @@ TI_STATUS hwInit_InitTopRegisterRead(TI_HANDLE hHwInit, TI_UINT32 uAddress)
               }
 
              continue;
-         
+
          } /* End switch */
 
      } /* End while */
@@ -2642,10 +2647,10 @@ TI_STATUS hwInit_InitTopRegisterRead(TI_HANDLE hHwInit, TI_UINT32 uAddress)
 *                      hwInit_StallTimerCb ()
 ****************************************************************************
 * DESCRIPTION: CB timer function in fTimerFunction format that calls hwInit_StallTimerCb
-* INPUTS:  TI_HANDLE hHwInit    
-* 
+* INPUTS:  TI_HANDLE hHwInit
+*
 * OUTPUT:  None
-* 
+*
 * RETURNS: None
 ****************************************************************************/
 #ifdef DOWNLOAD_TIMER_REQUIERD

@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * PowerSrv.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file powerSrv.c
  *  \brief This is the powerSrv module implementation.
  *  \
@@ -79,15 +84,15 @@ void powerSrvCreatePssRequest (TI_HANDLE                    hPowerSrv,
 /****************************************************************************************
  *                        powerSrv_create                                                           *
  ****************************************************************************************
-DESCRIPTION: Power Server module creation function, called by the MAC Services create in creation phase 
+DESCRIPTION: Power Server module creation function, called by the MAC Services create in creation phase
                 performs the following:
                 -   Allocate the Power Server handle
                 -   Creates the Power Server State Machine
-                                                                                                                   
-INPUT:          - hOs - Handle to OS        
+
+INPUT:          - hOs - Handle to OS
 
 
-OUTPUT:     
+OUTPUT:
 
 RETURN:     Handle to the Power Server module on success, NULL otherwise
 ****************************************************************************************/
@@ -125,11 +130,11 @@ TI_HANDLE powerSrv_create(TI_HANDLE hOs)
 DESCRIPTION: Power Server module destroy function, c
                 -   delete Power Server allocation
                 -   call the destroy function of the State machine
-                                                                                                                   
-INPUT:          - hPowerSrv - Handle to the Power Server    
+
+INPUT:          - hPowerSrv - Handle to the Power Server
 
 
-OUTPUT:     
+OUTPUT:
 
 RETURN:    TI_STATUS - TI_OK on success else TI_NOK.
 ****************************************************************************************/
@@ -151,17 +156,17 @@ TI_STATUS powerSrv_destroy(TI_HANDLE hPowerSrv)
 /****************************************************************************************
  *                        powerSrvSM_init                                                           *
  ****************************************************************************************
-DESCRIPTION: Power Server module initialize function, called by the MAC Services in initialization phase 
+DESCRIPTION: Power Server module initialize function, called by the MAC Services in initialization phase
                 performs the following:
                 -   init the Power server to active state.
                 -   call the init function of the state machine.
-                                                                                                                   
-INPUT:      - hPowerSrv         - handle to the PowerSrv object.        
-            - hReport           - handle to the Report object.
-            - hEventMbox        - handle to the Event Mbox object.    
-            - hCmdBld           - handle to the Command Builder object.    
 
-OUTPUT: 
+INPUT:      - hPowerSrv         - handle to the PowerSrv object.
+            - hReport           - handle to the Report object.
+            - hEventMbox        - handle to the Event Mbox object.
+            - hCmdBld           - handle to the Command Builder object.
+
+OUTPUT:
 RETURN:    TI_STATUS - TI_OK on success else TI_NOK.
 ****************************************************************************************/
 TI_STATUS powerSrv_init (TI_HANDLE hPowerSrv,
@@ -203,7 +208,7 @@ TI_STATUS powerSrv_init (TI_HANDLE hPowerSrv,
     pPowerSrv->pCurrentRequest  = & pPowerSrv->userRequest;
 
     /*
-    register for Event 
+    register for Event
     */
 
 	eventMbox_RegisterEvent (hEventMbox,
@@ -224,10 +229,10 @@ TI_STATUS powerSrv_init (TI_HANDLE hPowerSrv,
 DESCRIPTION: Restart the scan SRV module upon recovery.
 				-	init the Power server to active state.
 				-	call the init function of the state machine.
-				                                                                                                   
-INPUT:     	- hPowerSrv 			- handle to the PowerSrv object.		
 
-OUTPUT:	
+INPUT:     	- hPowerSrv 			- handle to the PowerSrv object.
+
+OUTPUT:
 RETURN:    TI_STATUS - TI_OK on success else TI_NOK.
 ****************************************************************************************/
 TI_STATUS powerSrv_restart(	TI_HANDLE hPowerSrv)
@@ -266,7 +271,7 @@ TI_STATUS powerSrv_restart(	TI_HANDLE hPowerSrv)
     pPowerSrv->pCurrentRequest 	= & pPowerSrv->userRequest;
 
 	/*
-	register for Event 
+	register for Event
 	*/
 	eventMbox_RegisterEvent (pPowerSrv->hEventMbox,
 							 TWD_OWN_EVENT_PS_REPORT,
@@ -281,15 +286,15 @@ TI_STATUS powerSrv_restart(	TI_HANDLE hPowerSrv)
 /****************************************************************************************
  *                        powerSrv_config                                                           *
  ****************************************************************************************
-DESCRIPTION: Power Server module configuration function, called by the MAC Services in configure phase 
+DESCRIPTION: Power Server module configuration function, called by the MAC Services in configure phase
                 performs the following:
                 -   init the Power server to active state.
                 -   call the init function of the state machine.
-                                                                                                                   
-INPUT:      - hPowerSrv             - handle to the PowerSrv object.            
+
+INPUT:      - hPowerSrv             - handle to the PowerSrv object.
             - pPowerSrvInitParams   - the Power Server initialize parameters.
 
-OUTPUT: 
+OUTPUT:
 RETURN:    TI_STATUS - TI_OK on success else TI_NOK.
 ****************************************************************************************/
 TI_STATUS powerSrv_config(  TI_HANDLE               hPowerSrv,
@@ -311,13 +316,13 @@ TI_STATUS powerSrv_config(  TI_HANDLE               hPowerSrv,
 DESCRIPTION: This function is a user mode request from the Power Save Server.
               it will create a Request from the "USER_REQUEST" and will try to perform the user request for PS/Active.
               this will be done in respect of priority to Driver request.
-                                                                                                                   
-INPUT:      - hPowerSrv                         - handle to the PowerSrv object.        
+
+INPUT:      - hPowerSrv                         - handle to the PowerSrv object.
             - psMode                            - Power save/Active request
-            - sendNullDataOnExit                - 
+            - sendNullDataOnExit                -
             - powerSaveCBObject     - handle to the Callback function module.
             - powerSaveCompleteCB           - Callback function - for success/faild notification.
-OUTPUT: 
+OUTPUT:
 RETURN:    TI_STATUS - TI_OK / PENDING / TI_NOK.
 ****************************************************************************************/
 TI_STATUS powerSrv_SetPsMode(   TI_HANDLE                   hPowerSrv,
@@ -359,23 +364,23 @@ TI_STATUS powerSrv_SetPsMode(   TI_HANDLE                   hPowerSrv,
  *                        powerSrv_ReservePS                                                        *
  ****************************************************************************************
 DESCRIPTION: This function is a driver mode request to set the 802.11 Power Save state and reserve the module.
-              The module should not be in driver mode when this request is made. 
-              If this function is called when the module is already in driver mode the result is unexpected. 
-              If the request cannot be fulfilled because of currently executing user mode request, 
-              then the function will return PENDING and the powerSaveCompleteCB function will be called when the request is fulfilled. 
-              If the request can be fulfilled immediately and the Power Save state required is the current state 
+              The module should not be in driver mode when this request is made.
+              If this function is called when the module is already in driver mode the result is unexpected.
+              If the request cannot be fulfilled because of currently executing user mode request,
+              then the function will return PENDING and the powerSaveCompleteCB function will be called when the request is fulfilled.
+              If the request can be fulfilled immediately and the Power Save state required is the current state
               (This is always the case when PSMode = KEEP_CURRENT),
-              then the module will be reserved and the function will return TI_OK - the callback function will not be called.?? 
+              then the module will be reserved and the function will return TI_OK - the callback function will not be called.??
               If the request can be fulfilled immediately and requires a Power Save state transition,
               then the return value will be TI_OK and the powerSaveCompleteCB function will be called by the Power Save Server
               when the request is complete.
-                                                                                                                   
-INPUT:      - hPowerSrv                         - handle to the PowerSrv object.        
+
+INPUT:      - hPowerSrv                         - handle to the PowerSrv object.
             - psMode                            - Power save/Active request
-            - sendNullDataOnExit                - 
+            - sendNullDataOnExit                -
             - powerSaveCBObject     - handle to the Callback function module.
             - powerSaveCompleteCB           - Callback function - for success/faild notification.
-OUTPUT: 
+OUTPUT:
 RETURN:    TI_STATUS - TI_OK / PENDING / TI_NOK.
 ****************************************************************************************/
 TI_STATUS powerSrv_ReservePS(   TI_HANDLE               hPowerSrv,
@@ -411,21 +416,21 @@ TI_STATUS powerSrv_ReservePS(   TI_HANDLE               hPowerSrv,
 /****************************************************************************************
  *                        powerSrv_ReleasePS                                                        *
  ****************************************************************************************
-DESCRIPTION: This function is used to release a previous driver mode request issued with the ReservPS API. 
+DESCRIPTION: This function is used to release a previous driver mode request issued with the ReservPS API.
               it creates a Driver request and the server act like it is a normal driver request.
-              the server will send the request with a simple optimization - if there is a pending or 
-              new user request - the request will be added in the driver request, in this way when the 
-              user request  will be executed there will be nothing to do, in the same manner if there 
-              are no user / driver request to execute we will send the last user request in Driver mode. 
-               
-              
-              
-                                                                                                                   
-INPUT:      - hPowerSrv                         - handle to the PowerSrv object.        
-            - sendNullDataOnExit                - 
+              the server will send the request with a simple optimization - if there is a pending or
+              new user request - the request will be added in the driver request, in this way when the
+              user request  will be executed there will be nothing to do, in the same manner if there
+              are no user / driver request to execute we will send the last user request in Driver mode.
+
+
+
+
+INPUT:      - hPowerSrv                         - handle to the PowerSrv object.
+            - sendNullDataOnExit                -
             - powerSaveCBObject     - handle to the Callback function module.
             - powerSaveCompleteCB           - Callback function - for success/faild notification.
-OUTPUT: 
+OUTPUT:
 RETURN:    TI_STATUS - TI_OK / PENDING / TI_NOK.
 ****************************************************************************************/
 TI_STATUS powerSrv_ReleasePS(   TI_HANDLE                   hPowerSrv,
@@ -487,10 +492,10 @@ TI_STATUS powerSrv_ReleasePS(   TI_HANDLE                   hPowerSrv,
  *                        powerSrv_getPsStatus                                                       *
  *****************************************************************************************
 DESCRIPTION: This function returns the true state of power.
-                                                                                                                                                                       
-INPUT:      - hPowerSrv                         - handle to the PowerSrv object.        
-            
-OUTPUT: 
+
+INPUT:      - hPowerSrv                         - handle to the PowerSrv object.
+
+OUTPUT:
 RETURN:    TI_BOOL - true if the SM is in PS state -  false otherwise
 ****************************************************************************************/
 TI_BOOL powerSrv_getPsStatus(TI_HANDLE hPowerSrv)
@@ -506,11 +511,11 @@ TI_BOOL powerSrv_getPsStatus(TI_HANDLE hPowerSrv)
 *                        powerSrv_SetRateModulation                                                         *
 *****************************************************************************************
 DESCRIPTION: Sets the rate modulation according to the current Radio Mode.
-                                                                                                                                                                      
+
 INPUT:      - hPowerSrv                         - handle to the PowerSrv object.
            - dot11mode_e - The current radio mode (A or G)
-           
-OUTPUT: 
+
+OUTPUT:
 RETURN:    TI_BOOL - true if the SM is in PS state -  false otherwise
 ****************************************************************************************/
 void powerSrv_SetRateModulation(TI_HANDLE hPowerSrv, TI_UINT16  rate)
@@ -549,18 +554,18 @@ TI_UINT32 powerSrv_GetRateModulation(TI_HANDLE hPowerSrv)
  ****************************************************************************************
 DESCRIPTION:  This function is the call back for the TWD control when a PS event triggered
               This function is responsible for the process "keep alive".
-              the function handles the event and sends it to the state machine, after sending the events 
+              the function handles the event and sends it to the state machine, after sending the events
               the function handles the next request with respect to driver request priority.
               if a request is already done then we will call the request call back (if exist!).
-               
-              
-              
-                                                                                                                   
-INPUT:      - hPowerSrv                         - handle to the PowerSrv object.        
-            - str                               - Event string   
+
+
+
+
+INPUT:      - hPowerSrv                         - handle to the PowerSrv object.
+            - str                               - Event string
             - strLen                            - string length
 
-OUTPUT: 
+OUTPUT:
 RETURN:    void.
 ****************************************************************************************/
 static void powerSrv802_11PsReport(TI_HANDLE hPowerSrv, char* str , TI_UINT32 strLen)
@@ -646,8 +651,8 @@ static void powerSrv802_11PsReport(TI_HANDLE hPowerSrv, char* str , TI_UINT32 st
         {
             pPowerSrv->pCurrentRequest->powerSrvCompleteCB(pPowerSrv->pCurrentRequest->powerSaveCBObject,
                                                            pPowerSrv->pCurrentRequest->psMode,
-                                                           ((pPowerSrv->pCurrentRequest->psMode == POWER_SAVE_ON) ? 
-                                                            ENTER_POWER_SAVE_SUCCESS : 
+                                                           ((pPowerSrv->pCurrentRequest->psMode == POWER_SAVE_ON) ?
+                                                            ENTER_POWER_SAVE_SUCCESS :
                                                             EXIT_POWER_SAVE_SUCCESS));
         }
     }
@@ -659,16 +664,16 @@ static void powerSrv802_11PsReport(TI_HANDLE hPowerSrv, char* str , TI_UINT32 st
 /****************************************************************************************
  *                        powerSrvProcessRequest                                                    *
  ****************************************************************************************
-DESCRIPTION: This function receive the request before sending it to the state machine, checks if it 
+DESCRIPTION: This function receive the request before sending it to the state machine, checks if it
               possible to be applied and pass it to the state machine.
-              
-              
-                                                                                                                   
-INPUT:      - hPowerSrv                         - handle to the PowerSrv object.        
+
+
+
+INPUT:      - hPowerSrv                         - handle to the PowerSrv object.
             - requestMode                   - Driver or User mode
 
 
-OUTPUT: 
+OUTPUT:
 RETURN:    TI_STATUS - TI_OK / PENDING / TI_NOK.
 ****************************************************************************************/
 TI_STATUS powerSrvProcessRequest (TI_HANDLE hPowerSrv, powerSrvMode_e requestMode)
@@ -683,19 +688,19 @@ TI_STATUS powerSrvProcessRequest (TI_HANDLE hPowerSrv, powerSrvMode_e requestMod
 /*determine what is the current request*/
     if ( requestMode == DRIVER_MODE )
     {
-        pPrcessedRequest = &(pPowerSrv->driverRequest);     
+        pPrcessedRequest = &(pPowerSrv->driverRequest);
     }
     else
     {
         pPrcessedRequest = &(pPowerSrv->userRequest);
     }
 
-/*in case that the state machine is in a pending state and it is a driver 
-   request we will return Pending and not call the SM. the request will 
+/*in case that the state machine is in a pending state and it is a driver
+   request we will return Pending and not call the SM. the request will
    be processed in the next event - according to the 802_11_Report.*/
     powerSrvSmState = powerSrvSM_getCurrentState(pPowerSrv->hPowerSrvSM);
 
-    if ( (powerSrvSmState == POWER_SRV_STATE_PEND_ACTIVE || 
+    if ( (powerSrvSmState == POWER_SRV_STATE_PEND_ACTIVE ||
           powerSrvSmState == POWER_SRV_STATE_PEND_PS) &&
          pPowerSrv->pCurrentRequest->requestMode == DRIVER_MODE )
     {
@@ -703,7 +708,7 @@ TI_STATUS powerSrvProcessRequest (TI_HANDLE hPowerSrv, powerSrvMode_e requestMod
         return POWER_SAVE_802_11_PENDING;
     }
     /*Set the correct request to the SM*/
-    powerSrvSm_setSmRequest(pPowerSrv->hPowerSrvSM ,pPrcessedRequest);      
+    powerSrvSm_setSmRequest(pPowerSrv->hPowerSrvSM ,pPrcessedRequest);
 
     /*call the SM with the correct request*/
 
@@ -734,16 +739,16 @@ TI_STATUS powerSrvProcessRequest (TI_HANDLE hPowerSrv, powerSrvMode_e requestMod
 DESCRIPTION: This function create a request acording to it's type:
                                                         - User
                                                         -Driver
-                
-                                                                                                                   
-INPUT:      - hPowerSrv                         - handle to the PowerSrv object.        
+
+
+INPUT:      - hPowerSrv                         - handle to the PowerSrv object.
             - requestMode                   - request type : Driver/User
             - psMode                            - Power save/Active request
-            - sendNullDataOnExit                - 
+            - sendNullDataOnExit                -
             - powerSaveCBObject     - handle to the Callback functin module.
             - powerSaveCompleteCB           - Calback function - for success/faild notification.
 
-OUTPUT: 
+OUTPUT:
 RETURN:    void.
 ****************************************************************************************/
 void powerSrvCreatePssRequest (TI_HANDLE                    hPowerSrv,
@@ -784,16 +789,16 @@ void powerSrvCreatePssRequest (TI_HANDLE                    hPowerSrv,
  *                        powerSrvRegisterFailureEventCB                                                    *
  ****************************************************************************************
 DESCRIPTION: Registers a failure event callback for scan error notifications.
-                
-                                                                                                                   
-INPUT:      - hPowerSrv         - handle to the PowerSrv object.        
+
+
+INPUT:      - hPowerSrv         - handle to the PowerSrv object.
             - failureEventCB    - the failure event callback function.\n
             - hFailureEventObj - handle to the object passed to the failure event callback function.
 
-OUTPUT: 
+OUTPUT:
 RETURN:    void.
 ****************************************************************************************/
-void powerSrvRegisterFailureEventCB( TI_HANDLE hPowerSrv, 
+void powerSrvRegisterFailureEventCB( TI_HANDLE hPowerSrv,
                                      void * failureEventCB, TI_HANDLE hFailureEventObj )
 {
     powerSrv_t *pPowerSrv = (powerSrv_t*)hPowerSrv;

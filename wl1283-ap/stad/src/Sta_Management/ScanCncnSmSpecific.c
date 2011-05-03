@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * ScanCncnSmSpecific.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
  /** \file  ScanCncnSmSpecific.c
  *  \brief Scan concentrator state machine type-specific functions implemenattion
  *
@@ -41,18 +46,18 @@
 #include "ScanCncnPrivate.h"
 #include "apConn.h"
 
-/* 
+/*
  * Aplication one-shot scan
  */
-/** 
- * \fn     scanCncnSmApp1Shot_ScrRequest 
+/**
+ * \fn     scanCncnSmApp1Shot_ScrRequest
  * \brief  Request the SCR for one-shot application scan
- * 
+ *
  * Request the SCR for one-shot application scan. handle different results.
- * 
+ *
  * \param  hScanCncnClient - handle to the specific client object
  * \return None
- */ 
+ */
 void scanCncnSmApp1Shot_ScrRequest (TI_HANDLE hScanCncnClient)
 {
     TScanCncnClient         *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
@@ -60,7 +65,7 @@ void scanCncnSmApp1Shot_ScrRequest (TI_HANDLE hScanCncnClient)
     EScePendReason          eScrPendReason;
 
     /* request the SCR as application scan client, and act according to return status */
-    switch (eScrReplyStatus = scr_clientRequest (pScanCncnClient->hSCR, SCR_CID_APP_SCAN, 
+    switch (eScrReplyStatus = scr_clientRequest (pScanCncnClient->hSCR, SCR_CID_APP_SCAN,
                                                  SCR_RESOURCE_SERVING_CHANNEL, &eScrPendReason))
     {
     case SCR_CRS_PEND:
@@ -80,20 +85,20 @@ void scanCncnSmApp1Shot_ScrRequest (TI_HANDLE hScanCncnClient)
         TRACE1(pScanCncnClient->hReport, REPORT_SEVERITY_ERROR , "scanCncnSmApp1Shot_ScrRequest: SCR returned unrecognized status: %d.\n", eScrReplyStatus);
         /* Send a reject event to recover from this error */
         pScanCncnClient->eScanResult = SCAN_CRS_SCAN_FAILED;
-        genSM_Event (pScanCncnClient->hGenSM, SCAN_CNCN_SM_EVENT_REJECT, hScanCncnClient);        
+        genSM_Event (pScanCncnClient->hGenSM, SCAN_CNCN_SM_EVENT_REJECT, hScanCncnClient);
         break;
    }
 }
 
-/** 
+/**
  * \fn     scanCncnSmApp1Shot_ScrRelease
  * \brief  Release the SCR as one-shot application scan
- * 
+ *
  * Release the SCR as one-shot application scan
- * 
+ *
  * \param  hScanCncnClient - handle to the specific client object
  * \return None
- */ 
+ */
 void scanCncnSmApp1Shot_ScrRelease (TI_HANDLE hScanCncnClient)
 {
     TScanCncnClient *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
@@ -102,15 +107,15 @@ void scanCncnSmApp1Shot_ScrRelease (TI_HANDLE hScanCncnClient)
     scr_clientComplete (pScanCncnClient->hSCR, SCR_CID_APP_SCAN, SCR_RESOURCE_SERVING_CHANNEL);
 }
 
-/** 
- * \fn     scanCncnSmApp1Shot_StartScan 
+/**
+ * \fn     scanCncnSmApp1Shot_StartScan
  * \brief  Request scan start from TWD for one-shot application scan
- * 
+ *
  * Request scan start from TWD for one-shot application scan
- * 
+ *
  * \param  hScanCncnClient - handle to the specific client object
  * \return None
- */ 
+ */
 void scanCncnSmApp1Shot_StartScan (TI_HANDLE hScanCncnClient)
 {
     TScanCncnClient *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
@@ -138,15 +143,15 @@ void scanCncnSmApp1Shot_StartScan (TI_HANDLE hScanCncnClient)
     }
 }
 
-/** 
+/**
  * \fn     scanCncnSmApp1Shot_StopScan
  * \brief  Request scan stop from TWD for one-shot application scan
- * 
+ *
  * Request scan stop from TWD for one-shot application scan
- * 
+ *
  * \param  hScanCncnClient - handle to the specific client object
  * \return None
- */ 
+ */
 void scanCncnSmApp1Shot_StopScan (TI_HANDLE hScanCncnClient)
 {
     TScanCncnClient *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
@@ -171,15 +176,15 @@ void scanCncnSmApp1Shot_StopScan (TI_HANDLE hScanCncnClient)
     }
 }
 
-/** 
+/**
  * \fn     scanCncnSmApp1Shot_Recovery
  * \brief  Handles recovery during scan for one-shot application scan
- * 
+ *
  * Notifies the scan SRV to stop its timer
- * 
+ *
  * \param  hScanCncnClient - handle to the specific client object
  * \return None
- */ 
+ */
 void scanCncnSmApp1Shot_Recovery (TI_HANDLE hScanCncnClient)
 {
     TScanCncnClient *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
@@ -191,15 +196,15 @@ void scanCncnSmApp1Shot_Recovery (TI_HANDLE hScanCncnClient)
 /*
  * Aplication Periodic scan
  */
-/** 
- * \fn     scanCncnSmAppP_ScrRequest 
- * \brief  Request the SCR for periodic application scan 
- * 
+/**
+ * \fn     scanCncnSmAppP_ScrRequest
+ * \brief  Request the SCR for periodic application scan
+ *
  * Request the SCR for periodic application scan. Handle different results
- * 
+ *
  * \param  hScanCncnClient - handle to the specific client object
  * \return None
- */ 
+ */
 void scanCncnSmAppP_ScrRequest (TI_HANDLE hScanCncnClient)
 {
     TScanCncnClient         *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
@@ -207,7 +212,7 @@ void scanCncnSmAppP_ScrRequest (TI_HANDLE hScanCncnClient)
     EScePendReason          eScrPendReason;
 
     /* request the SCR as application scan client, and act according to return status */
-    switch (eScrReplyStatus = scr_clientRequest (pScanCncnClient->hSCR, SCR_CID_APP_SCAN, 
+    switch (eScrReplyStatus = scr_clientRequest (pScanCncnClient->hSCR, SCR_CID_APP_SCAN,
                                                  SCR_RESOURCE_PERIODIC_SCAN, &eScrPendReason))
     {
     case SCR_CRS_PEND:
@@ -232,15 +237,15 @@ void scanCncnSmAppP_ScrRequest (TI_HANDLE hScanCncnClient)
    }
 }
 
-/** 
- * \fn     scanCncnSmAppP_ScrRelease 
- * \brief  Release the SCR as periodic application scan 
- * 
- * Release the SCR as periodic application scan 
- * 
+/**
+ * \fn     scanCncnSmAppP_ScrRelease
+ * \brief  Release the SCR as periodic application scan
+ *
+ * Release the SCR as periodic application scan
+ *
  * \param  hScanCncnClient - handle to the specific client object
  * \return None
- */ 
+ */
 void scanCncnSmAppP_ScrRelease (TI_HANDLE hScanCncnClient)
 {
     TScanCncnClient *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
@@ -249,15 +254,15 @@ void scanCncnSmAppP_ScrRelease (TI_HANDLE hScanCncnClient)
     scr_clientComplete (pScanCncnClient->hSCR, SCR_CID_APP_SCAN, SCR_RESOURCE_PERIODIC_SCAN);
 }
 
-/** 
+/**
  * \fn     scanCncnSmAppP_StartScan
  * \brief  Request scan start from TWD for periodic application scan
- * 
+ *
  * Request scan start from TWD for periodic application scan
- * 
+ *
  * \param  hScanCncnClient - handle to the specific client object
  * \return None
- */ 
+ */
 void scanCncnSmAppP_StartScan (TI_HANDLE hScanCncnClient)
 {
     TScanCncnClient *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
@@ -266,7 +271,7 @@ void scanCncnSmAppP_StartScan (TI_HANDLE hScanCncnClient)
 
     /* call the TWD start scan */
     tStatus = TWD_StartConnectionScan (pScanCncnClient->hTWD, &(pScanCncnClient->uScanParams.tPeriodicScanParams),
-                                       SCAN_RESULT_TAG_APPLICATION_PEIODIC, 
+                                       SCAN_RESULT_TAG_APPLICATION_PEIODIC,
                                        pScanCncn->tInitParams.uDfsPassiveDwellTimeMs, NULL, NULL);
     if (TI_OK != tStatus)
     {
@@ -280,15 +285,15 @@ void scanCncnSmAppP_StartScan (TI_HANDLE hScanCncnClient)
     }
 }
 
-/** 
+/**
  * \fn     scanCncnSmAppP_StopScan
  * \brief  Request scan stop from TWD for periodic application scan
- * 
+ *
  * Request scan stop from TWD for periodic application scan
- * 
+ *
  * \param  hScanCncnClient - handle to the specific client object
  * \return None
- */ 
+ */
 void scanCncnSmAppP_StopScan (TI_HANDLE hScanCncnClient)
 {
     TScanCncnClient *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
@@ -305,15 +310,15 @@ void scanCncnSmAppP_StopScan (TI_HANDLE hScanCncnClient)
     }
 }
 
-/** 
+/**
  * \fn     scanCncnSmAppP_Recovery
  * \brief  Handles recovery during scan for periodic application scan
- * 
+ *
  * Handles recovery during scan for periodic application scan
- * 
+ *
  * \param  hScanCncnClient - handle to the specific client object
  * \return None
- */ 
+ */
 void scanCncnSmAppP_Recovery (TI_HANDLE hScanCncnClient)
 {
 }
@@ -321,15 +326,15 @@ void scanCncnSmAppP_Recovery (TI_HANDLE hScanCncnClient)
 /*
  * Driver periodic scan
  */
-/** 
+/**
  * \fn     scanCncnSmDrvP_ScrRequest
  * \brief  Request the SCR for periodic driver scan
- * 
+ *
  * Request the SCR for periodic driver scan. Handle different results
- * 
+ *
  * \param  hScanCncnClient - handle to the specific client object
  * \return None
- */ 
+ */
 void scanCncnSmDrvP_ScrRequest (TI_HANDLE hScanCncnClient)
 {
     TScanCncnClient         *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
@@ -342,15 +347,15 @@ void scanCncnSmDrvP_ScrRequest (TI_HANDLE hScanCncnClient)
     {
     case SCR_CRS_PEND:
         TRACE1(pScanCncnClient->hReport, REPORT_SEVERITY_INFORMATION , "scanCncnSmAppP_ScrRequest: SCR pending, pend reason: %d.\n", eScrPendReason);
-        
+
         /* check the pending reason */
         if (SCR_PR_OTHER_CLIENT_ABORTING != eScrPendReason)
         {
-            /* 
-             * send a reject event to the SM - would not scan if not in a different group or 
+            /*
+             * send a reject event to the SM - would not scan if not in a different group or
              * another un-abortable client is running
              */
-            pScanCncnClient->eScanResult = SCAN_CRS_SCAN_FAILED; 
+            pScanCncnClient->eScanResult = SCAN_CRS_SCAN_FAILED;
             genSM_Event (pScanCncnClient->hGenSM, SCAN_CNCN_SM_EVENT_REJECT, hScanCncnClient);
         }
         /* if the pending reason is another client aborting wait untill it finish abort */
@@ -371,15 +376,15 @@ void scanCncnSmDrvP_ScrRequest (TI_HANDLE hScanCncnClient)
     }
 }
 
-/** 
+/**
  * \fn     scanCncnSmDrvP_ScrRelease
  * \brief  Release the SCR as periodic driver scan
- * 
- * Release the SCR as periodic driver scan 
- * 
+ *
+ * Release the SCR as periodic driver scan
+ *
  * \param  hScanCncnClient - handle to the specific client object
  * \return None
- */ 
+ */
 void scanCncnSmDrvP_ScrRelease (TI_HANDLE hScanCncnClient)
 {
     TScanCncnClient *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
@@ -388,15 +393,15 @@ void scanCncnSmDrvP_ScrRelease (TI_HANDLE hScanCncnClient)
     scr_clientComplete (pScanCncnClient->hSCR, SCR_CID_DRIVER_FG_SCAN, SCR_RESOURCE_PERIODIC_SCAN);
 }
 
-/** 
+/**
  * \fn     scanCncnSmDrvP_StartScan
  * \brief  Request scan start from TWD for periodic driver scan
- * 
+ *
  * Request scan start from TWD for periodic driver scan
- * 
+ *
  * \param  hScanCncnClient - handle to the specific client object
  * \return None
- */ 
+ */
 void scanCncnSmDrvP_StartScan (TI_HANDLE hScanCncnClient)
 {
     TScanCncnClient *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
@@ -405,7 +410,7 @@ void scanCncnSmDrvP_StartScan (TI_HANDLE hScanCncnClient)
 
     /* call the TWD_scan function */
     status = TWD_StartConnectionScan (pScanCncnClient->hTWD, &(pScanCncnClient->uScanParams.tPeriodicScanParams),
-                                      SCAN_RESULT_TAG_DRIVER_PERIODIC, 
+                                      SCAN_RESULT_TAG_DRIVER_PERIODIC,
                                       pScanCncn->tInitParams.uDfsPassiveDwellTimeMs, NULL, NULL);
 
     if (TI_OK != status)
@@ -420,15 +425,15 @@ void scanCncnSmDrvP_StartScan (TI_HANDLE hScanCncnClient)
     }
 }
 
-/** 
+/**
  * \fn     scanCncnSmDrvP_StopScan
  * \brief  Request scan stop from TWD for periodic driver scan
- * 
+ *
  * Request scan stop from TWD for periodic driver scan
- * 
+ *
  * \param  hScanCncnClient - handle to the specific client object
  * \return None
- */ 
+ */
 void scanCncnSmDrvP_StopScan (TI_HANDLE hScanCncnClient)
 {
     TScanCncnClient *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
@@ -445,15 +450,15 @@ void scanCncnSmDrvP_StopScan (TI_HANDLE hScanCncnClient)
     }
 }
 
-/** 
+/**
  * \fn     scanCncnSmApp1Shot_Recovery
  * \brief  Handles recovery during scan for periodic driver scan
- * 
+ *
  * Handles recovery during scan for periodic driver scan
- * 
+ *
  * \param  hScanCncnClient - handle to the specific client object
  * \return None
- */ 
+ */
 void scanCncnSmDrvP_Recovery (TI_HANDLE hScanCncnClient)
 {
 }
@@ -461,15 +466,15 @@ void scanCncnSmDrvP_Recovery (TI_HANDLE hScanCncnClient)
 /*
  * Continuous one-shot scan
  */
-/** 
+/**
  * \fn     scanCncnSmCont1Shot_ScrRequest
  * \brief  Request the SCR for one-shot continuous scan
- * 
+ *
  * Request the SCR for one-shot continuous scan. Handle different results
- * 
+ *
  * \param  hScanCncnClient - handle to the specific client object
  * \return None
- */ 
+ */
 void scanCncnSmCont1Shot_ScrRequest (TI_HANDLE hScanCncnClient)
 {
     TScanCncnClient         *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
@@ -477,7 +482,7 @@ void scanCncnSmCont1Shot_ScrRequest (TI_HANDLE hScanCncnClient)
     EScePendReason          eScrPendReason;
 
     /* request the SCR as continuous roaming client, and act according to return status */
-    switch (eScrReplyStatus = scr_clientRequest (pScanCncnClient->hSCR, SCR_CID_CONT_SCAN, 
+    switch (eScrReplyStatus = scr_clientRequest (pScanCncnClient->hSCR, SCR_CID_CONT_SCAN,
                                                 SCR_RESOURCE_SERVING_CHANNEL, &eScrPendReason ) )
     {
     case SCR_CRS_PEND:
@@ -507,15 +512,15 @@ void scanCncnSmCont1Shot_ScrRequest (TI_HANDLE hScanCncnClient)
     }
 }
 
-/** 
+/**
  * \fn     scanCncnSmCont1Shot_ScrRelease
  * \brief  Release the SCR as one-shot continuous scan
- * 
+ *
  * Release the SCR as one-shot continuous scan
- * 
+ *
  * \param  hScanCncnClient - handle to the specific client object
  * \return None
- */ 
+ */
 void scanCncnSmCont1Shot_ScrRelease (TI_HANDLE hScanCncnClient)
 {
     TScanCncnClient *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
@@ -524,22 +529,22 @@ void scanCncnSmCont1Shot_ScrRelease (TI_HANDLE hScanCncnClient)
     scr_clientComplete (pScanCncnClient->hSCR, SCR_CID_CONT_SCAN, SCR_RESOURCE_SERVING_CHANNEL);
 }
 
-/** 
- * \fn     scanCncnSmCont1Shot_StartScan 
+/**
+ * \fn     scanCncnSmCont1Shot_StartScan
  * \brief  Request scan start from TWD for one-shot continuous scan
- * 
+ *
  * Request scan start from TWD for one-shot continuous scan
- * 
+ *
  * \param  hScanCncnClient - handle to the specific client object
  * \return None
- */ 
+ */
 void scanCncnSmCont1Shot_StartScan (TI_HANDLE hScanCncnClient)
 {
     TScanCncnClient *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
     TI_STATUS       status;
 
     /* call the TWD start scan function */
-    status = TWD_Scan (pScanCncnClient->hTWD, &(pScanCncnClient->uScanParams.tOneShotScanParams), 
+    status = TWD_Scan (pScanCncnClient->hTWD, &(pScanCncnClient->uScanParams.tOneShotScanParams),
                        SCAN_RESULT_TAG_CONTINUOUS, TI_FALSE, TI_TRUE, TI_FALSE, POWER_SAVE_ON, TI_TRUE,
                        NULL, NULL);
 
@@ -555,15 +560,15 @@ void scanCncnSmCont1Shot_StartScan (TI_HANDLE hScanCncnClient)
     }
 }
 
-/** 
+/**
  * \fn     scanCncnSmCont1Shot_StopScan
  * \brief  Request scan stop from TWD for one-shot continuous scan
- * 
+ *
  * Request scan stop from TWD for one-shot continuous scan
- * 
+ *
  * \param  hScanCncnClient - handle to the specific client object
  * \return None
- */ 
+ */
 void scanCncnSmCont1Shot_StopScan (TI_HANDLE hScanCncnClient)
 {
     TScanCncnClient *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
@@ -580,15 +585,15 @@ void scanCncnSmCont1Shot_StopScan (TI_HANDLE hScanCncnClient)
     }
 }
 
-/** 
+/**
  * \fn     scanCncnSmCont1Shot_Recovery
  * \brief  Handles recovery during scan for one-shot continuous scan
- * 
+ *
  * Notifies the scan SRV to stop its timer
- * 
+ *
  * \param  hScanCncnClient - handle to the specific client object
  * \return None
- */ 
+ */
 void scanCncnSmCont1Shot_Recovery (TI_HANDLE hScanCncnClient)
 {
     TScanCncnClient *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
@@ -600,21 +605,21 @@ void scanCncnSmCont1Shot_Recovery (TI_HANDLE hScanCncnClient)
 /*
  * Immediate one-shot scan
  */
-/** 
+/**
  * \fn     scanCncnSmImmed1Shot_ScrRequest
  * \brief  Request the SCR for one-shot immediate scan
- * 
+ *
  * Request the SCR for one-shot immediate scan. Handle different results
- * 
+ *
  * \param  hScanCncnClient - handle to the specific client object
  * \return None
- */ 
+ */
 void scanCncnSmImmed1Shot_ScrRequest (TI_HANDLE hScanCncnClient)
 {
     TScanCncnClient         *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
     EScrClientRequestStatus eScrReplyStatus;
     EScePendReason          eScrPendReason;
-    
+
     /* request the SCR as immediate roaming client, and act according to return status */
     switch (eScrReplyStatus = scr_clientRequest (pScanCncnClient->hSCR, SCR_CID_IMMED_SCAN,
                                                  SCR_RESOURCE_SERVING_CHANNEL, &eScrPendReason))
@@ -647,15 +652,15 @@ void scanCncnSmImmed1Shot_ScrRequest (TI_HANDLE hScanCncnClient)
     }
 }
 
-/** 
+/**
  * \fn     scanCncnSmImmed1Shot_ScrRelease
  * \brief  Release the SCR as one-shot immediate scan
- * 
+ *
  * Release the SCR as one-shot immediate scan
- * 
+ *
  * \param  hScanCncnClient - handle to the specific client object
  * \return None
- */ 
+ */
 void scanCncnSmImmed1Shot_ScrRelease (TI_HANDLE hScanCncnClient)
 {
     TScanCncnClient *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
@@ -664,15 +669,15 @@ void scanCncnSmImmed1Shot_ScrRelease (TI_HANDLE hScanCncnClient)
     scr_clientComplete (pScanCncnClient->hSCR, SCR_CID_IMMED_SCAN, SCR_RESOURCE_SERVING_CHANNEL);
 }
 
-/** 
- * \fn     scanCncnSmImmed1Shot_StartScan 
+/**
+ * \fn     scanCncnSmImmed1Shot_StartScan
  * \brief  Request scan start from TWD for one-shot immediate scan
- * 
+ *
  * Request scan start from TWD for one-shot immediate scan
- * 
+ *
  * \param  hScanCncnClient - handle to the specific client object
  * \return None
- */ 
+ */
 void scanCncnSmImmed1Shot_StartScan (TI_HANDLE hScanCncnClient)
 {
     TScanCncnClient *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
@@ -682,7 +687,7 @@ void scanCncnSmImmed1Shot_StartScan (TI_HANDLE hScanCncnClient)
     /* check whether enter PS is required - according to the roaming reason severity */
     bPsRequired = apConn_isPsRequiredBeforeScan (pScanCncnClient->hApConn);
     bTriggeredScan = ((SCAN_TYPE_TRIGGERED_ACTIVE == pScanCncnClient->uScanParams.tOneShotScanParams.scanType) ||
-                      (SCAN_TYPE_TRIGGERED_PASSIVE == pScanCncnClient->uScanParams.tOneShotScanParams.scanType) 
+                      (SCAN_TYPE_TRIGGERED_PASSIVE == pScanCncnClient->uScanParams.tOneShotScanParams.scanType)
                       ? TI_TRUE : TI_FALSE);
 
     status = TWD_Scan (pScanCncnClient->hTWD, &(pScanCncnClient->uScanParams.tOneShotScanParams),
@@ -703,15 +708,15 @@ void scanCncnSmImmed1Shot_StartScan (TI_HANDLE hScanCncnClient)
     }
 }
 
-/** 
+/**
  * \fn     scanCncnSmImmed1Shot_StopScan
  * \brief  Request scan stop from TWD for one-shot immediate scan
- * 
+ *
  * Request scan stop from TWD for one-shot immediate scan
- * 
+ *
  * \param  hScanCncnClient - handle to the specific client object
  * \return None
- */ 
+ */
 void scanCncnSmImmed1Shot_StopScan (TI_HANDLE hScanCncnClient)
 {
     TScanCncnClient *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
@@ -728,15 +733,15 @@ void scanCncnSmImmed1Shot_StopScan (TI_HANDLE hScanCncnClient)
     }
 }
 
-/** 
+/**
  * \fn     scanCncnSmImmed1Shot_Recovery
  * \brief  Handles recovery during scan for one-shot immediate scan
- * 
+ *
  * Notifies the scan SRV to stop its timer
- * 
+ *
  * \param  hScanCncnClient - handle to the specific client object
  * \return None
- */ 
+ */
 void scanCncnSmImmed1Shot_Recovery (TI_HANDLE hScanCncnClient)
 {
     TScanCncnClient *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;

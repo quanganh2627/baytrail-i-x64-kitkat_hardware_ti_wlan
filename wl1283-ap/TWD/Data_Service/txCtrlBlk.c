@@ -1,39 +1,44 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * txCtrlBlk.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 /****************************************************************************
  *
  *   MODULE:  txCtrlBlk.c
- *   
- *   PURPOSE: Maintains active packets Tx attributes table (including descriptor). 
- * 
- *	 DESCRIPTION:  
+ *
+ *   PURPOSE: Maintains active packets Tx attributes table (including descriptor).
+ *
+ *	 DESCRIPTION:
  *   ============
  *		This module allocates and frees table entry for each packet in the Tx
  *		process (from sendPkt by upper driver until Tx-complete).
@@ -58,7 +63,7 @@ typedef struct
 	TTxCtrlBlk  aTxCtrlBlkTbl[CTRL_BLK_ENTRIES_NUM]; /* The table of control-block entries. */
 
 #ifdef TI_DBG  /* Just for debug. */
-	TI_UINT32	uNumUsedEntries;  
+	TI_UINT32	uNumUsedEntries;
 #endif
 
 } TTxCtrlBlkObj;
@@ -67,12 +72,12 @@ typedef struct
 /****************************************************************************
  *                      txCtrlBlk_Create()
  ****************************************************************************
- * DESCRIPTION:	Create the Tx control block table object 
- * 
+ * DESCRIPTION:	Create the Tx control block table object
+ *
  * INPUTS:	hOs
- * 
+ *
  * OUTPUT:	None
- * 
+ *
  * RETURNS:	The Created object
  ****************************************************************************/
 TI_HANDLE txCtrlBlk_Create (TI_HANDLE hOs)
@@ -94,12 +99,12 @@ TI_HANDLE txCtrlBlk_Create (TI_HANDLE hOs)
 /****************************************************************************
  *                      txCtrlBlk_Destroy()
  ****************************************************************************
- * DESCRIPTION:	Destroy the Tx control block table object 
- * 
+ * DESCRIPTION:	Destroy the Tx control block table object
+ *
  * INPUTS:	hTxCtrlBlk - The object to free
- * 
+ *
  * OUTPUT:	None
- * 
+ *
  * RETURNS:	TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS txCtrlBlk_Destroy (TI_HANDLE hTxCtrlBlk)
@@ -126,7 +131,7 @@ TI_STATUS txCtrlBlk_Init (TI_HANDLE hTxCtrlBlk, TI_HANDLE hReport, TI_HANDLE hCo
 
 	pTxCtrlBlk->hReport  = hReport;
 	pTxCtrlBlk->hContext = hContext;
-	
+
 	/* For all entries, write the entry index in the descriptor and the next entry address
 		 in the next free entery pointer. Init also some other fields. */
 	for(entry = 0; entry < CTRL_BLK_ENTRIES_NUM; entry++)
@@ -156,7 +161,7 @@ TI_STATUS txCtrlBlk_Init (TI_HANDLE hTxCtrlBlk, TI_HANDLE hReport, TI_HANDLE hCo
 /****************************************************************************
  *					txCtrlBlk_Alloc()
  ****************************************************************************
- * DESCRIPTION:	 
+ * DESCRIPTION:
 	Allocate a free control-block entry for the current Tx packet's parameters
 	  (including the descriptor structure).
 	Note that entry 0 in the list is never allocated and points to the
@@ -166,9 +171,9 @@ TTxCtrlBlk *txCtrlBlk_Alloc (TI_HANDLE hTxCtrlBlk)
 {
 	TTxCtrlBlkObj   *pTxCtrlBlk = (TTxCtrlBlkObj *)hTxCtrlBlk;
 	TTxCtrlBlk      *pCurrentEntry; /* The pointer of the new entry allocated for the packet. */
-	TTxCtrlBlk      *pFirstFreeEntry; /* The first entry just points to the first free entry. */ 
+	TTxCtrlBlk      *pFirstFreeEntry; /* The first entry just points to the first free entry. */
 
-	pFirstFreeEntry = &(pTxCtrlBlk->aTxCtrlBlkTbl[0]); 
+	pFirstFreeEntry = &(pTxCtrlBlk->aTxCtrlBlkTbl[0]);
 
     /* Protect block allocation from preemption (may be called from external context) */
     context_EnterCriticalSection (pTxCtrlBlk->hContext);
@@ -190,7 +195,7 @@ TRACE1(pTxCtrlBlk->hReport, REPORT_SEVERITY_ERROR, "txCtrlBlk_alloc():  No free 
 	pFirstFreeEntry->pNextFreeEntry = pCurrentEntry->pNextFreeEntry;
 
     context_LeaveCriticalSection (pTxCtrlBlk->hContext);
-	
+
 	/* Clear the next-free-entry index just as an indication that our entry is not free. */
 	pCurrentEntry->pNextFreeEntry = 0;
 
@@ -204,7 +209,7 @@ TRACE1(pTxCtrlBlk->hReport, REPORT_SEVERITY_ERROR, "txCtrlBlk_alloc():  No free 
 /****************************************************************************
  *					txCtrlBlk_Free()
  ****************************************************************************
- * DESCRIPTION:	
+ * DESCRIPTION:
 	Link the freed entry after entry 0, so now it is the first free entry to
 	  be allocated.
  ****************************************************************************/
@@ -237,7 +242,7 @@ TRACE2(pTxCtrlBlk->hReport, REPORT_SEVERITY_ERROR, "txCtrlBlk_free(): Entry %d a
 /****************************************************************************
  *					txCtrlBlk_GetPointer()
  ****************************************************************************
- * DESCRIPTION:	 
+ * DESCRIPTION:
 	Return a pointer to the control block entry of the requested packet.
 	Used upon tx-complete to retrieve info after getting the descId from the FW.
  ****************************************************************************/
@@ -261,11 +266,11 @@ void txCtrlBlk_PrintTable (TI_HANDLE hTxCtrlBlk)
 
 	WLAN_OS_REPORT((" Tx-Control-Block Information,  UsedEntries=%d\n", pTxCtrlBlk->uNumUsedEntries));
 	WLAN_OS_REPORT(("==============================================\n"));
-	
+
 	for(entry = 0; entry < CTRL_BLK_ENTRIES_NUM; entry++)
 	{
-		WLAN_OS_REPORT(("Entry %d: DescID=%d, Next=0x%x, Len=%d, StartTime=%d, TID=%d, ExtraBlks=%d, TotalBlks=%d, Flags=0x%x\n", 
-			entry, 
+		WLAN_OS_REPORT(("Entry %d: DescID=%d, Next=0x%x, Len=%d, StartTime=%d, TID=%d, ExtraBlks=%d, TotalBlks=%d, Flags=0x%x\n",
+			entry,
 			pTxCtrlBlk->aTxCtrlBlkTbl[entry].tTxDescriptor.descID,
 			(TI_UINT32)pTxCtrlBlk->aTxCtrlBlkTbl[entry].pNextFreeEntry,
 			ENDIAN_HANDLE_WORD(pTxCtrlBlk->aTxCtrlBlkTbl[entry].tTxDescriptor.length),

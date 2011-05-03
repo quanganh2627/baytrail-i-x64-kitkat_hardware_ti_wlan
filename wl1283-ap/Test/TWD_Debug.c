@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * TWD_Debug.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 #include "tidef.h"
 #include "TWDriver.h"
 #include "rxXfer_api.h"
@@ -121,10 +126,10 @@ typedef enum
    TNETW_PHY_REGISTERS
 
 } readWrite_MemoryType_e;
-    
+
 static void TWD_PrintMemRegsCB (TI_HANDLE hTWD, TI_UINT32 cmdCbStatus)
 {
-    TTwd    *pTWD = (TTwd *)hTWD;    
+    TTwd    *pTWD = (TTwd *)hTWD;
     int      i;
     TI_UINT8   *pBuf;
     TI_UINT32   result;
@@ -136,17 +141,17 @@ static void TWD_PrintMemRegsCB (TI_HANDLE hTWD, TI_UINT32 cmdCbStatus)
     }
 
     result = (((TI_UINT32)pTWD->tPrintRegsBuf.addr) & 0xFFFF0000);
-    
+
     switch (result)
     {
         case REGISTERS_BASE:
-                WLAN_OS_REPORT(("MAC REGS (Base=0x%08x) = 0x%08x\n", 
+                WLAN_OS_REPORT(("MAC REGS (Base=0x%08x) = 0x%08x\n",
                                ((TI_UINT32)pTWD->tPrintRegsBuf.addr)&0xFFFF,
                                *(TI_UINT32*)(pTWD->tPrintRegsBuf.value)));
                 break;
 
         case BB_REGISTER_ADDR_BASE:
-                WLAN_OS_REPORT(("PHY REGS (Base=0x%08x) = 0x%08x\n", 
+                WLAN_OS_REPORT(("PHY REGS (Base=0x%08x) = 0x%08x\n",
                                ((TI_UINT32)pTWD->tPrintRegsBuf.addr)&0xFFFF,
                                *(TI_UINT32*)(pTWD->tPrintRegsBuf.value)));
                 break;
@@ -154,9 +159,9 @@ static void TWD_PrintMemRegsCB (TI_HANDLE hTWD, TI_UINT32 cmdCbStatus)
         default: /* Memory*/
                 for (i=0, pBuf = pTWD->tPrintRegsBuf.value; i < 256; i += 16, pBuf += 16)
                 {
-                    WLAN_OS_REPORT(("PrintBuf: 0x%08x: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n", 
-                                    (TI_UINT32)(pTWD->tPrintRegsBuf.addr+i), 
-                                    pBuf[0], pBuf[1], pBuf[2], pBuf[3], pBuf[4], pBuf[5], pBuf[6], pBuf[7], 
+                    WLAN_OS_REPORT(("PrintBuf: 0x%08x: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n",
+                                    (TI_UINT32)(pTWD->tPrintRegsBuf.addr+i),
+                                    pBuf[0], pBuf[1], pBuf[2], pBuf[3], pBuf[4], pBuf[5], pBuf[6], pBuf[7],
                                     pBuf[8], pBuf[9], pBuf[10], pBuf[11], pBuf[12], pBuf[13], pBuf[14], pBuf[15]));
                 }
                 break;
@@ -166,66 +171,66 @@ static void TWD_PrintMemRegsCB (TI_HANDLE hTWD, TI_UINT32 cmdCbStatus)
 
 static void TWD_PrintMemRegs (TI_HANDLE hTWD, TI_UINT32 address, TI_UINT32 len, readWrite_MemoryType_e memType)
 {
-    TTwd  *pTWD = (TTwd *)hTWD;    
-    ReadWriteCommand_t  AcxCmd_ReadMemory; 
+    TTwd  *pTWD = (TTwd *)hTWD;
+    ReadWriteCommand_t  AcxCmd_ReadMemory;
     ReadWriteCommand_t* pCmd = &AcxCmd_ReadMemory;
 
     os_memoryZero (pTWD->hOs, (void *)pCmd, sizeof (*pCmd));
-    
+
     switch (memType)
     {
         case TNETW_INTERNAL_RAM:
             pCmd->addr = (TI_UINT32)ENDIAN_HANDLE_LONG (address);
             pCmd->size = ENDIAN_HANDLE_LONG (len);
             break;
-             
+
         case TNETW_MAC_REGISTERS:
             pCmd->addr = (TI_UINT32)ENDIAN_HANDLE_LONG (((address&0xFFFF) | REGISTERS_BASE));
             pCmd->size = 4;
             break;
-    
+
         case TNETW_PHY_REGISTERS:
             pCmd->addr = (TI_UINT32)ENDIAN_HANDLE_LONG (((address&0xFFFF) | BB_REGISTER_ADDR_BASE));
             pCmd->size = 4;
             break;
-    
+
         default:
             WLAN_OS_REPORT(("Wrong memory type %d\n\n", memType));
             return;
     }
-    
+
     os_memoryZero (pTWD->hOs, (void *)&pTWD->tPrintRegsBuf, sizeof(pTWD->tPrintRegsBuf));
-    
-    cmdQueue_SendCommand (pTWD->hCmdQueue, 
-                      CMD_READ_MEMORY, 
-                      (char *)pCmd, 
-                      sizeof(*pCmd), 
-                      (void *)TWD_PrintMemRegsCB, 
-                      hTWD, 
+
+    cmdQueue_SendCommand (pTWD->hCmdQueue,
+                      CMD_READ_MEMORY,
+                      (char *)pCmd,
+                      sizeof(*pCmd),
+                      (void *)TWD_PrintMemRegsCB,
+                      hTWD,
                       &pTWD->tPrintRegsBuf);
 }
 
 static TI_STATUS TWD_PrintMemoryMapCb (TI_HANDLE hTWD, TI_STATUS status, void *pData)
 {
 #ifdef TI_DBG
-    TTwd        *pTWD = (TTwd *)hTWD;    
+    TTwd        *pTWD = (TTwd *)hTWD;
     MemoryMap_t  *pMemMap = &pTWD->MemMap;
 
     /* Print the memory map */
     WLAN_OS_REPORT (("TWD_PrintMemoryMap:\n"));
     WLAN_OS_REPORT (("\tCode  (0x%08x, 0x%08x)\n\tWep  (0x%08x, 0x%08x)\n\tTmpl (0x%08x, 0x%08x)\n "
                     "\tQueue (0x%08x, 0x%08x)\n\tPool (0x%08x, 0x%08x)\n\tTraceBuffer (A = 0x%08x, B = 0x%08x)\n",
-                    (TI_UINT32)pMemMap->codeStart, 
+                    (TI_UINT32)pMemMap->codeStart,
                     (TI_UINT32)pMemMap->codeEnd,
-                    (TI_UINT32)pMemMap->wepDefaultKeyStart, 
+                    (TI_UINT32)pMemMap->wepDefaultKeyStart,
                     (TI_UINT32)pMemMap->wepDefaultKeyEnd,
-                    (TI_UINT32)pMemMap->packetTemplateStart, 
+                    (TI_UINT32)pMemMap->packetTemplateStart,
                     (TI_UINT32)pMemMap->packetTemplateEnd,
-                    (TI_UINT32)pMemMap->queueMemoryStart, 
+                    (TI_UINT32)pMemMap->queueMemoryStart,
                     (TI_UINT32)pMemMap->queueMemoryEnd,
-                    (TI_UINT32)pMemMap->packetMemoryPoolStart, 
+                    (TI_UINT32)pMemMap->packetMemoryPoolStart,
                     (TI_UINT32)pMemMap->packetMemoryPoolEnd,
-                    (TI_UINT32)pMemMap->debugBuffer1Start, 
+                    (TI_UINT32)pMemMap->debugBuffer1Start,
                     (TI_UINT32)pMemMap->debugBuffer2Start));
 #endif /* TI_DBG */
 
@@ -247,7 +252,7 @@ static TI_STATUS TWD_PrintMemoryMapCb (TI_HANDLE hTWD, TI_STATUS status, void *p
  ****************************************************************************/
 static void TWD_PrintMemoryMap (TI_HANDLE hTWD)
 {
-    TTwd *pTWD = (TTwd *)hTWD;    
+    TTwd *pTWD = (TTwd *)hTWD;
 
     TWD_ItrMemoryMap (pTWD, &pTWD->MemMap, (void *)TWD_PrintMemoryMapCb, hTWD);
 }
@@ -271,7 +276,7 @@ static TI_STATUS TWD_StatisticsReadCB (TI_HANDLE hTWD, TI_UINT16 MboxStatus, ACX
         return TI_NOK;
     }
 
-    /* 
+    /*
      *  Handle FW statistics endianess
      *  ==============================
      */
@@ -354,19 +359,19 @@ static TI_STATUS TWD_StatisticsReadCB (TI_HANDLE hTWD, TI_UINT16 MboxStatus, ACX
     pElem->wep.WepDefaultKeyCount      = ENDIAN_HANDLE_LONG(pElem->wep.WepDefaultKeyCount);
     pElem->wep.WepKeyNotFound          = ENDIAN_HANDLE_LONG(pElem->wep.WepKeyNotFound);
     pElem->wep.WepDecryptFail          = ENDIAN_HANDLE_LONG(pElem->wep.WepDecryptFail);
-    
+
     /* AES */
-    pElem->aes.AesEncryptFail          = ENDIAN_HANDLE_LONG(pElem->aes.AesEncryptFail);     
-    pElem->aes.AesDecryptFail          = ENDIAN_HANDLE_LONG(pElem->aes.AesDecryptFail);     
-    pElem->aes.AesEncryptPackets       = ENDIAN_HANDLE_LONG(pElem->aes.AesEncryptPackets);  
-    pElem->aes.AesDecryptPackets       = ENDIAN_HANDLE_LONG(pElem->aes.AesDecryptPackets);  
+    pElem->aes.AesEncryptFail          = ENDIAN_HANDLE_LONG(pElem->aes.AesEncryptFail);
+    pElem->aes.AesDecryptFail          = ENDIAN_HANDLE_LONG(pElem->aes.AesDecryptFail);
+    pElem->aes.AesEncryptPackets       = ENDIAN_HANDLE_LONG(pElem->aes.AesEncryptPackets);
+    pElem->aes.AesDecryptPackets       = ENDIAN_HANDLE_LONG(pElem->aes.AesDecryptPackets);
     pElem->aes.AesEncryptInterrupt     = ENDIAN_HANDLE_LONG(pElem->aes.AesEncryptInterrupt);
     pElem->aes.AesDecryptInterrupt     = ENDIAN_HANDLE_LONG(pElem->aes.AesDecryptInterrupt);
 
     /* Events */
     pElem->event.calibration           = ENDIAN_HANDLE_LONG(pElem->event.calibration);
-    pElem->event.rxMismatch            = ENDIAN_HANDLE_LONG(pElem->event.rxMismatch); 
-    pElem->event.rxMemEmpty            = ENDIAN_HANDLE_LONG(pElem->event.rxMemEmpty); 
+    pElem->event.rxMismatch            = ENDIAN_HANDLE_LONG(pElem->event.rxMismatch);
+    pElem->event.rxMemEmpty            = ENDIAN_HANDLE_LONG(pElem->event.rxMemEmpty);
 
     /* PS */
     pElem->pwr.MissingBcnsCnt           = ENDIAN_HANDLE_LONG(pElem->pwr.MissingBcnsCnt);
@@ -385,7 +390,7 @@ static TI_STATUS TWD_StatisticsReadCB (TI_HANDLE hTWD, TI_UINT16 MboxStatus, ACX
 
     pElem->ps.psPollTimeOuts            = ENDIAN_HANDLE_LONG(pElem->ps.psPollTimeOuts);
     pElem->ps.upsdTimeOuts              = ENDIAN_HANDLE_LONG(pElem->ps.upsdTimeOuts);
-    pElem->ps.upsdMaxAPturn             = ENDIAN_HANDLE_LONG(pElem->ps.upsdMaxAPturn); 
+    pElem->ps.upsdMaxAPturn             = ENDIAN_HANDLE_LONG(pElem->ps.upsdMaxAPturn);
     pElem->ps.psPollMaxAPturn           = ENDIAN_HANDLE_LONG(pElem->ps.psPollMaxAPturn);
     pElem->ps.psPollUtilization         = ENDIAN_HANDLE_LONG(pElem->ps.psPollUtilization);
     pElem->ps.upsdUtilization           = ENDIAN_HANDLE_LONG(pElem->ps.upsdUtilization);
@@ -422,8 +427,8 @@ static TI_STATUS TWD_StatisticsReadCB (TI_HANDLE hTWD, TI_UINT16 MboxStatus, ACX
     pElem->radioCal.tuneTxPPAFail       = ENDIAN_HANDLE_LONG(pElem->radioCal.tuneTxPPAFail);
 
 
-    /* 
-     *  Print FW statistics 
+    /*
+     *  Print FW statistics
      *  ===================
      */
 
@@ -536,7 +541,7 @@ static TI_STATUS TWD_StatisticsReadCB (TI_HANDLE hTWD, TI_UINT16 MboxStatus, ACX
     WLAN_OS_REPORT(("rxMismatch    = %d\n", (TI_INT32)pElem->event.rxMismatch));
     WLAN_OS_REPORT(("rxMemEmpty    = %d\n", (TI_INT32)pElem->event.rxMemEmpty));
 
-   /* PsPoll/Upsd */ 
+   /* PsPoll/Upsd */
     WLAN_OS_REPORT(("----------- PsPoll / Upsd -----------\n"));
     WLAN_OS_REPORT(("psPollTimeOuts     = %d\n",(TI_INT32)pElem->ps.psPollTimeOuts));
     WLAN_OS_REPORT(("upsdTimeOuts       = %d\n",(TI_INT32)pElem->ps.upsdTimeOuts));
@@ -550,12 +555,12 @@ static TI_STATUS TWD_StatisticsReadCB (TI_HANDLE hTWD, TI_UINT16 MboxStatus, ACX
     /* Calibration */
     WLAN_OS_REPORT(("----------- Calibrations -------------\n"));
     WLAN_OS_REPORT(("calStateFail           = %d\n", (TI_INT32)pElem->radioCal.calStateFail));
-    WLAN_OS_REPORT(("initCalTotal           = %d\n", (TI_INT32)pElem->radioCal.initCalTotal));       
+    WLAN_OS_REPORT(("initCalTotal           = %d\n", (TI_INT32)pElem->radioCal.initCalTotal));
     WLAN_OS_REPORT(("initRadioBandsFail     = %d\n", (TI_INT32)pElem->radioCal.initRadioBandsFail));
     WLAN_OS_REPORT(("initRxIqMmFail         = %d\n", (TI_INT32)pElem->radioCal.initRxIqMmFail));
     WLAN_OS_REPORT(("initSetParams          = %d\n", (TI_INT32)pElem->radioCal.initSetParams));
-    WLAN_OS_REPORT(("initTxClpcFail         = %d\n", (TI_INT32)pElem->radioCal.initTxClpcFail));    
-    WLAN_OS_REPORT(("tuneCalTotal           = %d\n", (TI_INT32)pElem->radioCal.tuneCalTotal));  
+    WLAN_OS_REPORT(("initTxClpcFail         = %d\n", (TI_INT32)pElem->radioCal.initTxClpcFail));
+    WLAN_OS_REPORT(("tuneCalTotal           = %d\n", (TI_INT32)pElem->radioCal.tuneCalTotal));
     WLAN_OS_REPORT(("tuneDrpwChanTune       = %d\n", (TI_INT32)pElem->radioCal.tuneDrpwChanTune));
     WLAN_OS_REPORT(("tuneDrpwLnaTank        = %d\n", (TI_INT32)pElem->radioCal.tuneDrpwLnaTank));
     WLAN_OS_REPORT(("tuneDrpwPdBufFail      = %d\n", (TI_INT32)pElem->radioCal.tuneDrpwPdBufFail));
@@ -565,13 +570,13 @@ static TI_STATUS TWD_StatisticsReadCB (TI_HANDLE hTWD, TI_UINT16 MboxStatus, ACX
     WLAN_OS_REPORT(("tuneDrpwRxTxLpf        = %d\n", (TI_INT32)pElem->radioCal.tuneDrpwRxTxLpf));
     WLAN_OS_REPORT(("tuneDrpwTaCal          = %d\n", (TI_INT32)pElem->radioCal.tuneDrpwTaCal));
     WLAN_OS_REPORT(("tuneDrpwTxMixFreqFail  = %d\n", (TI_INT32)pElem->radioCal.tuneDrpwTxMixFreqFail));
-    WLAN_OS_REPORT(("tuneRxAnaDcFail        = %d\n", (TI_INT32)pElem->radioCal.tuneRxAnaDcFail));       
+    WLAN_OS_REPORT(("tuneRxAnaDcFail        = %d\n", (TI_INT32)pElem->radioCal.tuneRxAnaDcFail));
     WLAN_OS_REPORT(("tuneRxIqMmFail         = %d\n", (TI_INT32)pElem->radioCal.tuneRxIqMmFail));
     WLAN_OS_REPORT(("tuneTxClpcFail         = %d\n", (TI_INT32)pElem->radioCal.tuneTxClpcFail));
     WLAN_OS_REPORT(("tuneTxIqMmFail         = %d\n", (TI_INT32)pElem->radioCal.tuneTxIqMmFail));
     WLAN_OS_REPORT(("tuneTxLOLeakFail       = %d\n", (TI_INT32)pElem->radioCal.tuneTxLOLeakFail));
     WLAN_OS_REPORT(("tuneTxPdetFail         = %d\n", (TI_INT32)pElem->radioCal.tuneTxPdetFail));
-    WLAN_OS_REPORT(("tuneTxPPAFail          = %d\n", (TI_INT32)pElem->radioCal.tuneTxPPAFail)); 
+    WLAN_OS_REPORT(("tuneTxPPAFail          = %d\n", (TI_INT32)pElem->radioCal.tuneTxPPAFail));
 
 
 
@@ -579,7 +584,7 @@ static TI_STATUS TWD_StatisticsReadCB (TI_HANDLE hTWD, TI_UINT16 MboxStatus, ACX
     WLAN_OS_REPORT(("------  Power management  ----------\n"));
     if(pElem->pwr.RcvdBeaconsCnt != 0)
     {
-        WLAN_OS_REPORT(("MissingBcnsCnt    = %d (percentage <= %d) \n", 
+        WLAN_OS_REPORT(("MissingBcnsCnt    = %d (percentage <= %d) \n",
                 (TI_INT32)pElem->pwr.MissingBcnsCnt,
                 (TI_INT32)((pElem->pwr.MissingBcnsCnt * 100) / (pElem->pwr.RcvdBeaconsCnt + pElem->pwr.MissingBcnsCnt)) ));
     }
@@ -612,12 +617,12 @@ static TI_STATUS TWD_StatisticsReadCB (TI_HANDLE hTWD, TI_UINT16 MboxStatus, ACX
     WLAN_OS_REPORT(("9 Continuous Missed Beacons [Awake] = %d\n", (TI_INT32)(pElem->pwr.ContMissBcnsSpread[8] >> 16)));
     WLAN_OS_REPORT((">=10 Continuous Missed Beacons [Awake] = %d\n", (TI_INT32)(pElem->pwr.ContMissBcnsSpread[9] >> 16)));
 
-    return TI_OK;  
+    return TI_OK;
 }
 
 TI_STATUS TWD_Debug (TI_HANDLE hTWD, TI_UINT32 funcType, void *pParam)
 {
-    TTwd *pTWD                  = (TTwd *)hTWD;    
+    TTwd *pTWD                  = (TTwd *)hTWD;
     TI_UINT32 GenericVal;
     TFwDebugParams* pMemDebug   = (TFwDebugParams*)pParam;
 
@@ -627,7 +632,7 @@ TI_STATUS TWD_Debug (TI_HANDLE hTWD, TI_UINT32 funcType, void *pParam)
     /* check paramemters validity */
     if (pMemDebug == NULL)
     {
-        WLAN_OS_REPORT(("TWD_Debug: Error - pParam is NULL\n"));        
+        WLAN_OS_REPORT(("TWD_Debug: Error - pParam is NULL\n"));
         return TI_NOK;
     }
 
@@ -646,7 +651,7 @@ TI_STATUS TWD_Debug (TI_HANDLE hTWD, TI_UINT32 funcType, void *pParam)
         /* check paramemters validity */
         if (pParam == NULL)
         {
-            WLAN_OS_REPORT(("TWD_Debug, TWD_SET_GENERIC_ADDR Error: No Perameter received\n"));     
+            WLAN_OS_REPORT(("TWD_Debug, TWD_SET_GENERIC_ADDR Error: No Perameter received\n"));
             return TI_NOK;
         }
         GenericAddr = *(TI_UINT32 *)pParam;
@@ -658,46 +663,46 @@ TI_STATUS TWD_Debug (TI_HANDLE hTWD, TI_UINT32 funcType, void *pParam)
         /* check paramemters validity */
         if (pMemDebug == NULL)
         {
-            WLAN_OS_REPORT(("TWD_Debug, TWD_READ_MEM Error: No Perameters received\n"));        
+            WLAN_OS_REPORT(("TWD_Debug, TWD_READ_MEM Error: No Perameters received\n"));
             return TI_NOK;
         }
-  
+
         /* validate length */
-        *(TI_UINT32*)&pMemDebug->length = 4;        
+        *(TI_UINT32*)&pMemDebug->length = 4;
 
         /* If Address in valid Memory area and there is enough space for Length to R/W */
         if (TWD_isValidMemoryAddr(hTWD, pMemDebug) == TI_TRUE)
         {
-            WLAN_OS_REPORT(("TWD_Debug, TWD_READ_MEM: Reading Valid memory Address\n"));        
+            WLAN_OS_REPORT(("TWD_Debug, TWD_READ_MEM: Reading Valid memory Address\n"));
 
             /* Init buf before reading */
             os_memorySet(pTWD->hOs, (void*)pMemDebug->UBuf.buf8, 0, 4);
             if ( TWD_readMem (hTWD, pMemDebug, NULL, NULL) != TI_OK )
             {
-                WLAN_OS_REPORT(("TWD_Debug, read memory failed\n"));    
+                WLAN_OS_REPORT(("TWD_Debug, read memory failed\n"));
                 return TI_NOK;
             }
         }
 
         else if (TWD_isValidRegAddr(hTWD, pMemDebug) == TI_TRUE)
         {
-            WLAN_OS_REPORT(("TWD_Debug, TWD_READ_MEM: Reading Valid register Address\n"));      
+            WLAN_OS_REPORT(("TWD_Debug, TWD_READ_MEM: Reading Valid register Address\n"));
 
             /* Init buf before reading */
             *(TI_UINT32*)&pMemDebug->UBuf.buf32 = 0;
 
             if ( TWD_readMem (hTWD, pMemDebug, NULL, NULL) != TI_OK )
             {
-                WLAN_OS_REPORT(("TWD_Debug, read register failed\n"));  
+                WLAN_OS_REPORT(("TWD_Debug, read register failed\n"));
                 return TI_NOK;
             }
 
         }
 
-        /* address Not in valid Area */ 
+        /* address Not in valid Area */
         else
         {
-            WLAN_OS_REPORT(("TWD_Debug, TWD_READ_MEM Address is not Valid\n"));     
+            WLAN_OS_REPORT(("TWD_Debug, TWD_READ_MEM Address is not Valid\n"));
             return TI_NOK;
         }
 
@@ -713,39 +718,39 @@ TI_STATUS TWD_Debug (TI_HANDLE hTWD, TI_UINT32 funcType, void *pParam)
         break;
 
     case TWD_WRITE_MEM:
-        WLAN_OS_REPORT(("TWD_Debug, TWD_WRITE_MEM, Addr:    0x%X\n", pMemDebug->addr));             
+        WLAN_OS_REPORT(("TWD_Debug, TWD_WRITE_MEM, Addr:    0x%X\n", pMemDebug->addr));
 
         /* check paramemters validity */
         if (pMemDebug == NULL)
         {
-            WLAN_OS_REPORT(("TWD_Debug, TWD_WRITE_MEM Error: No Perameters received\n"));               
+            WLAN_OS_REPORT(("TWD_Debug, TWD_WRITE_MEM Error: No Perameters received\n"));
             return TI_NOK;
         }
 
         /* validate length */
-        *(TI_UINT32*)&pMemDebug->length = 4;        
+        *(TI_UINT32*)&pMemDebug->length = 4;
 
         /* If Address in valid Memory area and there is enough space for Length to R/W */
         if (TWD_isValidMemoryAddr(hTWD, pMemDebug) == TI_TRUE)
         {
-            WLAN_OS_REPORT(("TWD_Debug, TWD_WRITE_MEM:  Writing Valid memory Address\n"));      
+            WLAN_OS_REPORT(("TWD_Debug, TWD_WRITE_MEM:  Writing Valid memory Address\n"));
 
 
             return ( TWD_writeMem (hTWD, pMemDebug, NULL, NULL) );
         }
-        
+
         else if (TWD_isValidRegAddr(hTWD, pMemDebug) == TI_TRUE)
         {
 
-            WLAN_OS_REPORT(("TWD_Debug, TWD_WRITE_MEM: Writing Valid register Address\n"));     
+            WLAN_OS_REPORT(("TWD_Debug, TWD_WRITE_MEM: Writing Valid register Address\n"));
 
             return ( TWD_writeMem (hTWD, pMemDebug, NULL, NULL) );
         }
-        /* address Not in valid Area */ 
+        /* address Not in valid Area */
 
         else
         {
-            WLAN_OS_REPORT(("TWD_Debug, TWD_WRITE_MEM Address is not Valid\n"));        
+            WLAN_OS_REPORT(("TWD_Debug, TWD_WRITE_MEM Address is not Valid\n"));
             return TI_NOK;
         }
 
@@ -754,47 +759,47 @@ TI_STATUS TWD_Debug (TI_HANDLE hTWD, TI_UINT32 funcType, void *pParam)
          /*  HAL Control functions */
 
     case TWD_PRINT_MBOX_QUEUE_INFO:
-        cmdQueue_Print (pTWD->hCmdQueue);         
+        cmdQueue_Print (pTWD->hCmdQueue);
         break;
-            
+
     case TWD_PRINT_MBOX_PRINT_CMD:
         /* check paramemters validity */
         if (pParam == NULL)
         {
-            WLAN_OS_REPORT(("TWD_Debug, TWD_PRINT_MBOX_PRINT_CMD Error: No Perameter received\n"));             
+            WLAN_OS_REPORT(("TWD_Debug, TWD_PRINT_MBOX_PRINT_CMD Error: No Perameter received\n"));
             return TI_NOK;
         }
-        cmdQueue_PrintHistory (pTWD->hCmdQueue, *(int *)pParam);            
+        cmdQueue_PrintHistory (pTWD->hCmdQueue, *(int *)pParam);
         break;
 
     case TWD_PRINT_EVENT_MBOX_INFO:
-        eventMbox_Print (pTWD->hEventMbox);         
+        eventMbox_Print (pTWD->hEventMbox);
         break;
-        
+
     case TWD_PRINT_EVENT_MBOX_MASK:
         /* check paramemters validity */
         if (pParam == NULL)
         {
-            WLAN_OS_REPORT(("TWD_Debug, TWD_PRINT_EVENT_MBOX_MASK Error: No Perameter received\n"));                
+            WLAN_OS_REPORT(("TWD_Debug, TWD_PRINT_EVENT_MBOX_MASK Error: No Perameter received\n"));
             return TI_NOK;
         }
         if ( eventMbox_MaskEvent (pTWD->hEventMbox, *(int *)pParam, NULL, NULL) == TI_NOK )
         {
-            WLAN_OS_REPORT(("TWD_Debug, TWD_PRINT_EVENT_MBOX_MASK Error: eventMbox_EvMask failed\n"));              
+            WLAN_OS_REPORT(("TWD_Debug, TWD_PRINT_EVENT_MBOX_MASK Error: eventMbox_EvMask failed\n"));
             return(TI_NOK);
         }
         break;
-        
+
     case TWD_PRINT_EVENT_MBOX_UNMASK:
         /* check paramemters validity */
         if (pParam == NULL)
         {
-            WLAN_OS_REPORT(("TWD_Debug, TWD_PRINT_EVENT_MBOX_UNMASK Error: No Perameter received\n"));              
+            WLAN_OS_REPORT(("TWD_Debug, TWD_PRINT_EVENT_MBOX_UNMASK Error: No Perameter received\n"));
             return TI_NOK;
         }
         if ( eventMbox_UnMaskEvent (pTWD->hEventMbox, *(int *)pParam, NULL, NULL) == TI_NOK )
         {
-            WLAN_OS_REPORT(("TWD_Debug, TWD_PRINT_EVENT_MBOX_UNMASK Error: eventMbox_EvUnMask failed\n"));              
+            WLAN_OS_REPORT(("TWD_Debug, TWD_PRINT_EVENT_MBOX_UNMASK Error: eventMbox_EvUnMask failed\n"));
             return(TI_NOK);
         }
         break;
@@ -804,7 +809,7 @@ TI_STATUS TWD_Debug (TI_HANDLE hTWD, TI_UINT32 funcType, void *pParam)
             int i;
             for (i=0; i<20; i+=4)
             {
-                WLAN_OS_REPORT(("%4d: %08d %08d %08d %08d\n", 
+                WLAN_OS_REPORT(("%4d: %08d %08d %08d %08d\n",
                                 i, iStart[i+0], iStart[i+1], iStart[i+2], iStart[i+3]));
             }
         }
@@ -814,10 +819,10 @@ TI_STATUS TWD_Debug (TI_HANDLE hTWD, TI_UINT32 funcType, void *pParam)
         {
             int i;
             TI_UINT32 RegAddr;
-    
+
             RegAddr = *(TI_UINT32 *)pParam;
             WLAN_OS_REPORT (("PrintListRegsThroughMbox ---------------------\n"));
-    
+
             for (i = 0; i < 8; i++, RegAddr += 16)
             {
                 TWD_PrintMemRegs (hTWD, RegAddr +  0, 4, TNETW_MAC_REGISTERS);
@@ -827,22 +832,22 @@ TI_STATUS TWD_Debug (TI_HANDLE hTWD, TI_UINT32 funcType, void *pParam)
             }
         }
         break;
-    
+
     case TWD_PRINT_LIST_MEM_THROG_MBOX:
         /* check paramemters validity */
         if (pParam == NULL)
         {
-            WLAN_OS_REPORT(("TWD_Debug, TWD_PRINT_LIST_MEM_THROG_MBOX Error: No Perameter received\n"));                
+            WLAN_OS_REPORT(("TWD_Debug, TWD_PRINT_LIST_MEM_THROG_MBOX Error: No Perameter received\n"));
             return TI_NOK;
         }
         TWD_PrintMemRegs (hTWD, *(TI_UINT32*)pParam, 256, TNETW_INTERNAL_RAM);
         break;
-                  
+
     case TWD_SET_MAC_CLOCK:
         /* check paramemters validity */
         if (pParam == NULL)
         {
-            WLAN_OS_REPORT(("TWD_Debug, TWD_SET_MAC_CLOCK Error: No Perameter received\n"));                
+            WLAN_OS_REPORT(("TWD_Debug, TWD_SET_MAC_CLOCK Error: No Perameter received\n"));
             return TI_NOK;
         }
 
@@ -855,7 +860,7 @@ TI_STATUS TWD_Debug (TI_HANDLE hTWD, TI_UINT32 funcType, void *pParam)
         /* check paramemters validity */
         if (pParam == NULL)
         {
-            WLAN_OS_REPORT(("TWD_Debug, TWD_SET_ARM_CLOCK Error: No Perameter received\n"));                
+            WLAN_OS_REPORT(("TWD_Debug, TWD_SET_ARM_CLOCK Error: No Perameter received\n"));
             return TI_NOK;
         }
 
@@ -865,32 +870,32 @@ TI_STATUS TWD_Debug (TI_HANDLE hTWD, TI_UINT32 funcType, void *pParam)
 #endif
 
     /*
-    * Rx functions 
+    * Rx functions
     */
 #ifdef TI_DBG
     case TWD_PRINT_RX_INFO:
-        rxXfer_PrintStats (pTWD->hRxXfer);  
+        rxXfer_PrintStats (pTWD->hRxXfer);
         break;
 
     case TWD_CLEAR_RX_INFO:
-        rxXfer_ClearStats (pTWD->hRxXfer);  
+        rxXfer_ClearStats (pTWD->hRxXfer);
         break;
 
 #endif /* TI_DBG */
 
     /*
-    * Acx functions 
+    * Acx functions
     */
     case TWD_PRINT_ACX_MAP:
-        TWD_PrintMemoryMap (hTWD);           
+        TWD_PrintMemoryMap (hTWD);
         break;
-            
+
     case TWD_PRINT_ACX_STAT:
-        TWD_ItrStatistics (hTWD, (void*)TWD_StatisticsReadCB, hTWD, (void *)&pTWD->acxStatistic);          
+        TWD_ItrStatistics (hTWD, (void*)TWD_StatisticsReadCB, hTWD, (void *)&pTWD->acxStatistic);
         break;
-                        
+
     /*
-    * General functions 
+    * General functions
     */
     case TWD_PRINT_HELP:
 
@@ -916,11 +921,11 @@ TI_STATUS TWD_Debug (TI_HANDLE hTWD, TI_UINT32 funcType, void *pParam)
         WLAN_OS_REPORT(("        %02d - TWD_PRINT_ACX_MAP \n", TWD_PRINT_ACX_MAP));
         WLAN_OS_REPORT(("        %02d - TWD_PRINT_ACX_STAT \n", TWD_PRINT_ACX_STAT));
 
-        WLAN_OS_REPORT(("General: \n")); 
+        WLAN_OS_REPORT(("General: \n"));
         WLAN_OS_REPORT(("        %02d - TWD_PRINT_LIST_REGS_THROG_MBOX \n",  TWD_PRINT_LIST_REGS_THROG_MBOX));
         WLAN_OS_REPORT(("        %02d - TWD_PRINT_LIST_MEM_THROG_MBOX \n",  TWD_PRINT_LIST_MEM_THROG_MBOX));
-            
-        WLAN_OS_REPORT(("Recovery: \n")); 
+
+        WLAN_OS_REPORT(("Recovery: \n"));
         WLAN_OS_REPORT(("        %02d - TWD_CHECK_HW \n", TWD_CHECK_HW));
         WLAN_OS_REPORT(("        %02d - TWD_PRINT_HW_STATUS \n", TWD_PRINT_HW_STATUS));
 
@@ -935,7 +940,7 @@ TI_STATUS TWD_Debug (TI_HANDLE hTWD, TI_UINT32 funcType, void *pParam)
         WLAN_OS_REPORT(("        %02d - TWD_PRINT_MBOX_INFO \n",  TWD_PRINT_MBOX_INFO));
         WLAN_OS_REPORT(("        %02d - TWD_FORCE_TEMPLATES_RATES \n",  TWD_FORCE_TEMPLATES_RATES));
         break;
-       
+
     case TWD_PRINT_FW_EVENT_INFO:
         fwEvent_PrintStat(pTWD->hFwEvent);
         break;
@@ -947,8 +952,8 @@ TI_STATUS TWD_Debug (TI_HANDLE hTWD, TI_UINT32 funcType, void *pParam)
         break;
 
     /*
-    * Recovery functions 
-    */       
+    * Recovery functions
+    */
     case TWD_CHECK_HW:
         {
             int Stt;
@@ -964,7 +969,7 @@ TI_STATUS TWD_Debug (TI_HANDLE hTWD, TI_UINT32 funcType, void *pParam)
         /* check paramemters validity */
         if (pParam == NULL)
         {
-            WLAN_OS_REPORT(("TWD_Debug, TWD_MAILBOX_HISTORY_PRINT Error: No Perameter received\n"));                
+            WLAN_OS_REPORT(("TWD_Debug, TWD_MAILBOX_HISTORY_PRINT Error: No Perameter received\n"));
             return TI_NOK;
         }
 
@@ -975,7 +980,7 @@ TI_STATUS TWD_Debug (TI_HANDLE hTWD, TI_UINT32 funcType, void *pParam)
     case TWD_FORCE_TEMPLATES_RATES:
         if (pParam == NULL)
         {
-            WLAN_OS_REPORT(("TWD_Debug, TWD_FORCE_TEMPLATES_RATES Error: No Perameter received\n"));        
+            WLAN_OS_REPORT(("TWD_Debug, TWD_FORCE_TEMPLATES_RATES Error: No Perameter received\n"));
             return TI_NOK;
         }
         cmdBld_DbgForceTemplatesRates (pTWD->hCmdBld, *(TI_UINT32 *)pParam);
@@ -989,5 +994,5 @@ TI_STATUS TWD_Debug (TI_HANDLE hTWD, TI_UINT32 funcType, void *pParam)
     } /* switch (funcType) */
 
     return TI_OK;
-} 
+}
 

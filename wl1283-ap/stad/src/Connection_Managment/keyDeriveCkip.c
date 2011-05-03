@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * keyDeriveCkip.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file wepBroadcastKeyDerivation.c
  * \brief WEP broadcast key derivation implementation.
  *
@@ -39,7 +44,7 @@
  *                                                                          *
  ****************************************************************************/
 
-#ifdef CCX_MODULE_INCLUDED
+#ifdef XCC_MODULE_INCLUDED
 #define __FILE_ID__  FILE_ID_30
 #include "osApi.h"
 #include "report.h"
@@ -57,13 +62,13 @@
 *
 * keyDeriveCkip_config
 *
-* \b Description: 
+* \b Description:
 *
-* CKIP key derivation init function: 
+* CKIP key derivation init function:
 *							- Initializes the derive & remove callback functions
-*							- Resets the key material in the system control block								
+*							- Resets the key material in the system control block
 *
-* \b ARGS: 
+* \b ARGS:
 *
 *  None
 *
@@ -85,13 +90,13 @@ TI_STATUS keyDeriveCkip_config(struct _keyDerive_t *pKeyDerive)
 *
 * keyDeriveCkip_derive
 *
-* \b Description: 
+* \b Description:
 *
-* CKIP key derivation function: 
+* CKIP key derivation function:
 *							- Decodes the key material.
 *							- Distribute the decoded key material to the driver.
 *
-* \b ARGS: 
+* \b ARGS:
 *
 *  I - p - Pointer to the encoded key material.
 *
@@ -107,7 +112,7 @@ TI_STATUS keyDeriveCkip_derive(struct _keyDerive_t *pKeyDerive, encodedKeyMateri
     TI_UINT8               ckipIndex, keyIndex;
     TI_UINT8               ckipKey[KEY_DERIVE_CKIP_ENC_LEN];
 
-    key.keyType = KEY_CCX;
+    key.keyType = KEY_XCC;
     key.keyIndex = (TI_UINT8)pEncodedKey->keyId;
 
     if (pEncodedKey->keyLen != KEY_DERIVE_CKIP_ENC_LEN)
@@ -130,7 +135,7 @@ TI_STATUS keyDeriveCkip_derive(struct _keyDerive_t *pKeyDerive, encodedKeyMateri
            /*keyIndex = ((keyIndex+1) <pEncodedKey->keyLen) ? keyIndex+1 : 0;*/
         }
     }
-    else 
+    else
     {
         for (ckipIndex=0; ckipIndex<KEY_DERIVE_CKIP_ENC_LEN; ckipIndex++)
         {
@@ -146,7 +151,7 @@ TI_STATUS keyDeriveCkip_derive(struct _keyDerive_t *pKeyDerive, encodedKeyMateri
     {
         key.encLen = pEncodedKey->keyLen;
     }
-    
+
     /* Copy encryption key - not expand */
     os_memoryCopy(pKeyDerive->hOs, (void*)key.encKey, ckipKey, key.encLen);
     /* Copy the MIC keys */
@@ -161,17 +166,17 @@ TI_STATUS keyDeriveCkip_derive(struct _keyDerive_t *pKeyDerive, encodedKeyMateri
 
     return status;
 }
- 
+
 /**
 *
 * wepBroadcastKeyDerivationRemove
 *
-* \b Description: 
+* \b Description:
 *
-* WEP broadcast key removal function: 
+* WEP broadcast key removal function:
 *							- Remove the key material from the driver.
 *
-* \b ARGS: 
+* \b ARGS:
 *
 *  None.
 *
@@ -186,7 +191,7 @@ TI_STATUS keyDeriveCkip_remove(struct _keyDerive_t *pKeyDerive, encodedKeyMateri
     TSecurityKeys  key;
 
     os_memoryZero(pKeyDerive->hOs, &key, sizeof(TSecurityKeys));
-    key.keyType = KEY_CCX;
+    key.keyType = KEY_XCC;
     key.keyIndex = (TI_UINT8)pEncodedKey->keyId;
     key.encLen = KEY_DERIVE_CKIP_ENC_LEN;
 	MAC_COPY (key.macAddress, pEncodedKey->pData);
@@ -200,5 +205,5 @@ TI_STATUS keyDeriveCkip_remove(struct _keyDerive_t *pKeyDerive, encodedKeyMateri
     return status;
 }
 
-#endif /* CCX_MODULE_INCLUDED */
+#endif /* XCC_MODULE_INCLUDED */
 

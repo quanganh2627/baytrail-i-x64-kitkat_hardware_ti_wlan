@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * regulatoryDomain.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file regulatoryDomain.c
  *  \brief regulatoryDomain module interface
  *
@@ -56,34 +61,34 @@
 #include <linux/string.h>
 
 /* Mask for retrieving the TxPower from the Scan Control Table */
-#define MASK_TX_POWER					(0x1f) /* bits 0-4 indicates MaxTxPower */ 
+#define MASK_TX_POWER					(0x1f) /* bits 0-4 indicates MaxTxPower */
 #define MASK_ACTIVE_ALLOWED 			(0x40) /* bit 6 indiactes the channel is allowed for Active scan */
 #define MASK_FREQ_ALLOWED 				(0x80) /* bit 7 indicates the cahnnel is allowed*/
 
 #define CHANNEL_VALIDITY_TS_THRESHOLD   10000 /* 10 sec */
 
-/* 
+/*
 * Small macro to convert Dbm units into Dbm/10 units. This macro is important
 * in order to avoid over-flow of Dbm units bigger than 25
 */
 #define DBM2DBMDIV10(uTxPower) \
 	((uTxPower) > (MAX_TX_POWER / DBM_TO_TX_POWER_FACTOR) ? \
-		MAX_TX_POWER : (uTxPower) * DBM_TO_TX_POWER_FACTOR)		
+		MAX_TX_POWER : (uTxPower) * DBM_TO_TX_POWER_FACTOR)
 
 /********************************************************************************/
 /*						Internal functions prototypes.							*/
 /********************************************************************************/
 static TI_STATUS regulatoryDomain_updateCurrTxPower(regulatoryDomain_t	*pRegulatoryDomain);
 
-static void regulatoryDomain_setChannelValidity(regulatoryDomain_t *pRegulatoryDomain, 
+static void regulatoryDomain_setChannelValidity(regulatoryDomain_t *pRegulatoryDomain,
 												TI_UINT16 channelNum, TI_BOOL channelValidity);
 
 static TI_STATUS setSupportedChannelsAccording2CountryIe(regulatoryDomain_t *pRegulatoryDomain, TCountry*	pCountry, TI_BOOL band_2_4);
 
 static void setSupportedChannelsAccording2ScanControlTable(regulatoryDomain_t  *pRegulatoryDomain);
 
-static TI_STATUS regulatoryDomain_getChannelCapability(regulatoryDomain_t *pRegulatoryDomain, 
-													   channelCapabilityReq_t channelCapabilityReq, 
+static TI_STATUS regulatoryDomain_getChannelCapability(regulatoryDomain_t *pRegulatoryDomain,
+													   channelCapabilityReq_t channelCapabilityReq,
 													   channelCapabilityRet_t *channelCapabilityRet);
 
 static void regulatoryDomain_updateChannelsTs(regulatoryDomain_t *pRegulatoryDomain, TI_UINT8 channel);
@@ -109,14 +114,14 @@ TI_BOOL RegDomain_FindChanInCountryTbl(TI_UINT8 channel,TApChanHwInfo *ChanStruc
 /************************************************************************
  *                        regulatoryDomain_create									*
  ************************************************************************
-DESCRIPTION: regulatoryDomain module creation function, called by the config mgr in creation phase 
+DESCRIPTION: regulatoryDomain module creation function, called by the config mgr in creation phase
 				performs the following:
 				-	Allocate the regulatoryDomain handle
-				                                                                                                   
-INPUT:      hOs -			Handle to OS		
+
+INPUT:      hOs -			Handle to OS
 
 
-OUTPUT:		
+OUTPUT:
 
 RETURN:     Handle to the regulatoryDomain module on success, NULL otherwise
 
@@ -124,7 +129,7 @@ RETURN:     Handle to the regulatoryDomain module on success, NULL otherwise
 TI_HANDLE regulatoryDomain_create(TI_HANDLE hOs)
 {
 	regulatoryDomain_t			*pRegulatoryDomain = NULL;
-	
+
 	/* allocating the regulatoryDomain object */
 	pRegulatoryDomain = os_memoryAlloc(hOs,sizeof(regulatoryDomain_t));
 
@@ -142,10 +147,10 @@ DESCRIPTION: Module init function, Called by the DrvMain in init phase
 				performs the following:
 				-	Reset & initializes local variables
 				-	Init the handles to be used by the module
-                                                                                                   
+
 INPUT:      pStadHandles - List of handles to be used by the module
 
-OUTPUT:		
+OUTPUT:
 
 RETURN:     void
 ************************************************************************/
@@ -158,7 +163,7 @@ void regulatoryDomain_init (TStadHandlesList *pStadHandles)
 	pRegulatoryDomain->country_5_WasFound		= TI_FALSE;
 	pRegulatoryDomain->uExternTxPowerPreferred	= MAX_TX_POWER;	/* i.e. no restriction */
 	pRegulatoryDomain->uPowerConstraint			= MIN_TX_POWER;	/* i.e. no restriction */
-	 
+
 	/* Init handlers */
 	pRegulatoryDomain->hSiteMgr       = pStadHandles->hSiteMgr;
 	pRegulatoryDomain->hTWD	          = pStadHandles->hTWD;
@@ -176,13 +181,13 @@ DESCRIPTION: regulatoryDomain module configuration function, called by the confi
 				performs the following:
 				-	Reset & initializes local variables
 				-	Init the handles to be used by the module
-                                                                                                   
+
 INPUT:      hRegulatoryDomain	-	regulatoryDomain handle
 			List of handles to be used by the module
-			pRegulatoryDomainInitParams	-	Init table of the module.		
+			pRegulatoryDomainInitParams	-	Init table of the module.
 
 
-OUTPUT:		
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
@@ -193,14 +198,14 @@ TI_STATUS regulatoryDomain_SetDefaults (TI_HANDLE 	hRegulatoryDomain,
 	regulatoryDomain_t *pRegulatoryDomain = (regulatoryDomain_t *)hRegulatoryDomain;
 
 	/* User max Tx power for all channels */
-	pRegulatoryDomain->uUserMaxTxPower	  = pRegulatoryDomainInitParams->desiredTxPower; 
+	pRegulatoryDomain->uUserMaxTxPower	  = pRegulatoryDomainInitParams->desiredTxPower;
 	/* Temporary Tx Power control to be used */
     pRegulatoryDomain->uTemporaryTxPower  = pRegulatoryDomainInitParams->uTemporaryTxPower;
     pRegulatoryDomain->uDesiredTemporaryTxPower = pRegulatoryDomainInitParams->uTemporaryTxPower;
 
-    /* 
+    /*
 	 * Indicate the time in which the STA didn't receive any country code and was not connected, and therefore
-     * will delete its current country code 
+     * will delete its current country code
 	 */
     pRegulatoryDomain->uTimeOutToResetCountryMs = pRegulatoryDomainInitParams->uTimeOutToResetCountryMs;
 	pRegulatoryDomain->uLastCountryReceivedTS = 0;
@@ -211,7 +216,7 @@ TI_STATUS regulatoryDomain_SetDefaults (TI_HANDLE 	hRegulatoryDomain,
 	{
 		pRegulatoryDomain->regulatoryDomainEnabled = TI_TRUE;
 	}
-		
+
 	/* Getting the desired Control Table contents for 2.4 Ghz*/
 	os_memoryCopy(pRegulatoryDomain->hOs,
 				  (void *)pRegulatoryDomain->scanControlTable.ScanControlTable24.tableString,
@@ -238,8 +243,8 @@ TI_STATUS regulatoryDomain_setParam(TI_HANDLE hRegulatoryDomain,
 									paramInfo_t	*pParam)
 {
 	regulatoryDomain_t *pRegulatoryDomain = (regulatoryDomain_t *)hRegulatoryDomain;
-    
-			
+
+
 	switch(pParam->paramType)
 	{
     case REGULATORY_DOMAIN_COUNTRY_PARAM:
@@ -248,13 +253,13 @@ TI_STATUS regulatoryDomain_setParam(TI_HANDLE hRegulatoryDomain,
 
             /* Sanity check */
             if (NULL == pParam->content.pCountry)
-            {   
+            {
                 TRACE0(pRegulatoryDomain->hReport, REPORT_SEVERITY_ERROR, "regulatoryDomain_setParam, REGULATORY_DOMAIN_COUNTRY_PARAM is set with NULL pointer");
 
                 return TI_NOK;
             }
             else /* Update country code and supported channels */
-            {         
+            {
                 bBand_2_4 = siteMgr_isCurrentBand24(pRegulatoryDomain->hSiteMgr);
 
 			    /* Setting the CountryIE for every Band */
@@ -267,7 +272,7 @@ TI_STATUS regulatoryDomain_setParam(TI_HANDLE hRegulatoryDomain,
 
         /* Update only if 11h enabled */
         if (pRegulatoryDomain->spectrumManagementEnabled)
-		{	
+		{
             /* Convert to RegDomain units */
             TI_UINT8 uNewPowerConstraint = DBM2DBMDIV10(pParam->content.powerConstraint);
 
@@ -281,8 +286,8 @@ TRACE2(pRegulatoryDomain->hReport, REPORT_SEVERITY_INFORMATION, "SET_POWER_CONST
 				regulatoryDomain_updateCurrTxPower(pRegulatoryDomain);
 			}
         }
-		break;	
-		
+		break;
+
 	case REGULATORY_DOMAIN_EXTERN_TX_POWER_PREFERRED:
 		/* ExternTxPowerPreferred is the TX Power Control (TPC) */
 		{
@@ -298,20 +303,20 @@ TRACE2(pRegulatoryDomain->hReport, REPORT_SEVERITY_INFORMATION, "REGULATORY_DOMA
 				regulatoryDomain_updateCurrTxPower(pRegulatoryDomain);
 			}
 		}
-		break;	
-	
+		break;
+
 	case REGULATORY_DOMAIN_SET_CHANNEL_VALIDITY:
 		/* Set channel as Valid or Invalid for Active SCAN only.
 			Mainly used by DFS when Switch Channel is active */
-		regulatoryDomain_setChannelValidity(pRegulatoryDomain, pParam->content.channelValidity.channelNum, 
+		regulatoryDomain_setChannelValidity(pRegulatoryDomain, pParam->content.channelValidity.channelNum,
 															   pParam->content.channelValidity.channelValidity);
 		break;
-	
+
 	case REGULATORY_DOMAIN_CURRENT_TX_POWER_IN_DBM_PARAM:
 		/* This case is called when the desired Tx Power Level in Dbm is changed by the user */
         if(pRegulatoryDomain->uUserMaxTxPower != pParam->content.desiredTxPower)
         {
-            pRegulatoryDomain->uUserMaxTxPower = pParam->content.desiredTxPower;			
+            pRegulatoryDomain->uUserMaxTxPower = pParam->content.desiredTxPower;
 			/* Set new Tx power to TWD - only if needed ! */
 			regulatoryDomain_updateCurrTxPower(pRegulatoryDomain);
         }
@@ -325,7 +330,7 @@ TRACE2(pRegulatoryDomain->hReport, REPORT_SEVERITY_INFORMATION, "REGULATORY_DOMA
 
 	   /* setting the Tx Power according to the selected channel */
         regulatoryDomain_updateCurrTxPower(pRegulatoryDomain);
-        
+
 		break;
 
     case REGULATORY_DOMAIN_DISCONNECT_PARAM:
@@ -334,7 +339,7 @@ TRACE2(pRegulatoryDomain->hReport, REPORT_SEVERITY_INFORMATION, "REGULATORY_DOMA
         pRegulatoryDomain->uExternTxPowerPreferred = MAX_TX_POWER;	/* i.e. no restriction */
         pRegulatoryDomain->uPowerConstraint		   = MIN_TX_POWER;	/* i.e. no restriction */
 
-        /* Update the last time a country code was used. 
+        /* Update the last time a country code was used.
         After uTimeOutToResetCountryMs the country code will be deleted     */
         if (pRegulatoryDomain->country_2_4_WasFound || pRegulatoryDomain->country_5_WasFound)
         {
@@ -364,7 +369,7 @@ TRACE1(pRegulatoryDomain->hReport, REPORT_SEVERITY_INFORMATION, "regulatoryDomai
         {   /* Disable of 802_11d, is not allowed when 802_11h is enabled */
             TRACE0(pRegulatoryDomain->hReport, REPORT_SEVERITY_ERROR, "regulatoryDomain_setParam, Disable of 802_11d, is not allowed when 802_11h is enabled  \n");
             return TI_NOK;
-            
+
         }
         pRegulatoryDomain->regulatoryDomainEnabled = pParam->content.enableDisable_802_11d;
 
@@ -440,7 +445,7 @@ TI_STATUS regulatoryDomain_getParam(TI_HANDLE hRegulatoryDomain,
 	case REGULATORY_DOMAIN_TX_POWER_LEVEL_TABLE_PARAM:
         {
             TFwInfo *pFwInfo = TWD_GetFWInfo (pRegulatoryDomain->hTWD);
-            os_memoryCopy(pRegulatoryDomain->hOs, 
+            os_memoryCopy(pRegulatoryDomain->hOs,
                           (void *)&pParam->content.powerLevelTable,
                           (void *)pFwInfo->txPowerTable,
                           sizeof(pFwInfo->txPowerTable));
@@ -450,7 +455,7 @@ TI_STATUS regulatoryDomain_getParam(TI_HANDLE hRegulatoryDomain,
 	case REGULATORY_DOMAIN_MANAGEMENT_CAPABILITY_ENABLED_PARAM:
 		pParam->content.spectrumManagementEnabled = pRegulatoryDomain->spectrumManagementEnabled;
 		break;
-		
+
 	case REGULATORY_DOMAIN_ENABLED_PARAM:
 		pParam->content.regulatoryDomainEnabled = pRegulatoryDomain->regulatoryDomainEnabled;
 		break;
@@ -468,7 +473,7 @@ TI_STATUS regulatoryDomain_getParam(TI_HANDLE hRegulatoryDomain,
 		break;
 
 	case REGULATORY_DOMAIN_POWER_CAPABILITY_PARAM:
-		/* power capability is only applicable when spectrum management is active (802.11h) */ 
+		/* power capability is only applicable when spectrum management is active (802.11h) */
 		if(pRegulatoryDomain->spectrumManagementEnabled)
 		{
             regulatoryDomain_getPowerTableMinMax (pRegulatoryDomain, &pParam->content.powerCapability);
@@ -481,9 +486,9 @@ TI_STATUS regulatoryDomain_getParam(TI_HANDLE hRegulatoryDomain,
 
 	case REGULATORY_DOMAIN_IS_CHANNEL_SUPPORTED:
 		/* checking if the channel is supported */
-		pParam->content.bIsChannelSupprted  = 
+		pParam->content.bIsChannelSupprted  =
 			regulatoryDomain_isChannelSupprted(pRegulatoryDomain, pParam->content.channel);
-			
+
 		break;
 
 	case REGULATORY_DOMAIN_ALL_SUPPORTED_CHANNELS:
@@ -510,7 +515,7 @@ TRACE1(pRegulatoryDomain->hReport, REPORT_SEVERITY_INFORMATION, "regulatoryDomai
         break;
 
     case REGULATORY_DOMAIN_COUNTRY_PARAM:
-        {   
+        {
             /* This case is used as an inner function of the driver to retrieve the full IE of the country */
             TI_BOOL bBand_2_4 = siteMgr_isCurrentBand24(pRegulatoryDomain->hSiteMgr);
 
@@ -526,7 +531,7 @@ TRACE1(pRegulatoryDomain->hReport, REPORT_SEVERITY_INFORMATION, "regulatoryDomai
                 }
             }   /* band 5.0 */
             else
-            { 
+            {
                 if (pRegulatoryDomain->country_5_WasFound)
                 {
                    pParam->content.pCountry = &pRegulatoryDomain->country5;
@@ -538,7 +543,7 @@ TRACE1(pRegulatoryDomain->hReport, REPORT_SEVERITY_INFORMATION, "regulatoryDomai
             }
         }
         break;
-        
+
 	case REGULATORY_DOMAIN_COUNTRY_2_4_PARAM:
 		/* Getting only country string */
 
@@ -574,9 +579,9 @@ TRACE1(pRegulatoryDomain->hReport, REPORT_SEVERITY_INFORMATION, "regulatoryDomai
 
 	case REGULATORY_DOMAIN_IS_COUNTRY_FOUND:
 
-		pParam->content.bIsCountryFound = 
+		pParam->content.bIsCountryFound =
 			 regulatoryDomain_isCountryFound(pRegulatoryDomain, pParam->content.eRadioBand);
-		
+
 		break;
 
     case REGULATORY_DOMAIN_IS_DFS_CHANNEL:
@@ -620,7 +625,7 @@ TRACE1(pRegulatoryDomain->hReport, REPORT_SEVERITY_INFORMATION, "regulatoryDomai
             }
             else
             {
-                /* 
+                /*
                  * if country already expired (shouldn't happen as we are checking it at the top of
                  * get_param, but just in case...
                  */
@@ -630,7 +635,7 @@ TRACE1(pRegulatoryDomain->hReport, REPORT_SEVERITY_INFORMATION, "regulatoryDomai
                 }
                 else
                 {
-                    pParam->content.uTimeToCountryExpiryMs = 
+                    pParam->content.uTimeToCountryExpiryMs =
                         pRegulatoryDomain->uTimeOutToResetCountryMs - (uCurrentTS - pRegulatoryDomain->uLastCountryReceivedTS);
                 }
             }
@@ -652,14 +657,14 @@ TRACE1(pRegulatoryDomain->hReport, REPORT_SEVERITY_ERROR, "Get param, Params is 
 /************************************************************************
  *                        regulatoryDomain_destroy						*
  ************************************************************************
-DESCRIPTION: regulatoryDomain module destroy function, called by the config mgr in the destroy phase 
+DESCRIPTION: regulatoryDomain module destroy function, called by the config mgr in the destroy phase
 				performs the following:
 				-	Free all memory allocated by the module
-                                                                                                   
-INPUT:      hRegulatoryDomain	-	regulatoryDomain handle.		
+
+INPUT:      hRegulatoryDomain	-	regulatoryDomain handle.
 
 
-OUTPUT:		
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
@@ -680,12 +685,12 @@ TI_STATUS regulatoryDomain_destroy(TI_HANDLE hRegulatoryDomain)
  *                        regulatoryDomain_isCountryFound						*
  ************************************************************************
 DESCRIPTION: This function returns the validity of Country according to band
-                                                                                                   
-INPUT:      hRegulatoryDomain	-	regulatoryDomain handle.   
-            radioBand           - the desired band 	
+
+INPUT:      hRegulatoryDomain	-	regulatoryDomain handle.
+            radioBand           - the desired band
 
 
-OUTPUT:		
+OUTPUT:
 
 RETURN:     TI_TRUE - if country IE was found according to the band.
             TI_FALSE - otherwise.
@@ -706,7 +711,7 @@ TI_BOOL regulatoryDomain_isCountryFound(regulatoryDomain_t  *pRegulatoryDomain, 
 }
 
 /***********************************************************************
- *                       setSupportedChannelsAccording2CountryIe									
+ *                       setSupportedChannelsAccording2CountryIe
  ***********************************************************************
 DESCRIPTION:	Called when beacon/Probe Response with Country IE
 				is found.
@@ -715,11 +720,11 @@ DESCRIPTION:	Called when beacon/Probe Response with Country IE
 				 It is assumed that only one Country IE per band is allowed.
 				 If Country is changed when the TNET is loaded, it should
 				 be re-loaded in order to re-config the new Country domain.
-                                                                                                   
+
 INPUT:      hRegulatoryDomain	-	RegulatoryDomain handle.
 			pCountry	-	pointer to the detected country IE.
 
-OUTPUT:		
+OUTPUT:
 
 RETURN:     TI_OK - New country code was set (or the same one was already configured)
             TI_NOK - The new country code could not be set
@@ -732,7 +737,7 @@ static TI_STATUS setSupportedChannelsAccording2CountryIe(regulatoryDomain_t *pRe
 	TI_UINT8				tripletChannelIndex, tripletChannelCnt;
 	TI_UINT8				channelStep, numberOfChannels, minChannelNumber, maxChannelNumber;
 
-	
+
 	if (!pRegulatoryDomain->regulatoryDomainEnabled)
 	{  /* Ignore the Country IE if 802.11d is disabled */
 		return TI_NOK;
@@ -752,7 +757,7 @@ TRACE0(pRegulatoryDomain->hReport, REPORT_SEVERITY_WARNING, "setSupportedChannel
             }
             else    /* Same IE - just mark the TS and return TI_OK */
             {
-                /* Mark the time of the received country IE */                
+                /* Mark the time of the received country IE */
                 pRegulatoryDomain->uLastCountryReceivedTS = os_timeStampMs(pRegulatoryDomain->hOs);
                 return TI_OK;
             }
@@ -780,7 +785,7 @@ TRACE0(pRegulatoryDomain->hReport, REPORT_SEVERITY_WARNING, "setSupportedChannel
             }
             else    /* Same IE - just mark the TS and return TI_OK */
             {
-                /* Mark the time of the received country IE */                
+                /* Mark the time of the received country IE */
                 pRegulatoryDomain->uLastCountryReceivedTS = os_timeStampMs(pRegulatoryDomain->hOs);
                 return TI_OK;
             }
@@ -801,25 +806,25 @@ TRACE0(pRegulatoryDomain->hReport, REPORT_SEVERITY_WARNING, "setSupportedChannel
      * New Country IE was saved. Now - update the last received TS and ScanControlTable
      */
 
-    /* Mark the time of the received country IE */                
+    /* Mark the time of the received country IE */
     pRegulatoryDomain->uLastCountryReceivedTS = os_timeStampMs(pRegulatoryDomain->hOs);
 
-	/* First clear the validity of all channels 
+	/* First clear the validity of all channels
 		Overwrite the ScanControlTable */
 	for (channelIndex=0; channelIndex<numberOfChannels; channelIndex++)
 	{
 		pSupportedChannels[channelIndex].channelValidityActive = TI_FALSE;
 		pSupportedChannels[channelIndex].channelValidityPassive = TI_FALSE;
 		pSupportedChannels[channelIndex].bChanneInCountryIe = TI_FALSE;
-		pSupportedChannels[channelIndex].uMaxTxPowerDomain = MIN_TX_POWER; 	
+		pSupportedChannels[channelIndex].uMaxTxPowerDomain = MIN_TX_POWER;
 	}
-    
+
 	tripletChannelCnt = (pCountry->len - DOT11_COUNTRY_STRING_LEN) / 3;
 	/* set validity of the channels according to the band (2.4 or 5) */
 	for( tripletChannelIndex = 0; tripletChannelIndex < tripletChannelCnt ; tripletChannelIndex++)
 	{
 		TI_UINT8	firstChannelNumInTriplet;
-		
+
 		firstChannelNumInTriplet = pCountry->countryIE.tripletChannels[tripletChannelIndex].firstChannelNumber;
 TRACE2(pRegulatoryDomain->hReport, REPORT_SEVERITY_INFORMATION, "firstChannelNumInTriplet=%d,channelStep=%d\n", firstChannelNumInTriplet, channelStep);
 		for (channelIndex=0; channelIndex<pCountry->countryIE.tripletChannels[tripletChannelIndex].numberOfChannels; channelIndex++)
@@ -828,7 +833,7 @@ TRACE2(pRegulatoryDomain->hReport, REPORT_SEVERITY_INFORMATION, "firstChannelNum
 
 			channelNumber = firstChannelNumInTriplet+(channelIndex*channelStep);
 TRACE1(pRegulatoryDomain->hReport, REPORT_SEVERITY_INFORMATION, "setSupportedChannelsAccording2CountryIe of channel=%d\n", channelNumber);
-			
+
 			if (channelNumber <= maxChannelNumber)
 			{
 				TI_UINT8 	channelIndex4Band;
@@ -839,7 +844,7 @@ TRACE1(pRegulatoryDomain->hReport, REPORT_SEVERITY_INFORMATION, "setSupportedCha
 				pSupportedChannels[channelIndex4Band].channelValidityActive = TI_TRUE;
 
 				/* set the TX power in DBM/10 units */
-			    pSupportedChannels[channelIndex4Band].uMaxTxPowerDomain = 
+			    pSupportedChannels[channelIndex4Band].uMaxTxPowerDomain =
 					DBM2DBMDIV10(pCountry->countryIE.tripletChannels[tripletChannelIndex].maxTxPowerLevel);
 
 TRACE2(pRegulatoryDomain->hReport, REPORT_SEVERITY_INFORMATION, "channel = %d uMaxTxPowerDomain=%d\n", 										channelNumber, pSupportedChannels[channelIndex4Band].uMaxTxPowerDomain);
@@ -852,15 +857,15 @@ TRACE2(pRegulatoryDomain->hReport, REPORT_SEVERITY_INFORMATION, "channel = %d uM
 
 
 /***********************************************************************
- *                        regulatoryDomain_isChannelSupprted									
+ *                        regulatoryDomain_isChannelSupprted
  ***********************************************************************
 DESCRIPTION:	The function checks if the input channel is supported.
-                                                                                                   
+
 INPUT:      pRegulatoryDomain	-	RegulatoryDomain pointer.
 			channel				-	Channel number.
-			
 
-OUTPUT:		
+
+OUTPUT:
 
 RETURN:     TI_OK if channel is supported, TI_NOK otherwise.
 
@@ -889,14 +894,14 @@ static TI_BOOL regulatoryDomain_isChannelSupprted(regulatoryDomain_t *pRegulator
 		channelIndex = (channel-BG_24G_BAND_MIN_CHANNEL);
 		if (channelIndex >= NUM_OF_CHANNELS_24)
 		{
-			TRACE1(pRegulatoryDomain->hReport, REPORT_SEVERITY_ERROR, 
+			TRACE1(pRegulatoryDomain->hReport, REPORT_SEVERITY_ERROR,
 				   "regulatoryDomain_isChannelSupprted(): 2.4G invalid channel # %u\n", channel );
 			return TI_FALSE;
 		}
 		pSupportedChannels = pRegulatoryDomain->supportedChannels_band_2_4;
 	}
-	if (pRegulatoryDomain->spectrumManagementEnabled 
-		&& (channel >= pRegulatoryDomain->minDFS_channelNum) 
+	if (pRegulatoryDomain->spectrumManagementEnabled
+		&& (channel >= pRegulatoryDomain->minDFS_channelNum)
         && (channel <= pRegulatoryDomain->maxDFS_channelNum)
 		&& ((os_timeStampMs(pRegulatoryDomain->hOs)-pSupportedChannels[channelIndex].timestamp) >=CHANNEL_VALIDITY_TS_THRESHOLD ))
 	{	/* If 802.11h is enabled, a DFS channel is valid only for 10 sec
@@ -916,10 +921,10 @@ static TI_BOOL regulatoryDomain_isChannelSupprted(regulatoryDomain_t *pRegulator
 /*
 *
 *
-* \b Description: 
+* \b Description:
 *
 * This function sets a channel as invalid or valid in the internal Regulatory Domain
- * database. 
+ * database.
 *
 * \b ARGS:
 *
@@ -931,9 +936,9 @@ static TI_BOOL regulatoryDomain_isChannelSupprted(regulatoryDomain_t *pRegulator
 *
 *  None.
 *
-* 
+*
 *************************************************************************/
-static void regulatoryDomain_setChannelValidity(regulatoryDomain_t *pRegulatoryDomain, 
+static void regulatoryDomain_setChannelValidity(regulatoryDomain_t *pRegulatoryDomain,
 												TI_UINT16 channelNum, TI_BOOL channelValidity)
 {
 	channelCapability_t		*pSupportedChannels;
@@ -949,18 +954,18 @@ static void regulatoryDomain_setChannelValidity(regulatoryDomain_t *pRegulatoryD
 TRACE1(pRegulatoryDomain->hReport, REPORT_SEVERITY_ERROR, "regulatoryDomain_setChannelValidity, invalid channelNum=%d \n", channelNum);
 		return;
 	}
-	
+
 	if (channelNum <= NUM_OF_CHANNELS_24)
 	{
 		pSupportedChannels = pRegulatoryDomain->supportedChannels_band_2_4;
 		channelIndex = (channelNum-BG_24G_BAND_MIN_CHANNEL);
 	}
-	else 
+	else
 	{
 		pSupportedChannels = pRegulatoryDomain->supportedChannels_band_5;
 		channelIndex = (channelNum - A_5G_BAND_MIN_CHANNEL);
 	}
-	
+
 	if(channelValidity == TI_TRUE)
 		if((pSupportedChannels[channelIndex].bChanneInCountryIe == TI_FALSE) && (pRegulatoryDomain->regulatoryDomainEnabled == TI_TRUE))
 		{
@@ -981,7 +986,7 @@ TRACE1(pRegulatoryDomain->hReport, REPORT_SEVERITY_WARNING, "regulatoryDomain_se
 /**
 *
 *
-* \b Description: 
+* \b Description:
 *
 * This function is called in config and sets the supported channels according to
 * the scan control table read from registry and reg domain read from the chip.
@@ -994,7 +999,7 @@ TRACE1(pRegulatoryDomain->hReport, REPORT_SEVERITY_WARNING, "regulatoryDomain_se
 *
 *  None.
 *
-* 
+*
 *************************************************************************/
 static void setSupportedChannelsAccording2ScanControlTable(regulatoryDomain_t  *pRegulatoryDomain)
 {
@@ -1014,7 +1019,7 @@ static void setSupportedChannelsAccording2ScanControlTable(regulatoryDomain_t  *
 		pRegulatoryDomain->supportedChannels_band_2_4[channelIndex].bChanneInCountryIe = TI_FALSE;
 
 		/* Calculate Domain Tx Power - channelMask units are in Dbm. */
-		pRegulatoryDomain->supportedChannels_band_2_4[channelIndex].uMaxTxPowerDomain = 
+		pRegulatoryDomain->supportedChannels_band_2_4[channelIndex].uMaxTxPowerDomain =
 						DBM2DBMDIV10(channelMask & MASK_TX_POWER);
 		if (channelMask & (MASK_ACTIVE_ALLOWED | MASK_FREQ_ALLOWED))
 		{	/* The channel is allowed for Active & Passive scans */
@@ -1028,9 +1033,9 @@ static void setSupportedChannelsAccording2ScanControlTable(regulatoryDomain_t  *
 				pRegulatoryDomain->supportedChannels_band_2_4[channelIndex].channelValidityActive = TI_TRUE;
                 TRACE1(pRegulatoryDomain->hReport, REPORT_SEVERITY_INFORMATION, "channelIndex=%d is Active valid \n", channelIndex+1);
 			}
-			
+
 		}
-		
+
 		if (channelMask & MASK_FREQ_ALLOWED)
 		{	/* The channel is allowed for Passive scan */
 			pRegulatoryDomain->supportedChannels_band_2_4[channelIndex].channelValidityPassive = TI_TRUE;
@@ -1044,7 +1049,7 @@ static void setSupportedChannelsAccording2ScanControlTable(regulatoryDomain_t  *
 	}
 
 	for (channelIndex=A_5G_BAND_MIN_CHANNEL; channelIndex<A_5G_BAND_MAX_CHANNEL; channelIndex++)
-	{	
+	{
 		TI_UINT8	channelIndexInBand5;
 
 		channelIndexInBand5 = (channelIndex-A_5G_BAND_MIN_CHANNEL);
@@ -1052,7 +1057,7 @@ static void setSupportedChannelsAccording2ScanControlTable(regulatoryDomain_t  *
         TRACE3(pRegulatoryDomain->hReport, REPORT_SEVERITY_INFORMATION, "channelIndex=%d, channelIndexInBand5=%d channelMask=%d\n", channelIndex, channelIndexInBand5, channelMask);
 
 		/* Calculate Domain Tx Power - channelMask units are in Dbm. */
-		pRegulatoryDomain->supportedChannels_band_5[channelIndexInBand5].uMaxTxPowerDomain = 
+		pRegulatoryDomain->supportedChannels_band_5[channelIndexInBand5].uMaxTxPowerDomain =
 			DBM2DBMDIV10(channelMask & MASK_TX_POWER);
 
 		pRegulatoryDomain->supportedChannels_band_5[channelIndexInBand5].bChanneInCountryIe = TI_FALSE;
@@ -1067,9 +1072,9 @@ static void setSupportedChannelsAccording2ScanControlTable(regulatoryDomain_t  *
 			{
 				pRegulatoryDomain->supportedChannels_band_5[channelIndexInBand5].channelValidityActive = TI_TRUE;
                 TRACE2(pRegulatoryDomain->hReport, REPORT_SEVERITY_INFORMATION, "channelIndex=%d, channelIndexInBand5=%d, is Active valid \n", channelIndex, channelIndexInBand5);
-			}   		
+			}
 		}
-		
+
 		if (channelMask & MASK_FREQ_ALLOWED)
 		{	/* The channel is allowed for Passive scan */
 			pRegulatoryDomain->supportedChannels_band_5[channelIndexInBand5].channelValidityPassive = TI_TRUE;
@@ -1086,7 +1091,7 @@ static void setSupportedChannelsAccording2ScanControlTable(regulatoryDomain_t  *
 
 
 /***********************************************************************
-*                        regulatoryDomain_getChannelCapability									
+*                        regulatoryDomain_getChannelCapability
 ***********************************************************************
 DESCRIPTION:	This function returns the channel capability information
 
@@ -1099,8 +1104,8 @@ OUTPUT:		channelCapabilityRet	-   Channel capability information
 RETURN:     TI_OK if information was retrieved, TI_NOK otherwise.
 
 ************************************************************************/
-static TI_STATUS regulatoryDomain_getChannelCapability(regulatoryDomain_t *pRegulatoryDomain, 
-													   channelCapabilityReq_t channelCapabilityReq, 
+static TI_STATUS regulatoryDomain_getChannelCapability(regulatoryDomain_t *pRegulatoryDomain,
+													   channelCapabilityReq_t channelCapabilityReq,
 													   channelCapabilityRet_t *channelCapabilityRet)
 {
 	channelCapability_t		*pSupportedChannels;
@@ -1111,7 +1116,7 @@ static TI_STATUS regulatoryDomain_getChannelCapability(regulatoryDomain_t *pRegu
 	{
 		return TI_NOK;
 	}
-	
+
 	channelCapabilityRet->channelValidity = TI_FALSE;
 	channelCapabilityRet->maxTxPowerDbm = 0;
 	if ((channelCapabilityReq.channelNum==0 ) || (channelCapabilityReq.channelNum > A_5G_BAND_MAX_CHANNEL))
@@ -1119,14 +1124,14 @@ static TI_STATUS regulatoryDomain_getChannelCapability(regulatoryDomain_t *pRegu
         TRACE1(pRegulatoryDomain->hReport, REPORT_SEVERITY_ERROR, "regulatoryDomain_getChannelCapability, invalid channelNum=%d \n", channelCapabilityReq.channelNum);
 		return TI_NOK;
 	}
-	
+
 	if (channelCapabilityReq.band==RADIO_BAND_2_4_GHZ)
 	{
 		pSupportedChannels = pRegulatoryDomain->supportedChannels_band_2_4;
 		channelIndex = (channelCapabilityReq.channelNum-BG_24G_BAND_MIN_CHANNEL);
 		if (channelIndex >= NUM_OF_CHANNELS_24)
 		{
-			TRACE1(pRegulatoryDomain->hReport, REPORT_SEVERITY_ERROR, 
+			TRACE1(pRegulatoryDomain->hReport, REPORT_SEVERITY_ERROR,
 				   "regulatoryDomain_getChannelCapability(): 2.4G invalid channel # %u\n", channelCapabilityReq.channelNum );
 			return TI_NOK;
 		}
@@ -1138,7 +1143,7 @@ static TI_STATUS regulatoryDomain_getChannelCapability(regulatoryDomain_t *pRegu
 		channelIndex = (channelCapabilityReq.channelNum - A_5G_BAND_MIN_CHANNEL);
 		if (channelIndex >= A_5G_BAND_NUM_CHANNELS)
 		{
-			TRACE1(pRegulatoryDomain->hReport, REPORT_SEVERITY_ERROR, 
+			TRACE1(pRegulatoryDomain->hReport, REPORT_SEVERITY_ERROR,
 				   "regulatoryDomain_getChannelCapability(): 5G invalid channel # %u\n", channelCapabilityReq.channelNum);
 			return TI_NOK;
 		}
@@ -1151,8 +1156,8 @@ static TI_STATUS regulatoryDomain_getChannelCapability(regulatoryDomain_t *pRegu
 	}
 
 
-	/* 
-	 * Set channelValidity according to ScanTable and whether 11d is enabled 
+	/*
+	 * Set channelValidity according to ScanTable and whether 11d is enabled
 	 */
 	if (channelCapabilityReq.scanOption == ACTIVE_SCANNING)
 	{
@@ -1161,7 +1166,7 @@ static TI_STATUS regulatoryDomain_getChannelCapability(regulatoryDomain_t *pRegu
 			channelCapabilityRet->channelValidity = TI_FALSE;
 		}
 		else
-		{            
+		{
             paramInfo_t *pParam = (paramInfo_t *)os_memoryAlloc(pRegulatoryDomain->hOs, sizeof(paramInfo_t));
             if (!pParam)
             {
@@ -1171,7 +1176,7 @@ static TI_STATUS regulatoryDomain_getChannelCapability(regulatoryDomain_t *pRegu
             channelCapabilityRet->channelValidity = pSupportedChannels[channelIndex].channelValidityActive;
 			/*
 			 * Set Maximum Tx power for the channel - only for active scanning
-			 */ 
+			 */
 
 			/* Get current channel and check if we are using the same one */
 			pParam->paramType = SITE_MGR_CURRENT_CHANNEL_PARAM;
@@ -1180,9 +1185,9 @@ static TI_STATUS regulatoryDomain_getChannelCapability(regulatoryDomain_t *pRegu
 			bServingChannel = ( pParam->content.siteMgrCurrentChannel == channelCapabilityReq.channelNum ?
 								TI_TRUE : TI_FALSE );
 
-			channelCapabilityRet->maxTxPowerDbm = regulatoryDomain_getMaxPowerAllowed((TI_HANDLE)pRegulatoryDomain, 
-				channelCapabilityReq.channelNum, 
-				channelCapabilityReq.band, 
+			channelCapabilityRet->maxTxPowerDbm = regulatoryDomain_getMaxPowerAllowed((TI_HANDLE)pRegulatoryDomain,
+				channelCapabilityReq.channelNum,
+				channelCapabilityReq.band,
 				bServingChannel);
             os_memoryFree(pRegulatoryDomain->hOs, pParam, sizeof(paramInfo_t));
 
@@ -1199,10 +1204,10 @@ static TI_STATUS regulatoryDomain_getChannelCapability(regulatoryDomain_t *pRegu
 		channelCapabilityRet->channelValidity = pSupportedChannels[channelIndex].channelValidityPassive;
 	}
 	}
-	
-	if (pRegulatoryDomain->spectrumManagementEnabled 
+
+	if (pRegulatoryDomain->spectrumManagementEnabled
 		&& (channelCapabilityReq.scanOption == ACTIVE_SCANNING)
-        && (channelCapabilityReq.channelNum >= pRegulatoryDomain->minDFS_channelNum) 
+        && (channelCapabilityReq.channelNum >= pRegulatoryDomain->minDFS_channelNum)
         && (channelCapabilityReq.channelNum <= pRegulatoryDomain->maxDFS_channelNum)
 		&& ((os_timeStampMs(pRegulatoryDomain->hOs)-pSupportedChannels[channelIndex].timestamp) >=CHANNEL_VALIDITY_TS_THRESHOLD ))
 	{	/* If 802.11h is enabled, a DFS channel is valid only for 10 sec
@@ -1243,13 +1248,13 @@ static void regulatoryDomain_updateChannelsTs(regulatoryDomain_t *pRegulatoryDom
 		channelIndex = (channel-BG_24G_BAND_MIN_CHANNEL);
 		if (channelIndex >= NUM_OF_CHANNELS_24)
 		{
-			TRACE1(pRegulatoryDomain->hReport, REPORT_SEVERITY_ERROR, 
+			TRACE1(pRegulatoryDomain->hReport, REPORT_SEVERITY_ERROR,
 				   "regulatoryDomain_updateChannelsTs(): 2.4G invalid channel # %u\n", channel );
 			return;
 		}
 		pSupportedChannels = pRegulatoryDomain->supportedChannels_band_2_4;
 	}
-	
+
 	if((pSupportedChannels[channelIndex].bChanneInCountryIe == TI_FALSE) && (pRegulatoryDomain->regulatoryDomainEnabled == TI_TRUE))
   	{
 		TRACE1(pRegulatoryDomain->hReport, REPORT_SEVERITY_WARNING, "regulatoryDomain_updateChannelsTs: channelNum = %d isn't supported at the Country. wll not set to active!\n", channel);
@@ -1262,14 +1267,14 @@ static void regulatoryDomain_updateChannelsTs(regulatoryDomain_t *pRegulatoryDom
 }
 
 /***********************************************************************
- *              regulatoryDomain_updateCurrTxPower								
+ *              regulatoryDomain_updateCurrTxPower
  ***********************************************************************
 DESCRIPTION: Called when new Tx power should be calculated and configured.
-			 Check if we are already joined to BSS/IBSS, calculate 
+			 Check if we are already joined to BSS/IBSS, calculate
 			 new Tx power and configure it to TWD.
-				
+
 INPUT:		pRegulatoryDomain	- regulatoryDomain pointer.
-			
+
 RETURN:     TI_OK - New value was configured to TWD, TI_NOK - Can't configure value
 			TX_POWER_SET_SAME_VALUE - Same value was already configured.
 
@@ -1313,10 +1318,10 @@ static TI_STATUS regulatoryDomain_updateCurrTxPower(regulatoryDomain_t	*pRegulat
 	siteMgr_getParam(pRegulatoryDomain->hSiteMgr, pParam);
 
 	/* Calculate maximum Tx power for the serving channel */
-	uNewTxPower = regulatoryDomain_getMaxPowerAllowed((TI_HANDLE)pRegulatoryDomain, uCurrChannel, 
+	uNewTxPower = regulatoryDomain_getMaxPowerAllowed((TI_HANDLE)pRegulatoryDomain, uCurrChannel,
 													  pParam->content.siteMgrRadioBand, TI_TRUE);
-    os_memoryFree(pRegulatoryDomain->hOs, pParam, sizeof(paramInfo_t));	
-	
+    os_memoryFree(pRegulatoryDomain->hOs, pParam, sizeof(paramInfo_t));
+
 	/* Verify that the Temporary TX Power Control doesn't violate the TX Power Constraint */
 	pRegulatoryDomain->uTemporaryTxPower = TI_MIN(pRegulatoryDomain->uDesiredTemporaryTxPower, uNewTxPower);
 
@@ -1341,18 +1346,18 @@ static TI_STATUS regulatoryDomain_updateCurrTxPower(regulatoryDomain_t	*pRegulat
 }
 
 /***********************************************************************
- *                        regulatoryDomain_checkCountryCodeExpiry									
+ *                        regulatoryDomain_checkCountryCodeExpiry
  ***********************************************************************
 DESCRIPTION: Check & Reset the country code that was detected earlier.
-                Reseting country code will be done when the STA was not connected for 
+                Reseting country code will be done when the STA was not connected for
                 a certain amount of time, and no country code was received in that period (from the same country).
                 This scenario might indicate that the STA has moved to a different country.
-                                                                                                   
+
 INPUT:      pRegulatoryDomain	-	Regulatory Domain handle.
 
 OUTPUT:		updating country code if necessary.
 
-RETURN:     
+RETURN:
 
 ************************************************************************/
 void regulatoryDomain_checkCountryCodeExpiry(regulatoryDomain_t *pRegulatoryDomain)
@@ -1382,23 +1387,23 @@ void regulatoryDomain_checkCountryCodeExpiry(regulatoryDomain_t *pRegulatoryDoma
             /* Reset country codes */
             pRegulatoryDomain->country_2_4_WasFound = TI_FALSE;
             pRegulatoryDomain->country_5_WasFound = TI_FALSE;
-            
+
             /* Restore default values of the scan control table */
-            setSupportedChannelsAccording2ScanControlTable(pRegulatoryDomain); 
-        }         
+            setSupportedChannelsAccording2ScanControlTable(pRegulatoryDomain);
+        }
         os_memoryFree(pRegulatoryDomain->hOs, pParam, sizeof(paramInfo_t));
     }
 }
 
 /***********************************************************************
-*              regulatoryDomain_getMaxPowerAllowed								
+*              regulatoryDomain_getMaxPowerAllowed
 ***********************************************************************
 DESCRIPTION: Get the maximum tx power allowed for the given channel.
 				The final value is constructed by:
 				1) User max value
 				2) Domain restriction - 11d country code IE
 				3) 11h power constraint - only on serving channel
-				4) CCX TPC - only on serving channel
+				4) XCC TPC - only on serving channel
 
 RETURN:     Max power in Dbm/10 for the given channel
 
@@ -1435,8 +1440,8 @@ TI_UINT8 regulatoryDomain_getMaxPowerAllowed(TI_HANDLE hRegulatoryDomain,
 			/* When 802.11h is disabled, uPowerConstraint is 0 anyway */
 			uTxPower -= pRegulatoryDomain->uPowerConstraint;
 		}
-        
-        /* Take CCX limitation too */
+
+        /* Take XCC limitation too */
         uTxPower = TI_MIN(uTxPower, pRegulatoryDomain->uExternTxPowerPreferred);
 
 	}
@@ -1485,16 +1490,16 @@ TRACE1(pRegulatoryDomain->hReport, REPORT_SEVERITY_INFORMATION, "Channel num %d 
 			maxSupportedChannels++;
 		}
 	}
- 
+
 	*listSize = maxSupportedChannels;
-    
+
 }
 
 /***********************************************************************
-*              regulatoryDomain_getPowerTableMinMax								
+*              regulatoryDomain_getPowerTableMinMax
 ***********************************************************************
 DESCRIPTION: Find the Tx-power-level table min & max values.
-			 The table is made of 4 power levels and 5 bands/sub-bands. 
+			 The table is made of 4 power levels and 5 bands/sub-bands.
 
 RETURN:     void
 ************************************************************************/
@@ -1504,16 +1509,16 @@ static void regulatoryDomain_getPowerTableMinMax (regulatoryDomain_t *pRegulator
     TFwInfo  *pFwInfo = TWD_GetFWInfo (pRegulatoryDomain->hTWD);
 	TI_UINT8	i;
 
-    /* Init the min (max) to the opposite edge so the table values are below (above) this edge */ 
+    /* Init the min (max) to the opposite edge so the table values are below (above) this edge */
 	pPowerCapability->minTxPower = MAX_TX_POWER;
 	pPowerCapability->maxTxPower = MIN_TX_POWER;
 
 	/* Find Min and Max values of the table */
 	for (i = 0; i < NUMBER_OF_SUB_BANDS_E; i++)
 	{
-		pPowerCapability->minTxPower = TI_MIN (pPowerCapability->minTxPower, 
+		pPowerCapability->minTxPower = TI_MIN (pPowerCapability->minTxPower,
                                                pFwInfo->txPowerTable[i][NUM_OF_POWER_LEVEL-1]);
-		pPowerCapability->maxTxPower = TI_MAX (pPowerCapability->maxTxPower, 
+		pPowerCapability->maxTxPower = TI_MAX (pPowerCapability->maxTxPower,
                                                pFwInfo->txPowerTable[i][0]);
 	}
 }
@@ -1530,7 +1535,7 @@ void regDomainPrintValidTables(TI_HANDLE hRegulatoryDomain)
 			WLAN_OS_REPORT(("channel num =%d is valid for passive \n", channelIndex+1));
 		if (pRegulatoryDomain->supportedChannels_band_2_4[channelIndex].channelValidityActive)
 		{
-			WLAN_OS_REPORT(("channel =%d is valid for active TX power=%d\n", 
+			WLAN_OS_REPORT(("channel =%d is valid for active TX power=%d\n",
 				channelIndex+1, pRegulatoryDomain->supportedChannels_band_2_4[channelIndex].uMaxTxPowerDomain));
 		}
 	}
@@ -1543,12 +1548,12 @@ void regDomainPrintValidTables(TI_HANDLE hRegulatoryDomain)
 			WLAN_OS_REPORT(("channel =%d is valid for passive \n", channelNum));
 		if (pRegulatoryDomain->supportedChannels_band_5[channelIndex].channelValidityActive)
 		{
-			WLAN_OS_REPORT(("channel =%d is valid for active TX power=%d\n", 
+			WLAN_OS_REPORT(("channel =%d is valid for active TX power=%d\n",
 				channelNum,pRegulatoryDomain->supportedChannels_band_5[channelIndex].uMaxTxPowerDomain));
 		}
 		}
 
-	WLAN_OS_REPORT(("11h PowerConstraint = %d, CCX TPC = %d, User  = %d\n", 
+	WLAN_OS_REPORT(("11h PowerConstraint = %d, XCC TPC = %d, User  = %d\n",
 		pRegulatoryDomain->uPowerConstraint, pRegulatoryDomain->uExternTxPowerPreferred,
 		pRegulatoryDomain->uUserMaxTxPower));
 
@@ -1559,12 +1564,12 @@ void regDomain_GetActiveChannel(TI_HANDLE hRegulatoryDomain,TApChanHwInfo *pChan
 {
  regulatoryDomain_t  *pRegulatoryDomain = (regulatoryDomain_t *)hRegulatoryDomain;
  int i,index=0;
- 
+
  for (i=0;i<NUM_OF_CHANNELS_24;i++)
  {
   if (pRegulatoryDomain->scanControlTable.ScanControlTable24.tableString[i])
   {
-   pChanInfo->Chan24str[index] = i + 1; 
+   pChanInfo->Chan24str[index] = i + 1;
    index++;
   }
  }
@@ -1578,7 +1583,7 @@ void regDomain_GetActiveChannel(TI_HANDLE hRegulatoryDomain,TApChanHwInfo *pChan
   {
    if (pRegulatoryDomain->scanControlTable.ScanControlTable5.tableString[i])
    {
-    pChanInfo->Chan5str[index] = i + A_5G_BAND_MIN_CHANNEL; 
+    pChanInfo->Chan5str[index] = i + A_5G_BAND_MIN_CHANNEL;
     index++;
    }
   }

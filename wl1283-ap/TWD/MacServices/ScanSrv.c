@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * ScanSrv.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file ScanSrv.c
  *  \brief This file include the scan SRV module implementation
  *
@@ -71,7 +76,7 @@ TI_HANDLE MacServices_scanSRV_create( TI_HANDLE hOS )
         os_memoryFree( hOS, pScanSRV, sizeof(scanSRV_t));
         return NULL;
     }
- 
+
     /* store the OS handle */
     pScanSRV->hOS = hOS;
 
@@ -95,7 +100,7 @@ void MacServices_scanSRV_destroy( TI_HANDLE hScanSRV )
 	{
 		tmr_DestroyTimer (pScanSRV->hScanSrvTimer);
 	}
-    
+
     /* free memory */
     fsm_Unload( pScanSRV->hOS, pScanSRV->SM );
     os_memoryFree( pScanSRV->hOS, (TI_HANDLE)pScanSRV , sizeof(scanSRV_t));
@@ -128,7 +133,7 @@ TI_STATUS MacServices_scanSRV_init (TI_HANDLE hMacServices,
     pScanSRV->hPowerSrv = pMacServices->hPowerSrv;
     pScanSRV->hCmdBld = hCmdBld;
     pScanSRV->commandResponseFunc = NULL;
-    pScanSRV->commandResponseObj = NULL;  
+    pScanSRV->commandResponseObj = NULL;
 
     /* create the timer */
     pScanSRV->hScanSrvTimer = tmr_CreateTimer (pScanSRV->hTimer);
@@ -142,13 +147,13 @@ TI_STATUS MacServices_scanSRV_init (TI_HANDLE hMacServices,
     scanSRVSM_init ((TI_HANDLE)pScanSRV);
 
     /* Register our scan complete handler to the HAL events mailbox */
-    eventMbox_RegisterEvent (pScanSRV->hEventMbox, 
-                              TWD_OWN_EVENT_SCAN_CMPLT, 
-                              (void *)MacServices_scanSRV_scanCompleteCB, 
-                              (TI_HANDLE)pScanSRV); 
-    eventMbox_RegisterEvent (pScanSRV->hEventMbox, 
-                              TWD_OWN_EVENT_SPS_SCAN_CMPLT, 
-                              (void *)MacServices_scanSRV_scanCompleteCB, 
+    eventMbox_RegisterEvent (pScanSRV->hEventMbox,
+                              TWD_OWN_EVENT_SCAN_CMPLT,
+                              (void *)MacServices_scanSRV_scanCompleteCB,
+                              (TI_HANDLE)pScanSRV);
+    eventMbox_RegisterEvent (pScanSRV->hEventMbox,
+                              TWD_OWN_EVENT_SPS_SCAN_CMPLT,
+                              (void *)MacServices_scanSRV_scanCompleteCB,
                               (TI_HANDLE)pScanSRV);
 
     /* init other stuff */
@@ -215,7 +220,7 @@ void MacServices_scanSrv_config( TI_HANDLE hMacServices, TScanSrvInitParams* pIn
  * \param scanCompleteCB - the complete callback function.\n
  * \param hScanCompleteObj - handle to the object passed to the scan complete callback function.\n
  */
-void MacServices_scanSRV_registerScanCompleteCB( TI_HANDLE hMacServices, 
+void MacServices_scanSRV_registerScanCompleteCB( TI_HANDLE hMacServices,
                                      TScanSrvCompleteCb scanCompleteCB, TI_HANDLE hScanCompleteObj )
 {
     scanSRV_t *pScanSRV = (scanSRV_t*)((MacServices_t*)hMacServices)->hScanSRV;
@@ -232,7 +237,7 @@ void MacServices_scanSRV_registerScanCompleteCB( TI_HANDLE hMacServices,
  * \param failureEventCB - the failure event callback function.\n
  * \param hFailureEventObj - handle to the object passed to the failure event callback function.\n
  */
-void scanSRV_registerFailureEventCB( TI_HANDLE hScanSRV, 
+void scanSRV_registerFailureEventCB( TI_HANDLE hScanSRV,
                                      void * failureEventCB, TI_HANDLE hFailureEventObj )
 {
     scanSRV_t *pScanSRV = (scanSRV_t*)(hScanSRV);
@@ -261,8 +266,8 @@ void MacServices_scanSRVCommandMailBoxCB(TI_HANDLE hScanSrv,TI_UINT16 MboxStatus
 
     /* set response to TI_OK or TI_NOK */
     responseStatus = ((MboxStatus > 0) ? TI_NOK : TI_OK);
-    
-    /* if we have a Response Function (only in GWSI) we set it back to NULL and then 
+
+    /* if we have a Response Function (only in GWSI) we set it back to NULL and then
         we call it */
     if (pScanSRV->commandResponseFunc != NULL)
     {
@@ -296,15 +301,15 @@ void MacServices_scanSRVCommandMailBoxCB(TI_HANDLE hScanSrv,TI_UINT16 MboxStatus
  * \param bHighPriority - whether to perform a high priority (overlaps DTIM) scan.\n
  * \param bDriverMode - whether to try to enter driver mode (with PS on) before issuing the scan command.\n
  * \param bScanOnDriverModeError - whether to proceed with the scan if requested to enter driver mode and failed.\n
- * \param psRequest - Parameter sent to PowerSaveServer on PS request to indicate PS on or "keep current" 
+ * \param psRequest - Parameter sent to PowerSaveServer on PS request to indicate PS on or "keep current"
  * \param bSendNullData - whether to send Null data when exiting driver mode on scan complete.\n
  * \param commandResponseFunc - CB function which called after downloading the command. \n
  * \param commandResponseObj -  The CB function Obj (Notice : last 2 params are NULL in Legacy run). \n
- * \param psRequest - Parameter sent to PowerSaveServer on PS request to indicate PS on or "keep current" 
+ * \param psRequest - Parameter sent to PowerSaveServer on PS request to indicate PS on or "keep current"
  * \return TI_OK if successful (various, TBD codes if not).\n
  */
 TI_STATUS MacServices_scanSRV_scan( TI_HANDLE hMacServices, TScanParams *scanParams, EScanResultTag eScanTag,
-                                    TI_BOOL bHighPriority, TI_BOOL bDriverMode, TI_BOOL bScanOnDriverModeError, 
+                                    TI_BOOL bHighPriority, TI_BOOL bDriverMode, TI_BOOL bScanOnDriverModeError,
                         E80211PsMode psRequest, TI_BOOL bSendNullData,
                         TCmdResponseCb commandResponseFunc, TI_HANDLE commandResponseObj)
 {
@@ -380,7 +385,7 @@ TI_STATUS MacServices_scanSRV_scan( TI_HANDLE hMacServices, TScanParams *scanPar
     }
 
     pScanSRV->bInRequest = TI_FALSE;
-    
+
     return pScanSRV->returnStatus;
 }
 
@@ -421,7 +426,7 @@ TI_STATUS MacServices_scanSRV_stopScan( TI_HANDLE hMacServices, EScanResultTag e
     {
         return TI_NOK;
     }
-    
+
     /* send a stop scan event */
     scanSRVSM_SMEvent( (TI_HANDLE)pScanSRV, (scan_SRVSMStates_e*)&pScanSRV->SMState, SCAN_SRV_EVENT_STOP_SCAN );
 
@@ -485,7 +490,7 @@ void MacServices_scanSRV_powerSaveCB( TI_HANDLE hScanSRV, TI_UINT8 PSMode,TI_UIN
     else
     {
         /* if we are trying to enter PS and fail to do so - return error on scan complete */
-        if ( ENTER_POWER_SAVE_FAIL == psStatus) 
+        if ( ENTER_POWER_SAVE_FAIL == psStatus)
         {
             TRACE0( pScanSRV->hReport, REPORT_SEVERITY_WARNING, "PS enter failed . quiting scan .\n");
             /* Set the return status  */
@@ -527,7 +532,7 @@ void MacServices_scanSRV_scanCompleteCB( TI_HANDLE hScanSRV, char* str, TI_UINT3
     pScanSRV->eScanTag = (EScanResultTag)pResult->scanTag;
 
     /* copy scan SPS addmitted channels and SPS result */
-    if (TI_FALSE == pScanSRV->bSPSScan) 
+    if (TI_FALSE == pScanSRV->bSPSScan)
     {
         /* normal scan - no result is available */
         pScanSRV->bTSFError = TI_FALSE;
@@ -601,22 +606,22 @@ TI_UINT32 MacServices_scanSRVcalculateScanTimeout( TI_HANDLE hScanSRV, TScanPara
            constant (the maximum time between two frames from the Tid
            according to which the scan is triggered) by the number of channels.
            DTIM period is added only as precaution - since the scan is divided to
-           channels, only very few of them will be delayed due to DTIM (in the worst 
+           channels, only very few of them will be delayed due to DTIM (in the worst
            case), and this delay would be only the length of one channel scan.
            Eventually, Add the guard time.
-        3. for SPS scan: Measure the time from current TSF to the TSF at which the 
-           scan is scheduled to finish (done by the scan manager, and passed as 
-           a parameter in the scan structure). Add guard time. DTIM overlapping is not 
-           considered because if the scan overlaps DTIM the channels which are 
+        3. for SPS scan: Measure the time from current TSF to the TSF at which the
+           scan is scheduled to finish (done by the scan manager, and passed as
+           a parameter in the scan structure). Add guard time. DTIM overlapping is not
+           considered because if the scan overlaps DTIM the channels which are
            scheduled during the DTIM (if any) won't be scanned.
      ********************************************************************************/
 
     /* get DTIM time, if scanning in connected mode and need to consider DTIM */
-    if ( bConsiderDTIM ) 
-    {  
+    if ( bConsiderDTIM )
+    {
         /* new dtimPeriod calculation */
         uBeaconIntervalMs = MacServices_scanSRVConvertTUToMsec (pScanSRV->uBeaconInterval);
-        uDtimPeriodMs     = uBeaconIntervalMs * pScanSRV->uDtimPeriod; 
+        uDtimPeriodMs     = uBeaconIntervalMs * pScanSRV->uDtimPeriod;
     }
     else
     {
@@ -637,14 +642,14 @@ TI_UINT32 MacServices_scanSRVcalculateScanTimeout( TI_HANDLE hScanSRV, TScanPara
 
     case SCAN_TYPE_TRIGGERED_ACTIVE:
     case SCAN_TYPE_TRIGGERED_PASSIVE:
-        /* the timeout is the scan duration on all channels, plus the maximum time that can pass 
+        /* the timeout is the scan duration on all channels, plus the maximum time that can pass
            between two different frames from the same Tid */
         for ( i = 0; i < scanParams->numOfChannels; i++ )
         {
             timeout += scanParams->channelEntry[ i ].normalChannelEntry.maxChannelDwellTime;
         }
-        timeout = (timeout / 1000) + uDtimPeriodMs + 
-                  ((pScanSRV->uTriggeredScanTimeOut / 1000 + 1) * scanParams->numOfChannels) + 
+        timeout = (timeout / 1000) + uDtimPeriodMs +
+                  ((pScanSRV->uTriggeredScanTimeOut / 1000 + 1) * scanParams->numOfChannels) +
                   SCAN_SRV_FW_GUARD_TIME_MS;
         break;
 
@@ -686,8 +691,8 @@ TI_UINT32 MacServices_scanSRVConvertTUToMsec( TI_UINT32 tu )
  * \param uBeaconInterval - Beacon perios in TUs (1024 msec)
  * \return void
  */
-void MacServices_scanSrv_UpdateDtimTbtt (TI_HANDLE hMacServices, 
-                                         TI_UINT8  uDtimPeriod, 
+void MacServices_scanSrv_UpdateDtimTbtt (TI_HANDLE hMacServices,
+                                         TI_UINT8  uDtimPeriod,
                                          TI_UINT16 uBeaconInterval)
 {
     scanSRV_t *pScanSRV = (scanSRV_t*)((MacServices_t*)hMacServices)->hScanSRV;
@@ -739,7 +744,7 @@ void MacServices_scanSrv_printDebugStatus(TI_HANDLE hMacServices)
     {
         WLAN_OS_REPORT(("scanSrv bExitFromDriverMode=%d, bHighPriority=%d, bInRequest=%d,\n \
                         bScanOnDriverModeFailure=%d, bSendNullData=%d, bSPSScan=%d, bTimerRunning=%d, \n \
-                        psRequest=%d, scanType=%d\n", 
+                        psRequest=%d, scanType=%d\n",
                         pScanSRV->bExitFromDriverMode,
                         pScanSRV->bHighPriority,
                         pScanSRV->bInRequest,

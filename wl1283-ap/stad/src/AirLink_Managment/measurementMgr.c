@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * measurementMgr.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 /***************************************************************************/
 /*                                                                         */
@@ -46,15 +51,15 @@
 #include "TrafficMonitorAPI.h"
 #include "smeApi.h"
 #include "sme.h"
-#ifdef CCX_MODULE_INCLUDED
-#include "ccxTSMngr.h"
+#ifdef XCC_MODULE_INCLUDED
+#include "XCCTSMngr.h"
 #endif
 #include "TWDriver.h"
 
 /* default measurement parameters */
 #define MEASUREMENT_CAPABILITIES_NONE                   0x00
 #define MEASUREMENT_CAPABILITIES_DOT11H                 0x01
-#define MEASUREMENT_CAPABILITIES_CCX_RM                 0x02
+#define MEASUREMENT_CAPABILITIES_XCC_RM                 0x02
 
 
 #define MEASUREMENT_BEACON_INTERVAL_IN_MICRO_SEC        1024
@@ -86,7 +91,7 @@ static TI_BOOL measurementMgrSM_measureInProgress(TI_HANDLE hMeasurementMgr);
 
 /**
  * Creates the Measurement Manager moodule.
- * 
+ *
  * @param hOs A handle to the OS object.
  *
  * @date 16-Dec-2005
@@ -106,7 +111,7 @@ TI_HANDLE measurementMgr_create(TI_HANDLE hOs)
     pMeasurementMgr->hOs = hOs;
 
     /* creating the Measurement SM */
-    status = fsm_Create(pMeasurementMgr->hOs, &(pMeasurementMgr->pMeasurementMgrSm), 
+    status = fsm_Create(pMeasurementMgr->hOs, &(pMeasurementMgr->pMeasurementMgrSm),
                         MEASUREMENTMGR_NUM_STATES , MEASUREMENTMGR_NUM_EVENTS);
     if(status != TI_OK)
     {
@@ -115,7 +120,7 @@ TI_HANDLE measurementMgr_create(TI_HANDLE hOs)
     }
 
     /* creating the sub modules of measurement module */
-    
+
     /* creating Request Handler sub module */
     if( (pMeasurementMgr->hRequestH = requestHandler_create(hOs)) == NULL)
     {
@@ -132,19 +137,19 @@ TI_HANDLE measurementMgr_create(TI_HANDLE hOs)
 
 /**
  * Configures the Measurement Manager module.
- * 
+ *
  * @param pStadHandles Handles to other modules the Measurement Manager needs.
- * 
+ *
  * @date 16-Dec-2005
  */
 void measurementMgr_init (TStadHandlesList *pStadHandles)
 {
     measurementMgr_t *pMeasurementMgr = (measurementMgr_t *)(pStadHandles->hMeasurementMgr);
     paramInfo_t param;
-    
+
     /* Init Handlers */
     pMeasurementMgr->hRegulatoryDomain  = pStadHandles->hRegulatoryDomain;
-    pMeasurementMgr->hCcxMngr           = pStadHandles->hCcxMngr;
+    pMeasurementMgr->hXCCMngr           = pStadHandles->hXCCMngr;
     pMeasurementMgr->hSiteMgr           = pStadHandles->hSiteMgr;
     pMeasurementMgr->hTWD               = pStadHandles->hTWD;
     pMeasurementMgr->hMlme              = pStadHandles->hMlmeSm;
@@ -170,28 +175,28 @@ void measurementMgr_init (TStadHandlesList *pStadHandles)
     {
         pMeasurementMgr->Capabilities |= MEASUREMENT_CAPABILITIES_DOT11H;
     }
-    
+
     /* Init Functions */
     pMeasurementMgr->parserFrameReq = NULL;
     pMeasurementMgr->isTypeValid = NULL;
     pMeasurementMgr->buildReport = NULL;
     pMeasurementMgr->buildRejectReport = NULL;
     pMeasurementMgr->sendReportAndCleanObj = NULL;
-    
-    /* initialize variables */  
+
+    /* initialize variables */
     pMeasurementMgr->currentState = MEASUREMENTMGR_STATE_IDLE;
     pMeasurementMgr->isModuleRegistered = TI_FALSE;
     pMeasurementMgr->currentFrameType = MSR_FRAME_TYPE_NO_ACTIVE;
     pMeasurementMgr->measuredChannelID = 0;
     pMeasurementMgr->currentNumOfRequestsInParallel = 0;
-    
+
     /* config sub modules */
     RequestHandler_config(pMeasurementMgr->hRequestH, pStadHandles->hReport, pStadHandles->hOs);
 
     /* Register to the SCR module */
-    scr_registerClientCB(pMeasurementMgr->hScr, SCR_CID_CCX_MEASURE, measurementMgr_scrResponseCB, (TI_HANDLE)pMeasurementMgr);
+    scr_registerClientCB(pMeasurementMgr->hScr, SCR_CID_XCC_MEASURE, measurementMgr_scrResponseCB, (TI_HANDLE)pMeasurementMgr);
 
-    measurementMgrSM_config ((TI_HANDLE)pMeasurementMgr);   
+    measurementMgrSM_config ((TI_HANDLE)pMeasurementMgr);
 
     TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_INIT , ": Measurement Manager configured successfully\n");
 }
@@ -200,7 +205,7 @@ void measurementMgr_init (TStadHandlesList *pStadHandles)
 TI_STATUS measurementMgr_SetDefaults (TI_HANDLE hMeasurementMgr, measurementInitParams_t * pMeasurementInitParams)
 {
     measurementMgr_t * pMeasurementMgr = (measurementMgr_t *) hMeasurementMgr;
-#ifdef CCX_MODULE_INCLUDED
+#ifdef XCC_MODULE_INCLUDED
     TI_UINT32 currAC;
 #endif
 
@@ -215,7 +220,7 @@ TI_STATUS measurementMgr_SetDefaults (TI_HANDLE hMeasurementMgr, measurementInit
         return TI_NOK;
     }
 
-#ifdef CCX_MODULE_INCLUDED  
+#ifdef XCC_MODULE_INCLUDED
     /* allocating the per AC TS Metrics report timers */
     for (currAC = 0; currAC < MAX_NUM_OF_AC; currAC++)
     {
@@ -229,10 +234,10 @@ TI_STATUS measurementMgr_SetDefaults (TI_HANDLE hMeasurementMgr, measurementInit
         }
     }
 
-    /* Check in the Registry if the station supports CCX RM */
-    if (pMeasurementInitParams->ccxEnabled == CCX_MODE_ENABLED)
+    /* Check in the Registry if the station supports XCC RM */
+    if (pMeasurementInitParams->XCCEnabled == XCC_MODE_ENABLED)
     {
-        pMeasurementMgr->Capabilities |= MEASUREMENT_CAPABILITIES_CCX_RM;
+        pMeasurementMgr->Capabilities |= MEASUREMENT_CAPABILITIES_XCC_RM;
     }
 #endif
 
@@ -248,7 +253,7 @@ TI_STATUS measurementMgr_SetDefaults (TI_HANDLE hMeasurementMgr, measurementInit
  *
  * @param hMeasurementMgr A handle to the Measurement Manager module.
  * @param pParam The parameter to set.
- * 
+ *
  * @date 16-Dec-2005
  */
 TI_STATUS measurementMgr_setParam(TI_HANDLE hMeasurementMgr, paramInfo_t * pParam)
@@ -286,11 +291,11 @@ TI_STATUS measurementMgr_setParam(TI_HANDLE hMeasurementMgr, paramInfo_t * pPara
             {
                 TRACE1(pMeasurementMgr->hReport, REPORT_SEVERITY_ERROR, ": Invalid value for MEASUREMENT_TRAFFIC_THRESHOLD_PARAM (%d)\n", pParam->content.measurementTrafficThreshold);
             }
-        
+
             break;
         }
 
-        
+
         case MEASUREMENT_MAX_DURATION_PARAM:
         {
             TRACE1(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": MEASUREMENT_MAX_DURATION_PARAM <- %d\n", pParam->content.measurementMaxDuration);
@@ -299,7 +304,7 @@ TI_STATUS measurementMgr_setParam(TI_HANDLE hMeasurementMgr, paramInfo_t * pPara
 
             break;
         }
-        
+
 
         default:
         {
@@ -309,7 +314,7 @@ TI_STATUS measurementMgr_setParam(TI_HANDLE hMeasurementMgr, paramInfo_t * pPara
         }
 
     }
-    
+
     return TI_OK;
 }
 
@@ -322,7 +327,7 @@ TI_STATUS measurementMgr_setParam(TI_HANDLE hMeasurementMgr, paramInfo_t * pPara
  *
  * @param hMeasurementMgr A handle to the Measurement Manager module.
  * @param pParam The parameter to get.
- * 
+ *
  * @date 16-Dec-2005
  */
 TI_STATUS measurementMgr_getParam(TI_HANDLE hMeasurementMgr, paramInfo_t * pParam)
@@ -353,7 +358,7 @@ TI_STATUS measurementMgr_getParam(TI_HANDLE hMeasurementMgr, paramInfo_t * pPara
 
             break;
         }
-        
+
 
         default:
         {
@@ -376,7 +381,7 @@ TI_STATUS measurementMgr_getParam(TI_HANDLE hMeasurementMgr, paramInfo_t * pPara
  * Signals the Measurement Manager that the STA is connected.
  *
  * @param hMeasurementMgr A handle to the Measurement Manager module.
- * 
+ *
  * @date 16-Dec-2005
  */
 TI_STATUS measurementMgr_connected(TI_HANDLE hMeasurementMgr)
@@ -389,7 +394,7 @@ TI_STATUS measurementMgr_connected(TI_HANDLE hMeasurementMgr)
 
     TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": MeasurementMgr set to connected.\n");
 
-    return measurementMgrSM_event((TI_UINT8 *) &(pMeasurementMgr->currentState), 
+    return measurementMgrSM_event((TI_UINT8 *) &(pMeasurementMgr->currentState),
                                MEASUREMENTMGR_EVENT_CONNECTED, pMeasurementMgr);
 }
 
@@ -401,7 +406,7 @@ TI_STATUS measurementMgr_connected(TI_HANDLE hMeasurementMgr)
  * Signals the Measurement Manager that the STA is disconnected.
  *
  * @param hMeasurementMgr A handle to the Measurement Manager module.
- * 
+ *
  * @date 16-Dec-2005
  */
 TI_STATUS measurementMgr_disconnected(TI_HANDLE hMeasurementMgr)
@@ -410,7 +415,7 @@ TI_STATUS measurementMgr_disconnected(TI_HANDLE hMeasurementMgr)
 
     TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": MeasurementMgr set to disconnected.\n");
 
-    return measurementMgrSM_event((TI_UINT8 *) &(pMeasurementMgr->currentState), 
+    return measurementMgrSM_event((TI_UINT8 *) &(pMeasurementMgr->currentState),
                                 MEASUREMENTMGR_EVENT_DISCONNECTED, pMeasurementMgr);
 }
 
@@ -419,7 +424,7 @@ TI_STATUS measurementMgr_disconnected(TI_HANDLE hMeasurementMgr)
 
 /**
  * Enables the Measurement Manager module.
- * 
+ *
  * @date 10-Jan-2006
  */
 TI_STATUS measurementMgr_enable(TI_HANDLE hMeasurementMgr)
@@ -428,7 +433,7 @@ TI_STATUS measurementMgr_enable(TI_HANDLE hMeasurementMgr)
 
     TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": MeasurementMgr set to enabled.\n");
 
-    return measurementMgrSM_event((TI_UINT8 *) &(pMeasurementMgr->currentState), 
+    return measurementMgrSM_event((TI_UINT8 *) &(pMeasurementMgr->currentState),
                                 MEASUREMENTMGR_EVENT_ENABLE, pMeasurementMgr);
 }
 
@@ -438,7 +443,7 @@ TI_STATUS measurementMgr_enable(TI_HANDLE hMeasurementMgr)
 
 /**
  * Disables the Measurement Manager module.
- * 
+ *
  * @date 10-Jan-2006
  */
 TI_STATUS measurementMgr_disable(TI_HANDLE hMeasurementMgr)
@@ -447,7 +452,7 @@ TI_STATUS measurementMgr_disable(TI_HANDLE hMeasurementMgr)
 
     TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": MeasurementMgr set to disabled.\n");
 
-    return measurementMgrSM_event((TI_UINT8 *) &(pMeasurementMgr->currentState), 
+    return measurementMgrSM_event((TI_UINT8 *) &(pMeasurementMgr->currentState),
                                 MEASUREMENTMGR_EVENT_DISABLE, pMeasurementMgr);
 }
 
@@ -457,9 +462,9 @@ TI_STATUS measurementMgr_disable(TI_HANDLE hMeasurementMgr)
 
 /**
  * Destroys the Measurement Manager module.
- * 
+ *
  * @param hMeasurementMgr A handle to the Measurement Manager module.
- * 
+ *
  * @date 16-Dec-2005
  */
 TI_STATUS measurementMgr_destroy(TI_HANDLE hMeasurementMgr)
@@ -486,15 +491,15 @@ TI_STATUS measurementMgr_destroy(TI_HANDLE hMeasurementMgr)
 
 /**
  * Sets the Measurement Mode.
- * 
+ *
  * @param hMeasurementMgr A handle to the Measurement Manager module.
  * @param capabilities The AP capabilities.
  * @param pIeBuffer Pointer to the list of IEs.
  * @param length Length of the IE list.
- * 
+ *
  * @date 16-Dec-2005
  */
-TI_STATUS measurementMgr_setMeasurementMode(TI_HANDLE hMeasurementMgr, TI_UINT16 capabilities, 
+TI_STATUS measurementMgr_setMeasurementMode(TI_HANDLE hMeasurementMgr, TI_UINT16 capabilities,
                                          TI_UINT8 * pIeBuffer, TI_UINT16 length)
 {
     measurementMgr_t * pMeasurementMgr = (measurementMgr_t *) hMeasurementMgr;
@@ -510,11 +515,11 @@ TI_STATUS measurementMgr_setMeasurementMode(TI_HANDLE hMeasurementMgr, TI_UINT16
     else
     {
 */
-#ifdef CCX_MODULE_INCLUDED
+#ifdef XCC_MODULE_INCLUDED
 
-        if(pMeasurementMgr->Capabilities & MEASUREMENT_CAPABILITIES_CCX_RM)
+        if(pMeasurementMgr->Capabilities & MEASUREMENT_CAPABILITIES_XCC_RM)
         {
-                    pMeasurementMgr->Mode = MSR_MODE_CCX;
+                    pMeasurementMgr->Mode = MSR_MODE_XCC;
         }
         else
 #endif
@@ -524,7 +529,7 @@ TI_STATUS measurementMgr_setMeasurementMode(TI_HANDLE hMeasurementMgr, TI_UINT16
 
 
     TRACE1(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": MeasurementMgr mode changed to: %d\n", pMeasurementMgr->Mode);
-    
+
     return TI_OK;
 }
 
@@ -535,12 +540,12 @@ TI_STATUS measurementMgr_setMeasurementMode(TI_HANDLE hMeasurementMgr, TI_UINT16
 
 /**
  * Called when a frame with type measurement request is received.
- * 
+ *
  * @param hMeasurementMgr A handle to the Measurement Manager module.
  * @param frameType The frame type.
  * @param dataLen The length of the frame.
  * @param pData A pointer to the frame's content.
- * 
+ *
  * @date 16-Dec-2005
  */
 TI_STATUS measurementMgr_receiveFrameRequest(TI_HANDLE hMeasurementMgr,
@@ -550,9 +555,9 @@ TI_STATUS measurementMgr_receiveFrameRequest(TI_HANDLE hMeasurementMgr,
 {
     measurementMgr_t * pMeasurementMgr = (measurementMgr_t *) hMeasurementMgr;
 
-    TMeasurementFrameRequest * frame = &(pMeasurementMgr->newFrameRequest);    
+    TMeasurementFrameRequest * frame = &(pMeasurementMgr->newFrameRequest);
     TI_UINT16 currentFrameToken;
-    
+
     /* checking if measurement is enabled */
     if (pMeasurementMgr->Mode == MSR_MODE_NONE)
         return TI_NOK;
@@ -569,14 +574,14 @@ TI_STATUS measurementMgr_receiveFrameRequest(TI_HANDLE hMeasurementMgr,
     if (frameType == MSR_FRAME_TYPE_BROADCAST && pMeasurementMgr->currentFrameType == MSR_FRAME_TYPE_MULTICAST)
     {
         TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Broadcast measurement frame has been ignored\n");
-        
+
         return TI_NOK;
     }
 
     TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Measurement frame received\n");
 
     /* Parsing the Frame Request Header */
-    pMeasurementMgr->parserFrameReq(hMeasurementMgr, pData, dataLen, 
+    pMeasurementMgr->parserFrameReq(hMeasurementMgr, pData, dataLen,
                                         frame);
 
     frame->frameType = frameType;
@@ -585,7 +590,7 @@ TI_STATUS measurementMgr_receiveFrameRequest(TI_HANDLE hMeasurementMgr,
     if ((requestHandler_getFrameToken(pMeasurementMgr->hRequestH, &currentFrameToken) == TI_OK)
         && (currentFrameToken == frame->hdr->dialogToken))
     {
-        os_memoryZero(pMeasurementMgr->hOs, &pMeasurementMgr->newFrameRequest, 
+        os_memoryZero(pMeasurementMgr->hOs, &pMeasurementMgr->newFrameRequest,
                       sizeof(TMeasurementFrameRequest));
 
         TRACE1(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Measurement frame token %d is identical to current frame token - ignoring frame\n", currentFrameToken);
@@ -596,7 +601,7 @@ TI_STATUS measurementMgr_receiveFrameRequest(TI_HANDLE hMeasurementMgr,
     TRACE1(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Measurement frame token is %d\n", frame->hdr->dialogToken);
 
     /* Frame is Received for processing */
-    return measurementMgrSM_event((TI_UINT8 *) &(pMeasurementMgr->currentState), 
+    return measurementMgrSM_event((TI_UINT8 *) &(pMeasurementMgr->currentState),
                                MEASUREMENTMGR_EVENT_FRAME_RECV, pMeasurementMgr);
 }
 
@@ -606,9 +611,9 @@ TI_STATUS measurementMgr_receiveFrameRequest(TI_HANDLE hMeasurementMgr,
 
 /**
  * Activates the next measurement request.
- * 
+ *
  * @param hMeasurementMgr A handle to the Measurement Manager module.
- * 
+ *
  * @date 16-Dec-2005
  */
 TI_STATUS measurementMgr_activateNextRequest(TI_HANDLE hMeasurementMgr)
@@ -647,24 +652,24 @@ TI_STATUS measurementMgr_activateNextRequest(TI_HANDLE hMeasurementMgr)
         numOfRequestsInParallel = 0;
 
         /* Getting the next request/requests from the request handler */
-        status = requestHandler_getNextReq(pMeasurementMgr->hRequestH, TI_FALSE, pRequestArr, 
+        status = requestHandler_getNextReq(pMeasurementMgr->hRequestH, TI_FALSE, pRequestArr,
                                            &numOfRequestsInParallel);
-        
+
         /* Checking if there are no waiting requests */
         if (status != TI_OK)
         {
             TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": There are no waiting requests in the queue\n");
 
-            return measurementMgrSM_event((TI_UINT8 *) &(pMeasurementMgr->currentState), 
+            return measurementMgrSM_event((TI_UINT8 *) &(pMeasurementMgr->currentState),
                                MEASUREMENTMGR_EVENT_SEND_REPORT, pMeasurementMgr);
         }
 
         /* Checking validity of request/s */
-        valid = measurementMgr_isRequestValid(pMeasurementMgr, pRequestArr, 
+        valid = measurementMgr_isRequestValid(pMeasurementMgr, pRequestArr,
                                 numOfRequestsInParallel);
 
         /* Checking if the current request is Beacon Table */
-        if( (numOfRequestsInParallel == 1) && 
+        if( (numOfRequestsInParallel == 1) &&
             (pRequestArr[0]->Type == MSR_TYPE_BEACON_MEASUREMENT) &&
             (pRequestArr[0]->ScanMode == MSR_SCAN_MODE_BEACON_TABLE) )
         {
@@ -673,10 +678,10 @@ TI_STATUS measurementMgr_activateNextRequest(TI_HANDLE hMeasurementMgr)
             pMeasurementMgr->buildReport(hMeasurementMgr, *(pRequestArr[0]), NULL);
             valid = TI_FALSE; /* In order to get the next request/s*/
         }
-        
+
     } while (valid == TI_FALSE);
-    
-    
+
+
     TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Request(s) for activation:\n");
 
     for (index = 0; index < numOfRequestsInParallel; index++)
@@ -691,18 +696,18 @@ TI_STATUS measurementMgr_activateNextRequest(TI_HANDLE hMeasurementMgr)
 
         measurementMgr_rejectPendingRequests(pMeasurementMgr, MSR_REJECT_TRAFFIC_INTENSITY_TOO_HIGH);
 
-        return measurementMgrSM_event((TI_UINT8 *) &(pMeasurementMgr->currentState), 
+        return measurementMgrSM_event((TI_UINT8 *) &(pMeasurementMgr->currentState),
                                MEASUREMENTMGR_EVENT_SEND_REPORT, pMeasurementMgr);
     }
 
     TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Request is Valid, about to start\n");
-    
+
     pMeasurementMgr->measuredChannelID = pRequestArr[0]->channelNumber;
-  
+
     /* Request resource from the SCR */
-    return measurementMgrSM_event((TI_UINT8 *) &(pMeasurementMgr->currentState), 
-        MEASUREMENTMGR_EVENT_REQUEST_SCR, pMeasurementMgr);    
-}   
+    return measurementMgrSM_event((TI_UINT8 *) &(pMeasurementMgr->currentState),
+        MEASUREMENTMGR_EVENT_REQUEST_SCR, pMeasurementMgr);
+}
 
 
 
@@ -714,7 +719,7 @@ void measurementMgr_rejectPendingRequests(TI_HANDLE hMeasurementMgr, EMeasuremen
     TI_UINT8 numOfRequestsInParallel;
 
     /* reject all pending measurement requests */
-    while (requestHandler_getNextReq(pMeasurementMgr->hRequestH, TI_TRUE, 
+    while (requestHandler_getNextReq(pMeasurementMgr->hRequestH, TI_TRUE,
                 pRequestArr, &numOfRequestsInParallel) == TI_OK)
     {
         TRACE1(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Rejecting pending request (activeRequestID = %d)...\n", pRequestH->activeRequestID);
@@ -738,11 +743,11 @@ void measurementMgr_rejectPendingRequests(TI_HANDLE hMeasurementMgr, EMeasuremen
 /**
  * The callback called by the MeasurementSRV module when then
  * measurement operation has ended.
- * 
+ *
  * @param clientObj A handle to the Measurement Manager module.
  * @param msrReply An array of replies sent by the MeasurementSRV module,
  * where each reply contains the result of a single measurement request.
- * 
+ *
  * @date 01-Jan-2006
  */
 void measurementMgr_MeasurementCompleteCB(TI_HANDLE clientObj, TMeasurementReply * msrReply)
@@ -758,19 +763,19 @@ void measurementMgr_MeasurementCompleteCB(TI_HANDLE clientObj, TMeasurementReply
         pMeasurementMgr->buildReport(pMeasurementMgr, *(pMeasurementMgr->currentRequest[index]), &msrReply->msrTypes[index]);
     }
 
-    measurementMgrSM_event((TI_UINT8 *) &(pMeasurementMgr->currentState), 
+    measurementMgrSM_event((TI_UINT8 *) &(pMeasurementMgr->currentState),
             MEASUREMENTMGR_EVENT_COMPLETE, pMeasurementMgr);
 }
 
 
 /**
  * The callback called when the SCR responds to the SCR request.
- * 
+ *
  * @param hClient A handle to the Measurement Manager module.
  * @param requestStatus The request's status
  * @param eResource The resource for which the CB is issued
  * @param pendReason The reason of a PEND status.
- * 
+ *
  * @date 01-Jan-2006
  */
 void measurementMgr_scrResponseCB(TI_HANDLE hClient, EScrClientRequestStatus requestStatus,
@@ -808,7 +813,7 @@ void measurementMgr_scrResponseCB(TI_HANDLE hClient, EScrClientRequestStatus req
         }
     }
     else
-    {   
+    {
         /* This can only occur if FW reset occurs or when higher priority client is running. */
 
         if (requestStatus == SCR_CRS_FW_RESET)
@@ -825,7 +830,7 @@ void measurementMgr_scrResponseCB(TI_HANDLE hClient, EScrClientRequestStatus req
     }
     }
 
-    measurementMgrSM_event((TI_UINT8 *) &(pMeasurementMgr->currentState), 
+    measurementMgrSM_event((TI_UINT8 *) &(pMeasurementMgr->currentState),
         event, pMeasurementMgr);
 }
 
@@ -836,12 +841,12 @@ void measurementMgr_scrResponseCB(TI_HANDLE hClient, EScrClientRequestStatus req
 
 /**
  * The callback called by the MLME.
- * 
+ *
  * @param hMeasurementMgr A handle to the Measurement Manager module.
- * 
+ *
  * @date 01-Jan-2006
  */
-void measurementMgr_mlmeResultCB(TI_HANDLE hMeasurementMgr, TMacAddr * bssid, mlmeFrameInfo_t * frameInfo, 
+void measurementMgr_mlmeResultCB(TI_HANDLE hMeasurementMgr, TMacAddr * bssid, mlmeFrameInfo_t * frameInfo,
                                  TRxAttr * pRxAttr, TI_UINT8 * buffer, TI_UINT16 bufferLength)
 {
     measurementMgr_t * pMeasurementMgr = (measurementMgr_t *) hMeasurementMgr;
@@ -853,8 +858,8 @@ void measurementMgr_mlmeResultCB(TI_HANDLE hMeasurementMgr, TMacAddr * bssid, ml
 		return;
 	}
 
-	
-	/* erroneous frames are notifed to the measurmenet manager to update counter 
+
+	/* erroneous frames are notifed to the measurmenet manager to update counter
     (add counter sometimes in the future) Look at: scanCncn_ScanCompleteNotificationCB and
     scanCncn_MlmeResultCB */
     if (NULL == bssid)
@@ -900,15 +905,15 @@ void measurementMgr_mlmeResultCB(TI_HANDLE hMeasurementMgr, TMacAddr * bssid, ml
 
 /**
  * Releases the module's allocated objects according to the given init vector.
- * 
+ *
  * @param pMeasurementMgr A handle to the Measurement Manager module.
  * @param initVec The init vector with a bit set for each allocated object.
- * 
+ *
  * @date 01-Jan-2006
  */
 static void measurementMgr_releaseModule (measurementMgr_t * pMeasurementMgr)
 {
-#ifdef CCX_MODULE_INCLUDED
+#ifdef XCC_MODULE_INCLUDED
     TI_UINT32 currAC;
 #endif
 
@@ -917,7 +922,7 @@ static void measurementMgr_releaseModule (measurementMgr_t * pMeasurementMgr)
         tmr_DestroyTimer (pMeasurementMgr->hActivationDelayTimer);
     }
 
-#ifdef CCX_MODULE_INCLUDED
+#ifdef XCC_MODULE_INCLUDED
     for (currAC = 0; currAC < MAX_NUM_OF_AC; currAC++)
     {
         if (pMeasurementMgr->hTsMetricsReportTimer[currAC])
@@ -936,7 +941,7 @@ static void measurementMgr_releaseModule (measurementMgr_t * pMeasurementMgr)
     {
         requestHandler_destroy(pMeasurementMgr->hRequestH);
     }
-    
+
     os_memoryFree(pMeasurementMgr->hOs, pMeasurementMgr, sizeof(measurementMgr_t));
 }
 
@@ -945,11 +950,11 @@ static void measurementMgr_releaseModule (measurementMgr_t * pMeasurementMgr)
 /**
  * Checks whether the traffic intensity, i.e. number of packets per seconds, is higher
  * than the preconfigured threshold.
- * 
+ *
  * @param pMeasurementMgr A handle to the Measurement Manager module.
- * 
+ *
  * @return True iff the traffic intensity is high
- * 
+ *
  * @date 01-Jan-2006
  */
 static TI_BOOL measurementMgr_isTrafficIntensityHigherThanThreshold(measurementMgr_t * pMeasurementMgr)
@@ -960,10 +965,10 @@ static TI_BOOL measurementMgr_isTrafficIntensityHigherThanThreshold(measurementM
     pcksPerSec = TrafficMonitor_GetFrameBandwidth(pMeasurementMgr->hTrafficMonitor);
 
     TRACE1(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": pcksPerSec = %d\n", pcksPerSec);
-    
+
     if (pcksPerSec >= pMeasurementMgr->trafficIntensityThreshold)
         trafficIntensityHigh = TI_TRUE;
-    
+
     return trafficIntensityHigh;
 }
 
@@ -972,13 +977,13 @@ static TI_BOOL measurementMgr_isTrafficIntensityHigherThanThreshold(measurementM
 
 /**
  * Checks whether the given measurement request is valid.
- * 
+ *
  * @param hMeasurementMgr A handle to the Measurement Manager module.
  * @param pRequestArr The measurement request.
  * @param numOfRequest Number of type requests
- * 
+ *
  * @return True iff the request is valid
- * 
+ *
  * @date 01-Jan-2006
  */
 static TI_BOOL  measurementMgr_isRequestValid(TI_HANDLE hMeasurementMgr, MeasurementRequest_t *pRequestArr[],
@@ -997,7 +1002,7 @@ static TI_BOOL  measurementMgr_isRequestValid(TI_HANDLE hMeasurementMgr, Measure
         TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Request rejected due to invalid channel\n");
 
         if (pMeasurementMgr->currentFrameType == MSR_FRAME_TYPE_UNICAST)
-            pMeasurementMgr->buildRejectReport(pMeasurementMgr, pRequestArr, numOfRequest, 
+            pMeasurementMgr->buildRejectReport(pMeasurementMgr, pRequestArr, numOfRequest,
                                     MSR_REJECT_INVALID_CHANNEL);
 
         return TI_FALSE;
@@ -1006,7 +1011,7 @@ static TI_BOOL  measurementMgr_isRequestValid(TI_HANDLE hMeasurementMgr, Measure
     {
         TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Request channel is Valid\n");
     }
-    
+
     TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Starting to check each request:\n");
 
     /* Check Validity of each request */
@@ -1015,13 +1020,13 @@ static TI_BOOL  measurementMgr_isRequestValid(TI_HANDLE hMeasurementMgr, Measure
         TRACE1(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Checking request #%d:\n", requestIndex+1);
 
         /* Checking validity of the Request Type */
-        if (pMeasurementMgr->isTypeValid(hMeasurementMgr, pRequestArr[requestIndex]->Type, 
+        if (pMeasurementMgr->isTypeValid(hMeasurementMgr, pRequestArr[requestIndex]->Type,
                 pRequestArr[requestIndex]->ScanMode) == TI_FALSE)
         {
             TRACE2(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Request rejected due to invalid measurement type of request #%d (type = %d)\n", requestIndex+1, pRequestArr[requestIndex]->Type);
-            
+
             if(pMeasurementMgr->currentFrameType == MSR_FRAME_TYPE_UNICAST)
-                pMeasurementMgr->buildRejectReport(pMeasurementMgr, pRequestArr, numOfRequest, 
+                pMeasurementMgr->buildRejectReport(pMeasurementMgr, pRequestArr, numOfRequest,
                                         MSR_REJECT_INVALID_MEASUREMENT_TYPE);
 
             return TI_FALSE;
@@ -1032,7 +1037,7 @@ static TI_BOOL  measurementMgr_isRequestValid(TI_HANDLE hMeasurementMgr, Measure
         }
 
         /* For measurement types different than Beacon Table */
-        if ((pRequestArr[requestIndex]->Type != MSR_TYPE_BEACON_MEASUREMENT) || 
+        if ((pRequestArr[requestIndex]->Type != MSR_TYPE_BEACON_MEASUREMENT) ||
             (pRequestArr[requestIndex]->ScanMode != MSR_SCAN_MODE_BEACON_TABLE))
         {
             /* Checking Measurement request's duration only when request is on a non-serving channel */
@@ -1049,11 +1054,11 @@ static TI_BOOL  measurementMgr_isRequestValid(TI_HANDLE hMeasurementMgr, Measure
                     TRACE1(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Request #%d rejected because duration exceeds maximum duration\n", requestIndex+1);
 
                     TRACE2(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Duration = %d, MaxDurationOnNonServingChannel = %d\n", pRequestArr[requestIndex]->DurationTime, pMeasurementMgr->maxDurationOnNonServingChannel);
-                
+
                     if (pMeasurementMgr->currentFrameType == MSR_FRAME_TYPE_UNICAST)
-                        pMeasurementMgr->buildRejectReport(pMeasurementMgr, pRequestArr, numOfRequest, 
+                        pMeasurementMgr->buildRejectReport(pMeasurementMgr, pRequestArr, numOfRequest,
                                 MSR_REJECT_DURATION_EXCEED_MAX_DURATION);
-                
+
                     return TI_FALSE;
                 }
                 else
@@ -1078,11 +1083,11 @@ static TI_BOOL  measurementMgr_isRequestValid(TI_HANDLE hMeasurementMgr, Measure
                 if (pRequestArr[requestIndex]->DurationTime > dtimDuration)
                 {
                     TRACE1(pMeasurementMgr->hReport, REPORT_SEVERITY_WARNING, ": Request rejected due to DTIM overlap of request #%d\n", requestIndex+1);
-                                    
+
                     TRACE2(pMeasurementMgr->hReport, REPORT_SEVERITY_WARNING, ": Duration = %d, DTIM Duration = %d\n", pRequestArr[requestIndex]->DurationTime, dtimDuration);
-        
+
                     if (pMeasurementMgr->currentFrameType == MSR_FRAME_TYPE_UNICAST)
-                        pMeasurementMgr->buildRejectReport(pMeasurementMgr, pRequestArr, numOfRequest, 
+                        pMeasurementMgr->buildRejectReport(pMeasurementMgr, pRequestArr, numOfRequest,
                                                 MSR_REJECT_DTIM_OVERLAP);
 
                     return TI_FALSE;

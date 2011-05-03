@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * txCtrl.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /*******************************************************************************/
 /*                                                                             */
 /*      MODULE: txCtrl.c                                                       */
@@ -52,20 +57,20 @@
 #include "txCtrl.h"
 #include "txCtrl_Api.h"
 #include "DrvMainModules.h"
-#ifdef CCX_MODULE_INCLUDED
-#include "ccxMngr.h"
+#ifdef XCC_MODULE_INCLUDED
+#include "XCCMngr.h"
 #endif
 #include "bmtrace_api.h"
 #include "Ctrl.h"
 #include "txDataQueue_Api.h"
 
 
-/* 
+/*
  * Module internal functions prototypes:
  */
 
-/* Note: put here and not in txCtrl.h to avoid warning in the txCtrl submodules that include txCtrl.h */ 
- 
+/* Note: put here and not in txCtrl.h to avoid warning in the txCtrl submodules that include txCtrl.h */
+
 static void   txCtrl_TxCompleteCb (TI_HANDLE hTxCtrl, TxResultDescriptor_t *pTxResultInfo);
 static void   txCtrl_BuildDataPkt (txCtrl_t *pTxCtrl, TTxCtrlBlk *pPktCtrlBlk,
                                    TI_UINT32 uAc, TI_UINT32 uBackpressure);
@@ -73,18 +78,18 @@ static void	  txCtrl_BuildMgmtPkt (txCtrl_t *pTxCtrl, TTxCtrlBlk *pPktCtrlBlk, T
 static void   txCtrl_UpdateHighestAdmittedAcTable (txCtrl_t *pTxCtrl);
 static void   txCtrl_UpdateAcToTidMapping (txCtrl_t *pTxCtrl);
 static void   txCtrl_UpdateBackpressure (txCtrl_t *pTxCtrl, TI_UINT32 freedAcBitmap, TI_UINT32 freedLinkBitmap);
-static void   txCtrl_UpdateTxCounters (txCtrl_t *pTxCtrl, 
+static void   txCtrl_UpdateTxCounters (txCtrl_t *pTxCtrl,
                                        TxResultDescriptor_t *pTxResultInfo,
-                                       TTxCtrlBlk *pPktCtrlBlk, 
-                                       TI_UINT32 ac, 
+                                       TTxCtrlBlk *pPktCtrlBlk,
+                                       TI_UINT32 ac,
                                        TI_BOOL bIsDataPkt);
-#ifdef CCX_MODULE_INCLUDED  /* Needed only for CCX-V4 */
-static void   txCtrl_SetTxDelayCounters (txCtrl_t *pTxCtrl, 
-                                         TI_UINT32 ac, 
-                                         TI_UINT32 fwDelay, 
-                                         TI_UINT32 driverDelay, 
+#ifdef XCC_MODULE_INCLUDED  /* Needed only for XCC-V4 */
+static void   txCtrl_SetTxDelayCounters (txCtrl_t *pTxCtrl,
+                                         TI_UINT32 ac,
+                                         TI_UINT32 fwDelay,
+                                         TI_UINT32 driverDelay,
                                          TI_UINT32 mediumDelay);
-#endif /* CCX_MODULE_INCLUDED */
+#endif /* XCC_MODULE_INCLUDED */
 
 
 /********************************************************************************
@@ -112,7 +117,7 @@ static inline TI_UINT16 txCtrl_TranslateLengthToFw (TTxCtrlBlk *pPktCtrlBlk)
 	pPktCtrlBlk->tTxDescriptor.length = ENDIAN_HANDLE_WORD(uPktLen);/* Save FW format length in descriptor */
 
     /* Find last buffer (last buffer in use is pointed by uBufNum-1) */
-    for (uBufNum = 1; uBufNum < MAX_XFER_BUFS; uBufNum++) 
+    for (uBufNum = 1; uBufNum < MAX_XFER_BUFS; uBufNum++)
     {
         if (pPktCtrlBlk->tTxnStruct.aLen[uBufNum] == 0)
         {
@@ -121,7 +126,7 @@ static inline TI_UINT16 txCtrl_TranslateLengthToFw (TTxCtrlBlk *pPktCtrlBlk)
     }
     /* Add last word alignment pad also to the last buffer length */
     pPktCtrlBlk->tTxnStruct.aLen[uBufNum - 1] += uLastWordPad;
-    
+
     return uLastWordPad;
 }
 
@@ -134,7 +139,7 @@ static inline void txCtrl_TranslateTimeToFw (txCtrl_t *pTxCtrl, TTxCtrlBlk *pPkt
     pPktCtrlBlk->tTxPktParams.uDriverDelay = os_timeStampMs (pTxCtrl->hOs) - uPktStartTime;
 
     /* Translate packet timestamp to FW time and undate descriptor */
-    uPktStartTime = TWD_TranslateToFwTime (pTxCtrl->hTWD, uPktStartTime); 
+    uPktStartTime = TWD_TranslateToFwTime (pTxCtrl->hTWD, uPktStartTime);
 	pPktCtrlBlk->tTxDescriptor.startTime = ENDIAN_HANDLE_LONG (uPktStartTime);
 	pPktCtrlBlk->tTxDescriptor.lifeTime  = ENDIAN_HANDLE_WORD (uLifeTime);
 }
@@ -200,7 +205,7 @@ void txCtrl_Init (TStadHandlesList *pStadHandles)
 	pTxCtrl->hHealthMonitor = pStadHandles->hHealthMonitor;
 	pTxCtrl->hTimer         = pStadHandles->hTimer;
     pTxCtrl->hStaCap        = pStadHandles->hStaCap;
-    pTxCtrl->hCcxMngr       = pStadHandles->hCcxMngr;
+    pTxCtrl->hXCCMngr       = pStadHandles->hXCCMngr;
     pTxCtrl->hQosMngr       = pStadHandles->hQosMngr;
 	pTxCtrl->hRxData        = pStadHandles->hRxData;
 
@@ -211,7 +216,7 @@ void txCtrl_Init (TStadHandlesList *pStadHandles)
     pTxCtrl->encryptionFieldSize = 0;
     pTxCtrl->currBssType = BSS_INFRASTRUCTURE;
     pTxCtrl->busyAcBitmap = 0;
-	pTxCtrl->dbgPktSeqNum = 0;		
+	pTxCtrl->dbgPktSeqNum = 0;
 	pTxCtrl->bCreditCalcTimerRunning = TI_FALSE;
 	pTxCtrl->genericEthertype = ETHERTYPE_EAPOL;
 
@@ -233,15 +238,15 @@ void txCtrl_Init (TStadHandlesList *pStadHandles)
 
 
     /* Register the Tx-Complete callback function. */
-	TWD_RegisterCb (pTxCtrl->hTWD, 
-                    TWD_EVENT_TX_RESULT_SEND_PKT_COMPLETE, 
-					(void*)txCtrl_TxCompleteCb, 
+	TWD_RegisterCb (pTxCtrl->hTWD,
+                    TWD_EVENT_TX_RESULT_SEND_PKT_COMPLETE,
+					(void*)txCtrl_TxCompleteCb,
                     pStadHandles->hTxCtrl);
 
 	/* Register the Update-Busy-Map callback function. */
-	TWD_RegisterCb (pTxCtrl->hTWD, 
-                    TWD_EVENT_TX_HW_QUEUE_UPDATE_BUSY_MAP, 
-					(void *)txCtrl_UpdateBackpressure, 
+	TWD_RegisterCb (pTxCtrl->hTWD,
+                    TWD_EVENT_TX_HW_QUEUE_UPDATE_BUSY_MAP,
+					(void *)txCtrl_UpdateBackpressure,
                     pStadHandles->hTxCtrl);
 
     TRACE0(pTxCtrl->hReport, REPORT_SEVERITY_INIT, ".....Tx Data configured successfully\n");
@@ -251,14 +256,14 @@ void txCtrl_Init (TStadHandlesList *pStadHandles)
 /*************************************************************************
 *                        txCtrl_SetDefaults                                   *
 **************************************************************************
-* DESCRIPTION:  
+* DESCRIPTION:
 *
-* INPUT:        
+* INPUT:
 *               txDataInitParams - Tx Data creation parameters
-*               
+*
 * OUTPUT:
 *
-* RETURN:       
+* RETURN:
 *************************************************************************/
 TI_STATUS txCtrl_SetDefaults (TI_HANDLE hTxCtrl, txDataInitParams_t *txDataInitParams)
 {
@@ -268,7 +273,7 @@ TI_STATUS txCtrl_SetDefaults (TI_HANDLE hTxCtrl, txDataInitParams_t *txDataInitP
 	pTxCtrl->bCreditCalcTimerEnabled  = txDataInitParams->bCreditCalcTimerEnabled;
 
     /* Update queues mapping (AC/TID/Backpressure) after module init. */
-	txCtrl_UpdateQueuesMapping (hTxCtrl); 
+	txCtrl_UpdateQueuesMapping (hTxCtrl);
 
     /* allocate timer for credit calculation */
     pTxCtrl->hCreditTimer = tmr_CreateTimer (pTxCtrl->hTimer);
@@ -285,7 +290,7 @@ TI_STATUS txCtrl_SetDefaults (TI_HANDLE hTxCtrl, txDataInitParams_t *txDataInitP
 /***************************************************************************
 *                           txCtrl_Unload                                  *
 ****************************************************************************
-* DESCRIPTION:  This function unload the tx ctrl module. 
+* DESCRIPTION:  This function unload the tx ctrl module.
 *
 ***************************************************************************/
 TI_STATUS txCtrl_Unload (TI_HANDLE hTxCtrl)
@@ -332,8 +337,8 @@ TI_STATUS txCtrl_XmitData (TI_HANDLE hTxCtrl, TTxCtrlBlk *pPktCtrlBlk)
 	ETxHwQueStatus eHwQueStatus;
 	CL_TRACE_START_L3();
 
-	/* Get an admitted AC corresponding to the packet TID. 
-	 * If downgraded due to admission limitation, the TID is downgraded as well. 
+	/* Get an admitted AC corresponding to the packet TID.
+	 * If downgraded due to admission limitation, the TID is downgraded as well.
 	 */
 	SELECT_AC_FOR_TID (pTxCtrl, pPktCtrlBlk->tTxDescriptor.tid, uAc);
 	uHlid = pPktCtrlBlk->tTxDescriptor.hlid;
@@ -342,7 +347,7 @@ TI_STATUS txCtrl_XmitData (TI_HANDLE hTxCtrl, TTxCtrlBlk *pPktCtrlBlk)
 
 	pTxCtrl->dbgCounters.dbgNumPktsSent[uAc]++;
 	pTxCtrl->dbgLinkCounters.dbgNumPktsSent[uHlid]++;
-    
+
 	/* Call TxHwQueue for Hw resources allocation. */
 	{
 		CL_TRACE_START_L4();
@@ -351,7 +356,7 @@ TI_STATUS txCtrl_XmitData (TI_HANDLE hTxCtrl, TTxCtrlBlk *pPktCtrlBlk)
 	}
 
 #ifdef AP_MODE_ENABLED
-	/* 
+	/*
 	 * Check resource allocation status, first LINK status bits and then AC status bits
 	 */
 
@@ -421,8 +426,8 @@ TI_STATUS txCtrl_XmitData (TI_HANDLE hTxCtrl, TTxCtrlBlk *pPktCtrlBlk)
 	if (eStatus == TXN_STATUS_ERROR)
 	{
 		TRACE3(pTxCtrl->hReport, REPORT_SEVERITY_ERROR, "txCtrl_XmitData(): Xfer Error, queue = %d, link = %d, Status = %d\n", uAc, uHlid, eStatus);
-		pTxCtrl->dbgCounters.dbgNumPktsError[uAc]++;	
-		pTxCtrl->dbgLinkCounters.dbgNumPktsError[uHlid]++;	
+		pTxCtrl->dbgCounters.dbgNumPktsError[uAc]++;
+		pTxCtrl->dbgLinkCounters.dbgNumPktsError[uHlid]++;
 
 		/* Free the packet resources (packet and CtrlBlk)  */
 		txCtrl_FreePacket (pTxCtrl, pPktCtrlBlk, TI_NOK);
@@ -431,8 +436,8 @@ TI_STATUS txCtrl_XmitData (TI_HANDLE hTxCtrl, TTxCtrlBlk *pPktCtrlBlk)
 		return STATUS_XMIT_ERROR;
 	}
 
-	pTxCtrl->dbgCounters.dbgNumPktsSuccess[uAc]++;	
-	pTxCtrl->dbgLinkCounters.dbgNumPktsSuccess[uHlid]++;	
+	pTxCtrl->dbgCounters.dbgNumPktsSuccess[uAc]++;
+	pTxCtrl->dbgLinkCounters.dbgNumPktsSuccess[uHlid]++;
 
 	CL_TRACE_END_L3("tiwlan_drv.ko", "INHERIT", "TX", "");
 	return STATUS_XMIT_SUCCESS;
@@ -442,7 +447,7 @@ TI_STATUS txCtrl_XmitData (TI_HANDLE hTxCtrl, TTxCtrlBlk *pPktCtrlBlk)
 /*******************************************************************************
 *                          txCtrl_XmitMgmt		                               *
 ********************************************************************************
-* DESCRIPTION:  Get a packet from the Mgmt-Queue (management, EAPOL or IAPP), 
+* DESCRIPTION:  Get a packet from the Mgmt-Queue (management, EAPOL or IAPP),
 *				  allocate HW resources and CtrlBlk, build header if Ethernet (EAPOL),
 *				  build descriptor, and send packet to HW by TxXfer.
 *
@@ -459,8 +464,8 @@ TI_STATUS txCtrl_XmitMgmt (TI_HANDLE hTxCtrl, TTxCtrlBlk *pPktCtrlBlk)
 	ETxHwQueStatus eHwQueStatus;
 	TI_UINT32  uHlid;
 
-	/* Get an admitted AC corresponding to the packet TID. 
-	 * If downgraded due to admission limitation, the TID is downgraded as well. 
+	/* Get an admitted AC corresponding to the packet TID.
+	 * If downgraded due to admission limitation, the TID is downgraded as well.
 	 */
 	SELECT_AC_FOR_TID (pTxCtrl, pPktCtrlBlk->tTxDescriptor.tid, uAc);
 	uHlid = pPktCtrlBlk->tTxDescriptor.hlid;
@@ -471,7 +476,7 @@ TI_STATUS txCtrl_XmitMgmt (TI_HANDLE hTxCtrl, TTxCtrlBlk *pPktCtrlBlk)
 	eHwQueStatus = TWD_txHwQueue_AllocResources (pTxCtrl->hTWD, pPktCtrlBlk);
 
 #ifdef AP_MODE_ENABLED
-	/* 
+	/*
 	 * Check resource allocation status, first LINK status bits and then AC status bits
 	 */
 
@@ -532,8 +537,8 @@ TI_STATUS txCtrl_XmitMgmt (TI_HANDLE hTxCtrl, TTxCtrlBlk *pPktCtrlBlk)
 	if (eStatus == TXN_STATUS_ERROR)
 	{
 		TRACE3(pTxCtrl->hReport, REPORT_SEVERITY_ERROR, "txCtrl_XmitMgmt(): Xfer Error, queue=%d, link=%d, Status = %d\n", uAc, uHlid, eStatus);
-		pTxCtrl->dbgCounters.dbgNumPktsError[uAc]++;	
-		pTxCtrl->dbgLinkCounters.dbgNumPktsError[uHlid]++;	
+		pTxCtrl->dbgCounters.dbgNumPktsError[uAc]++;
+		pTxCtrl->dbgLinkCounters.dbgNumPktsError[uHlid]++;
 
         /* On mgmt frames, send Tx complete packet with error indication to hostapd */
         if (IS_PKT_TYPE_IF_ROLE_AP(pPktCtrlBlk) && (pPktCtrlBlk->tTxPktParams.uPktType == TX_PKT_TYPE_MGMT))
@@ -546,8 +551,8 @@ TI_STATUS txCtrl_XmitMgmt (TI_HANDLE hTxCtrl, TTxCtrlBlk *pPktCtrlBlk)
 		return STATUS_XMIT_ERROR;
 	}
 
-	pTxCtrl->dbgCounters.dbgNumPktsSuccess[uAc]++;	
-	pTxCtrl->dbgLinkCounters.dbgNumPktsSuccess[uHlid]++;	
+	pTxCtrl->dbgCounters.dbgNumPktsSuccess[uAc]++;
+	pTxCtrl->dbgLinkCounters.dbgNumPktsSuccess[uHlid]++;
 
     /* On mgmt frames, send Tx complete packet with success indication to hostapd */
     if (IS_PKT_TYPE_IF_ROLE_AP(pPktCtrlBlk) && (pPktCtrlBlk->tTxPktParams.uPktType == TX_PKT_TYPE_MGMT))
@@ -560,7 +565,7 @@ TI_STATUS txCtrl_XmitMgmt (TI_HANDLE hTxCtrl, TTxCtrlBlk *pPktCtrlBlk)
 
 
 /***************************************************************************
-*                           txCtrl_UpdateQueuesMapping 
+*                           txCtrl_UpdateQueuesMapping
 ****************************************************************************
 * DESCRIPTION:  This function should be called upon the following events:
 *					1) Init
@@ -575,7 +580,7 @@ TI_STATUS txCtrl_XmitMgmt (TI_HANDLE hTxCtrl, TTxCtrlBlk *pPktCtrlBlk)
 void txCtrl_UpdateQueuesMapping (TI_HANDLE hTxCtrl)
 {
 	txCtrl_t *pTxCtrl = (txCtrl_t *)hTxCtrl;
-	
+
 	/* Update mapping from requested-AC to highest-admitted-AC. */
 	txCtrl_UpdateHighestAdmittedAcTable (pTxCtrl);
 
@@ -591,26 +596,26 @@ void txCtrl_UpdateQueuesMapping (TI_HANDLE hTxCtrl)
 *                           txCtrl_AllocPacketBuffer
 ****************************************************************************
 * DESCRIPTION:  Allocate a raw buffer for the whole Tx packet.
-                Used for driver generated packets and when the OAL needs to 
-                    copy the packet to a new buffer (e.g. to gather multiple buffers). 
+                Used for driver generated packets and when the OAL needs to
+                    copy the packet to a new buffer (e.g. to gather multiple buffers).
 ***************************************************************************/
 void *txCtrl_AllocPacketBuffer (TI_HANDLE hTxCtrl, TTxCtrlBlk *pPktCtrlBlk, TI_UINT32 uPacketLen)
 {
     txCtrl_t *pTxCtrl = (txCtrl_t *)hTxCtrl;
     void     *pRawBuf = os_memoryAlloc (pTxCtrl->hOs, uPacketLen);
 
-    if (pRawBuf) 
+    if (pRawBuf)
     {
         /* Indicate that the packet is in a raw buffer (i.e. not OS packet) and save its address and length */
         pPktCtrlBlk->tTxPktParams.uFlags |= TX_CTRL_FLAG_PKT_IN_RAW_BUF;
-        
+
         /* Save buffer address and length for the free operation */
         pPktCtrlBlk->tTxPktParams.pInputPkt    = pRawBuf;
         pPktCtrlBlk->tTxPktParams.uInputPktLen = uPacketLen;
-        
+
         TRACE2(pTxCtrl->hReport, REPORT_SEVERITY_INFORMATION, "txCtrl_AllocPacketBuffer(): pRawBuf = 0x%x, uPacketLen = %d\n", pRawBuf, uPacketLen);
-    } 
-    else 
+    }
+    else
     {
         TRACE1(pTxCtrl->hReport, REPORT_SEVERITY_ERROR, "txCtrl_AllocPacketBuffer(): uPacketLen = %d, returning NULL\n", uPacketLen);
     }
@@ -620,25 +625,25 @@ void *txCtrl_AllocPacketBuffer (TI_HANDLE hTxCtrl, TTxCtrlBlk *pPktCtrlBlk, TI_U
 
 
 /***************************************************************************
-*                           txCtrl_FreePacket 
+*                           txCtrl_FreePacket
 ****************************************************************************
-* DESCRIPTION:  Free the packet resources, including the packet and the CtrlBlk 
+* DESCRIPTION:  Free the packet resources, including the packet and the CtrlBlk
 ***************************************************************************/
 void txCtrl_FreePacket (TI_HANDLE hTxCtrl, TTxCtrlBlk *pPktCtrlBlk, TI_STATUS eStatus)
 {
     txCtrl_t *pTxCtrl = (txCtrl_t *)hTxCtrl;
-    
+
     TRACE3(pTxCtrl->hReport, REPORT_SEVERITY_INFORMATION, "txCtrl_FreePacket(): RawBufFlag = 0x%x, pBuf = 0x%x, Len = %d\n", (pPktCtrlBlk->tTxPktParams.uFlags & TX_CTRL_FLAG_PKT_IN_RAW_BUF), pPktCtrlBlk->tTxPktParams.pInputPkt, pPktCtrlBlk->tTxPktParams.uInputPktLen);
 
         /* If the packet is in a raw buffer, free its memory */
     if (pPktCtrlBlk->tTxPktParams.uFlags & TX_CTRL_FLAG_PKT_IN_RAW_BUF)
     {
-        os_memoryFree (pTxCtrl->hOs, 
-                       pPktCtrlBlk->tTxPktParams.pInputPkt, 
+        os_memoryFree (pTxCtrl->hOs,
+                       pPktCtrlBlk->tTxPktParams.pInputPkt,
                        pPktCtrlBlk->tTxPktParams.uInputPktLen);
     }
     /* If the original packet is in OS format, call the OAL to free it */
-    else 
+    else
     {
         wlanDrvIf_FreeTxPacket (pTxCtrl->hOs, pPktCtrlBlk, eStatus);
     }
@@ -668,8 +673,8 @@ void txCtrl_FreePacket (TI_HANDLE hTxCtrl, TTxCtrlBlk *pPktCtrlBlk, TI_STATUS eS
 *				- Free the packet resources (Wbuf and CtrlBlk)
 *
 * INPUT:    hTWD -  The Tnetw-Driver handle.
-*		    pTxResultInfo - The packet's Tx result information.   
-*              
+*		    pTxResultInfo - The packet's Tx result information.
+*
 *************************************************************************/
 static void txCtrl_TxCompleteCb (TI_HANDLE hTxCtrl, TxResultDescriptor_t *pTxResultInfo)
 {
@@ -694,20 +699,20 @@ TRACE2(pTxCtrl->hReport, REPORT_SEVERITY_ERROR, "txCtrl_TxCompleteCb(): Pkt alre
 TRACE3(pTxCtrl->hReport, REPORT_SEVERITY_INFORMATION, "txCtrl_TxCompleteCb(): Pkt Tx Complete, DescID=%d, AC=%d, Status=%d\n", pTxResultInfo->descID, ac, pTxResultInfo->status);
 #endif
 	/* Update the TKIP/AES sequence-number according to the Tx data packet security-seq-num. */
-	/* Note: The FW always provides the last used seq-num so no need to check if the current 
+	/* Note: The FW always provides the last used seq-num so no need to check if the current
 			 packet is data and WEP is on. */
 	TWD_SetSecuritySeqNum (pTxCtrl->hTWD, pTxResultInfo->lsbSecuritySequenceNumber);
 
-	bIsDataPkt = ( (pPktCtrlBlk->tTxPktParams.uPktType == TX_PKT_TYPE_ETHER) || 
+	bIsDataPkt = ( (pPktCtrlBlk->tTxPktParams.uPktType == TX_PKT_TYPE_ETHER) ||
 		           (pPktCtrlBlk->tTxPktParams.uPktType == TX_PKT_TYPE_WLAN_DATA) );
 
-#ifdef CCX_MODULE_INCLUDED    
-	/* If it's a CCX link-test packet, call its handler. */
+#ifdef XCC_MODULE_INCLUDED
+	/* If it's a XCC link-test packet, call its handler. */
 	if (pPktCtrlBlk->tTxPktParams.uFlags & TX_CTRL_FLAG_LINK_TEST)
     {
         CL_TRACE_START_L4();
-        ccxMngr_LinkTestRetriesUpdate (pTxCtrl->hCcxMngr, pTxResultInfo->ackFailures);
-        CL_TRACE_END_L4("tiwlan_drv.ko", "INHERIT", "TX_Cmplt", ".ccxLinkTest");
+        XCCMngr_LinkTestRetriesUpdate (pTxCtrl->hXCCMngr, pTxResultInfo->ackFailures);
+        CL_TRACE_END_L4("tiwlan_drv.ko", "INHERIT", "TX_Cmplt", ".XCCLinkTest");
     }
 #endif
 
@@ -731,7 +736,7 @@ TRACE3(pTxCtrl->hReport, REPORT_SEVERITY_INFORMATION, "txCtrl_TxCompleteCb(): Pk
 /***************************************************************************
 *                   txCtrl_BuildDataPktHdr                                 *
 ****************************************************************************
-* DESCRIPTION:  this function builds the WLAN header from ethernet format, 
+* DESCRIPTION:  this function builds the WLAN header from ethernet format,
 *               including 802.11-MAC, LLC/SNAP, security padding, alignment padding.
 *
 * INPUTS:       hTxCtrl - the object
@@ -742,7 +747,7 @@ TRACE3(pTxCtrl->hReport, REPORT_SEVERITY_INFORMATION, "txCtrl_TxCompleteCb(): Pk
 
 TI_UINT32 txCtrl_BuildDataPktHdr (TI_HANDLE hTxCtrl, TTxCtrlBlk *pPktCtrlBlk, AckPolicy_e eAckPolicy)
 {
-    txCtrl_t *pTxCtrl = (txCtrl_t *)hTxCtrl;    
+    txCtrl_t *pTxCtrl = (txCtrl_t *)hTxCtrl;
     TEthernetHeader     *pEthHeader;
     dot11_header_t      *pDot11Header;
     Wlan_LlcHeader_T    *pWlanSnapHeader;
@@ -755,15 +760,15 @@ TI_UINT32 txCtrl_BuildDataPktHdr (TI_HANDLE hTxCtrl, TTxCtrlBlk *pPktCtrlBlk, Ac
     TI_UINT8            encryptionFieldSize;
 
 
-	
-    /*  
+
+    /*
 	 * Handle encryption if needed, for data or EAPOL (decision was done by Hostapd):
      * txMgmtQ will set the encrypt bit for eapol, txdataQ will set the encrypt bit for data.
-	 *   - Set WEP bit in header, 
-     *   - Add padding for FW security overhead: 4 bytes for TKIP, 8 for AES.  
+	 *   - Set WEP bit in header,
+     *   - Add padding for FW security overhead: 4 bytes for TKIP, 8 for AES.
 	 */
 
-    
+
     if (IS_PKT_TYPE_IF_ROLE_AP(pPktCtrlBlk))
     {
       if (IS_PKT_TYPE_ENCRYPT(pPktCtrlBlk))
@@ -775,30 +780,30 @@ TI_UINT32 txCtrl_BuildDataPktHdr (TI_HANDLE hTxCtrl, TTxCtrlBlk *pPktCtrlBlk, Ac
         }
     }
     else
-    /* 
+    /*
 	 * Handle encryption if needed, for data or EAPOL (decision was done at RSN):
 	 *   - Set WEP bit in header.
-	 *   - Add padding for FW security overhead: 4 bytes for TKIP, 8 for AES.  
+	 *   - Add padding for FW security overhead: 4 bytes for TKIP, 8 for AES.
 	 */
 
     {
-        
+
       	if (( (pPktCtrlBlk->tTxPktParams.uPktType == TX_PKT_TYPE_EAPOL)
 			  &&
-			  pTxCtrl->eapolEncryptionStatus) 
+			  pTxCtrl->eapolEncryptionStatus)
 		 ||
 			((pPktCtrlBlk->tTxPktParams.uPktType != TX_PKT_TYPE_EAPOL)
 			  &&
 			  pTxCtrl->currentPrivacyInvokedMode ))
         {
-        
+
 			fc |= DOT11_FC_WEP;
 			uHdrLen += pTxCtrl->encryptionFieldSize;
             uHdrAlignPad = pTxCtrl->encryptionFieldSize % 4;
 	    }
         }
 
-	/* 
+	/*
 	 * Handle QoS if needed:
 	 */
     if (eQosMode == HDR_CONVERT_QOS)
@@ -815,7 +820,7 @@ TI_UINT32 txCtrl_BuildDataPktHdr (TI_HANDLE hTxCtrl, TTxCtrlBlk *pPktCtrlBlk, Ac
         }
 
 		/* Set Qos control fields. */
-		uQosControl = (TI_UINT16)(pPktCtrlBlk->tTxDescriptor.tid); 
+		uQosControl = (TI_UINT16)(pPktCtrlBlk->tTxDescriptor.tid);
 		if ( TI_UNLIKELY(eAckPolicy == ACK_POLICY_NO_ACK) )
 			uQosControl |= DOT11_QOS_CONTROL_DONT_ACK;
 		COPY_WLAN_WORD(&pDot11Header->qosControl, &uQosControl); /* copy with endianess handling. */
@@ -827,7 +832,7 @@ TI_UINT32 txCtrl_BuildDataPktHdr (TI_HANDLE hTxCtrl, TTxCtrlBlk *pPktCtrlBlk, Ac
     }
 	uHdrLen += uHdrAlignPad;
 
-    /* Before the header translation the first buf-pointer points to the Ethernet header. */	
+    /* Before the header translation the first buf-pointer points to the Ethernet header. */
 	pEthHeader = (TEthernetHeader *)(pPktCtrlBlk->tTxnStruct.aBuf[0]);
 
     if (TI_UNLIKELY(MAC_MULTICAST(pEthHeader->dst)))
@@ -855,7 +860,7 @@ TI_UINT32 txCtrl_BuildDataPktHdr (TI_HANDLE hTxCtrl, TTxCtrlBlk *pPktCtrlBlk, Ac
 	/* Set MAC header fields for Infrastructure-BSS case. */
     else
     {
-        if (IS_PKT_TYPE_IF_ROLE_AP(pPktCtrlBlk)) 
+        if (IS_PKT_TYPE_IF_ROLE_AP(pPktCtrlBlk))
         {
             MAC_COPY (pDot11Header->address1, pEthHeader->dst);
             MAC_COPY (pDot11Header->address2, pTxCtrl->currBssId);
@@ -867,7 +872,7 @@ TI_UINT32 txCtrl_BuildDataPktHdr (TI_HANDLE hTxCtrl, TTxCtrlBlk *pPktCtrlBlk, Ac
         }
         else
         {
-         
+
         MAC_COPY (pDot11Header->address1, pTxCtrl->currBssId);
         MAC_COPY (pDot11Header->address2, pEthHeader->src);
         MAC_COPY (pDot11Header->address3, pEthHeader->dst);
@@ -880,10 +885,10 @@ TI_UINT32 txCtrl_BuildDataPktHdr (TI_HANDLE hTxCtrl, TTxCtrlBlk *pPktCtrlBlk, Ac
     }
 
 	COPY_WLAN_WORD(&pDot11Header->fc, &fc); /* copy with endianess handling. */
-	
+
     /* Set the SNAP header pointer right after the other header parts handled above. */
     pWlanSnapHeader = (Wlan_LlcHeader_T *)&(pPktCtrlBlk->aPktHdr[uHdrLen]);
-    
+
 	typeLength = HTOWLANS(pEthHeader->type);
 
     /* Detect the packet type and decide if to create a     */
@@ -894,10 +899,10 @@ TI_UINT32 txCtrl_BuildDataPktHdr (TI_HANDLE hTxCtrl, TTxCtrlBlk *pPktCtrlBlk, Ac
         /* Create the SNAP Header:     */
         /*-----------------------------*/
         /*
-         * Make a working copy of the SNAP header 
+         * Make a working copy of the SNAP header
          * initialised to zero
          */
-		
+
         pWlanSnapHeader->DSAP = SNAP_CHANNEL_ID;
         pWlanSnapHeader->SSAP = SNAP_CHANNEL_ID;
         pWlanSnapHeader->Control = LLC_CONTROL_UNNUMBERED_INFORMATION;
@@ -925,10 +930,10 @@ TI_UINT32 txCtrl_BuildDataPktHdr (TI_HANDLE hTxCtrl, TTxCtrlBlk *pPktCtrlBlk, Ac
 
         /* set type length */
         pWlanSnapHeader->Type = pEthHeader->type;
-    
+
         /* Add the SNAP length to the total header length. */
         uHdrLen += sizeof(Wlan_LlcHeader_T);
-        
+
     }
 
      /* Replace first buffer pointer and length to the descriptor and WLAN-header (instead of Ether header) */
@@ -942,11 +947,11 @@ TI_UINT32 txCtrl_BuildDataPktHdr (TI_HANDLE hTxCtrl, TTxCtrlBlk *pPktCtrlBlk, Ac
 
 
 /***************************************************************************
-*                       txCtrl_BuildDataPkt                            
+*                       txCtrl_BuildDataPkt
 ****************************************************************************
 * DESCRIPTION:  Prepare the Data packet control-block including the Tx-descriptor.
 ***************************************************************************/
-static void txCtrl_BuildDataPkt (txCtrl_t *pTxCtrl, TTxCtrlBlk *pPktCtrlBlk, 
+static void txCtrl_BuildDataPkt (txCtrl_t *pTxCtrl, TTxCtrlBlk *pPktCtrlBlk,
                                  TI_UINT32 uAc, TI_UINT32 uBackpressure)
 {
 	TI_UINT32 uHdrAlignPad; /* Num of bytes added between Tx-descriptor and header for 4 bytes alignment (0 or 2). */
@@ -976,7 +981,7 @@ static void txCtrl_BuildDataPkt (txCtrl_t *pTxCtrl, TTxCtrlBlk *pPktCtrlBlk,
 #else
 	uTxDescAttr |= pTxCtrl->dataRatePolicy[uAc] << TX_ATTR_OFST_RATE_POLICY;
 #endif
-        
+
 	if (uHdrAlignPad)
 	{
 		uTxDescAttr |= TX_ATTR_HEADER_PAD;
@@ -992,7 +997,7 @@ static void txCtrl_BuildDataPkt (txCtrl_t *pTxCtrl, TTxCtrlBlk *pPktCtrlBlk,
 		uTxDescAttr &= ~TX_ATTR_RATE_POLICY;
 		uTxDescAttr |= pTxCtrl->mgmtRatePolicy[uAc] << TX_ATTR_OFST_RATE_POLICY;
 	}
-	pPktCtrlBlk->tTxDescriptor.txAttr = ENDIAN_HANDLE_WORD(uTxDescAttr); 
+	pPktCtrlBlk->tTxDescriptor.txAttr = ENDIAN_HANDLE_WORD(uTxDescAttr);
 
     /* Translate packet timestamp to FW time (also updates lifeTime and driverHandlingTime) */
     txCtrl_TranslateTimeToFw (pTxCtrl, pPktCtrlBlk, pTxCtrl->aMsduLifeTimeTu[uAc]);
@@ -1007,7 +1012,7 @@ static void txCtrl_BuildDataPkt (txCtrl_t *pTxCtrl, TTxCtrlBlk *pPktCtrlBlk,
 
 
 /***************************************************************************
-*                       txCtrl_BuildMgmtPkt                            
+*                       txCtrl_BuildMgmtPkt
 ****************************************************************************
 * DESCRIPTION:  Prepare the Mgmt-Queue packet control-block including the Tx-descriptor.
 ***************************************************************************/
@@ -1019,7 +1024,7 @@ static void txCtrl_BuildMgmtPkt (txCtrl_t *pTxCtrl, TTxCtrlBlk *pPktCtrlBlk, TI_
 	TI_UINT16 uRatePolicy;
 	TI_UINT8  uPktType = pPktCtrlBlk->tTxPktParams.uPktType;
 	dot11_header_t *pDot11Header;
-    
+
 	/* If EAPOL packet (Ethernet), build header (including MAC,SNAP,security pad & alignment pad). */
 	if (uPktType == TX_PKT_TYPE_EAPOL)
 	{
@@ -1029,17 +1034,17 @@ static void txCtrl_BuildMgmtPkt (txCtrl_t *pTxCtrl, TTxCtrlBlk *pPktCtrlBlk, TI_
 	}
 
 	/*  Other types are already in WLAN format so copy header from Wbuf to Ctrl-Blk. */
-	else         
+	else
 	{
 		TI_UINT32 uHdrLen = pPktCtrlBlk->tTxnStruct.aLen[0];
 		TI_UINT32 uHdrLenDelta; /* Add the header pad (2 bytes) and Tx-Descriptor length */
 
-		/*  
+		/*
          * Update the length fields to include the header pad and the Tx-Descriptor.
-         * Note: The mgmt-queue provides the header length without the alignment pad, so if 
-		 *       it's not 4-byte aligned, a 2-bytes pad was added at the header beginning. 
+         * Note: The mgmt-queue provides the header length without the alignment pad, so if
+		 *       it's not 4-byte aligned, a 2-bytes pad was added at the header beginning.
 		 */
-		uHdrAlignPad = (uHdrLen & ALIGN_4BYTE_MASK) ? HEADER_PAD_SIZE : 0;  
+		uHdrAlignPad = (uHdrLen & ALIGN_4BYTE_MASK) ? HEADER_PAD_SIZE : 0;
         uHdrLenDelta = uHdrAlignPad + sizeof(TxIfDescriptor_t);
         pPktCtrlBlk->tTxnStruct.aBuf[0]   -= uHdrLenDelta;
         pPktCtrlBlk->tTxnStruct.aLen[0]   += uHdrLenDelta;
@@ -1051,7 +1056,7 @@ static void txCtrl_BuildMgmtPkt (txCtrl_t *pTxCtrl, TTxCtrlBlk *pPktCtrlBlk, TI_
 		uRatePolicy = pTxCtrl->mgmtRatePolicy[uAc];
 #endif
 
-        if (uPktType == TX_PKT_TYPE_WLAN_DATA)  
+        if (uPktType == TX_PKT_TYPE_WLAN_DATA)
 		{
 			/* If QoS mode, update TID in QoS header in case it was downgraded. */
 			/* Note: Qos-hdr update for EAPOL is done in txCtrl_BuildDataPktHeader() and doesn't exist in mgmt. */
@@ -1080,7 +1085,7 @@ static void txCtrl_BuildMgmtPkt (txCtrl_t *pTxCtrl, TTxCtrlBlk *pPktCtrlBlk, TI_
     {
 		uTxDescAttr |= TX_ATTR_HEADER_PAD;
     }
-	pPktCtrlBlk->tTxDescriptor.txAttr = ENDIAN_HANDLE_WORD(uTxDescAttr); 
+	pPktCtrlBlk->tTxDescriptor.txAttr = ENDIAN_HANDLE_WORD(uTxDescAttr);
 
     /* Translate packet timestamp to FW time (also updates lifeTime and driverHandlingTime) */
     txCtrl_TranslateTimeToFw (pTxCtrl, pPktCtrlBlk, MGMT_PKT_LIFETIME_TU);
@@ -1095,9 +1100,9 @@ static void txCtrl_BuildMgmtPkt (txCtrl_t *pTxCtrl, TTxCtrlBlk *pPktCtrlBlk, TI_
 
 
 /***************************************************************************
-*                           txCtrl_UpdateHighestAdmittedAcTable 
+*                           txCtrl_UpdateHighestAdmittedAcTable
 ****************************************************************************
-* DESCRIPTION:  This function updates the table that provides for each requested AC  
+* DESCRIPTION:  This function updates the table that provides for each requested AC
 *				  the highest AC that can be currently used, as follows:
 *					If requested AC is admitted use it.
 *					If not, find highest AC below it that doesn't require admission.
@@ -1112,8 +1117,8 @@ static void txCtrl_UpdateHighestAdmittedAcTable (txCtrl_t *pTxCtrl)
 	int			 inputIdx;
 	int			 outputIdx;
 	EAcTrfcType inputAc;
-	EAcTrfcType outputAc; 
-        
+	EAcTrfcType outputAc;
+
 	/* Loop over all ACs in priority order (BE is higher priority than BK). */
 	for (inputIdx = 0; inputIdx < MAX_NUM_OF_AC; inputIdx++)
 	{
@@ -1124,14 +1129,14 @@ static void txCtrl_UpdateHighestAdmittedAcTable (txCtrl_t *pTxCtrl)
 			pTxCtrl->highestAdmittedAc[inputAc] = inputAc;
 
 		/* If input AC is not admitted, find next highest priority AC that doesn't require admission. */
-		else	
+		else
 		{
 			/* Loop from input AC downward by priority order. */
 			for (outputIdx = inputIdx; outputIdx >= 0; outputIdx--)
 			{
 				outputAc = priorityOrderedAc[outputIdx]; /* Get priority ordered AC. */
 
-				/* Break with first (highest) AC that doesn't require admission (we don't want to 
+				/* Break with first (highest) AC that doesn't require admission (we don't want to
 				 *   redirect traffic to an AC that requires admission even if admitted for other traffic).
 				 */
 				if(pTxCtrl->admissionRequired[outputAc] == ADMISSION_NOT_REQUIRED)
@@ -1142,16 +1147,16 @@ static void txCtrl_UpdateHighestAdmittedAcTable (txCtrl_t *pTxCtrl)
 			if (outputIdx >= 0)
 				pTxCtrl->highestAdmittedAc[inputAc] = outputAc;
 			else
-				pTxCtrl->highestAdmittedAc[inputAc] = QOS_AC_BE; 
+				pTxCtrl->highestAdmittedAc[inputAc] = QOS_AC_BE;
 		}
 	}
 }
 
 
 /***************************************************************************
-*                           txCtrl_UpdateAcToTidMapping 
+*                           txCtrl_UpdateAcToTidMapping
 ****************************************************************************
-* DESCRIPTION:  This function updates the table that provides per each AC  
+* DESCRIPTION:  This function updates the table that provides per each AC
 *				  a bitmap of the TIDs that are mapped to it when transitting packets.
 *				Note that this mapping considers the ACs admission states.
 *				It is used for mapping ACs backpressure to TIDs (for updating the data/mgmt queues)
@@ -1165,8 +1170,8 @@ static void txCtrl_UpdateAcToTidMapping (txCtrl_t *pTxCtrl)
 {
 	TI_UINT32	tid;
 	EAcTrfcType inputAc;
-	EAcTrfcType admittedAc; 
-        
+	EAcTrfcType admittedAc;
+
     os_memoryZero(pTxCtrl->hOs, (void *)&(pTxCtrl->admittedAcToTidMap[0]), sizeof(pTxCtrl->admittedAcToTidMap));
 
 	/* Loop over all TIDs. */
@@ -1177,16 +1182,16 @@ static void txCtrl_UpdateAcToTidMapping (txCtrl_t *pTxCtrl)
 		admittedAc = pTxCtrl->highestAdmittedAc[inputAc];	/* The actual AC that is used for Tx. */
 
 		/* Set the bit related to the TID in the correlated AC. */
-		pTxCtrl->admittedAcToTidMap[admittedAc] |= 1 << tid;		
+		pTxCtrl->admittedAcToTidMap[admittedAc] |= 1 << tid;
 	}
 }
 
 
 /***************************************************************************
-*                           txCtrl_UpdateBackpressure 
+*                           txCtrl_UpdateBackpressure
 ****************************************************************************
-* DESCRIPTION:  This function is called whenever the busy-TIDs bitmap may change, 
-*				  (except on packet-xmit - handled separately for performance). 
+* DESCRIPTION:  This function is called whenever the busy-TIDs bitmap may change,
+*				  (except on packet-xmit - handled separately for performance).
 *				This includes:
 *					1) Init
 *					2) ACs admission required change (upon association)
@@ -1202,13 +1207,13 @@ static void txCtrl_UpdateBackpressure (txCtrl_t *pTxCtrl, TI_UINT32 freedAcBitma
 	TI_UINT32 busyTidBitmap = 0;
 	TI_UINT32 ac = 0;
 
-	/* 
+	/*
 	 * Handle free LINK resources bitmap
 	 */
 	pTxCtrl->busyLinkBitmap &= ~freedLinkBitmap;			/* Clear backpressure bits of freed LINKs. */
 	TRACE1(pTxCtrl->hReport, REPORT_SEVERITY_INFORMATION, "txCtrl_UpdateBackpressure(): busyLinkBitmap = 0x%x\n", pTxCtrl->busyLinkBitmap);
-	
-	/* 
+
+	/*
 	 * Handle free AC resources bitmap
 	 */
 	busyAcBitmap &= ~freedAcBitmap;			/* Clear backpressure bits of freed ACs. */
@@ -1250,12 +1255,12 @@ static void txCtrl_UpdateBackpressure (txCtrl_t *pTxCtrl, TI_UINT32 freedAcBitma
 * RETURNS:
  ****************************************************************************/
 
-#ifdef CCX_MODULE_INCLUDED  /* Needed only for CCX-V4 */
+#ifdef XCC_MODULE_INCLUDED  /* Needed only for XCC-V4 */
 
-static void txCtrl_SetTxDelayCounters (txCtrl_t *pTxCtrl, 
-                                       TI_UINT32 ac, 
-                                       TI_UINT32 fwDelay, 
-                                       TI_UINT32 driverDelay, 
+static void txCtrl_SetTxDelayCounters (txCtrl_t *pTxCtrl,
+                                       TI_UINT32 ac,
+                                       TI_UINT32 fwDelay,
+                                       TI_UINT32 driverDelay,
                                        TI_UINT32 mediumDelay)
 {
 	int     rangeIndex;
@@ -1271,39 +1276,39 @@ static void txCtrl_SetTxDelayCounters (txCtrl_t *pTxCtrl,
 			break;
 		}
 	}
-	
+
 	/* Update total delay and FW delay sums and packets number for average delay calculation. */
-	/* Note: Accumulate Total-Delay in usec to avoid division per packet (convert to msec 
+	/* Note: Accumulate Total-Delay in usec to avoid division per packet (convert to msec
 	         only when results are requested by user). */
 	if (pTxCtrl->SumTotalDelayUs[ac] < 0x7FFFFFFF) /* verify we are not close to the edge. */
 	{
-		pTxCtrl->txDataCounters[ac].NumPackets++; 
-		pTxCtrl->SumTotalDelayUs[ac] += totalTxDelayUsec;   
+		pTxCtrl->txDataCounters[ac].NumPackets++;
+		pTxCtrl->SumTotalDelayUs[ac] += totalTxDelayUsec;
         pTxCtrl->txDataCounters[ac].SumFWDelayUs += fwDelay;
         pTxCtrl->txDataCounters[ac].SumMacDelayUs += mediumDelay;
 	}
 	else  /* If we get close to overflow, restart average accumulation. */
 	{
-		pTxCtrl->txDataCounters[ac].NumPackets = 1; 
-		pTxCtrl->SumTotalDelayUs[ac] = totalTxDelayUsec;   
+		pTxCtrl->txDataCounters[ac].NumPackets = 1;
+		pTxCtrl->SumTotalDelayUs[ac] = totalTxDelayUsec;
         pTxCtrl->txDataCounters[ac].SumFWDelayUs = fwDelay;
         pTxCtrl->txDataCounters[ac].SumMacDelayUs = mediumDelay;
 	}
 }
 
-#endif /* CCX_MODULE_INCLUDED */
+#endif /* XCC_MODULE_INCLUDED */
 
 
 
 /***************************************************************************
-*                       txCtrl_UpdateTxCounters                            
+*                       txCtrl_UpdateTxCounters
 ****************************************************************************
 * DESCRIPTION:  Update Tx statistics counters according to the transmitted packet.
 ***************************************************************************/
-static void txCtrl_UpdateTxCounters (txCtrl_t *pTxCtrl, 
+static void txCtrl_UpdateTxCounters (txCtrl_t *pTxCtrl,
                                      TxResultDescriptor_t *pTxResultInfo,
-                                     TTxCtrlBlk *pPktCtrlBlk, 
-                                     TI_UINT32 ac, 
+                                     TTxCtrlBlk *pPktCtrlBlk,
+                                     TI_UINT32 ac,
                                      TI_BOOL bIsDataPkt)
 {
 	TI_UINT32 pktLen;
@@ -1318,7 +1323,7 @@ static void txCtrl_UpdateTxCounters (txCtrl_t *pTxCtrl,
 	/* update debug counters. */
 	pTxCtrl->dbgCounters.dbgNumTxCmplt[ac]++;
 	pTxCtrl->dbgLinkCounters.dbgNumTxCmplt[uHlid]++;
-	if (pTxResultInfo->status == TX_SUCCESS) 
+	if (pTxResultInfo->status == TX_SUCCESS)
 	{
 		pTxCtrl->dbgCounters.dbgNumTxCmpltOk[ac]++;
 		pTxCtrl->dbgCounters.dbgNumTxCmpltOkBytes[ac] += pktLen;
@@ -1336,7 +1341,7 @@ static void txCtrl_UpdateTxCounters (txCtrl_t *pTxCtrl,
 		{
 TRACE1(pTxCtrl->hReport, REPORT_SEVERITY_ERROR, "txCtrl_UpdateTxCounters(): TxResult = %d !!!\n", pTxResultInfo->status);
 		}
-        else 
+        else
         {
 TRACE1(pTxCtrl->hReport, REPORT_SEVERITY_WARNING, "txCtrl_UpdateTxCounters(): TxResult = %d !!!\n", pTxResultInfo->status);
         }
@@ -1347,20 +1352,20 @@ TRACE1(pTxCtrl->hReport, REPORT_SEVERITY_WARNING, "txCtrl_UpdateTxCounters(): Tx
 	if ( !bIsDataPkt )
 		return;
 
-	if (pTxResultInfo->status == TX_SUCCESS) 
+	if (pTxResultInfo->status == TX_SUCCESS)
 	{
 		/* update the retry histogram */
-		retryHistogramIndex = (pTxResultInfo->ackFailures >= TX_RETRY_HISTOGRAM_SIZE) ? 
+		retryHistogramIndex = (pTxResultInfo->ackFailures >= TX_RETRY_HISTOGRAM_SIZE) ?
 							   (TX_RETRY_HISTOGRAM_SIZE - 1) : pTxResultInfo->ackFailures;
 		pTxCtrl->txDataCounters[ac].RetryHistogram[retryHistogramIndex]++;
 
-#ifdef CCX_MODULE_INCLUDED
+#ifdef XCC_MODULE_INCLUDED
 		/* update delay histogram */
-		txCtrl_SetTxDelayCounters (pTxCtrl, 
-        						   ac, 
-        						   ENDIAN_HANDLE_LONG(pTxResultInfo->fwHandlingTime), 
-        						   pPktCtrlBlk->tTxPktParams.uDriverDelay, 
-        						   ENDIAN_HANDLE_LONG(pTxResultInfo->mediumDelay));  
+		txCtrl_SetTxDelayCounters (pTxCtrl,
+        						   ac,
+        						   ENDIAN_HANDLE_LONG(pTxResultInfo->fwHandlingTime),
+        						   pPktCtrlBlk->tTxPktParams.uDriverDelay,
+        						   ENDIAN_HANDLE_LONG(pTxResultInfo->mediumDelay));
 #endif
 
 		if (pTxCtrl->headerConverMode == HDR_CONVERT_QOS)
@@ -1382,7 +1387,7 @@ TRACE1(pTxCtrl->hReport, REPORT_SEVERITY_WARNING, "txCtrl_UpdateTxCounters(): Tx
                 EventMask |= BROADCAST_BYTES_XFER;
                 EventMask |= BROADCAST_FRAMES_XFER;
             }
-            else 
+            else
             {
                 /* Multicast Address */
                 pTxCtrl->txDataCounters[ac].MulticastFramesXmit++;
@@ -1391,10 +1396,10 @@ TRACE1(pTxCtrl->hReport, REPORT_SEVERITY_WARNING, "txCtrl_UpdateTxCounters(): Tx
                 EventMask |= MULTICAST_FRAMES_XFER;
             }
         }
-        else 
+        else
         {
             /* Save last data Tx rate for applications' query */
-            EHwBitRate eHwTxRate = ENDIAN_HANDLE_LONG(pTxResultInfo->rate); 
+            EHwBitRate eHwTxRate = ENDIAN_HANDLE_LONG(pTxResultInfo->rate);
             rate_PolicyToDrv ((TI_UINT32)eHwTxRate, &pTxCtrl->eCurrentTxRate);
 
             /* Directed frame statistics */
@@ -1421,16 +1426,16 @@ TRACE1(pTxCtrl->hReport, REPORT_SEVERITY_WARNING, "txCtrl_UpdateTxCounters(): Tx
 	}
 	else	/* Handle Errors */
 	{
-		/* 
+		/*
 			NOTE: if the FW sets more then 1 error bit  at a time change the error handling
-			code below 
+			code below
 		*/
-		if (pTxResultInfo->status == TX_RETRY_EXCEEDED) 
+		if (pTxResultInfo->status == TX_RETRY_EXCEEDED)
 		{
 			pTxCtrl->txDataCounters[ac].RetryFailCounter++;
 			pTxCtrl->currentConsecutiveRetryFail++;
 		}
-		else if (pTxResultInfo->status == TX_TIMEOUT) 
+		else if (pTxResultInfo->status == TX_TIMEOUT)
 		{
 			pTxCtrl->txDataCounters[ac].TxTimeoutCounter++;
 		}
@@ -1478,7 +1483,7 @@ TI_STATUS txCtrl_NotifyFwReset (TI_HANDLE hTxCtrl)
 /***************************************************************************
 *                           txCtrl_CheckForTxStuck                         *
 ****************************************************************************
-* DESCRIPTION:  Check if there are stale packets in the TxCtrlTable. 
+* DESCRIPTION:  Check if there are stale packets in the TxCtrlTable.
 * The criterion for staleness is function of life time (2 times the longest life time)
 * Note that only packets that were not sent to the FW are checked for simplicity!
 ***************************************************************************/

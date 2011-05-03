@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * rsn.h
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file assocSM.h
  *  \brief 802.11 Association SM
  *
@@ -55,24 +60,24 @@
 #define RSN_MAX_NUMBER_OF_BANNED_SITES  16
 #define RSN_MIC_FAILURE_REPORT_TIMEOUT     500
 #define RSN_MIC_FAILURE_TIMEOUT         (60000 + RSN_MIC_FAILURE_REPORT_TIMEOUT)
-#define RSN_MAIN_KEYS_SESSION_TIMEOUT   RSN_AUTH_FAILURE_TIMEOUT 
+#define RSN_MAIN_KEYS_SESSION_TIMEOUT   RSN_AUTH_FAILURE_TIMEOUT
 #define RSN_MIC_FAILURE_RE_KEY_TIMEOUT  3000
 
 /* Enumerations */
-typedef enum 
+typedef enum
 {
     MIC_FAILURE_FALSE,
     MIC_FAILURE_TRUE,
     MIC_FAILURE_BLOCK
 } rsn_micFailureStatus_e;
 
-typedef enum 
+typedef enum
 {
     GROUP_KEY_UPDATE_FALSE,
     GROUP_KEY_UPDATE_TRUE
 } rsn_groupKeyUpdate_e;
 
-typedef enum 
+typedef enum
 {
 	PAIRWISE_KEY_UPDATE_FALSE,
 	PAIRWISE_KEY_UPDATE_TRUE
@@ -81,7 +86,7 @@ typedef enum
 
 /* Typedefs */
 typedef struct _rsn_t   rsn_t;
-         
+
 typedef TI_STATUS (*rsn_eventCallback_t)(void* pCtx, void *pData);
 typedef TI_STATUS (*rsn_setPaeConfig_t)(rsn_t *pRsn, TRsnPaeConfig *pPaeConfig);
 typedef TI_STATUS (*rsn_getNetworkMode_t)(rsn_t *pRsn, ERsnNetworkMode *pNetMode);
@@ -109,7 +114,7 @@ typedef struct
     TI_UINT8             pwdLength;                      /**< User password string length */
 } authIdentity_t;
 
-typedef struct 
+typedef struct
 {
     ERsnSiteBanLevel        banLevel;
     TI_UINT32               banStartedMs;
@@ -122,7 +127,7 @@ struct _rsn_t
     rsn_eventStruct_t      events[RSN_MAX_NUMBER_OF_EVENTS];
     TRsnPaeConfig          paeConfig;
     TI_BOOL                PrivacyOptionImplemented;
-    
+
     TSecurityKeys          keys[MAX_KEYS_NUM];
     TI_BOOL                keys_en [MAX_KEYS_NUM];
     TI_UINT8               defaultKeyId;
@@ -155,7 +160,7 @@ struct _rsn_t
     TI_HANDLE              hSiteMgr;
     TI_HANDLE              hReport;
     TI_HANDLE              hOs;
-    TI_HANDLE              hCcxMngr;
+    TI_HANDLE              hXCCMngr;
     TI_HANDLE              hEvHandler;
     TI_HANDLE              hSmeSm;
     TI_HANDLE              hAPConn;
@@ -163,7 +168,7 @@ struct _rsn_t
     TI_HANDLE              hPowerMgr;
     TI_HANDLE              hTimer;
     TI_HANDLE              hCurrBss;
-    
+
     rsn_setPaeConfig_t     setPaeConfig;
     rsn_getNetworkMode_t   getNetworkMode;
     rsn_setKey_t           setKey;

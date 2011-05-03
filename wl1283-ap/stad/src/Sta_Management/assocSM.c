@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * assocSM.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file assocSM.c
  *  \brief 802.11 association SM source
  *
@@ -55,9 +60,9 @@
 #include "mlmeApi.h"
 #include "AssocSM.h"
 #include "qosMngr_API.h"
-#ifdef CCX_MODULE_INCLUDED
-#include "ccxRMMngr.h"
-#include "ccxMngr.h"
+#ifdef XCC_MODULE_INCLUDED
+#include "XCCRMMngr.h"
+#include "XCCMngr.h"
 #endif
 #include "apConn.h"
 #include "TWDriver.h"
@@ -127,7 +132,7 @@ TI_STATUS assoc_sendDisAssoc(assoc_t *pAssocSm, mgmtStatus_e reason);
 *
 * assoc_create - allocate memory for association SM
 *
-* \b Description: 
+* \b Description:
 *
 * Allocate memory for association SM. \n
 *       Allocates memory for Association context. \n
@@ -175,7 +180,7 @@ TI_HANDLE assoc_create(TI_HANDLE hOs)
 *
 * assocunload - unload association SM from memory
 *
-* \b Description: 
+* \b Description:
 *
 * Unload association SM from memory
 *
@@ -202,12 +207,12 @@ TI_STATUS assoc_unload(TI_HANDLE hAssoc)
         /* report failure but don't stop... */
         TRACE0(pHandle->hReport, REPORT_SEVERITY_ERROR, "ASSOC_SM: Error releasing FSM memory \n");
     }
-    
+
 	if (pHandle->hAssocSmTimer)
 	{
 		tmr_DestroyTimer (pHandle->hAssocSmTimer);
 	}
-    
+
     os_memoryFree(pHandle->hOs, hAssoc, sizeof(assoc_t));
 
     return TI_OK;
@@ -217,7 +222,7 @@ TI_STATUS assoc_unload(TI_HANDLE hAssoc)
 *
 * assoc_config - configure a new association SM
 *
-* \b Description: 
+* \b Description:
 *
 * Configure a new association SM.
 *
@@ -230,7 +235,7 @@ TI_STATUS assoc_unload(TI_HANDLE hAssoc)
 void assoc_init (TStadHandlesList *pStadHandles)
 {
     assoc_t *pHandle = (assoc_t*)(pStadHandles->hAssoc);
-    
+
     /** Main 802.1X State Machine matrix */
     fsm_actionCell_t    assoc_smMatrix[ASSOC_SM_NUM_STATES][ASSOC_SM_NUM_EVENTS] =
     {
@@ -258,14 +263,14 @@ void assoc_init (TStadHandlesList *pStadHandles)
          {ASSOC_SM_STATE_ASSOC, (fsm_Action_t)assoc_smActionUnexpected},
          {ASSOC_SM_STATE_ASSOC, (fsm_Action_t)assoc_smActionUnexpected}
         }};
-    
+
     /* configure state machine */
     fsm_Config (pHandle->pAssocSm, &assoc_smMatrix[0][0], ASSOC_SM_NUM_STATES, ASSOC_SM_NUM_EVENTS, NULL, pStadHandles->hOs);
 
     pHandle->assocRejectCount = 0;
     pHandle->assocTimeoutCount = 0;
     pHandle->currentState = ASSOC_SM_STATE_IDLE;
-    
+
     pHandle->hMlme             = pStadHandles->hMlmeSm;
     pHandle->hRegulatoryDomain = pStadHandles->hRegulatoryDomain;
     pHandle->hSiteMgr          = pStadHandles->hSiteMgr;
@@ -274,7 +279,7 @@ void assoc_init (TStadHandlesList *pStadHandles)
     pHandle->hRsn              = pStadHandles->hRsn;
     pHandle->hReport           = pStadHandles->hReport;
     pHandle->hOs               = pStadHandles->hOs;
-    pHandle->hCcxMngr          = pStadHandles->hCcxMngr;
+    pHandle->hXCCMngr          = pStadHandles->hXCCMngr;
     pHandle->hQosMngr          = pStadHandles->hQosMngr;
     pHandle->hMeasurementMgr   = pStadHandles->hMeasurementMgr;
     pHandle->hApConn           = pStadHandles->hAPConnection;
@@ -308,7 +313,7 @@ TI_STATUS assoc_SetDefaults (TI_HANDLE hAssoc, assocInitParams_t *pAssocInitPara
 *
 * assoc_start - Start event for the association SM
 *
-* \b Description: 
+* \b Description:
 *
 * Start event for the association SM
 *
@@ -348,9 +353,9 @@ TI_STATUS assoc_start(TI_HANDLE hAssoc)
 *
 * assoc_start - Start event for the association SM
 *
-* \b Description: 
+* \b Description:
 *
-* Start event for the association SM - for Re-assoc request 
+* Start event for the association SM - for Re-assoc request
 *
 * \b ARGS:
 *
@@ -384,7 +389,7 @@ TI_STATUS reassoc_start(TI_HANDLE hAssoc)
 *
 * assoc_stop - Stop event for the association SM
 *
-* \b Description: 
+* \b Description:
 *
 * Stop event for the association SM
 *
@@ -409,9 +414,9 @@ TI_STATUS assoc_stop(TI_HANDLE hAssoc)
     {
         return TI_NOK;
     }
-    
+
     status = assoc_smEvent(pHandle, ASSOC_SM_EVENT_STOP, hAssoc);
-    
+
     return status;
 }
 
@@ -419,7 +424,7 @@ TI_STATUS assoc_stop(TI_HANDLE hAssoc)
 TI_STATUS assoc_setDisAssocFlag(TI_HANDLE hAssoc, TI_BOOL disAsoccFlag)
 {
     assoc_t     *pHandle;
-    pHandle = (assoc_t*)hAssoc; 
+    pHandle = (assoc_t*)hAssoc;
 
     pHandle->disAssoc = disAsoccFlag;
 
@@ -432,7 +437,7 @@ TI_STATUS assoc_setDisAssocFlag(TI_HANDLE hAssoc, TI_BOOL disAsoccFlag)
 *
 * assoc_recv - Recive a message from the AP
 *
-* \b Description: 
+* \b Description:
 *
 * Parse a message form the AP and perform the appropriate event.
 *
@@ -463,7 +468,7 @@ TI_STATUS assoc_recv(TI_HANDLE hAssoc, mlmeFrameInfo_t *pFrame)
     if(pHandle->currentState != ASSOC_SM_STATE_WAIT)
         return TI_OK;
 
-    
+
     if ((pFrame->subType != ASSOC_RESPONSE) && (pFrame->subType != RE_ASSOC_RESPONSE))
     {
         return TI_NOK;
@@ -471,7 +476,7 @@ TI_STATUS assoc_recv(TI_HANDLE hAssoc, mlmeFrameInfo_t *pFrame)
 
     /* check response status */
     rspStatus  = pFrame->content.assocRsp.status;
-    
+
     if (rspStatus == 0)
     {
         TRsnData        rsnData;
@@ -482,12 +487,12 @@ TI_STATUS assoc_recv(TI_HANDLE hAssoc, mlmeFrameInfo_t *pFrame)
 
 
         TRACE0(pHandle->hReport, REPORT_SEVERITY_SM, "ASSOC_SM: DEBUG Success associating to AP \n");
-        
+
         /* set AID to HAL */
         tTwdParam.paramType = TWD_AID_PARAM_ID;
         tTwdParam.content.halCtrlAid  = pFrame->content.assocRsp.aid;
         TWD_SetParam (pHandle->hTWD, &tTwdParam);
-        
+
 
         /* Get the RSN IE data */
         pRsnIe = pFrame->content.assocRsp.pRsnIe;
@@ -495,11 +500,11 @@ TI_STATUS assoc_recv(TI_HANDLE hAssoc, mlmeFrameInfo_t *pFrame)
         {
             curRsnData[0+length] = pRsnIe->hdr[0];
             curRsnData[1+length] = pRsnIe->hdr[1];
-            os_memoryCopy(pHandle->hOs, &curRsnData[2+length], (void *)pRsnIe->rsnIeData, pRsnIe->hdr[1]); 
+            os_memoryCopy(pHandle->hOs, &curRsnData[2+length], (void *)pRsnIe->rsnIeData, pRsnIe->hdr[1]);
             length += pRsnIe->hdr[1] + 2;
             pRsnIe += 1;
         }
-        
+
         if (pFrame->content.assocRsp.rsnIeLen != 0)
         {
             rsnData.pIe = curRsnData;
@@ -519,19 +524,19 @@ TI_STATUS assoc_recv(TI_HANDLE hAssoc, mlmeFrameInfo_t *pFrame)
         if(status != TI_OK)
         {
             TRACE0(pHandle->hReport, REPORT_SEVERITY_ERROR, "ASSOC_SM: DEBUG - Association failed : qosMngr_setSite error \n");
-            /* in case we wanted to work with qosAP and failed to connect to qos AP we want to reassociated again 
-               to another one */  
+            /* in case we wanted to work with qosAP and failed to connect to qos AP we want to reassociated again
+               to another one */
             status = assoc_smEvent(pHandle, ASSOC_SM_EVENT_FAIL, hAssoc);
         }
         else
         {
             status = assoc_smEvent(pHandle, ASSOC_SM_EVENT_SUCCESS, hAssoc);
         }
-    } 
-    else 
+    }
+    else
     {
         pHandle->assocRejectCount++;
-        
+
         /* If there was attempt to renegotiate voice settings, update QoS Manager */
         qosMngr_checkTspecRenegResults(pHandle->hQosMngr, &pFrame->content.assocRsp);
 
@@ -585,7 +590,7 @@ TI_STATUS assoc_recv(TI_HANDLE hAssoc, mlmeFrameInfo_t *pFrame)
 *
 * assoc_getParam - Get a specific parameter from the association SM
 *
-* \b Description: 
+* \b Description:
 *
 * Get a specific parameter from the association SM.
 *
@@ -687,14 +692,14 @@ TI_STATUS assoc_getParam(TI_HANDLE hAssoc, paramInfo_t *pParam)
             pParam->content.assocAssociationInformation.RequestFixedIEs.Capabilities = *(TI_UINT16*)&(pHandle->assocReqBuffer[0]);
             pParam->content.assocAssociationInformation.RequestFixedIEs.ListenInterval = *(TI_UINT16*)(&pHandle->assocReqBuffer[2]);
 
-            pParam->content.assocAssociationInformation.RequestIELength = RequestIELength; 
+            pParam->content.assocAssociationInformation.RequestIELength = RequestIELength;
             pParam->content.assocAssociationInformation.OffsetRequestIEs = 0;
             if (RequestIELength > 0)
             {
                 pParam->content.assocAssociationInformation.OffsetRequestIEs = (TI_UINT32)&pHandle->assocReqBuffer[reqBuffIEOffset];
             }
             /* Copy the association response information */
-            pParam->content.assocAssociationInformation.AvailableResponseFixedIEs = 
+            pParam->content.assocAssociationInformation.AvailableResponseFixedIEs =
                 OS_802_11_AI_RESFI_CAPABILITIES | OS_802_11_AI_RESFI_STATUSCODE | OS_802_11_AI_RESFI_ASSOCIATIONID;
             pParam->content.assocAssociationInformation.ResponseFixedIEs.Capabilities = *(TI_UINT16*)&(pHandle->assocRespBuffer[0]);
             pParam->content.assocAssociationInformation.ResponseFixedIEs.StatusCode = *(TI_UINT16*)&(pHandle->assocRespBuffer[2]);
@@ -719,7 +724,7 @@ TI_STATUS assoc_getParam(TI_HANDLE hAssoc, paramInfo_t *pParam)
 *
 * assoc_setParam - Set a specific parameter to the association SM
 *
-* \b Description: 
+* \b Description:
 *
 * Set a specific parameter to the association SM.
 *
@@ -768,7 +773,7 @@ TI_STATUS assoc_setParam(TI_HANDLE hAssoc, paramInfo_t *pParam)
 *
 * assoc_smTimeout - Time out event activation function
 *
-* \b Description: 
+* \b Description:
 *
 * Time out event activation function.
 *
@@ -793,7 +798,7 @@ void assoc_smTimeout(TI_HANDLE hAssoc, TI_BOOL bTwdInitOccured)
     {
         return;
     }
-    
+
     pHandle->assocTimeoutCount++;
 
     assoc_smEvent(pHandle, ASSOC_SM_EVENT_TIMEOUT, hAssoc);
@@ -803,7 +808,7 @@ void assoc_smTimeout(TI_HANDLE hAssoc, TI_BOOL bTwdInitOccured)
 *
 * assoc_smEvent - Perform an event on the association SM
 *
-* \b Description: 
+* \b Description:
 *
 * Perform an event on the association SM.
 *
@@ -817,7 +822,7 @@ void assoc_smTimeout(TI_HANDLE hAssoc, TI_BOOL bTwdInitOccured)
 *
 *  TI_OK if successful, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 TI_STATUS assoc_smEvent(assoc_t *pAssoc, TI_UINT8 event, void *pData)
 {
@@ -880,11 +885,11 @@ TI_STATUS assoc_smFailureWait(assoc_t *pAssoc)
     status = assoc_smStopTimer(pAssoc);
 
     /* Sanity check. If the Response status is indeed not 0 */
-    if (uRspStatus) 
+    if (uRspStatus)
     {
         status = assoc_smReportFailure(pAssoc, uRspStatus);
     }
-    else    /* (uRspStatus == 0) how did we get here ? */ 
+    else    /* (uRspStatus == 0) how did we get here ? */
     {
         TRACE0(pAssoc->hReport, REPORT_SEVERITY_ERROR, "while Response status is OK (0) !!! \n");
 
@@ -964,9 +969,9 @@ TI_STATUS assoc_smResetRetry(assoc_t *pAssoc)
     {
         return TI_NOK;
     }
-    
+
     pAssoc->retryCount = 0;
-    
+
     return TI_OK;
 }
 
@@ -978,9 +983,9 @@ TI_STATUS assoc_smIncRetry(assoc_t *pAssoc)
     {
         return TI_NOK;
     }
-    
+
     pAssoc->retryCount++;
-    
+
     if (pAssoc->retryCount > pAssoc->maxCount)
     {
         status = assoc_smEvent(pAssoc, ASSOC_SM_EVENT_MAX_RETRY, pAssoc);
@@ -1012,7 +1017,7 @@ TI_STATUS assoc_smReportFailure(assoc_t *pAssoc, TI_UINT16 uStatusCode)
     {
         return TI_NOK;
     }
-    
+
     status = mlme_reportAssocStatus(pAssoc->hMlme, uStatusCode);
 
     return status;
@@ -1024,7 +1029,7 @@ TI_STATUS assoc_smStartTimer(assoc_t *pAssoc)
     {
         return TI_NOK;
     }
-    
+
     tmr_StartTimer (pAssoc->hAssocSmTimer,
                     assoc_smTimeout,
                     (TI_HANDLE)pAssoc,
@@ -1040,7 +1045,7 @@ TI_STATUS assoc_smStopTimer(assoc_t *pAssoc)
     {
         return TI_NOK;
     }
-    
+
     tmr_StopTimer (pAssoc->hAssocSmTimer);
 
 	/* If the timer was stopped it means the association is over,
@@ -1118,7 +1123,7 @@ TI_STATUS assoc_smCapBuild(assoc_t *pCtx, TI_UINT16 *cap)
         return TI_NOK;
     }
 
-    
+
     /* Checking if the station supports Spectrum Management (802.11h) */
     param.paramType = REGULATORY_DOMAIN_MANAGEMENT_CAPABILITY_ENABLED_PARAM;
     status =  regulatoryDomain_getParam(pCtx->hRegulatoryDomain, &param);
@@ -1126,12 +1131,12 @@ TI_STATUS assoc_smCapBuild(assoc_t *pCtx, TI_UINT16 *cap)
     {
         if( param.content.spectrumManagementEnabled)
             *cap |= DOT11_SPECTRUM_MANAGEMENT;
-    } 
+    }
     else
     {
         return TI_NOK;
     }
-    
+
     /* slot time */
     param.paramType = SITE_MGR_OPERATIONAL_MODE_PARAM;
     status = siteMgr_getParam(pCtx->hSiteMgr, &param);
@@ -1146,7 +1151,7 @@ TI_STATUS assoc_smCapBuild(assoc_t *pCtx, TI_UINT16 *cap)
     {
         /* new requirement: the short slot time should be set only
            if the AP's modulation is OFDM (highest rate) */
-        
+
         /* get Rates */
         param.paramType = SITE_MGR_CURRENT_RATE_PAIR_PARAM;
         status =  siteMgr_getParam(pCtx->hSiteMgr, &param);
@@ -1157,14 +1162,14 @@ TI_STATUS assoc_smCapBuild(assoc_t *pCtx, TI_UINT16 *cap)
         } else {
             return TI_NOK;
         }
-        
+
         /* convert the bit map to the rates array */
         rate_DrvBitmapToNetStr (rateSuppMask, rateBasicMask, ratesBuf, &len, &ofdmIndex);
 
         if(ofdmIndex < len)
             *cap |= DOT11_CAPS_SHORT_SLOT_TIME;
 
-/*      
+/*
         param.paramType = SITE_MGR_CURRENT_MODULATION_TYPE_PARAM;
         status = siteMgr_getParam(pCtx->hSiteMgr, &param);
         if(param.content.siteMgrCurrentModulationType == DRV_MODULATION_OFDM)
@@ -1182,8 +1187,8 @@ TI_STATUS assoc_smCapBuild(assoc_t *pCtx, TI_UINT16 *cap)
         /* verify 11n_Enable and Chip type */
         StaCap_IsHtEnable (pCtx->hStaCap, &b11nEnable);
         /* verify that WME flag enable */
-        qosMngr_GetWmeEnableFlag (pCtx->hQosMngr, &bWmeEnable); 
-    
+        qosMngr_GetWmeEnableFlag (pCtx->hQosMngr, &bWmeEnable);
+
         if ((b11nEnable != TI_FALSE) && (bWmeEnable != TI_FALSE))
         {
             *cap |= DOT11_CAPS_IMMEDIATE_BA;
@@ -1211,14 +1216,14 @@ TI_STATUS assoc_smSSIDBuild(assoc_t *pCtx, TI_UINT8 *pSSID, TI_UINT32 *ssidLen)
     {
         return status;
     }
-    
+
     /* check for ANY ssid */
     if (param.content.smeDesiredSSID.len != 0)
     {
         pDot11Ssid->hdr[1] = param.content.smeDesiredSSID.len;
-        os_memoryCopy(pCtx->hOs, 
-                      (void *)pDot11Ssid->serviceSetId, 
-                      (void *)param.content.smeDesiredSSID.str, 
+        os_memoryCopy(pCtx->hOs,
+                      (void *)pDot11Ssid->serviceSetId,
+                      (void *)param.content.smeDesiredSSID.str,
                       param.content.smeDesiredSSID.len);
 
     } else {
@@ -1230,15 +1235,15 @@ TI_STATUS assoc_smSSIDBuild(assoc_t *pCtx, TI_UINT8 *pSSID, TI_UINT32 *ssidLen)
             return status;
         }
         pDot11Ssid->hdr[1] = param.content.siteMgrCurrentSSID.len;
-        os_memoryCopy(pCtx->hOs, 
-                      (void *)pDot11Ssid->serviceSetId, 
-                      (void *)param.content.siteMgrCurrentSSID.str, 
+        os_memoryCopy(pCtx->hOs,
+                      (void *)pDot11Ssid->serviceSetId,
+                      (void *)param.content.siteMgrCurrentSSID.str,
                       param.content.siteMgrCurrentSSID.len);
 
     }
 
     *ssidLen = pDot11Ssid->hdr[1] + sizeof(dot11_eleHdr_t);
-    
+
     return TI_OK;
 }
 
@@ -1262,8 +1267,8 @@ TI_STATUS assoc_smRatesBuild(assoc_t *pCtx, TI_UINT8 *pRates, TI_UINT32 *ratesLe
     {
         rateBasicMask = param.content.siteMgrCurrentRateMask.basicRateMask;
         rateSuppMask  = param.content.siteMgrCurrentRateMask.supportedRateMask;
-    } 
-    else 
+    }
+    else
     {
         return TI_NOK;
     }
@@ -1278,7 +1283,7 @@ TI_STATUS assoc_smRatesBuild(assoc_t *pCtx, TI_UINT8 *pRates, TI_UINT32 *ratesLe
 
     /* convert the bit map to the rates array */
     /* remove MCS rates from Extended Supported Rates IE */
-    rateSuppMask &= ~(DRV_RATE_MASK_MCS_0_OFDM | 
+    rateSuppMask &= ~(DRV_RATE_MASK_MCS_0_OFDM |
                       DRV_RATE_MASK_MCS_1_OFDM |
                       DRV_RATE_MASK_MCS_2_OFDM |
                       DRV_RATE_MASK_MCS_3_OFDM |
@@ -1296,7 +1301,7 @@ TI_STATUS assoc_smRatesBuild(assoc_t *pCtx, TI_UINT8 *pRates, TI_UINT32 *ratesLe
         os_memoryCopy(NULL, (void *)pDot11Rates->rates, ratesBuf, len);
         *ratesLen = pDot11Rates->hdr[1] + sizeof(dot11_eleHdr_t);
     }
-    else 
+    else
     {
         /* fill in the supported rates */
         pDot11Rates->hdr[0] = SUPPORTED_RATES_IE_ID;
@@ -1328,7 +1333,7 @@ TI_STATUS assoc_powerCapabilityBuild(assoc_t *pCtx, TI_UINT8 *pPowerCapability, 
     dot11_CAPABILITY_t      *pDot11PowerCapability;
 
     pDot11PowerCapability = (dot11_CAPABILITY_t*)pPowerCapability;
-    
+
     /* set Power Capability element id */
     pDot11PowerCapability->hdr[0] = DOT11_CAPABILITY_ELE_ID;
     pDot11PowerCapability->hdr[1] = DOT11_CAPABILITY_ELE_LEN;
@@ -1357,12 +1362,12 @@ TI_STATUS assoc_smRequestBuild(assoc_t *pCtx, TI_UINT8* reqBuf, TI_UINT32* reqLe
     paramInfo_t     param;
     TTwdParamInfo   tTwdParam;
     TI_UINT16       capabilities;
-   
-    
+
+
     pRequest = reqBuf;
     *reqLen = 0;
 
-    
+
     /* insert capabilities */
     status = assoc_smCapBuild(pCtx, &capabilities);
     if (status == TI_OK)
@@ -1384,7 +1389,7 @@ TI_STATUS assoc_smRequestBuild(assoc_t *pCtx, TI_UINT8* reqBuf, TI_UINT32* reqLe
     } else {
         return TI_NOK;
     }
-    
+
     pRequest += 2;
     *reqLen += 2;
     if (pCtx->reAssoc)
@@ -1435,7 +1440,7 @@ TI_STATUS assoc_smRequestBuild(assoc_t *pCtx, TI_UINT8* reqBuf, TI_UINT32* reqLe
         /* Checking the selected AP capablities */
         param.paramType = SITE_MGR_SITE_CAPABILITY_PARAM;
         status =  siteMgr_getParam(pCtx->hSiteMgr,&param);
-        if(status == TI_OK && ((param.content.siteMgrSiteCapability & DOT11_SPECTRUM_MANAGEMENT) != 0)) 
+        if(status == TI_OK && ((param.content.siteMgrSiteCapability & DOT11_SPECTRUM_MANAGEMENT) != 0))
         {
             /* insert Power capability element */
             status = assoc_powerCapabilityBuild(pCtx, pRequest, &len);
@@ -1469,8 +1474,8 @@ TI_STATUS assoc_smRequestBuild(assoc_t *pCtx, TI_UINT8* reqBuf, TI_UINT32* reqLe
     *reqLen += len;
 
 
-#ifdef CCX_MODULE_INCLUDED
-    status = rsn_getCcxExtendedInfoElement(pCtx->hRsn, pRequest, (TI_UINT8*)&len);
+#ifdef XCC_MODULE_INCLUDED
+    status = rsn_getXCCExtendedInfoElement(pCtx->hRsn, pRequest, (TI_UINT8*)&len);
     if (status != TI_OK)
     {
         return TI_NOK;
@@ -1480,8 +1485,8 @@ TI_STATUS assoc_smRequestBuild(assoc_t *pCtx, TI_UINT8* reqBuf, TI_UINT32* reqLe
 
     if (pCtx->reAssoc)
     {   /* insert CCKM information element only in reassoc */
-        status = ccxMngr_getCckmInfoElement(pCtx->hCcxMngr, pRequest, (TI_UINT8*)&len);
-        
+        status = XCCMngr_getCckmInfoElement(pCtx->hXCCMngr, pRequest, (TI_UINT8*)&len);
+
         if (status != TI_OK)
         {
             return TI_NOK;
@@ -1489,7 +1494,7 @@ TI_STATUS assoc_smRequestBuild(assoc_t *pCtx, TI_UINT8* reqBuf, TI_UINT32* reqLe
         pRequest += len;
         *reqLen += len;
     }
-    status = ccxMngr_getCCXVersionInfoElement(pCtx->hCcxMngr, pRequest, (TI_UINT8*)&len);
+    status = XCCMngr_getXCCVersionInfoElement(pCtx->hXCCMngr, pRequest, (TI_UINT8*)&len);
     if (status != TI_OK)
     {
         return TI_NOK;
@@ -1510,12 +1515,12 @@ TI_STATUS assoc_smRequestBuild(assoc_t *pCtx, TI_UINT8* reqBuf, TI_UINT32* reqLe
      /* Get Simple-Config state */
     param.paramType = SITE_MGR_SIMPLE_CONFIG_MODE;
     status = siteMgr_getParam(pCtx->hSiteMgr, &param);
-   
+
    if (param.content.siteMgrWSCMode.WSCMode == TIWLN_SIMPLE_CONFIG_OFF)
    {
     /* insert RSN information elements */
     status = rsn_getInfoElement(pCtx->hRsn, pRequest, &len);
-	
+
 	if (status != TI_OK)
 	{
 		return TI_NOK;
@@ -1523,7 +1528,7 @@ TI_STATUS assoc_smRequestBuild(assoc_t *pCtx, TI_UINT8* reqBuf, TI_UINT32* reqLe
 	pRequest += len;
 	*reqLen += len;
   }
-  
+
     /* Primary Site support HT ? */
     param.paramType = SITE_MGR_PRIMARY_SITE_HT_SUPPORT;
     siteMgr_getParam(pCtx->hSiteMgr, &param);
@@ -1554,7 +1559,7 @@ TI_STATUS assoc_smRequestBuild(assoc_t *pCtx, TI_UINT8* reqBuf, TI_UINT32* reqLe
 	}
 	pRequest += len;
 	*reqLen += len;
- 
+
     if (*reqLen>=MAX_ASSOC_MSG_LENGTH)
     {
         return TI_NOK;
@@ -1572,9 +1577,9 @@ TI_STATUS assoc_saveAssocRespMessage(assoc_t *pAssocSm, TI_UINT8 *pAssocBuffer, 
         return TI_NOK;
     }
 
-    os_memoryCopy(pAssocSm->hOs, pAssocSm->assocRespBuffer, pAssocBuffer, length);  
+    os_memoryCopy(pAssocSm->hOs, pAssocSm->assocRespBuffer, pAssocBuffer, length);
     pAssocSm->assocRespLen = length;
-    
+
     TRACE1(pAssocSm->hReport, REPORT_SEVERITY_INFORMATION, "assoc_saveAssocRespMessage: length=%ld \n",length);
     return TI_OK;
 }
@@ -1587,9 +1592,9 @@ TI_STATUS assoc_saveAssocReqMessage(assoc_t *pAssocSm, TI_UINT8 *pAssocBuffer, T
         return TI_NOK;
     }
 
-    os_memoryCopy(pAssocSm->hOs, pAssocSm->assocReqBuffer, pAssocBuffer, length);  
+    os_memoryCopy(pAssocSm->hOs, pAssocSm->assocReqBuffer, pAssocBuffer, length);
     pAssocSm->assocReqLen = length;
-    
+
     TRACE1(pAssocSm->hReport, REPORT_SEVERITY_INFORMATION, "assoc_saveAssocReqMessage: length=%ld \n",length);
     return TI_OK;
 }

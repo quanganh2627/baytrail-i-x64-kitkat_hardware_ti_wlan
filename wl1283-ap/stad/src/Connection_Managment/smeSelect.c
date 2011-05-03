@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * smeSelect.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file  smeSelect.c
  *  \brief SME select function implementation
  *
@@ -43,27 +48,27 @@
 #include "smeSm.h"
 #include "tidef.h"
 
-static TI_BOOL sme_SelectSsidMatch (TI_HANDLE hSme, TSsid *pSiteSsid, TSsid *pDesiredSsid, 
+static TI_BOOL sme_SelectSsidMatch (TI_HANDLE hSme, TSsid *pSiteSsid, TSsid *pDesiredSsid,
                                     ESsidType eDesiredSsidType);
 static TI_BOOL sme_SelectBssidMatch (TMacAddr *pSiteBssid, TMacAddr *pDesiredBssid);
 static TI_BOOL sme_SelectBssTypeMatch (ScanBssType_e eSiteBssType, ScanBssType_e eDesiredBssType);
-static TI_BOOL sme_SelectWscMatch (TI_HANDLE hSme, TSiteEntry *pCurrentSite, 
+static TI_BOOL sme_SelectWscMatch (TI_HANDLE hSme, TSiteEntry *pCurrentSite,
                                    TI_BOOL *pbWscPbAbort, TI_BOOL *pbWscPbApFound);
 static TI_BOOL sme_SelectRsnMatch (TI_HANDLE hSme, TSiteEntry *pCurrentSite);
 
-/** 
+/**
  * \fn     sme_Select
  * \brief  Select a connection candidate from the scan result table
- * 
+ *
  * Select a connection candidate from the scan result table.
- * 
+ *
  * Connection candidate must match SSID, BSSID, BSS type, RSN and WSC settings, has the best
  * RSSI level from all matching sites, and connection was not attempted to it in this SME cycle
  * (since last scan was completed)
- * 
+ *
  * \param  hSme - handle to the SME object
  * \return A pointer to the selected site, NULL if no site macthes the selection criteria
- */ 
+ */
 TSiteEntry *sme_Select (TI_HANDLE hSme)
 {
     TSme            *pSme = (TSme*)hSme;
@@ -76,7 +81,7 @@ TSiteEntry *sme_Select (TI_HANDLE hSme)
 
     /* on SG avalanche, select is not needed, send connect event automatically */
     if (TI_TRUE == pSme->bReselect)
-    {        
+    {
         paramInfo_t *pParam;
 
         TRACE0(pSme->hReport, REPORT_SEVERITY_INFORMATION , "sme_Select: reselect flag is on, reselecting the current site\n");
@@ -157,7 +162,7 @@ TSiteEntry *sme_Select (TI_HANDLE hSme)
          {
            pWscPbApFound = TI_TRUE;
          }
-         
+
         /* and simple config match */
         if (TI_FALSE == sme_SelectWscMatch (hSme, pCurrentSite, &bWscPbAbort, &pWscPbApFound))
         /* site doesn't match */
@@ -237,7 +242,7 @@ TSiteEntry *sme_Select (TI_HANDLE hSme)
         siteMgr_changeBandParams (pSme->hSiteMgr, pSelectedSite->eBand);
 
         /*
-         * Coordinate between SME module site table and Site module site Table 
+         * Coordinate between SME module site table and Site module site Table
          * copy candidate AP to Site module site Table.
          */
         siteMgr_CopyToPrimarySite(pSme->hSiteMgr, pSelectedSite);
@@ -247,20 +252,20 @@ TSiteEntry *sme_Select (TI_HANDLE hSme)
     return pSelectedSite;
 }
 
-/** 
+/**
  * \fn     sme_SelectSsidMatch
  * \brief  Check if a site SSID matches the desired SSID for selection
- * 
+ *
  * Check if a site SSID matches the desired SSID for selection
- * 
+ *
  * \param  hSme - handle to the SME object
  * \param  pSiteSsid - the site SSID
  * \param  pDesiredSsid - the desired SSID
  * \param  edesiredSsidType - the desired SSID type
  * \return TI_TRUE if SSIDs match, TI_FALSE if they don't
  * \sa     sme_Select
- */ 
-TI_BOOL sme_SelectSsidMatch (TI_HANDLE hSme, TSsid *pSiteSsid, TSsid *pDesiredSsid, 
+ */
+TI_BOOL sme_SelectSsidMatch (TI_HANDLE hSme, TSsid *pSiteSsid, TSsid *pDesiredSsid,
                              ESsidType eDesiredSsidType)
 {
     TSme        *pSme = (TSme*)hSme;
@@ -298,17 +303,17 @@ TI_BOOL sme_SelectSsidMatch (TI_HANDLE hSme, TSsid *pSiteSsid, TSsid *pDesiredSs
     }
 }
 
-/** 
+/**
  * \fn     sme_SelectBssidMatch
  * \brief  Check if a site BSSID matches the desired BSSID for selection
- * 
+ *
  * Check if a site BSSID matches the desired BSSID for selection
- * 
+ *
  * \param  pSiteBssid - the site BSSID
  * \param  pDesiredBssid - the desired BSSID
  * \return TI_TRUE if BSSIDs match, TI_FALSE if they don't
  * \sa     sme_Select
- */ 
+ */
 TI_BOOL sme_SelectBssidMatch (TMacAddr *pSiteBssid, TMacAddr *pDesiredBssid)
 {
     /* check if the desired BSSID is broadcast (no need to match) */
@@ -327,17 +332,17 @@ TI_BOOL sme_SelectBssidMatch (TMacAddr *pSiteBssid, TMacAddr *pDesiredBssid)
     return TI_FALSE;
 }
 
-/** 
+/**
  * \fn     sme_SelectBssTypeMatch
  * \brief  Checks if the desired BSS type match the BSS type of a site
- * 
+ *
  * Checks if the desired BSS type match the BSS type of a site
- * 
+ *
  * \param  eSiteBssType - the site BSS type
  * \param  edesiredBssType - the desired BSS type
  * \return TI_TRUE if the BSS types matches, TI_FALSE if they don't
  * \sa     sme_Select
- */ 
+ */
 TI_BOOL sme_SelectBssTypeMatch (ScanBssType_e eSiteBssType, ScanBssType_e eDesiredBssType)
 {
     /* if the desired type is any, there is a match */
@@ -356,18 +361,18 @@ TI_BOOL sme_SelectBssTypeMatch (ScanBssType_e eSiteBssType, ScanBssType_e eDesir
     return TI_FALSE;
 }
 
-/** 
+/**
  * \fn     sme_SelectWscMatch
  * \brief  checks if the configred WSC mode equals the WSC mode of a site
- * 
+ *
  * checks if the configred WSC mode equals the WSC mode of a site
- * 
+ *
  * \param  hSme - handle to the SME object
  * \param  pCurrentSite - site to check
- * \return TI_TRUE if site macthes current WSC mode, TI_FALSE if it doesn't match 
+ * \return TI_TRUE if site macthes current WSC mode, TI_FALSE if it doesn't match
  * \sa     sme_Select
- */ 
-TI_BOOL sme_SelectWscMatch (TI_HANDLE hSme, TSiteEntry *pCurrentSite, 
+ */
+TI_BOOL sme_SelectWscMatch (TI_HANDLE hSme, TSiteEntry *pCurrentSite,
                             TI_BOOL *pbWscPbAbort, TI_BOOL *pbWscPbApFound)
 {
     TSme            *pSme = (TSme*)hSme;
@@ -405,17 +410,17 @@ TI_BOOL sme_SelectWscMatch (TI_HANDLE hSme, TSiteEntry *pCurrentSite,
     return TI_FALSE;
 }
 
-/** 
+/**
  * \fn     sme_SelectRsnMatch
  * \brief  Checks if the configured scurity settings match those of a site
- * 
+ *
  * Checks if the configured scurity settings match those of a site
- * 
+ *
  * \param  hSme - handle to the SME object
  * \param  pCurrentSite - the site to check
  * \return TI_TRUE if site matches RSN settings, TI FALSE if it doesn't
  * \sa     sme_Select
- */ 
+ */
 TI_BOOL sme_SelectRsnMatch (TI_HANDLE hSme, TSiteEntry *pCurrentSite)
 {
     TSme            *pSme = (TSme*)hSme;
@@ -446,13 +451,13 @@ TI_BOOL sme_SelectRsnMatch (TI_HANDLE hSme, TSiteEntry *pCurrentSite)
         }
         uCurRsnData[ 0 + uLength ] = pRsnIe->hdr[ 0 ];
         uCurRsnData[ 1 + uLength ] = pRsnIe->hdr[ 1 ];
-        os_memoryCopy (pSme->hOS, &uCurRsnData[ 2 + uLength ], pRsnIe->rsnIeData, pRsnIe->hdr[ 1 ]); 
+        os_memoryCopy (pSme->hOS, &uCurRsnData[ 2 + uLength ], pRsnIe->rsnIeData, pRsnIe->hdr[ 1 ]);
         uLength += pRsnIe->hdr[ 1 ] + 2;
         pRsnIe += 1;
         uRsnIECount++;
     }
     /* sanity check - make sure RSN IE's size is not too big */
-    if (uLength < pCurrentSite->rsnIeLen) 
+    if (uLength < pCurrentSite->rsnIeLen)
     {
         TRACE2(pSme->hReport, REPORT_SEVERITY_ERROR , "sme_SelectRsnMatch, RSN IE is too long: rsnIeLen=%d, MAX_RSN_IE=%d\n", pCurrentSite->rsnIeLen, MAX_RSN_IE);
     }

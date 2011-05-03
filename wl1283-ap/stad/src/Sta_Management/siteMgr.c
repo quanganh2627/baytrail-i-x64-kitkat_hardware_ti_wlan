@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * siteMgr.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file siteMgr.c
  *  \brief Site Manager implementation
  *
@@ -58,7 +63,7 @@
 #include "PowerMgr_API.h"
 #include "EvHandler.h"
 #include "TI_IPC_Api.h"
-#include "MacServices_api.h" 
+#include "MacServices_api.h"
 #include "apConn.h"
 #include "currBss.h"
 #include "PowerMgr.h"
@@ -69,8 +74,8 @@
 #include "freq.h"
 #include "currBssApi.h"
 #include "CmdBld.h"
-#ifdef CCX_MODULE_INCLUDED
-#include "ccxMngr.h"
+#ifdef XCC_MODULE_INCLUDED
+#include "XCCMngr.h"
 #endif
 
 /* External function prototypes */
@@ -229,7 +234,7 @@ static void siteMgr_TxPowerHighThreshold(TI_HANDLE hSiteMgr, TI_UINT8 *data, TI_
 DESCRIPTION:	This function is used to start the Tx Power Control adjust mechanism
 				in regulatoryDomain.
 
-INPUT:      bActivateTempFix             -   Whether the power should be adjusted 
+INPUT:      bActivateTempFix             -   Whether the power should be adjusted
 ************************************************************************/
 void siteMgr_setTemporaryTxPower(siteMgr_t* pSiteMgr, TI_BOOL bActivateTempFix)
 {
@@ -334,7 +339,7 @@ OUTPUT:
 RETURN:     void
 ************************************************************************/
 void siteMgr_init (TStadHandlesList *pStadHandles)
-{ 
+{
     siteMgr_t *pSiteMgr = (siteMgr_t *)(pStadHandles->hSiteMgr);
 
     /* Init handles */
@@ -354,7 +359,7 @@ void siteMgr_init (TStadHandlesList *pStadHandles)
     pSiteMgr->hMlmeSm               = pStadHandles->hMlmeSm;
     pSiteMgr->hAssoc                = pStadHandles->hAssoc;
     pSiteMgr->hReport               = pStadHandles->hReport;
-    pSiteMgr->hCcxMngr              = pStadHandles->hCcxMngr;
+    pSiteMgr->hXCCMngr              = pStadHandles->hXCCMngr;
     pSiteMgr->hApConn               = pStadHandles->hAPConnection;
     pSiteMgr->hCurrBss              = pStadHandles->hCurrBss;
     pSiteMgr->hQosMngr              = pStadHandles->hQosMngr;
@@ -367,7 +372,7 @@ void siteMgr_init (TStadHandlesList *pStadHandles)
 
 TI_STATUS siteMgr_SetDefaults (TI_HANDLE                hSiteMgr,
                                siteMgrInitParams_t     *pSiteMgrInitParams)
-{    
+{
     siteMgr_t       *pSiteMgr = (siteMgr_t *)hSiteMgr;
     TI_UINT32       timestamp;
     ESlotTime       slotTime;
@@ -506,13 +511,13 @@ TI_STATUS siteMgr_SetDefaults (TI_HANDLE                hSiteMgr,
     TRACE2(pSiteMgr->hReport, REPORT_SEVERITY_INIT, " SiteMgr - numOfElements = %d IETableSize = %d\n" , pSiteMgrInitParams->beaconFilterParams.numOfElements, pSiteMgrInitParams->beaconFilterParams.IETableSize);
     /* Send the table regardless to the state */
     TWD_CfgBeaconFilterTable (pSiteMgr->hTWD,
-                              pSiteMgrInitParams->beaconFilterParams.numOfElements, 
-                              pSiteMgrInitParams->beaconFilterParams.IETable, 
+                              pSiteMgrInitParams->beaconFilterParams.numOfElements,
+                              pSiteMgrInitParams->beaconFilterParams.IETable,
                               pSiteMgrInitParams->beaconFilterParams.IETableSize);
 
     /*  At start-up Set the Beacon Filter state as the User required */
     TWD_CfgBeaconFilterOpt (pSiteMgr->hTWD, pSiteMgrInitParams->beaconFilterParams.desiredState, pSiteMgr->beaconFilterParams.numOfStored);
-    
+
     pSiteMgr->pSitesMgmtParams->pPrevPrimarySite = NULL;
 
     /* Clears the ProbeReqWSC IE */
@@ -646,7 +651,7 @@ TI_STATUS siteMgr_setParam(TI_HANDLE        hSiteMgr,
             MAC_COPY (pSiteMgr->pDesiredParams->siteMgrDesiredBSSID, pParam->content.siteMgrDesiredBSSID);
            return TI_OK;
 
-    case SITE_MGR_DESIRED_SSID_PARAM: 
+    case SITE_MGR_DESIRED_SSID_PARAM:
 
         TRACE1(pSiteMgr->hReport, REPORT_SEVERITY_INFORMATION, "\nSet new SSID= (len=%d)  \n", pParam->content.siteMgrDesiredSSID.len);
 
@@ -709,7 +714,7 @@ TI_STATUS siteMgr_setParam(TI_HANDLE        hSiteMgr,
         return TI_OK;
 
     case SITE_MGR_SIMPLE_CONFIG_MODE: /* Setting the WiFiSimpleConfig mode */
-		
+
 		/* Modify the current mode */
 		pSiteMgr->siteMgrWSCCurrMode = pParam->content.siteMgrWSCMode.WSCMode;
 
@@ -721,14 +726,14 @@ TI_STATUS siteMgr_setParam(TI_HANDLE        hSiteMgr,
 		{
 			os_memoryCopy(pSiteMgr->hOs, &pSiteMgr->siteMgrWSCProbeReqParams, &pParam->content.siteMgrWSCMode.probeReqWSCIE, DOT11_WSC_PROBE_REQ_MAX_LENGTH);
 
-			param.paramType = RSN_WPA_PROMOTE_OPTIONS;	
+			param.paramType = RSN_WPA_PROMOTE_OPTIONS;
            	param.content.rsnWPAPromoteFlags = ADMCTRL_WPA_OPTION_ENABLE_PROMOTE_AUTH_MODE;
            	rsn_setParam(pSiteMgr->hRsn, &param);
         }
 		else
 		{
-            
-			param.paramType = RSN_WPA_PROMOTE_OPTIONS;	
+
+			param.paramType = RSN_WPA_PROMOTE_OPTIONS;
            	param.content.rsnWPAPromoteFlags = ADMCTRL_WPA_OPTION_NONE;
            	rsn_setParam(pSiteMgr->hRsn, &param);
 		}
@@ -907,7 +912,7 @@ TI_STATUS siteMgr_setParam(TI_HANDLE        hSiteMgr,
 
             /* Set the New Desired User request of Beacon Filter */
             pSiteMgr->beaconFilterParams.desiredState = pParam->content.siteMgrDesiredBeaconFilterState;
-                
+
             TRACE0(pSiteMgr->hReport, REPORT_SEVERITY_INFORMATION, "New Beacon Filter State is: \n");
 
             /* Send the User required Beacon Filter Configuration to the FW */
@@ -962,14 +967,14 @@ TI_STATUS siteMgr_setParam(TI_HANDLE        hSiteMgr,
             TWD_CmdTemplate (pSiteMgr->hTWD, &templateStruct, NULL, NULL);
 
             /* configuring the IP to 0.0.0.0 by app means disable filtering */
-            if ((staIp[0] | staIp[0] | staIp[1] | staIp[0]) == 0) 
+            if ((staIp[0] | staIp[0] | staIp[1] | staIp[0]) == 0)
             {
                 filterType = ArpFilterDisabled;
             }
 
             TWD_CfgArpIpAddrTable(pSiteMgr->hTWD, staIp , filterType, IP_VER_4);
         }
-        
+
         break;
 
     default:
@@ -1024,7 +1029,7 @@ TI_STATUS siteMgr_getParam (TI_HANDLE        hSiteMgr,
 
     switch(pParam->paramType)
     {
-   
+
     case SITE_MGR_CONFIGURATION_PARAM:
         pParam->content.pSiteMgrConfiguration->Length = sizeof(OS_802_11_CONFIGURATION);
         pParam->content.pSiteMgrConfiguration->ATIMWindow = pSiteMgr->pDesiredParams->siteMgrDesiredAtimWindow;
@@ -1040,7 +1045,7 @@ TI_STATUS siteMgr_getParam (TI_HANDLE        hSiteMgr,
 
 	case SITE_MGR_SIMPLE_CONFIG_MODE: /* Retrieving the WiFiSimpleConfig mode */
 		pParam->content.siteMgrWSCMode.WSCMode = pSiteMgr->siteMgrWSCCurrMode;
-		
+
         TRACE1(pSiteMgr->hReport, REPORT_SEVERITY_INFORMATION, "Retrieving the SimpleConfig Mode (%d) \n", pSiteMgr->siteMgrWSCCurrMode);
 		break;
 
@@ -1155,7 +1160,7 @@ TI_STATUS siteMgr_getParam (TI_HANDLE        hSiteMgr,
         {
             pParam->content.siteMgrCurrentBSSType = pSiteMgr->pDesiredParams->siteMgrDesiredBSSType;
             TRACE0(pSiteMgr->hReport, REPORT_SEVERITY_ERROR, "Trying to get current BSS Type while no site is selected\n");
-            
+
         }
         else{
             pParam->content.siteMgrCurrentBSSType = pPrimarySite->bssType;
@@ -1263,19 +1268,19 @@ TI_STATUS siteMgr_getParam (TI_HANDLE        hSiteMgr,
 
         pParam->paramType = AUTH_COUNTERS_PARAM;
         auth_getParam(pSiteMgr->hAuth, pParam);
-        
+
 		pParam->paramType = MLME_BEACON_RECV;
         mlme_getParam(pSiteMgr->hMlmeSm, pParam);
-        
+
         pParam->paramType = ASSOC_COUNTERS_PARAM;
         assoc_getParam(pSiteMgr->hAssoc, pParam);
         pParam->content.siteMgrTiWlanCounters.BeaconsXmit = pSiteMgr->beaconSentCount;
         break;
-    
+
     case SITE_MGR_FIRMWARE_VERSION_PARAM:
         {
             TFwInfo *pFwInfo = TWD_GetFWInfo (pSiteMgr->hTWD);
-            os_memoryCopy(pSiteMgr->hOs, 
+            os_memoryCopy(pSiteMgr->hOs,
                           pParam->content.siteMgrFwVersion,
                           pFwInfo->fwVer,
                           sizeof(pFwInfo->fwVer));
@@ -1283,17 +1288,17 @@ TI_STATUS siteMgr_getParam (TI_HANDLE        hSiteMgr,
         break;
 
     case SITE_MGR_CURRENT_TX_RATE_PARAM:
-        {   
+        {
             ERate rate = txCtrlParams_GetTxRate (pSiteMgr->hTxCtrl);
             pParam->content.siteMgrCurrentTxRate = rate_DrvToNet (rate);
         }
         break;
 
     case SITE_MGR_CURRENT_RX_RATE_PARAM:
-        {   
+        {
             pParam->paramType = RX_DATA_RATE_PARAM;
             rxData_getParam (pSiteMgr->hRxData, pParam);
-            pParam->content.siteMgrCurrentRxRate = 
+            pParam->content.siteMgrCurrentRxRate =
                 (TI_UINT8)rate_DrvToNet ((ERate)pParam->content.siteMgrCurrentRxRate);
         }
         break;
@@ -1375,9 +1380,9 @@ TI_STATUS siteMgr_getParam (TI_HANDLE        hSiteMgr,
             return TI_NOK;
         }
         pParam->content.siteMgrDesiredSSID.len = pSiteMgr->pSitesMgmtParams->pPrevPrimarySite->ssid.len;
-        os_memoryCopy(pSiteMgr->hOs, 
-                      (void *)pParam->content.siteMgrDesiredSSID.str, 
-                      (void *)pSiteMgr->pSitesMgmtParams->pPrevPrimarySite->ssid.str, 
+        os_memoryCopy(pSiteMgr->hOs,
+                      (void *)pParam->content.siteMgrDesiredSSID.str,
+                      (void *)pSiteMgr->pSitesMgmtParams->pPrevPrimarySite->ssid.str,
                       pSiteMgr->pSitesMgmtParams->pPrevPrimarySite->ssid.len);
         break;
 
@@ -1453,7 +1458,7 @@ TI_STATUS siteMgr_getParam (TI_HANDLE        hSiteMgr,
        break;
     case SITE_MGRT_GET_RATE_MANAGMENT:
          return cmdBld_ItrRateParams (pSiteMgr->hTWD,
-                                      pParam->content.interogateCmdCBParams.fCb, 
+                                      pParam->content.interogateCmdCBParams.fCb,
                                       pParam->content.interogateCmdCBParams.hCb,
                                       (void*)pParam->content.interogateCmdCBParams.pCb);
 
@@ -1520,9 +1525,9 @@ TI_STATUS siteMgr_join(TI_HANDLE    hSiteMgr)
     joinParams.pSSID = (TI_UINT8 *)&pPrimarySite->ssid.str;
     joinParams.ssidLength = pPrimarySite->ssid.len;
 
-    /*  
+    /*
      * Set the radio band and the HW management Tx rate according to operational mode.
-     * The HW management frames includes Beacon and Probe-Response (in IBSS). 
+     * The HW management frames includes Beacon and Probe-Response (in IBSS).
      */
     if(pSiteMgr->siteMgrOperationalMode == DOT11_A_MODE)
     {
@@ -1576,7 +1581,7 @@ TI_STATUS siteMgr_join(TI_HANDLE    hSiteMgr)
         templateStruct.type = PS_POLL_TEMPLATE;
         buildPsPollTemplate(pSiteMgr, &templateStruct);
         TWD_CmdTemplate (pSiteMgr->hTWD, &templateStruct, NULL, NULL);
-            
+
         /* Set QOS Null data template to the firmware.
             Note:  the AC to use with this template may change in QoS-manager. */
         templateStruct.ptr = (TI_UINT8 *)&QosNullDataTemplate;
@@ -1593,8 +1598,8 @@ TI_STATUS siteMgr_join(TI_HANDLE    hSiteMgr)
 #endif
 
     /* Reset the Tx Power Control adjustment in RegulatoryDomain */
-    siteMgr_setTemporaryTxPower(pSiteMgr, TI_FALSE);     
-    
+    siteMgr_setTemporaryTxPower(pSiteMgr, TI_FALSE);
+
 	/* Get a new Tx-Session-Count (also updates the TxCtrl module). */
 	joinParams.txSessionCount = incrementTxSessionCount(pSiteMgr);
 
@@ -1656,7 +1661,7 @@ TI_STATUS siteMgr_IbssMerge(TI_HANDLE       hSiteMgr,
 	siteMgr_t   *pSiteMgr = (siteMgr_t *)hSiteMgr;
     siteEntry_t *pSite;
 	paramInfo_t Param;
-     
+
 	pSite = findAndInsertSiteEntry(pSiteMgr, (TMacAddr*)&our_bssid, band);
 
 	if(!pSite) {
@@ -1665,12 +1670,12 @@ TRACE6(pSiteMgr->hReport, REPORT_SEVERITY_ERROR, "siteMgr_IbssMerge, cannot find
 	}
 
 	updateSiteInfo(pSiteMgr, pFrameInfo, pSite, rxChannel);
-    
+
 	pSite->siteType = SITE_PRIMARY;
 	pSiteMgr->pSitesMgmtParams->pPrimarySite = pSite;
-    
+
 	MAC_COPY(pSite->bssid, new_bssid);
-    
+
 	Param.paramType   = SITE_MGR_DESIRED_BSSID_PARAM;
     Param.paramLength = sizeof(TMacAddr);
 	MAC_COPY(Param.content.siteMgrDesiredBSSID, new_bssid);
@@ -1726,7 +1731,7 @@ TI_STATUS siteMgr_updateSite(TI_HANDLE          hSiteMgr,
 
     /* The following is not required, since the scanCncn is responsible to check
         the channels validity before scanning.
-        The problem it caused was that when 802.11d is enabled, 
+        The problem it caused was that when 802.11d is enabled,
         channels that are valid for Passive only, will not be updated.*/
     /*if (isChannelSupprted(pSiteMgr->hRegulatoryDomain , rxChannel) == TI_FALSE)
     {
@@ -1908,7 +1913,7 @@ TI_STATUS siteMgr_updatePrimarySiteFailStatus(TI_HANDLE hSiteMgr,
 
     TRACE1(pSiteMgr->hReport, REPORT_SEVERITY_INFORMATION, " SITE MGR: bRemoveSite = %d \n", bRemoveSite);
 
-    if (bRemoveSite) 
+    if (bRemoveSite)
     {
         removeSiteEntry(pSiteMgr, currTable, pSiteMgr->pSitesMgmtParams->pPrimarySite);
         pSiteMgr->pSitesMgmtParams->pPrimarySite = NULL;
@@ -1990,10 +1995,10 @@ DESCRIPTION:    Sets the site APSD support flag according to the
 
 INPUT:      pSite       -   Pointer to the site entry in the site table
             pFrameInfo  -   Frame information after the parsing
-            
+
 OUTPUT:     pSite->APSDSupport flag
 
-RETURN:     
+RETURN:
 
 ************************************************************************/
 static void update_apsd(siteEntry_t *pSite, mlmeFrameInfo_t *pFrameInfo)
@@ -2003,7 +2008,7 @@ static void update_apsd(siteEntry_t *pSite, mlmeFrameInfo_t *pFrameInfo)
     if (pFrameInfo->content.iePacket.WMEParams == NULL)
         pSite->APSDSupport = (((pFrameInfo->content.iePacket.capabilities >> CAP_APSD_SHIFT) & CAP_APSD_MASK) ? TI_TRUE : TI_FALSE);
 
-    /* Else, set the APSD-Support flag if either the capabilities APSD bit or the 
+    /* Else, set the APSD-Support flag if either the capabilities APSD bit or the
          WME-Params APSD bit indicate so. */
     else
         pSite->APSDSupport = ((((pFrameInfo->content.iePacket.capabilities >> CAP_APSD_SHIFT) & CAP_APSD_MASK) ? TI_TRUE : TI_FALSE) ||
@@ -2084,9 +2089,9 @@ static void updateSiteInfo(siteMgr_t *pSiteMgr, mlmeFrameInfo_t *pFrameInfo, sit
     case BEACON:
 
         UPDATE_BEACON_INTERVAL(pSite, pFrameInfo);
-        
+
         UPDATE_CAPABILITIES(pSite, pFrameInfo);
-        
+
 
         /***********************************/
         /* Must be before UPDATE_PRIVACY and UPDATE_RSN_IE */
@@ -2100,11 +2105,11 @@ static void updateSiteInfo(siteMgr_t *pSiteMgr, mlmeFrameInfo_t *pFrameInfo, sit
         }
         else if (pSiteMgr->pDesiredParams->siteMgrDesiredSSID.len > 0)
         {   /* There is a desired SSID */
-            if (pFrameInfo->content.iePacket.pSsid != NULL) 
+            if (pFrameInfo->content.iePacket.pSsid != NULL)
             {
-                if (os_memoryCompare (pSiteMgr->hOs, 
+                if (os_memoryCompare (pSiteMgr->hOs,
                                       (TI_UINT8 *)pSiteMgr->pDesiredParams->siteMgrDesiredSSID.str,
-                                      (TI_UINT8 *)pFrameInfo->content.iePacket.pSsid->serviceSetId, 
+                                      (TI_UINT8 *)pFrameInfo->content.iePacket.pSsid->serviceSetId,
                                       pSiteMgr->pDesiredParams->siteMgrDesiredSSID.len)==0)
                 {   /* update only SSID that equals the desired SSID */
                     ssidUpdated = TI_TRUE;
@@ -2117,7 +2122,7 @@ static void updateSiteInfo(siteMgr_t *pSiteMgr, mlmeFrameInfo_t *pFrameInfo, sit
             }
         }
         /***********************************/
- 
+
         if (ssidUpdated)
         {
 
@@ -2165,7 +2170,7 @@ static void updateSiteInfo(siteMgr_t *pSiteMgr, mlmeFrameInfo_t *pFrameInfo, sit
 
 
         /* updating CountryIE  */
-        if ((pFrameInfo->content.iePacket.country  != NULL) && 
+        if ((pFrameInfo->content.iePacket.country  != NULL) &&
 			(pFrameInfo->content.iePacket.country->hdr[1] != 0))
         {
             /* set the country info in the regulatory domain - If a different code was detected earlier
@@ -2176,10 +2181,10 @@ static void updateSiteInfo(siteMgr_t *pSiteMgr, mlmeFrameInfo_t *pFrameInfo, sit
         }
 
         /* Updating WSC params */
-        updateWSCParams(pSiteMgr, pSite, pFrameInfo); 
-  
+        updateWSCParams(pSiteMgr, pSite, pFrameInfo);
+
         UPDATE_LOCAL_TIME_STAMP(pSiteMgr, pSite, pFrameInfo);
-        
+
         UPDATE_BEACON_MODULATION(pSite, pFrameInfo);
 
         /* If the BSS type is independent, the beacon & probe modulation are equal,
@@ -2190,7 +2195,7 @@ static void updateSiteInfo(siteMgr_t *pSiteMgr, mlmeFrameInfo_t *pFrameInfo, sit
 
         if (pSite->siteType == SITE_PRIMARY)
         {
-           
+
             if (pSiteMgr->pSitesMgmtParams->pPrimarySite == NULL)
             {
                 TRACE0(pSiteMgr->hReport, REPORT_SEVERITY_ERROR, "updateSiteInfo: Primary Site Is NULL\n");
@@ -2201,8 +2206,8 @@ static void updateSiteInfo(siteMgr_t *pSiteMgr, mlmeFrameInfo_t *pFrameInfo, sit
                 /*  If the site that we got the beacon on is the primary site - which means we are either trying */
                 /*  to connect to it or we are already connected - send the EVENT_GOT_BEACON to the conn module (through the SME module) */
                 /*  so the conn module will be aware of the beacon status of the site it's trying to connect to */
-                
-#ifdef CCX_MODULE_INCLUDED
+
+#ifdef XCC_MODULE_INCLUDED
                 TI_INT8 ExternTxPower;
 
                 if (pFrameInfo->content.iePacket.cellTP != NULL)
@@ -2232,7 +2237,7 @@ static void updateSiteInfo(siteMgr_t *pSiteMgr, mlmeFrameInfo_t *pFrameInfo, sit
                             param.paramType = REGULATORY_DOMAIN_SET_POWER_CONSTRAINT_PARAM;
                             param.content.powerConstraint = pSite->powerConstraint;
                             regulatoryDomain_setParam(pSiteMgr->hRegulatoryDomain,&param);
-                
+
                         }
                     }
                 }
@@ -2245,7 +2250,7 @@ static void updateSiteInfo(siteMgr_t *pSiteMgr, mlmeFrameInfo_t *pFrameInfo, sit
                     StaCap_IsHtEnable (pSiteMgr->hStaCap, &b11nEnable);
 
                     /* verify that WME flag enable */
-                    qosMngr_GetWmeEnableFlag (pSiteMgr->hQosMngr, &bWmeEnable); 
+                    qosMngr_GetWmeEnableFlag (pSiteMgr->hQosMngr, &bWmeEnable);
 
                     if ((b11nEnable != TI_FALSE) && (bWmeEnable != TI_FALSE))
                     {
@@ -2263,13 +2268,13 @@ static void updateSiteInfo(siteMgr_t *pSiteMgr, mlmeFrameInfo_t *pFrameInfo, sit
             TI_UINT8       rsnIeLen = pFrameInfo->content.iePacket.rsnIeLen;
             UPDATE_RSN_IE(pSite, pRsnIe, rsnIeLen);
         }
-        
+
         UPDATE_BEACON_TIMESTAMP(pSiteMgr, pSite, pFrameInfo);
 
-        
-        
+
+
         TWD_UpdateDtimTbtt (pSiteMgr->hTWD, pSite->dtimPeriod, pSite->beaconInterval);
-       
+
         break;
 
 
@@ -2282,17 +2287,17 @@ static void updateSiteInfo(siteMgr_t *pSiteMgr, mlmeFrameInfo_t *pFrameInfo, sit
                 ssidUpdated = TI_TRUE;
         if (pSite->siteType == SITE_PRIMARY)
         {   /* Primary SITE */
-            if (pFrameInfo->content.iePacket.pSsid != NULL && 
+            if (pFrameInfo->content.iePacket.pSsid != NULL &&
                 pSiteMgr->pDesiredParams->siteMgrDesiredSSID.len > 0)
             {   /* There's a desired SSID*/
-                if (os_memoryCompare (pSiteMgr->hOs, 
-                                      (TI_UINT8*)pSiteMgr->pDesiredParams->siteMgrDesiredSSID.str, 
-                                      (TI_UINT8*)pFrameInfo->content.iePacket.pSsid->serviceSetId, 
+                if (os_memoryCompare (pSiteMgr->hOs,
+                                      (TI_UINT8*)pSiteMgr->pDesiredParams->siteMgrDesiredSSID.str,
+                                      (TI_UINT8*)pFrameInfo->content.iePacket.pSsid->serviceSetId,
                                       pFrameInfo->content.iePacket.pSsid->hdr[1])!=0)
                 {   /* Do not overwrite the primary site's SSID with a different than the desired SSID*/
                     ssidUpdated = TI_FALSE;
                 }
-                
+
             }
             else if (pFrameInfo->content.iePacket.pSsid == NULL)
             {
@@ -2343,7 +2348,7 @@ static void updateSiteInfo(siteMgr_t *pSiteMgr, mlmeFrameInfo_t *pFrameInfo, sit
 
 
         /* updating CountryIE  */
-        if ((pFrameInfo->content.iePacket.country  != NULL) && 
+        if ((pFrameInfo->content.iePacket.country  != NULL) &&
 			(pFrameInfo->content.iePacket.country->hdr[1] != 0))
         {
             /* set the country info in the regulatory domain - If a different code was detected earlier
@@ -2354,8 +2359,8 @@ static void updateSiteInfo(siteMgr_t *pSiteMgr, mlmeFrameInfo_t *pFrameInfo, sit
         }
 
         /* Updating WSC params */
-        updateWSCParams(pSiteMgr, pSite, pFrameInfo); 
-        
+        updateWSCParams(pSiteMgr, pSite, pFrameInfo);
+
         UPDATE_LOCAL_TIME_STAMP(pSiteMgr, pSite, pFrameInfo);
 
         UPDATE_PROBE_MODULATION(pSite, pFrameInfo);
@@ -2512,15 +2517,15 @@ RETURN:
 
 ************************************************************************/
 void siteMgr_UpdatHtParams (TI_HANDLE hSiteMgr, siteEntry_t *pSite, mlmeFrameInfo_t *pFrameInfo)
-{                    
+{
     siteMgr_t *pSiteMgr = (siteMgr_t *)hSiteMgr;
 
     /* Updating HT capabilites IE params */
     if (pFrameInfo->content.iePacket.pHtCapabilities != NULL)
     {
 	   /* updating the HT capabilities unparse format into the site table. */
-       os_memoryCopy (pSiteMgr->hOs, &pSite->tHtCapabilities, 
-                      (TI_UINT8 *)(pFrameInfo->content.iePacket.pHtCapabilities), 
+       os_memoryCopy (pSiteMgr->hOs, &pSite->tHtCapabilities,
+                      (TI_UINT8 *)(pFrameInfo->content.iePacket.pHtCapabilities),
                       sizeof(Tdot11HtCapabilitiesUnparse));
 
        TRACE0(pSiteMgr->hReport, REPORT_SEVERITY_INFORMATION , "$$$$$$ HT capabilites parameters were updates.\n");
@@ -2534,9 +2539,9 @@ void siteMgr_UpdatHtParams (TI_HANDLE hSiteMgr, siteEntry_t *pSite, mlmeFrameInf
 	if (pFrameInfo->content.iePacket.pHtInformation != NULL)
 	{
 	   /* update in case different setting vlaue from the last one */
-       if (os_memoryCompare (pSiteMgr->hOs, 
+       if (os_memoryCompare (pSiteMgr->hOs,
                              (TI_UINT8 *)&pSite->tHtInformation,
-                             (TI_UINT8 *)pFrameInfo->content.iePacket.pHtInformation, 
+                             (TI_UINT8 *)pFrameInfo->content.iePacket.pHtInformation,
                              sizeof(Tdot11HtInformationUnparse)) != 0)
        {
            pSite->bHtInfoUpdate = TI_TRUE;
@@ -2620,7 +2625,7 @@ static int parseWscMethodFromIE (siteMgr_t *pSiteMgr, dot11_WSC_t *WSCParams, TI
          tlvPtr+=tlvPtrLen+2;
       }
    } while ((tlvPtr < endPtr) && (selectedMethod == 0));
-   
+
    if (tlvPtr >= endPtr)
    {
       return TI_NOK;
@@ -2722,20 +2727,20 @@ TRACE2(pSiteMgr->hReport, REPORT_SEVERITY_INFORMATION, "1- maxBasicRate = 0x%X, 
 
     if(pFrameInfo->content.iePacket.pExtRates)
     {
-        rate_NetStrToDrvBitmap (&bitMapExtSupp, 
+        rate_NetStrToDrvBitmap (&bitMapExtSupp,
                                 pFrameInfo->content.iePacket.pExtRates->rates,
                                        pFrameInfo->content.iePacket.pExtRates->hdr[1]);
 
         pSite->rateMask.supportedRateMask |= bitMapExtSupp;
 
-        rate_NetBasicStrToDrvBitmap (&bitMapExtSupp, 
+        rate_NetBasicStrToDrvBitmap (&bitMapExtSupp,
                                      pFrameInfo->content.iePacket.pExtRates->rates,
                                         pFrameInfo->content.iePacket.pExtRates->hdr[1]);
 
         pSite->rateMask.basicRateMask |= bitMapExtSupp;
     }
 
-    
+
     if (pFrameInfo->content.iePacket.pHtCapabilities != NULL)
     {
         /* MCS build rates bit map */
@@ -2813,10 +2818,10 @@ static TI_STATUS getPrimaryBssid(siteMgr_t *pSiteMgr, OS_802_11_BSSID_EX *primar
 
     TRACE1(pSiteMgr->hReport, REPORT_SEVERITY_INFORMATION, "Entering getPrimaryBssid, length = %d\n", *pLength);
 
-    primaryBssid->Length = length; 
+    primaryBssid->Length = length;
     /* MacAddress */
     MAC_COPY (primaryBssid->MacAddress, pPrimarySite->bssid);
-        
+
     /* Capabilities */
     primaryBssid->Capabilities = pPrimarySite->capabilities;
 
@@ -2826,9 +2831,9 @@ static TI_STATUS getPrimaryBssid(siteMgr_t *pSiteMgr, OS_802_11_BSSID_EX *primar
     {
         pPrimarySite->ssid.len = MAX_SSID_LEN;
     }
-    os_memoryCopy (pSiteMgr->hOs, 
-                   (void *)primaryBssid->Ssid.Ssid, 
-                   (void *)pPrimarySite->ssid.str, 
+    os_memoryCopy (pSiteMgr->hOs,
+                   (void *)primaryBssid->Ssid.Ssid,
+                   (void *)pPrimarySite->ssid.str,
                    pPrimarySite->ssid.len);
     primaryBssid->Ssid.SsidLength = pPrimarySite->ssid.len;
 
@@ -2845,7 +2850,7 @@ static TI_STATUS getPrimaryBssid(siteMgr_t *pSiteMgr, OS_802_11_BSSID_EX *primar
     rate_DrvBitmapToNetStr (pPrimarySite->rateMask.supportedRateMask,
                             pPrimarySite->rateMask.basicRateMask,
                             (TI_UINT8 *)primaryBssid->SupportedRates,
-                            &len, 
+                            &len,
                             &firstOFDMloc);
 
     /* set network type acording to band and rates */
@@ -2937,16 +2942,16 @@ void siteMgr_printPrimarySiteDesc(TI_HANDLE hSiteMgr )
     siteEntry_t *pPrimarySite = pSiteMgr->pSitesMgmtParams->pPrimarySite;
 
     /* the driver logger can't print %s
-     * TRACE1(pSiteMgr->hReport, REPORT_SEVERITY_CONSOLE, "-- SSID  = %s \n",pPrimarySite->ssid.str); 
+     * TRACE1(pSiteMgr->hReport, REPORT_SEVERITY_CONSOLE, "-- SSID  = %s \n",pPrimarySite->ssid.str);
      */
     TRACE6(pSiteMgr->hReport, REPORT_SEVERITY_CONSOLE,"-- BSSID = %x-%x-%x-%x-%x-%x\n",
-                    pPrimarySite->bssid[0], pPrimarySite->bssid[1], pPrimarySite->bssid[2], pPrimarySite->bssid[3], 
+                    pPrimarySite->bssid[0], pPrimarySite->bssid[1], pPrimarySite->bssid[2], pPrimarySite->bssid[3],
                     pPrimarySite->bssid[4], pPrimarySite->bssid[5]);
 
 
 	WLAN_OS_REPORT(("-- SSID  = %s \n",pPrimarySite->ssid.str));
 	WLAN_OS_REPORT(("-- BSSID = %x-%x-%x-%x-%x-%x\n",
-					pPrimarySite->bssid[0], pPrimarySite->bssid[1], pPrimarySite->bssid[2], pPrimarySite->bssid[3], 
+					pPrimarySite->bssid[0], pPrimarySite->bssid[1], pPrimarySite->bssid[2], pPrimarySite->bssid[3],
 					pPrimarySite->bssid[4], pPrimarySite->bssid[5]));
 }
 #endif
@@ -2988,7 +2993,7 @@ static void getPrimarySiteDesc(siteMgr_t *pSiteMgr, OS_802_11_BSSID *pPrimarySit
 
     TRACE0(pSiteMgr->hReport, REPORT_SEVERITY_INFORMATION, "getPrimarySiteDesc - enter\n");
 
-    
+
     /* If an "extended" request has been made - update the length accordingly */
    if (supplyExtendedInfo == TI_FALSE)
     pPrimarySiteDesc->Length = sizeof(OS_802_11_BSSID);
@@ -3011,9 +3016,9 @@ static void getPrimarySiteDesc(siteMgr_t *pSiteMgr, OS_802_11_BSSID *pPrimarySit
         return;
     }
     /* SSID */
-    os_memoryCopy (pSiteMgr->hOs, 
-                   (void *)pPrimarySiteDesc->Ssid.Ssid, 
-                   (void *)pPrimarySite->ssid.str, 
+    os_memoryCopy (pSiteMgr->hOs,
+                   (void *)pPrimarySiteDesc->Ssid.Ssid,
+                   (void *)pPrimarySite->ssid.str,
                    pPrimarySite->ssid.len);
     pPrimarySiteDesc->Ssid.SsidLength = pPrimarySite->ssid.len;
 
@@ -3045,7 +3050,7 @@ static void getPrimarySiteDesc(siteMgr_t *pSiteMgr, OS_802_11_BSSID *pPrimarySit
    rate_DrvBitmapToNetStr (pPrimarySite->rateMask.supportedRateMask,
                            pPrimarySite->rateMask.basicRateMask,
                            &SupportedRates[0],
-                           &len, 
+                           &len,
                            &firstOFDMloc);
 
    if (supplyExtendedInfo == TI_FALSE)
@@ -3070,13 +3075,13 @@ static void getPrimarySiteDesc(siteMgr_t *pSiteMgr, OS_802_11_BSSID *pPrimarySit
      pVarIes = (OS_802_11_VARIABLE_IEs*)&pExPrimarySiteDesc->IEs[pExPrimarySiteDesc->IELength];
      pVarIes->ElementID = SSID_IE_ID;
      pVarIes->Length = pPrimarySite->ssid.len;
-     os_memoryCopy (pSiteMgr->hOs, 
-                    (void *)pVarIes->data, 
-                    (void *)pPrimarySite->ssid.str, 
+     os_memoryCopy (pSiteMgr->hOs,
+                    (void *)pVarIes->data,
+                    (void *)pPrimarySite->ssid.str,
                     pPrimarySite->ssid.len);
      pExPrimarySiteDesc->IELength += (pVarIes->Length + 2);
 
-     
+
      /* copy RSN information elements */
      rsnIeLength = 0;
      for (index=0; index<MAX_RSN_IE && pPrimarySite->pRsnIe[index].hdr[1] > 0; index++)
@@ -3183,8 +3188,8 @@ static void getSupportedRateSet(siteMgr_t *pSiteMgr, TRates *pRatesSet)
 
     rate_DrvBitmapToNetStr (pSiteMgr->pDesiredParams->siteMgrRegstrySuppRateMask,
                                pSiteMgr->pDesiredParams->siteMgrRegstryBasicRateMask,
-                            (TI_UINT8 *)pRatesSet->ratesString, 
-                            &len, 
+                            (TI_UINT8 *)pRatesSet->ratesString,
+                            &len,
                             &dontCareParam);
 
     pRatesSet->len = (TI_UINT8) len;
@@ -3243,7 +3248,7 @@ static TI_STATUS setSupportedRateSet(siteMgr_t *pSiteMgr, TRates *pRatesSet)
     }
 
     /* Basic rates must be supported. If one of 1M,2M,5.5M,11M is not supported fail.*/
-    for (j = 0; j < currentBasicRatesLength; j++) 
+    for (j = 0; j < currentBasicRatesLength; j++)
     {
         for (i = 0; i < pRatesSet->len; i++)
         {
@@ -3252,13 +3257,13 @@ static TI_STATUS setSupportedRateSet(siteMgr_t *pSiteMgr, TRates *pRatesSet)
                 break;
         }
         /* not all the basic rates are supported! Failure*/
-        if (i == pRatesSet->len) 
+        if (i == pRatesSet->len)
         {
             TRACE0(pSiteMgr->hReport, REPORT_SEVERITY_ERROR, "Rates set must contain the basic set! Failing\n");
             return PARAM_VALUE_NOT_VALID;
         }
     }
-    
+
     for (i = 0; i < pRatesSet->len; i++)
     {
         drvRate = rate_NetToDrv (pRatesSet->ratesString[i]);
@@ -3541,13 +3546,13 @@ void siteMgr_updateRates(TI_HANDLE hSiteMgr, TI_BOOL dot11a, TI_BOOL updateToOS)
         pSiteMgr->pDesiredParams->siteMgrCurrentDesiredRateMask.basicRateMask &= uSupportedRates;
 
         /* Set desired modulation */
-        pSiteMgr->pDesiredParams->siteMgrDesiredModulationType = 
+        pSiteMgr->pDesiredParams->siteMgrDesiredModulationType =
             (eMaxRate < DRV_RATE_22M) ? DRV_MODULATION_CCK : DRV_MODULATION_OFDM;
     }
     pSiteMgr->pDesiredParams->siteMgrDesiredRatePair.maxBasic = translateRateMaskToValue(pSiteMgr, pSiteMgr->pDesiredParams->siteMgrCurrentDesiredRateMask.basicRateMask);
     pSiteMgr->pDesiredParams->siteMgrDesiredRatePair.maxActive = translateRateMaskToValue(pSiteMgr, pSiteMgr->pDesiredParams->siteMgrCurrentDesiredRateMask.supportedRateMask);
 
-    if (updateToOS == TI_TRUE) 
+    if (updateToOS == TI_TRUE)
 	{
         siteEntry_t  *pPrimarySite = pSiteMgr->pSitesMgmtParams->pPrimarySite;
         TI_UINT32 commonSupportedRateMask;
@@ -3568,17 +3573,17 @@ void siteMgr_updateRates(TI_HANDLE hSiteMgr, TI_BOOL dot11a, TI_BOOL updateToOS)
 }
 
 
-/** 
+/**
  * \fn     siteMgr_SelectRateMatch
  * \brief  Checks if the rates settings match those of a site
- * 
+ *
  * Checks if the rates settings match those of a site
- * 
+ *
  * \param  hSiteMgr - handle to the siteMgr object
  * \param  pCurrentSite - the site to check
  * \return TI_TRUE if site matches rates settings, TI FALSE if it doesn't
  * \sa     sme_Select
- */ 
+ */
 TI_BOOL siteMgr_SelectRateMatch (TI_HANDLE hSiteMgr, TSiteEntry *pCurrentSite)
 {
     siteMgr_t *pSiteMgr = (siteMgr_t *)hSiteMgr;
@@ -3588,12 +3593,12 @@ TI_BOOL siteMgr_SelectRateMatch (TI_HANDLE hSiteMgr, TSiteEntry *pCurrentSite)
 	TI_UINT32 SiteTotalRates;
 
 	/* If the basic or active rate are invalid (0), return NO_MATCH. */
-	if ((pCurrentSite->maxBasicRate == DRV_RATE_INVALID) || (pCurrentSite->maxActiveRate == DRV_RATE_INVALID)) 
+	if ((pCurrentSite->maxBasicRate == DRV_RATE_INVALID) || (pCurrentSite->maxActiveRate == DRV_RATE_INVALID))
 	{
         TRACE2(pSiteMgr->hReport, REPORT_SEVERITY_INFORMATION, "siteMgr_SelectRateMatch: basic or active rate are invalid. maxBasic=%d,maxActive=%d \n", pCurrentSite->maxBasicRate ,pCurrentSite->maxActiveRate);
 		return TI_FALSE;
 	}
-	
+
 	if (DRV_RATE_MAX < pCurrentSite->maxBasicRate)
 	{
         TRACE1(pSiteMgr->hReport, REPORT_SEVERITY_INFORMATION, "siteMgr_SelectRateMatch: basic rate is too high. maxBasic=%d\n", pCurrentSite->maxBasicRate);
@@ -3609,10 +3614,10 @@ TI_BOOL siteMgr_SelectRateMatch (TI_HANDLE hSiteMgr, TSiteEntry *pCurrentSite)
 				    pSiteMgr->pDesiredParams->siteMgrCurrentDesiredRateMask.supportedRateMask;
 
 	SiteTotalRates = pCurrentSite->rateMask.basicRateMask | pCurrentSite->rateMask.supportedRateMask;
-    
-	MatchedBasicRateMask = SiteTotalRates 
+
+	MatchedBasicRateMask = SiteTotalRates
 				& pSiteMgr->pDesiredParams->siteMgrCurrentDesiredRateMask.basicRateMask;
- 
+
     MatchedSupportedRateMask = SiteTotalRates &
 				pSiteMgr->pDesiredParams->siteMgrCurrentDesiredRateMask.supportedRateMask;
 
@@ -3890,16 +3895,16 @@ void siteMgr_IsERP_Needed(TI_HANDLE hSiteMgr,TI_BOOL *useProtection,TI_BOOL *Non
     }
 }
 
-/** 
+/**
  * \fn     siteMgr_CopyToPrimarySite()
- * \brief  Responsible to copy candidate AP from SME table to site Mgr table 
+ * \brief  Responsible to copy candidate AP from SME table to site Mgr table
  *
- * \note   
+ * \note
  * \param  hSiteMgr - SiteMgr handle.
  * \param  pCandidate - candidate AP from SME table.
- * \return TI_OK on success or TI_NOK on failure 
- * \sa     
- */ 
+ * \return TI_OK on success or TI_NOK on failure
+ * \sa
+ */
 TI_STATUS siteMgr_CopyToPrimarySite (TI_HANDLE hSiteMgr, TSiteEntry *pCandidate)
 {
     siteMgr_t   *pSiteMgr = (siteMgr_t *)hSiteMgr;
@@ -3950,16 +3955,16 @@ TI_STATUS siteMgr_CopyToPrimarySite (TI_HANDLE hSiteMgr, TSiteEntry *pCandidate)
 
 
 /***********************************************************************
- *                        siteMgr_disSelectSite									
+ *                        siteMgr_disSelectSite
  ***********************************************************************
 DESCRIPTION: Called by the SME SM in order to dis select the primary site.
-			The function set the primary site pointer to NULL and set its type to type regular	
-                                                                                                   
+			The function set the primary site pointer to NULL and set its type to type regular
+
 INPUT:      hSiteMgr	-	site mgr handle.
 
-OUTPUT:		
+OUTPUT:
 
-RETURN:     TI_OK 
+RETURN:     TI_OK
 
 ************************************************************************/
 TI_STATUS siteMgr_disSelectSite(TI_HANDLE	hSiteMgr)
@@ -3970,7 +3975,7 @@ TI_STATUS siteMgr_disSelectSite(TI_HANDLE	hSiteMgr)
 	if (pSiteMgr->pSitesMgmtParams->pPrimarySite != NULL)
 	{
         TRACE6(pSiteMgr->hReport, REPORT_SEVERITY_INFORMATION, "siteMgr_disSelectSite REMOVE Primary ssid=, bssid= 0x%x-0x%x-0x%x-0x%x-0x%x-0x%x\n\n", pSiteMgr->pSitesMgmtParams->pPrimarySite->bssid[0], pSiteMgr->pSitesMgmtParams->pPrimarySite->bssid[1], pSiteMgr->pSitesMgmtParams->pPrimarySite->bssid[2], pSiteMgr->pSitesMgmtParams->pPrimarySite->bssid[3], pSiteMgr->pSitesMgmtParams->pPrimarySite->bssid[4], pSiteMgr->pSitesMgmtParams->pPrimarySite->bssid[5] );
-		
+
         pSiteMgr->pSitesMgmtParams->pPrimarySite->siteType = SITE_REGULAR;
 		pSiteMgr->pSitesMgmtParams->pPrevPrimarySite = pSiteMgr->pSitesMgmtParams->pPrimarySite;
 		pSiteMgr->pSitesMgmtParams->pPrimarySite = NULL;
@@ -3984,7 +3989,7 @@ TI_STATUS siteMgr_disSelectSite(TI_HANDLE	hSiteMgr)
 *
 * siteMgr_overwritePrimarySite
 *
-* \b Description: 
+* \b Description:
 *
 * This function sets new AP as a primary site and, if requested, stores previous
 * AP's info; called during roaming
@@ -3992,12 +3997,12 @@ TI_STATUS siteMgr_disSelectSite(TI_HANDLE	hSiteMgr)
 * \b ARGS:
 *
 *  I   - pCurrBSS - Current BSS handle \n
-*  
+*
 * \b RETURNS:
 *
 *  TI_OK on success, TI_NOK on failure.
 *
-* \sa 
+* \sa
 */
 TI_STATUS siteMgr_overwritePrimarySite(TI_HANDLE hSiteMgr, bssEntry_t *newAP, TI_BOOL requiredToStorePrevSite)
 {
@@ -4049,7 +4054,7 @@ TI_STATUS siteMgr_overwritePrimarySite(TI_HANDLE hSiteMgr, bssEntry_t *newAP, TI
         newApEntry->dtimPeriod      = 1;
         newApEntry->rxRate          = (ERate)newAP->rxRate;
         /* Mark the site as regular in order to prevent from calling Power manager during beacon parsing */
-        newApEntry->siteType        = SITE_REGULAR; 
+        newApEntry->siteType        = SITE_REGULAR;
 
         os_memoryCopy(pSiteMgr->hOs, &newApEntry->ssid, &pSiteMgr->pDesiredParams->siteMgrDesiredSSID, sizeof(TSsid));
 
@@ -4095,7 +4100,7 @@ TI_STATUS siteMgr_overwritePrimarySite(TI_HANDLE hSiteMgr, bssEntry_t *newAP, TI
 }
 
 
-/** 
+/**
  * \fn     siteMgr_changeBandParams
  * \brief  change band params at the SithMgr and the TWD
 
@@ -4103,7 +4108,7 @@ TI_STATUS siteMgr_overwritePrimarySite(TI_HANDLE hSiteMgr, bssEntry_t *newAP, TI
  * \param  radioBand - the set radio band.
  * \return TI_TRUE if site matches RSN settings, TI FALSE if it doesn't
  * \sa     sme_Select
- */ 
+ */
 void siteMgr_changeBandParams (TI_HANDLE hSiteMgr, ERadioBand radioBand)
 {
 	paramInfo_t	param;
@@ -4117,15 +4122,15 @@ void siteMgr_changeBandParams (TI_HANDLE hSiteMgr, ERadioBand radioBand)
 		param.content.siteMgrDot11OperationalMode = DOT11_A_MODE;
 
 	siteMgr_setParam(hSiteMgr, &param);
-	
+
 	param.paramType = SITE_MGR_RADIO_BAND_PARAM;
 	param.content.siteMgrRadioBand = radioBand;
 	siteMgr_setParam(hSiteMgr, &param);
-	
+
 	siteMgr_setCurrentTable(hSiteMgr, radioBand);
-	
+
 	/* configure hal with common core-hal parameters */
-	TWD_SetRadioBand (pSiteMgr->hTWD, radioBand);   
+	TWD_SetRadioBand (pSiteMgr->hTWD, radioBand);
 }
 
 
@@ -4160,19 +4165,19 @@ static TI_UINT16 incrementTxSessionCount(siteMgr_t *pSiteMgr)
 *
 * siteMgr_TxPowerHighThreshold
 *
-* \b Description: 
+* \b Description:
 *
 * Called by EventMBox upon TX Power Adaptation High Threshold Trigger.
 *
 * \b ARGS:
 *
 *  I   - hSiteMgr - Site Mgr handle \n
-*  
+*
 * \b RETURNS:
 *
 *  None
 *
-* \sa 
+* \sa
 */
 void siteMgr_TxPowerHighThreshold(TI_HANDLE hSiteMgr,
                                       TI_UINT8     *data,
@@ -4185,19 +4190,19 @@ void siteMgr_TxPowerHighThreshold(TI_HANDLE hSiteMgr,
 *
 * siteMgr_TxPowerLowThreshold
 *
-* \b Description: 
+* \b Description:
 *
 * Called by EventMBox upon TX Power Adaptation Low Threshold Trigger.
 *
 * \b ARGS:
 *
 *  I   - hSiteMgr - Site Mgr handle \n
-*  
+*
 * \b RETURNS:
 *
 *  None
 *
-* \sa 
+* \sa
 */
 void siteMgr_TxPowerLowThreshold(TI_HANDLE hSiteMgr,
                                       TI_UINT8     *data,
@@ -4210,7 +4215,7 @@ void siteMgr_TxPowerLowThreshold(TI_HANDLE hSiteMgr,
 *
 * siteMgr_TxPowerAdaptation
 *
-* \b Description: 
+* \b Description:
 *
 * TX Power Adaptation - Used for TX power adjust .
 *
@@ -4218,12 +4223,12 @@ void siteMgr_TxPowerLowThreshold(TI_HANDLE hSiteMgr,
 *
 *  I   - hSiteMgr - Site Mgr handle \n
 *      - highLowEdge - Direction of Edge event
-*  
+*
 * \b RETURNS:
 *
 *  None
 *
-* \sa 
+* \sa
 */
 static void siteMgr_TxPowerAdaptation(TI_HANDLE hSiteMgr, RssiEventDir_e highLowEdge)
 {
@@ -4234,12 +4239,12 @@ static void siteMgr_TxPowerAdaptation(TI_HANDLE hSiteMgr, RssiEventDir_e highLow
         if (highLowEdge == RSSI_EVENT_DIR_HIGH)
         {
             /* enable the "Temporary TX power" when close to AP */
-            siteMgr_setTemporaryTxPower (pSiteMgr, TI_TRUE) ;  
+            siteMgr_setTemporaryTxPower (pSiteMgr, TI_TRUE) ;
         }
-        else 
+        else
         {
             /* disable the "Temporary TX power" when we are again far from the AP */
-            siteMgr_setTemporaryTxPower (pSiteMgr, TI_FALSE);  
+            siteMgr_setTemporaryTxPower (pSiteMgr, TI_FALSE);
         }
     }
 }
@@ -4248,11 +4253,11 @@ static void siteMgr_TxPowerAdaptation(TI_HANDLE hSiteMgr, RssiEventDir_e highLow
 *
 * SiteMgr_GetMode
 *
-* \b Description: 
+* \b Description:
 *
 * get dot11mode a/b/g/dua; .
 *
-* \sa 
+* \sa
 */
 TI_UINT8 SiteMgr_GetMode(TI_HANDLE hSiteMgr)
 {

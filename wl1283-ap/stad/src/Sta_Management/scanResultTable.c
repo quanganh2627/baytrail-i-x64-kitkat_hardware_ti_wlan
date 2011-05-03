@@ -1,32 +1,37 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
-/** \file  scanResultTable.c 
+/*
+ * scanResultTable.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/** \file  scanResultTable.c
  *  \brief implements a table holding scan results, by BSSID
  *
  *  \see   scanResultTable.h
@@ -150,17 +155,17 @@ static void         scanResultTable_UpdateWSCParams (TSiteEntry *pSite, TScanFra
 static TI_STATUS scanResultTable_CheckRxSignalValidity(TScanResultTable *pScanResultTable, siteEntry_t *pSite, TI_INT8 rxLevel, TI_UINT8 channel);
 
 
-/** 
- * \fn     scanResultTable_Create 
+/**
+ * \fn     scanResultTable_Create
  * \brief  Create a scan result table object.
- * 
+ *
  * Create a scan result table object. Allocate system resources.
- * 
- * \note   
+ *
+ * \note
  * \param  hOS - handle to the OS object
  * \return Handle to the newly created scan result table object, NULL if an error occured.
  * \sa     scanResultTable_Init, scanResultTable_Destroy
- */ 
+ */
 TI_HANDLE scanResultTable_Create (TI_HANDLE hOS)
 {
     TScanResultTable    *pScanResultTable = NULL;
@@ -170,19 +175,19 @@ TI_HANDLE scanResultTable_Create (TI_HANDLE hOS)
     if (NULL == pScanResultTable)
     {
         /* because the malloc failure here the TRACEx can not be used (no pointer for the 1st parameter to TRACEx) */
-        WLAN_OS_REPORT(("scanResultTable_Create: Unable to allocate memory for pScanResultTable of %d bytes\n", 
+        WLAN_OS_REPORT(("scanResultTable_Create: Unable to allocate memory for pScanResultTable of %d bytes\n",
 			  sizeof (TScanResultTable)));
         return NULL;  /* this is done similarly to the next error case */
     }
 
     pScanResultTable->hOS = hOS;
     /* allocate memory for sites' data */
-    pScanResultTable->pTable = 
+    pScanResultTable->pTable =
         (TSiteEntry *)os_memoryAlloc (pScanResultTable->hOS, sizeof (TSiteEntry) * TABLE_ENTRIES_NUMBER);
     if (NULL == pScanResultTable->pTable)
     {
-        TRACE2(pScanResultTable->hReport, REPORT_SEVERITY_ERROR , 
-			   "scanResultTable_Create: Unable to allocate memory for %d entries of %d bytes\n", 
+        TRACE2(pScanResultTable->hReport, REPORT_SEVERITY_ERROR ,
+			   "scanResultTable_Create: Unable to allocate memory for %d entries of %d bytes\n",
 			   TABLE_ENTRIES_NUMBER, sizeof (TSiteEntry));
         os_memoryFree(pScanResultTable->hOS, pScanResultTable, sizeof(TScanResultTable));
         return NULL;
@@ -191,17 +196,17 @@ TI_HANDLE scanResultTable_Create (TI_HANDLE hOS)
     return (TI_HANDLE)pScanResultTable;
 }
 
-/** 
- * \fn     scanResultTable_Init 
- * \brief  Initializes the scan result table object 
- * 
+/**
+ * \fn     scanResultTable_Init
+ * \brief  Initializes the scan result table object
+ *
  * Initializes the scan result table object. Set handles to other objects.
- * 
+ *
  * \param  hScanResultTable - handle to the scan result table object
  * \param  pStadHandles - modules handles table
  * \return None
  * \sa     scanResultTable_Create
- */ 
+ */
 void        scanResultTable_Init (TI_HANDLE hScanResultTable, TStadHandlesList *pStadHandles)
 {
     TScanResultTable    *pScanResultTable = (TScanResultTable*)hScanResultTable;
@@ -217,16 +222,16 @@ void        scanResultTable_Init (TI_HANDLE hScanResultTable, TStadHandlesList *
 }
 
 
-/** 
- * \fn     scanResultTable_Destroy 
+/**
+ * \fn     scanResultTable_Destroy
  * \brief  Destroys the scan result table object
- * 
+ *
  * Destroys the scan result table object. Release system resources
- * 
+ *
  * \param  hScanResultTable - handle to the scan result table object
  * \return None
- * \sa     scanResultTable_Create 
- */ 
+ * \sa     scanResultTable_Create
+ */
 void        scanResultTable_Destroy (TI_HANDLE hScanResultTable)
 {
     TScanResultTable    *pScanResultTable = (TScanResultTable*)hScanResultTable;
@@ -235,7 +240,7 @@ void        scanResultTable_Destroy (TI_HANDLE hScanResultTable)
     if (NULL != pScanResultTable->pTable)
     {
         /* free table memory */
-        os_memoryFree (pScanResultTable->hOS, (void*)pScanResultTable->pTable, 
+        os_memoryFree (pScanResultTable->hOS, (void*)pScanResultTable->pTable,
                        sizeof (TSiteEntry) * TABLE_ENTRIES_NUMBER);
     }
 
@@ -243,19 +248,19 @@ void        scanResultTable_Destroy (TI_HANDLE hScanResultTable)
     os_memoryFree (pScanResultTable->hOS, (void*)hScanResultTable, sizeof (TScanResultTable));
 }
 
-/** 
+/**
  * \fn     scanResultTable_UpdateEntry
- * \brief  Update or insert a site data. 
- * 
+ * \brief  Update or insert a site data.
+ *
  * Update a site's data in the table if it already exists, or create an antry if the site doesn't exist.
  * If the table is in stable state, will move it to updating state and clear its contents.
- * 
+ *
  * \param  hScanResultTable - handle to the scan result table object
  * \param  pBssid - a pointer to the site BSSID
  * \param  pframe - a pointer to the received frame data
  * \return TI_OK if entry was inseretd or updated successfuly, TI_NOK if table is full
  * \sa     scanResultTable_SetStableState
- */ 
+ */
 TI_STATUS scanResultTable_UpdateEntry (TI_HANDLE hScanResultTable, TMacAddr *pBssid, TScanFrameInfo* pFrame)
 {
     TScanResultTable    *pScanResultTable = (TScanResultTable*)hScanResultTable;
@@ -275,7 +280,7 @@ TI_STATUS scanResultTable_UpdateEntry (TI_HANDLE hScanResultTable, TMacAddr *pBs
     }
 
     /* Verify that the SSID IE is available (if not return NOK) */
-    if (NULL == pFrame->parsedIEs->content.iePacket.pSsid) 
+    if (NULL == pFrame->parsedIEs->content.iePacket.pSsid)
     {
         TRACE6(pScanResultTable->hReport, REPORT_SEVERITY_WARNING, "scanResultTable_UpdateEntry: can't add site %02d:%02d:%02d:%02d:%02d:%02d"                                  " because SSID IE is NULL\n", pBssid[ 0 ], pBssid[ 1 ], pBssid[ 2 ], pBssid[ 3 ], pBssid[ 4 ], pBssid[ 5 ]);
         return TI_NOK;
@@ -292,12 +297,12 @@ TI_STATUS scanResultTable_UpdateEntry (TI_HANDLE hScanResultTable, TMacAddr *pBs
         handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
         tTempSsid.len = MAX_SSID_LEN;
     }
-    os_memoryCopy(pScanResultTable->hOS, (void *)&(tTempSsid.str[ 0 ]), 
+    os_memoryCopy(pScanResultTable->hOS, (void *)&(tTempSsid.str[ 0 ]),
                   (void *)&(pFrame->parsedIEs->content.iePacket.pSsid->serviceSetId[ 0 ]),
                   tTempSsid.len);
     if (MAX_SSID_LEN > tTempSsid.len)
         tTempSsid.str[ tTempSsid.len ] ='\0';
-    
+
     /* check if the SSID:BSSID pair already exists in the table */
     pSite = scanResultTable_GetBySsidBssidPair (hScanResultTable, &tTempSsid ,pBssid);
     if (NULL != pSite)
@@ -321,7 +326,7 @@ TI_STATUS scanResultTable_UpdateEntry (TI_HANDLE hScanResultTable, TMacAddr *pBs
         }
 
         /* and update its data */
-        scanResultTable_UpdateSiteData (hScanResultTable, 
+        scanResultTable_UpdateSiteData (hScanResultTable,
                                         pSite,
                                         pFrame);
     }
@@ -329,16 +334,16 @@ TI_STATUS scanResultTable_UpdateEntry (TI_HANDLE hScanResultTable, TMacAddr *pBs
     return TI_OK;
 }
 
-/** 
- * \fn     scanResultTable_SetStableState 
- * \brief  Moves the table to stable state 
- * 
+/**
+ * \fn     scanResultTable_SetStableState
+ * \brief  Moves the table to stable state
+ *
  * Moves the table to stable state. Also clears the tabel contents if required.
- * 
+ *
  * \param  hScanResultTable - handle to the scan result table object
  * \return None
- * \sa     scanResultTable_UpdateEntry 
- */ 
+ * \sa     scanResultTable_UpdateEntry
+ */
 void        scanResultTable_SetStableState (TI_HANDLE hScanResultTable)
 {
     TScanResultTable    *pScanResultTable = (TScanResultTable*)hScanResultTable;
@@ -358,16 +363,16 @@ void        scanResultTable_SetStableState (TI_HANDLE hScanResultTable)
 
 }
 
-/** 
- * \fn     scanResultTable_GetFirst 
- * \brief  Retrieves the first entry in the table 
- * 
+/**
+ * \fn     scanResultTable_GetFirst
+ * \brief  Retrieves the first entry in the table
+ *
  * Retrieves the first entry in the table
- * 
+ *
  * \param  hScanResultTable - handle to the scan result table object
  * \return A pointer to the first entry in the table, NULL if the table is empty
  * \sa     scanResultTable_GetNext
- */ 
+ */
 TSiteEntry  *scanResultTable_GetFirst (TI_HANDLE hScanResultTable)
 {
     TScanResultTable    *pScanResultTable = (TScanResultTable*)hScanResultTable;
@@ -379,17 +384,17 @@ TSiteEntry  *scanResultTable_GetFirst (TI_HANDLE hScanResultTable)
     return scanResultTable_GetNext (hScanResultTable);
 }
 
-/** 
+/**
  * \fn     scanResultTable_GetNext
  * \brief  Retreives the next entry in the table
- * 
+ *
  * Retreives the next entry in the table, until table is exhusted. A call to scanResultTable_GetFirst
  * must preceed a sequence of calls to this function.
- * 
+ *
  * \param  hScanResultTable - handle to the scan result table object
  * \return A pointer to the next entry in the table, NULL if the table is exhsuted
  * \sa     scanResultTable_GetFirst
- */ 
+ */
 TSiteEntry  *scanResultTable_GetNext (TI_HANDLE hScanResultTable)
 {
     TScanResultTable    *pScanResultTable = (TScanResultTable*)hScanResultTable;
@@ -403,24 +408,24 @@ TSiteEntry  *scanResultTable_GetNext (TI_HANDLE hScanResultTable)
     return &(pScanResultTable->pTable[ pScanResultTable->uIterator++ ]);
 }
 
-/** 
+/**
  * \fn     scanResultTable_GetByBssid
  * \brief  retreives an entry according to its SSID and BSSID
- * 
+ *
  * retreives an entry according to its BSSID
- * 
+ *
  * \param  hScanResultTable - handle to the scan result table object
  * \param  pSsid - SSID to search for
  * \param  pBssid - BSSID to search for
- * \return A pointer to the entry with macthing BSSID, NULL if no such entry was found. 
- */ 
+ * \return A pointer to the entry with macthing BSSID, NULL if no such entry was found.
+ */
 TSiteEntry  *scanResultTable_GetBySsidBssidPair (TI_HANDLE hScanResultTable, TSsid *pSsid, TMacAddr *pBssid)
 {
     TScanResultTable    *pScanResultTable = (TScanResultTable*)hScanResultTable;
     TI_UINT32           uIndex;
 
     TRACE6(pScanResultTable->hReport, REPORT_SEVERITY_INFORMATION , "scanResultTable_GetBySsidBssidPair: Searching for SSID  BSSID %02x:%02x:%02x:%02x:%02x:%02x\n", (*pBssid)[ 0 ], (*pBssid)[ 1 ], (*pBssid)[ 2 ], (*pBssid)[ 3 ], (*pBssid)[ 4 ], (*pBssid)[ 5 ]);
-    
+
     /* check all entries in the table */
     for (uIndex = 0; uIndex < pScanResultTable->uCurrentSiteNumber; uIndex++)
     {
@@ -441,15 +446,15 @@ TSiteEntry  *scanResultTable_GetBySsidBssidPair (TI_HANDLE hScanResultTable, TSs
     return NULL;
 }
 
-/** 
- * \fn     scanresultTbale_AllocateNewEntry 
+/**
+ * \fn     scanresultTbale_AllocateNewEntry
  * \brief  Allocates an empty entry for a new site
- * 
+ *
  * Function Allocates an empty entry for a new site (and nullfiies required entry fields)
- * 
+ *
  * \param  hScanResultTable - handle to the scan result table object
  * \return Pointer to the site entry (NULL if the table is full)
- */ 
+ */
 TSiteEntry *scanResultTbale_AllocateNewEntry (TI_HANDLE hScanResultTable)
 {
     TScanResultTable    *pScanResultTable = (TScanResultTable*)hScanResultTable;
@@ -471,17 +476,17 @@ TSiteEntry *scanResultTbale_AllocateNewEntry (TI_HANDLE hScanResultTable)
     return &(pScanResultTable->pTable[ pScanResultTable->uCurrentSiteNumber - 1 ]);
 }
 
-/** 
- * \fn     scanResultTable_UpdateSiteData 
+/**
+ * \fn     scanResultTable_UpdateSiteData
  * \brief  Update a site entry data from a received frame (beacon or probe response)
- * 
+ *
  * Update a site entry data from a received frame (beacon or probe response)
- * 
+ *
  * \param  hScanResultTable - handle to the scan result table object
  * \param  pSite - the site entry to update
  * \param  pFrame - the received frame information
  * \return None
- */ 
+ */
 void scanResultTable_UpdateSiteData (TI_HANDLE hScanResultTable, TSiteEntry *pSite, TScanFrameInfo *pFrame)
 {
     TScanResultTable    *pScanResultTable = (TScanResultTable*)hScanResultTable;
@@ -527,7 +532,7 @@ void scanResultTable_UpdateSiteData (TI_HANDLE hScanResultTable, TSiteEntry *pSi
     UPDATE_BEACON_TIMESTAMP (pScanResultTable, pSite, pFrame);
     scanResultTable_UpdateWSCParams (pSite, pFrame);
     siteMgr_UpdatHtParams (pScanResultTable->hSiteMgr, pSite, pFrame->parsedIEs);
-    
+
     if (BEACON == pFrame->parsedIEs->subType)
     {
         /* DTIM is only available in beacons */
@@ -548,7 +553,7 @@ void scanResultTable_UpdateSiteData (TI_HANDLE hScanResultTable, TSiteEntry *pSi
         pSite->bChannelSwitchAnnoncIEFound = (pFrame->parsedIEs->content.iePacket.channelSwitch != NULL)?TI_TRUE:TI_FALSE;
 
         UPDATE_BEACON_RECV (pSite);
-        UPDATE_FRAME_BUFFER (pScanResultTable, (pSite->beaconBuffer), (pSite->beaconLength), pFrame); 
+        UPDATE_FRAME_BUFFER (pScanResultTable, (pSite->beaconBuffer), (pSite->beaconLength), pFrame);
     }
     else if (PROBE_RESPONSE == pFrame->parsedIEs->subType)
     {
@@ -570,10 +575,10 @@ void scanResultTable_UpdateSiteData (TI_HANDLE hScanResultTable, TSiteEntry *pSi
     }
 }
 
-/** 
- * \fn     scanResultTable_updateRates 
- * \brief  Update a scan result table entry with rates information 
- * 
+/**
+ * \fn     scanResultTable_updateRates
+ * \brief  Update a scan result table entry with rates information
+ *
  * Called by the function 'updateSiteInfo()' in order to translate the rates received
  * in the beacon or probe response to rate used by the driver. Perfoms the following:
  *    -   Check the rates. validity. If rates are invalid, return
@@ -581,13 +586,13 @@ void scanResultTable_UpdateSiteData (TI_HANDLE hScanResultTable, TSiteEntry *pSi
  *    -   Translate the max active rate and max basic rate from network rates to host rates.
  *        The max active & max basic rate are used by the driver from now on in all the processes:
  *        (selection, join, transmission, etc....)
- * 
+ *
  * \param  hScanResultTable - handle to the scan result table object
- * \param  pSite - a pointer to the site entry to update 
+ * \param  pSite - a pointer to the site entry to update
  * \param  pFrame - a pointer to the received frame
  * \return None
- * \sa     scanResultTable_UpdateSiteData 
- */ 
+ * \sa     scanResultTable_UpdateSiteData
+ */
 void scanResultTable_updateRates(TI_HANDLE hScanResultTable, TSiteEntry *pSite, TScanFrameInfo *pFrame)
 {
     TScanResultTable    *pScanResultTable = (TScanResultTable*)hScanResultTable;
@@ -603,7 +608,7 @@ void scanResultTable_updateRates(TI_HANDLE hScanResultTable, TSiteEntry *pSite, 
     }
 
     /* Update the rate elements */
-    maxBasicRate = rate_GetMaxBasicFromStr ((TI_UINT8 *)pFrame->parsedIEs->content.iePacket.pRates->rates, 
+    maxBasicRate = rate_GetMaxBasicFromStr ((TI_UINT8 *)pFrame->parsedIEs->content.iePacket.pRates->rates,
                                             pFrame->parsedIEs->content.iePacket.pRates->hdr[1], maxBasicRate);
     maxActiveRate = rate_GetMaxActiveFromStr ((TI_UINT8 *)pFrame->parsedIEs->content.iePacket.pRates->rates,
                                               pFrame->parsedIEs->content.iePacket.pRates->hdr[1], maxActiveRate);
@@ -648,13 +653,13 @@ void scanResultTable_updateRates(TI_HANDLE hScanResultTable, TSiteEntry *pSite, 
 
     if (pFrame->parsedIEs->content.iePacket.pExtRates)
     {
-        rate_NetStrToDrvBitmap (&bitMapExtSupp, 
+        rate_NetStrToDrvBitmap (&bitMapExtSupp,
                                 pFrame->parsedIEs->content.iePacket.pExtRates->rates,
                                 pFrame->parsedIEs->content.iePacket.pExtRates->hdr[1]);
 
         pSite->rateMask.supportedRateMask |= bitMapExtSupp;
 
-        rate_NetBasicStrToDrvBitmap (&bitMapExtSupp, 
+        rate_NetBasicStrToDrvBitmap (&bitMapExtSupp,
                                      pFrame->parsedIEs->content.iePacket.pExtRates->rates,
                                      pFrame->parsedIEs->content.iePacket.pExtRates->hdr[1]);
 
@@ -662,17 +667,17 @@ void scanResultTable_updateRates(TI_HANDLE hScanResultTable, TSiteEntry *pSite, 
     }
 }
 
-/** 
- * \fn     scanResultTable_UpdateWSCParams 
- * \brief  Update a scan result table entry with WSC information 
- * 
+/**
+ * \fn     scanResultTable_UpdateWSCParams
+ * \brief  Update a scan result table entry with WSC information
+ *
  * Update a scan result table entry with WSC information
- * 
- * \param  pSite - a pointer to the site entry to update 
+ *
+ * \param  pSite - a pointer to the site entry to update
  * \param  pFrame - a pointer to the received frame
  * \return None
- * \sa     scanResultTable_UpdateSiteData 
- */ 
+ * \sa     scanResultTable_UpdateSiteData
+ */
 void scanResultTable_UpdateWSCParams (TSiteEntry *pSite, TScanFrameInfo *pFrame)
 {
     /* if the IE is not null => the WSC is on - check which method is supported */
@@ -680,14 +685,14 @@ void scanResultTable_UpdateWSCParams (TSiteEntry *pSite, TScanFrameInfo *pFrame)
     {
         TI_UINT8    *tlvPtr,*endPtr;
         TI_UINT16   tlvPtrType,tlvPtrLen,selectedMethod=0;
-    
+
         tlvPtr = (TI_UINT8*)pFrame->parsedIEs->content.iePacket.WSCParams->WSCBeaconOrProbIE;
         endPtr = tlvPtr + pFrame->parsedIEs->content.iePacket.WSCParams->hdr[1] - (DOT11_OUI_LEN + 1);
-    
+
         do
         {
             tlvPtrType = WLANTOHS (WLAN_WORD(tlvPtr));
-    
+
             if (tlvPtrType == DOT11_WSC_DEVICE_PASSWORD_ID)
             {
                 tlvPtr+=2;
@@ -702,18 +707,18 @@ void scanResultTable_UpdateWSCParams (TSiteEntry *pSite, TScanFrameInfo *pFrame)
                 tlvPtr+=tlvPtrLen+2;
             }
         } while ((tlvPtr < endPtr) && (selectedMethod == 0));
-       
+
         if (tlvPtr > endPtr)
         {
             pSite->WSCSiteMode = TIWLN_SIMPLE_CONFIG_OFF;
             return;
         }
-    
+
         if (selectedMethod == DOT11_WSC_DEVICE_PASSWORD_ID_PIN)
             pSite->WSCSiteMode = TIWLN_SIMPLE_CONFIG_PIN_METHOD;
         else if (selectedMethod == DOT11_WSC_DEVICE_PASSWORD_ID_PBC)
             pSite->WSCSiteMode = TIWLN_SIMPLE_CONFIG_PBC_METHOD;
-        else 
+        else
             pSite->WSCSiteMode = TIWLN_SIMPLE_CONFIG_OFF;
     }
     else
@@ -722,17 +727,17 @@ void scanResultTable_UpdateWSCParams (TSiteEntry *pSite, TScanFrameInfo *pFrame)
     }
 }
 
-/** 
+/**
  * \fn     scanResultTable_CalculateBssidListSize
  * \brief  Calculates the size required for BSSID list storage
- * 
+ *
  * Calculates the size required for BSSID list storage
- * 
+ *
  * \param  hScanResultTable - handle to the scan result table object
  * \param  bAllVarIes - whether to include all variable size IEs
  * \return The total length required
  * \sa     scanResultTable_GetBssidList
- */ 
+ */
 TI_UINT32 scanResultTable_CalculateBssidListSize (TI_HANDLE hScanResultTable, TI_BOOL bAllVarIes)
 {
     TScanResultTable    *pScanResultTable = (TScanResultTable*)hScanResultTable;
@@ -760,7 +765,7 @@ TI_UINT32 scanResultTable_CalculateBssidListSize (TI_HANDLE hScanResultTable, TI
             {
                 uSiteLength += pSiteEntry->beaconLength;
             }
-                     
+
         }
         /* partial list is requested */
         else
@@ -794,22 +799,22 @@ TI_UINT32 scanResultTable_CalculateBssidListSize (TI_HANDLE hScanResultTable, TI
     return uLength;
 }
 
-/** 
+/**
  * \fn     scanResultTable_GetBssidList
  * \brief  Retrieves the site table content
- * 
+ *
  * Retrieves the site table content
- * 
+ *
  * \param  hScanResultTable - handle to the scan result table object
  * \param  pBssidList - pointer to a buffer large enough to hols the BSSID list
  * \param  plength - length of the supplied buffer, will be overwritten with the actual list length
  * \param  bAllVarIes - whether to include all variable size IEs
  * \return None
  * \sa     scanResultTable_CalculateBssidListSize
- */ 
-TI_STATUS scanResultTable_GetBssidList (TI_HANDLE hScanResultTable, 
-                                        OS_802_11_BSSID_LIST_EX *pBssidList, 
-                                        TI_UINT32 *pLength, 
+ */
+TI_STATUS scanResultTable_GetBssidList (TI_HANDLE hScanResultTable,
+                                        OS_802_11_BSSID_LIST_EX *pBssidList,
+                                        TI_UINT32 *pLength,
                                         TI_BOOL bAllVarIes)
 {
     TScanResultTable        *pScanResultTable = (TScanResultTable*)hScanResultTable;
@@ -859,7 +864,7 @@ TI_STATUS scanResultTable_GetBssidList (TI_HANDLE hScanResultTable,
         /* start copy stuff: */
         /* MacAddress */
         MAC_COPY (pBssid->MacAddress, pSiteEntry->bssid);
-        
+
         /* Capabilities */
         pBssid->Capabilities = pSiteEntry->capabilities;
 
@@ -869,9 +874,9 @@ TI_STATUS scanResultTable_GetBssidList (TI_HANDLE hScanResultTable,
         {
             pSiteEntry->ssid.len = MAX_SSID_LEN;
         }
-        os_memoryCopy (pScanResultTable->hOS, 
-                       (void *)pBssid->Ssid.Ssid, 
-                       (void *)pSiteEntry->ssid.str, 
+        os_memoryCopy (pScanResultTable->hOS,
+                       (void *)pBssid->Ssid.Ssid,
+                       (void *)pSiteEntry->ssid.str,
                        pSiteEntry->ssid.len);
         pBssid->Ssid.SsidLength = pSiteEntry->ssid.len;
 
@@ -895,7 +900,7 @@ TI_STATUS scanResultTable_GetBssidList (TI_HANDLE hScanResultTable,
         rate_DrvBitmapToNetStr (pSiteEntry->rateMask.supportedRateMask,
                                 pSiteEntry->rateMask.basicRateMask,
                                 (TI_UINT8*)pBssid->SupportedRates,
-                                &len, 
+                                &len,
                                 &firstOFDMloc);
 
         /* set network type acording to band and rates */
@@ -918,7 +923,7 @@ TI_STATUS scanResultTable_GetBssidList (TI_HANDLE hScanResultTable,
 
         /* copy fixed IEs from site entry */
         pFixedIes = (OS_802_11_FIXED_IEs*)&(pBssid->IEs[ pBssid->IELength ]);
-        os_memoryCopy (pScanResultTable->hOS, (void*)pFixedIes->TimeStamp, 
+        os_memoryCopy (pScanResultTable->hOS, (void*)pFixedIes->TimeStamp,
                        &(pSiteEntry->tsfTimeStamp[ 0 ]), TIME_STAMP_LEN);
         pFixedIes->BeaconInterval = pSiteEntry->beaconInterval;
         pFixedIes->Capabilities = pSiteEntry->capabilities;
@@ -933,19 +938,19 @@ TI_STATUS scanResultTable_GetBssidList (TI_HANDLE hScanResultTable,
             /* copy SSID */
             pVarIes->ElementID = SSID_IE_ID;
             pVarIes->Length = pSiteEntry->ssid.len;
-            os_memoryCopy (pScanResultTable->hOS, 
-                           (void *)pVarIes->data, 
-                           (void *)pSiteEntry->ssid.str, 
+            os_memoryCopy (pScanResultTable->hOS,
+                           (void *)pVarIes->data,
+                           (void *)pSiteEntry->ssid.str,
                            pSiteEntry->ssid.len);
             pBssid->IELength += (pVarIes->Length + 2);
 
             /* copy RATES */
             pVarIes = (OS_802_11_VARIABLE_IEs*)&(pBssid->IEs[ pBssid->IELength ]);
             pVarIes->ElementID = SUPPORTED_RATES_IE_ID;
-            rate_DrvBitmapToNetStr (pSiteEntry->rateMask.supportedRateMask, 
+            rate_DrvBitmapToNetStr (pSiteEntry->rateMask.supportedRateMask,
                                     pSiteEntry->rateMask.basicRateMask,
-                                    (TI_UINT8 *)pVarIes->data, 
-                                    &len, 
+                                    (TI_UINT8 *)pVarIes->data,
+                                    &len,
                                     &firstOFDMloc);
             pVarIes->Length = len;
             pBssid->IELength += (pVarIes->Length + 2);
@@ -954,7 +959,7 @@ TI_STATUS scanResultTable_GetBssidList (TI_HANDLE hScanResultTable,
             pVarIes = (OS_802_11_VARIABLE_IEs*)&(pBssid->IEs[ pBssid->IELength ]);
             pVarIes->ElementID = DS_PARAMETER_SET_IE_ID;
             pVarIes->Length = DOT11_DS_PARAMS_ELE_LEN;
-            os_memoryCopy (pScanResultTable->hOS, (void *)pVarIes->data, 
+            os_memoryCopy (pScanResultTable->hOS, (void *)pVarIes->data,
                            &(pSiteEntry->channel), DOT11_DS_PARAMS_ELE_LEN);
             pBssid->IELength += (pVarIes->Length + 2);
 
@@ -967,20 +972,20 @@ TI_STATUS scanResultTable_GetBssidList (TI_HANDLE hScanResultTable,
                     pVarIes = (OS_802_11_VARIABLE_IEs*)&(pBssid->IEs[ pBssid->IELength + rsnIeLength ]);
                     pVarIes->ElementID = pSiteEntry->pRsnIe[ rsnIndex ].hdr[0];
                     pVarIes->Length = pSiteEntry->pRsnIe[ rsnIndex ].hdr[1];
-                    os_memoryCopy (pScanResultTable->hOS, (void *)pVarIes->data, 
-                                   (void *)pSiteEntry->pRsnIe[ rsnIndex ].rsnIeData, 
+                    os_memoryCopy (pScanResultTable->hOS, (void *)pVarIes->data,
+                                   (void *)pSiteEntry->pRsnIe[ rsnIndex ].rsnIeData,
                                    pSiteEntry->pRsnIe[ rsnIndex ].hdr[1]);
                     rsnIeLength += pSiteEntry->pRsnIe[ rsnIndex ].hdr[1] + 2;
                 }
                 pBssid->IELength += pSiteEntry->rsnIeLen;
             }
 
-            /* QOS_WME/CCX */
+            /* QOS_WME/XCC */
             if (TI_TRUE == pSiteEntry->WMESupported)
             {
                 /* oui */
                 TI_UINT8            ouiWME[3] = {0x50, 0xf2, 0x01};
-                dot11_WME_PARAM_t   *pWMEParams; 
+                dot11_WME_PARAM_t   *pWMEParams;
 
                 /* fill in the general element  parameters */
                 pVarIes =  (OS_802_11_VARIABLE_IEs*)&(pBssid->IEs[ pBssid->IELength ]);
@@ -1007,7 +1012,7 @@ TI_STATUS scanResultTable_GetBssidList (TI_HANDLE hScanResultTable,
 			/* Copy the unknown IEs */
 			if ( 0 < pSiteEntry->unknownIeLen  ) {
 					os_memoryCopy (pScanResultTable->hOS, (void *)(&pBssid->IEs[ pBssid->IELength ]),
-								   (void *)pSiteEntry->pUnknownIe, 
+								   (void *)pSiteEntry->pUnknownIe,
 								   pSiteEntry->unknownIeLen );
 					pBssid->IELength += pSiteEntry->unknownIeLen;
 			}
@@ -1027,7 +1032,7 @@ TI_STATUS scanResultTable_GetBssidList (TI_HANDLE hScanResultTable,
                     handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
                     return TI_NOK;
                 }
-                os_memoryCopy (pScanResultTable->hOS, pVarIes, 
+                os_memoryCopy (pScanResultTable->hOS, pVarIes,
                                pSiteEntry->probeRespBuffer, pSiteEntry->probeRespLength);
                 pBssid->IELength += pSiteEntry->probeRespLength;
             }
@@ -1043,7 +1048,7 @@ TI_STATUS scanResultTable_GetBssidList (TI_HANDLE hScanResultTable,
                     handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
                     return TI_NOK;
                 }
-                os_memoryCopy (pScanResultTable->hOS, pVarIes, 
+                os_memoryCopy (pScanResultTable->hOS, pVarIes,
                                pSiteEntry->beaconBuffer, pSiteEntry->beaconLength);
                 pBssid->IELength += pSiteEntry->beaconLength;
             }
@@ -1080,8 +1085,8 @@ TI_STATUS scanResultTable_GetBssidList (TI_HANDLE hScanResultTable,
 /***********************************************************************
  *                        siteMgr_CheckRxSignalValidity
  ***********************************************************************
-DESCRIPTION: Called by the scanResultTable_UpdateEntry when receiving managment frame 
-                Find the ste in the site table and validate that the 
+DESCRIPTION: Called by the scanResultTable_UpdateEntry when receiving managment frame
+                Find the ste in the site table and validate that the
                 RSSI of that site signal is not lower then -80DB + not lower
                 then the exising site RSSI
 
@@ -1095,21 +1100,21 @@ OUTPUT:
 RETURN:     TI_OK / TI_NOK
 
 ************************************************************************/
-/** 
+/**
  * \fn     scanResultTable_CheckRxSignalValidity
  * \brief  return the state of the table to its state after scan
- * 
- * Called by the scanResultTable_UpdateEntry when receiving managment frame   
+ *
+ * Called by the scanResultTable_UpdateEntry when receiving managment frame
  * validate that the RSSI of that site signal is not lower then then the exising site RSSI.
- * validate that the channel in correct.                                             
- * 
+ * validate that the channel in correct.
+ *
  * \param  pScanResultTable - scan result table object
  * \param  pSite - entry from the table
- * \param  rssi - RSSI level at which frame was received 
- * \param  channel - channel on which the frame was received 
+ * \param  rssi - RSSI level at which frame was received
+ * \param  channel - channel on which the frame was received
  * \return None
  * \sa
- */ 
+ */
 static TI_STATUS scanResultTable_CheckRxSignalValidity(TScanResultTable *pScanResultTable, TSiteEntry *pSite, TI_INT8 rxLevel, TI_UINT8 channel)
 {
      if ((channel != pSite->channel) &&

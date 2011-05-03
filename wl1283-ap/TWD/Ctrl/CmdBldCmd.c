@@ -1,36 +1,41 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * CmdBldCmd.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
-/** \file  CmdBldCmd.c 
+
+/** \file  CmdBldCmd.c
  *  \brief Command builder. Commands
  *
- *  \see   CmdBld.h 
+ *  \see   CmdBld.h
  */
 
 #define __FILE_ID__  FILE_ID_93
@@ -43,7 +48,7 @@
 #include "CmdQueue_api.h"
 #include "eventMbox_api.h"
 
-/* 
+/*
     Rx filter field is mostly hard-coded.
    This filter value basically pass only valid beacons / probe responses. For exact bit description,
    consult either the DPG or the FPG (or both, and Yoel...)
@@ -58,12 +63,12 @@ TI_STATUS cmdBld_CmdRemoveWepMappingKey (TI_HANDLE hCmdBld, TSecurityKeys* aSecu
 TI_UINT32 cmdBld_BuildPeriodicScanChannles  (TPeriodicScanParams *pPeriodicScanParams, ConnScanChannelInfo_t *pChannelList, EScanType eScanType, ERadioBand eRadioBand, TI_UINT32 uPassiveScanDfsDwellTime);
 
 
-/** 
+/**
  * \fn     cmdBld_CmdStartScan
  * \brief  Build a start scan command and send it to the FW
- * 
+ *
  * Build a start scan command and send it to the FW
- * 
+ *
  * \param  hCmdBld - handle to the command builder object
  * \param  pScanVals - scan parameters
  * \param  eScanTag - scan tag used for scan complete and result tracking
@@ -71,8 +76,8 @@ TI_UINT32 cmdBld_BuildPeriodicScanChannles  (TPeriodicScanParams *pPeriodicScanP
  * \param  hCb - command complete CB
  * \return command status (OK / NOK)
  * \sa     cmdBld_CmdStopScan
- */ 
-TI_STATUS cmdBld_CmdStartScan (TI_HANDLE hCmdBld, TScanParams *pScanVals, EScanResultTag eScanTag, 
+ */
+TI_STATUS cmdBld_CmdStartScan (TI_HANDLE hCmdBld, TScanParams *pScanVals, EScanResultTag eScanTag,
                                TI_BOOL bHighPriority, void* ScanCommandResponseCB, TI_HANDLE hCb)
 {
     TCmdBld   *pCmdBld = (TCmdBld *)hCmdBld;
@@ -81,37 +86,37 @@ TI_STATUS cmdBld_CmdStartScan (TI_HANDLE hCmdBld, TScanParams *pScanVals, EScanR
     TI_UINT8*              pBSSID;
     TI_INT32 i;
 
-   
+
     /* Convert general scan data to tnet structure */
     tnetScanParams.basicScanParameters.tidTrigger = pScanVals->Tid;
     tnetScanParams.basicScanParameters.numOfProbRqst = pScanVals->probeReqNumber;
     tnetScanParams.basicScanParameters.ssidLength = pScanVals->desiredSsid.len;
-    os_memoryCopy (pCmdBld->hOs, 
-                   (void *)tnetScanParams.basicScanParameters.ssidStr, 
-                   (void *)pScanVals->desiredSsid.str, 
+    os_memoryCopy (pCmdBld->hOs,
+                   (void *)tnetScanParams.basicScanParameters.ssidStr,
+                   (void *)pScanVals->desiredSsid.str,
                    tnetScanParams.basicScanParameters.ssidLength);
-    
-    /* 
-        scan options field is composed of scan type and band selection. 
-        First, use the lookup table to convert the scan type 
-    */                  
+
+    /*
+        scan options field is composed of scan type and band selection.
+        First, use the lookup table to convert the scan type
+    */
 
     tnetScanParams.basicScanParameters.scanOptions = 0;
 
     switch ( pScanVals->scanType )
     {
-    case SCAN_TYPE_NORMAL_ACTIVE : 
+    case SCAN_TYPE_NORMAL_ACTIVE :
         tnetScanParams.basicScanParameters.scanOptions = SCAN_ACTIVE;
         break;
-    
-    case SCAN_TYPE_NORMAL_PASSIVE : 
+
+    case SCAN_TYPE_NORMAL_PASSIVE :
         tnetScanParams.basicScanParameters.scanOptions = SCAN_PASSIVE;
         break;
-    
+
     case SCAN_TYPE_TRIGGERED_ACTIVE :
         tnetScanParams.basicScanParameters.scanOptions = SCAN_ACTIVE | TRIGGERED_SCAN;
         break;
-    
+
     case SCAN_TYPE_TRIGGERED_PASSIVE :
         tnetScanParams.basicScanParameters.scanOptions = SCAN_PASSIVE | TRIGGERED_SCAN;
         break;
@@ -150,8 +155,8 @@ TI_STATUS cmdBld_CmdStartScan (TI_HANDLE hCmdBld, TScanParams *pScanVals, EScanR
         tnetScanParams.basicScanParameters.rxCfg.ConfigOptions = ENDIAN_HANDLE_LONG(RX_CONFIG_OPTION | CFG_SSID_FILTER_EN | CFG_UNI_FILTER_EN) ;
     }
     /* Rate conversion is done in the HAL */
-    cmdBld_ConvertAppRatesBitmap (pScanVals->probeRequestRate, 
-                                     0, 
+    cmdBld_ConvertAppRatesBitmap (pScanVals->probeRequestRate,
+                                     0,
                                      &tnetScanParams.basicScanParameters.txdRateSet);
 
     tnetScanParams.basicScanParameters.txdRateSet = ENDIAN_HANDLE_LONG( tnetScanParams.basicScanParameters.txdRateSet );
@@ -173,23 +178,23 @@ TI_STATUS cmdBld_CmdStartScan (TI_HANDLE hCmdBld, TScanParams *pScanVals, EScanR
         {
             macAddr[ j ] = pScanVals->channelEntry[ i ].normalChannelEntry.bssId[ MAC_ADDR_LEN - 1 - j ];
         }
-        tnetScanParams.basicScanChannelParameters[ i ].scanMinDuration = 
+        tnetScanParams.basicScanChannelParameters[ i ].scanMinDuration =
             ENDIAN_HANDLE_LONG( pScanVals->channelEntry[ i ].normalChannelEntry.minChannelDwellTime );
-        tnetScanParams.basicScanChannelParameters[ i ].scanMaxDuration = 
+        tnetScanParams.basicScanChannelParameters[ i ].scanMaxDuration =
             ENDIAN_HANDLE_LONG( pScanVals->channelEntry[ i ].normalChannelEntry.maxChannelDwellTime );
-        tnetScanParams.basicScanChannelParameters[ i ].ETCondCount = 
+        tnetScanParams.basicScanChannelParameters[ i ].ETCondCount =
             pScanVals->channelEntry[ i ].normalChannelEntry.ETMaxNumOfAPframes |
             pScanVals->channelEntry[ i ].normalChannelEntry.earlyTerminationEvent;
-        tnetScanParams.basicScanChannelParameters[ i ].txPowerAttenuation = 
+        tnetScanParams.basicScanChannelParameters[ i ].txPowerAttenuation =
             pScanVals->channelEntry[ i ].normalChannelEntry.txPowerDbm;
-        tnetScanParams.basicScanChannelParameters[ i ].channel = 
+        tnetScanParams.basicScanChannelParameters[ i ].channel =
             pScanVals->channelEntry[ i ].normalChannelEntry.channel;
     }
 
     TRACE7(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "RxCfg = 0x%x\n                             RxFilterCfg = 0x%x\n                             scanOptions = 0x%x\n                             numChannels = %d\n                             probeNumber = %d\n                             probeRateModulation = 0x%x\n                             tidTrigger = %d\n" ,                               tnetScanParams.basicScanParameters.rxCfg.ConfigOptions,                               tnetScanParams.basicScanParameters.rxCfg.FilterOptions,                              tnetScanParams.basicScanParameters.scanOptions,                               tnetScanParams.basicScanParameters.numChannels,                               tnetScanParams.basicScanParameters.numOfProbRqst,                              tnetScanParams.basicScanParameters.txdRateSet,                               tnetScanParams.basicScanParameters.tidTrigger);
-    
+
     TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "Channel      BSSID           MinTime     MaxTime     ET     TxPower   probChan\n");
-   
+
     for( i=0; i < pScanVals->numOfChannels; i++)
     {
         chanPtr = &tnetScanParams.basicScanChannelParameters[i];
@@ -201,12 +206,12 @@ TI_STATUS cmdBld_CmdStartScan (TI_HANDLE hCmdBld, TScanParams *pScanVals, EScanR
     return cmdBld_CmdIeStartScan (hCmdBld, &tnetScanParams, ScanCommandResponseCB, hCb);
 }
 
-/** 
+/**
  * \fn     cmdBld_CmdStartSPSScan
  * \brief  Build a start SPS scan command and send it to the FW
- * 
+ *
  * Build a start SPS scan command and send it to the FW
- * 
+ *
  * \param  hCmdBld - handle to the command builder object
  * \param  pScanVals - scan parameters
  * \param  eScanTag - scan tag used for scan complete and result tracking
@@ -214,8 +219,8 @@ TI_STATUS cmdBld_CmdStartScan (TI_HANDLE hCmdBld, TScanParams *pScanVals, EScanR
  * \param  hCb - command complete CB
  * \return command status (OK / NOK)
  * \sa     cmdBld_CmdStopSPSScan
- */ 
-TI_STATUS cmdBld_CmdStartSPSScan (TI_HANDLE hCmdBld, TScanParams *pScanVals, EScanResultTag eScanTag, 
+ */
+TI_STATUS cmdBld_CmdStartSPSScan (TI_HANDLE hCmdBld, TScanParams *pScanVals, EScanResultTag eScanTag,
                                   void* fScanCommandResponseCB, TI_HANDLE hCb)
 {
     TCmdBld  *pCmdBld = (TCmdBld *)hCmdBld;
@@ -266,21 +271,21 @@ TI_STATUS cmdBld_CmdStartSPSScan (TI_HANDLE hCmdBld, TScanParams *pScanVals, ESc
         {
             macAddr[ j ] = pScanVals->channelEntry[ i ].normalChannelEntry.bssId[ MAC_ADDR_LEN - 1 - j ];
         }
-        tnetSPSScanParams.scheduledChannelParameters[ i ].scanMaxDuration = 
+        tnetSPSScanParams.scheduledChannelParameters[ i ].scanMaxDuration =
             ENDIAN_HANDLE_LONG( pScanVals->channelEntry[ i ].SPSChannelEntry.scanDuration );
-        tnetSPSScanParams.scheduledChannelParameters[ i ].scanStartTime = 
+        tnetSPSScanParams.scheduledChannelParameters[ i ].scanStartTime =
             ENDIAN_HANDLE_LONG( pScanVals->channelEntry[ i ].SPSChannelEntry.scanStartTime );
         tnetSPSScanParams.scheduledChannelParameters[ i ].ETCondCount =
-            pScanVals->channelEntry[ i ].SPSChannelEntry.ETMaxNumOfAPframes | 
+            pScanVals->channelEntry[ i ].SPSChannelEntry.ETMaxNumOfAPframes |
             pScanVals->channelEntry[ i ].SPSChannelEntry.earlyTerminationEvent;
-        tnetSPSScanParams.scheduledChannelParameters[ i ].channel = 
+        tnetSPSScanParams.scheduledChannelParameters[ i ].channel =
             pScanVals->channelEntry[ i ].SPSChannelEntry.channel;
     }
 
     TRACE4(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "RxCfg = 0x%x\n                             RxFilterCfg = 0x%x\n                             scanOptions = 0x%x\n                             numChannels = %d\n", tnetSPSScanParams.scheduledGeneralParameters.rxCfg.ConfigOptions, tnetSPSScanParams.scheduledGeneralParameters.rxCfg.FilterOptions, tnetSPSScanParams.scheduledGeneralParameters.scanOptions, tnetSPSScanParams.scheduledGeneralParameters.numChannels);
-    
+
     TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "Channel      BSSID           StartTime     Duration     ET     probChan\n");
-   
+
 #ifdef TI_DBG
     for( i=0; i < tnetSPSScanParams.scheduledGeneralParameters.numChannels; i++)
     {
@@ -294,35 +299,35 @@ TI_STATUS cmdBld_CmdStartSPSScan (TI_HANDLE hCmdBld, TScanParams *pScanVals, ESc
     return cmdBld_CmdIeStartSPSScan (hCmdBld, &tnetSPSScanParams, fScanCommandResponseCB, hCb);
 }
 
-/** 
+/**
  * \fn     cmdBld_CmdStopScan
  * \brief  Build a stop scan command and send it to FW
- * 
+ *
  * Build a stop scan command and send it to FW
- * 
+ *
  * \param  hCmdBld - handle to the command builder object
  * \param  eScanTag - scan tag, used for scan complete and result tracking
  * \return command status (OK / NOK)
  * \sa     cmdBld_CmdStartSPSScan
- */ 
-TI_STATUS cmdBld_CmdStopScan (TI_HANDLE hCmdBld, EScanResultTag eScanTag, 
+ */
+TI_STATUS cmdBld_CmdStopScan (TI_HANDLE hCmdBld, EScanResultTag eScanTag,
                               void *fScanCommandResponseCB, TI_HANDLE hCb)
 {
     return cmdBld_CmdIeStopScan (hCmdBld, fScanCommandResponseCB, hCb);
 }
 
 
-/** 
+/**
  * \fn     cmdBld_CmdStopSPSScan
  * \brief  Build a stop SPS scan command and send it to FW
- * 
+ *
  * Build a stop SPS scan command and send it to FW
- * 
+ *
  * \param  hCmdBld - handle to the command builder object
  * \param  eScanTag - scan tag, used for scan complete and result tracking
  * \return command status (OK / NOK)
  * \sa     cmdBld_CmdStartScan
- */ TI_STATUS cmdBld_CmdStopSPSScan (TI_HANDLE hCmdBld, EScanResultTag eScanTag, 
+ */ TI_STATUS cmdBld_CmdStopSPSScan (TI_HANDLE hCmdBld, EScanResultTag eScanTag,
                                  void* fScanCommandResponseCB, TI_HANDLE hCb)
 {
     return cmdBld_CmdIeStopSPSScan (hCmdBld, fScanCommandResponseCB, hCb);
@@ -336,18 +341,18 @@ TI_STATUS cmdBld_CmdSetSplitScanTimeOut (TI_HANDLE hCmdBld, TI_UINT32 uTimeOut)
 	return cmdBld_CmdIeSetSplitScanTimeOut (hCmdBld, uTimeOut, NULL, NULL);
 }
 
-/** 
- * \fn     cmdBld_debugPrintPeriodicScanChannles 
+/**
+ * \fn     cmdBld_debugPrintPeriodicScanChannles
  * \brief  Print periodic scan channel list for debug purposes
- * 
+ *
  * Print periodic scan channel list for debug purposes
- * 
+ *
  * \param  hCmdBld - handle to the command builder object
  * \param  pChannel - pointer to the channel list to print
  * \param  uChannelCount - number of channles to print
  * \return None
  * \sa     cmdBld_debugPrintPeriodicScanParams
- */ 
+ */
 void cmdBld_debugPrintPeriodicScanChannles (TI_HANDLE hCmdBld, ConnScanChannelInfo_t* pChannel,
                                             TI_UINT32 uChannelCount)
 {
@@ -362,17 +367,17 @@ void cmdBld_debugPrintPeriodicScanChannles (TI_HANDLE hCmdBld, ConnScanChannelIn
     }
 }
 
-/** 
- * \fn     cmdBld_debugPrintPeriodicScanParams 
+/**
+ * \fn     cmdBld_debugPrintPeriodicScanParams
  * \brief  Print periodic scan parameters for debug purposes
- * 
+ *
  * Print periodic scan parameters for debug purposes
- * 
+ *
  * \param  hCmdBld - handle to the command builder object
  * \param  pCommand - pointer to the periodic scan command to print
  * \return None
  * \sa     cmdBld_debugPrintPeriodicScanChannles
- */ 
+ */
 void cmdBld_debugPrintPeriodicScanParams (TI_HANDLE hCmdBld, ConnScanParameters_t* pCommand)
 {
     TCmdBld                 *pCmdBld = (TCmdBld *)hCmdBld;
@@ -390,34 +395,34 @@ void cmdBld_debugPrintPeriodicScanParams (TI_HANDLE hCmdBld, ConnScanParameters_
     TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "-----------------\n");
     TRACE2(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "Number of passive channels: %d, number of active channels: %d\n", pCommand->numOfPassive[ 0 ], pCommand->numOfActive[ 0 ]);
     cmdBld_debugPrintPeriodicScanChannles (hCmdBld, &(pCommand->channelList[ 0 ]),
-                                           pCommand->numOfPassive[ 0 ] + 
+                                           pCommand->numOfPassive[ 0 ] +
                                            pCommand->numOfActive[ 0 ]);
     TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "5.0 GHz Channels:\n");
     TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "-----------------\n");
     TRACE3(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "Number of passive channels: %d, number of DFS channels: %d, number of active channels: %d\n", pCommand->numOfPassive[ 1 ], pCommand->numOfDfs, pCommand->numOfActive[ 2 ]);
     cmdBld_debugPrintPeriodicScanChannles (hCmdBld, &(pCommand->channelList[ CONN_SCAN_MAX_CHANNELS_BG ]),
-                                           pCommand->numOfPassive[ 1 ] + 
+                                           pCommand->numOfPassive[ 1 ] +
                                            pCommand->numOfActive[ 1 ] +
                                            pCommand->numOfDfs);
     TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "4.9 GHz channles:\n");
     TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "-----------------\n");
     TRACE2(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "Number of passive channels: %d, number of active channels: %d\n", pCommand->numOfPassive[ 2 ], pCommand->numOfActive[ 2 ]);
     cmdBld_debugPrintPeriodicScanChannles (hCmdBld, &(pCommand->channelList[ CONN_SCAN_MAX_CHANNELS_BG + CONN_SCAN_MAX_CHANNELS_A ]),
-                                           pCommand->numOfPassive[ 2 ] + 
+                                           pCommand->numOfPassive[ 2 ] +
                                            pCommand->numOfActive[ 2 ]);
 }
 
-/** 
- * \fn     cmdBld_debugPrintPeriodicScanSsidList 
+/**
+ * \fn     cmdBld_debugPrintPeriodicScanSsidList
  * \brief  Print periodic scan SSID list for debug purposes
- * 
+ *
  * Print periodic scan SSID list for debug purposes
- * 
+ *
  * \param  hCmdBld - handle to the command builder object
  * \param  pCommand - pointer to the periodic scan SSID list command to print
  * \return None
  * \sa     cmdBld_debugPrintPeriodicScanParams
- */ 
+ */
 void cmdBld_debugPrintPeriodicScanSsidList (TI_HANDLE hCmdBld, ConnScanSSIDList_t* pCommand)
 {
     TCmdBld                 *pCmdBld = (TCmdBld *)hCmdBld;
@@ -434,22 +439,22 @@ void cmdBld_debugPrintPeriodicScanSsidList (TI_HANDLE hCmdBld, ConnScanSSIDList_
 
 }
 
-/** 
- * \fn     cmdBld_BuildPeriodicScanChannlesn 
- * \brief  Copy channels info for periodic scan to FW structure for a specific band and scan type 
- * 
+/**
+ * \fn     cmdBld_BuildPeriodicScanChannlesn
+ * \brief  Copy channels info for periodic scan to FW structure for a specific band and scan type
+ *
  * Copy channels info, from driver structure, to FW structure, for periodic scan, for a specific
  * band and scan type.
- * 
+ *
  * \param  pPeriodicScanParams - driver priodic scan parameters (source)
  * \param  pChannelList - FW scan channel list (destination)
  * \param  eScanType - scan type (passive or active)
  * \param  eRadioBand - band (G, A or J)
  * \param  uPassiveScanDfsDwellTime - Dwell time for passive scan on DFS channels (in milli-secs)
  * \return Number of channels found for this scan type and band
- * \sa     cmdBld_StartPeriodicScan 
- */ 
-TI_UINT32 cmdBld_BuildPeriodicScanChannles (TPeriodicScanParams *pPeriodicScanParams, 
+ * \sa     cmdBld_StartPeriodicScan
+ */
+TI_UINT32 cmdBld_BuildPeriodicScanChannles (TPeriodicScanParams *pPeriodicScanParams,
                                             ConnScanChannelInfo_t *pChannelList,
                                             EScanType eScanType, ERadioBand eRadioBand,
                                             TI_UINT32 uPassiveScanDfsDwellTime)
@@ -465,9 +470,9 @@ TI_UINT32 cmdBld_BuildPeriodicScanChannles (TPeriodicScanParams *pPeriodicScanPa
         {
             /* update scan parameters */
             pChannelList[ uNumChannels ].channel = (TI_UINT8)pPeriodicScanParams->tChannels[ uIndex ].uChannel;
-            pChannelList[ uNumChannels ].scanMaxDuration = 
+            pChannelList[ uNumChannels ].scanMaxDuration =
                 ENDIAN_HANDLE_WORD ((TI_UINT16)pPeriodicScanParams->tChannels[ uIndex ].uMaxDwellTimeMs);
-            pChannelList[ uNumChannels ].scanMinDuration = 
+            pChannelList[ uNumChannels ].scanMinDuration =
                 ENDIAN_HANDLE_WORD ((TI_UINT16)pPeriodicScanParams->tChannels[ uIndex ].uMinDwellTimeMs);
             pChannelList[ uNumChannels ].txPowerLevelDbm = (TI_UINT8)pPeriodicScanParams->tChannels[ uIndex ].uTxPowerLevelDbm;
             if (SCAN_TYPE_PACTSIVE == eScanType) /* DFS channel */
@@ -491,13 +496,13 @@ TI_UINT32 cmdBld_BuildPeriodicScanChannles (TPeriodicScanParams *pPeriodicScanPa
     return uNumChannels;
 }
 
-/** 
- * \fn     cmdBld_StartPeriodicScan 
+/**
+ * \fn     cmdBld_StartPeriodicScan
  * \brief  Copy driver periodic scan parameters to FW structures and send all commands to FW
- * 
+ *
  * Copy driver periodic scan parameters to FW structures (SSID list, parameters including channels
  * and start command) and send all commands to FW.
- * 
+ *
  * \param  hCmdBld - handle to the command builder object
  * \param  pPeriodicScanParams - periodic scan driver parameters (source)
  * \param  eScanTag - scan tag, used for scan complete and result tracking
@@ -506,7 +511,7 @@ TI_UINT32 cmdBld_BuildPeriodicScanChannles (TPeriodicScanParams *pPeriodicScanPa
  * \param  hCb - scan command response handle
  * \return TI_OK on success, other codes indicate failure
  * \sa     cmdBld_BuildPeriodicScanChannles, cmdBld_StopPeriodicScan
- */ 
+ */
 TI_STATUS cmdBld_StartPeriodicScan (TI_HANDLE hCmdBld, TPeriodicScanParams *pPeriodicScanParams,
                                     EScanResultTag eScanTag, TI_UINT32 uPassiveScanDfsDwellTimeMs,
                                     void* fScanCommandResponseCB, TI_HANDLE hCb)
@@ -524,7 +529,7 @@ TI_STATUS cmdBld_StartPeriodicScan (TI_HANDLE hCmdBld, TPeriodicScanParams *pPer
     tFWPeriodicScanParams.bssType = (ScanBssType_e)pPeriodicScanParams->eBssType;
     for (uIndex = 0; uIndex < PERIODIC_SCAN_MAX_INTERVAL_NUM; uIndex ++)
     {
-        tFWPeriodicScanParams.cycleIntervals[ uIndex ] = 
+        tFWPeriodicScanParams.cycleIntervals[ uIndex ] =
             ENDIAN_HANDLE_LONG (pPeriodicScanParams->uCycleIntervalMsec[ uIndex ]);
     }
     tFWPeriodicScanParams.maxNumOfCycles = (TI_UINT8)pPeriodicScanParams->uCycleNum;
@@ -556,9 +561,9 @@ TI_STATUS cmdBld_StartPeriodicScan (TI_HANDLE hCmdBld, TPeriodicScanParams *pPer
         pFWSsidList->numOfSSIDEntries = (TI_UINT8)pPeriodicScanParams->uSsidNum;
         for (uIndex = 0; uIndex < pPeriodicScanParams->uSsidNum; uIndex++)
         {
-            pFWSsidList->SSIDList[ uIndex ].ssidType = 
+            pFWSsidList->SSIDList[ uIndex ].ssidType =
                 (TI_UINT8)pPeriodicScanParams->tDesiredSsid[ uIndex ].eVisability;
-            pFWSsidList->SSIDList[ uIndex ].ssidLength = 
+            pFWSsidList->SSIDList[ uIndex ].ssidLength =
                 (TI_UINT8)pPeriodicScanParams->tDesiredSsid[ uIndex ].tSsid.len;
             os_memoryCopy (pCmdBld->hOs, (void*)&(pFWSsidList->SSIDList[ uIndex ].ssid[ 0 ]),
                            (void*)&(pPeriodicScanParams->tDesiredSsid[ uIndex ].tSsid.str[ 0 ]),
@@ -617,20 +622,20 @@ TI_STATUS cmdBld_StartPeriodicScan (TI_HANDLE hCmdBld, TPeriodicScanParams *pPer
     return tStatus;
 }
 
-/** 
- * \fn     cmdBld_StopPeriodicScan 
+/**
+ * \fn     cmdBld_StopPeriodicScan
  * \brief  Stops an on-going periodic scan operation
- * 
- * Stops an on-going periodic scan operation 
- * 
+ *
+ * Stops an on-going periodic scan operation
+ *
  * \param  hCmdBld - handle to the command builder object
  * \param  eScanTag - scan tag, used for scan complete and result tracking
  * \param  fScanCommandResponseCB - scan command complete CB
  * \param  hCb - scan command response handle
  * \return TI_OK on success, other codes indicate failure
  * \sa     cmdBld_BuildPeriodicScanChannles, cmdBld_StartPeriodicScan
- */ 
-TI_STATUS cmdBld_StopPeriodicScan (TI_HANDLE hCmdBld, EScanResultTag eScanTag, 
+ */
+TI_STATUS cmdBld_StopPeriodicScan (TI_HANDLE hCmdBld, EScanResultTag eScanTag,
                                    void* fScanCommandResponseCB, TI_HANDLE hCb)
 {
     PeriodicScanTag tScanStop;
@@ -643,12 +648,12 @@ TI_STATUS cmdBld_StopPeriodicScan (TI_HANDLE hCmdBld, EScanResultTag eScanTag,
 /****************************************************************************
  *                      cmdBld_SetBssType()
  ****************************************************************************
- * DESCRIPTION: Set Bss type, set RxFilter 
- * 
- * INPUTS: None 
- * 
+ * DESCRIPTION: Set Bss type, set RxFilter
+ *
+ * INPUTS: None
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 static TI_STATUS cmdBld_CmdSetBssType (TI_HANDLE hCmdBld, ScanBssType_e BssType, TI_UINT8 *HwBssType)
@@ -667,7 +672,7 @@ static TI_STATUS cmdBld_CmdSetBssType (TI_HANDLE hCmdBld, ScanBssType_e BssType,
         cmdBld_SetRxFilter (hCmdBld, RX_CONFIG_OPTION_FOR_IBSS_JOIN, RX_FILTER_OPTION_DEF);
         break;
 
-    default: 
+    default:
         TRACE1(pCmdBld->hReport, REPORT_SEVERITY_FATAL_ERROR, "cmdBld_SetBssType: FATAL_ERROR, unknown BssType %d\n", BssType);
         return TI_NOK;
     }
@@ -681,18 +686,18 @@ static TI_STATUS cmdBld_CmdSetBssType (TI_HANDLE hCmdBld, ScanBssType_e BssType,
 /****************************************************************************
  *                      cmdBld_StartJoin()
  ****************************************************************************
- * DESCRIPTION: Enable Rx/Tx and send Start/Join command 
- * 
- * INPUTS: None 
- * 
+ * DESCRIPTION: Enable Rx/Tx and send Start/Join command
+ *
+ * INPUTS: None
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CmdStartJoin (TI_HANDLE hCmdBld, ScanBssType_e BssType, void *fJoinCompleteCB, TI_HANDLE hCb)
 {
     TI_UINT8  HwBssType = 0;
-#ifdef TI_DBG  
+#ifdef TI_DBG
     TCmdBld  *pCmdBld = (TCmdBld *)hCmdBld;
     TI_UINT8 *pBssId = DB_BSS(hCmdBld).BssId;
 
@@ -820,7 +825,7 @@ TI_STATUS cmdBld_CmdTemplate (TI_HANDLE hCmdBld, TSetTemplate *pTemplateParams, 
     case QOS_NULL_DATA_TEMPLATE:
         eType = TEMPLATE_QOS_NULL_DATA;
         pTemplate = &(DB_TEMP(hCmdBld).QosNullData);
-        /* This template is not being sent during recovery sequence even if 
+        /* This template is not being sent during recovery sequence even if
         we had joined since it does not appear in sequence at all!!! */
         break;
 
@@ -839,7 +844,7 @@ TI_STATUS cmdBld_CmdTemplate (TI_HANDLE hCmdBld, TSetTemplate *pTemplateParams, 
 
     case ARP_RSP_TEMPLATE:
         eType = TEMPLATE_ARP_RSP;
-        pTemplate = &(DB_TEMP(hCmdBld).ArpRsp); 
+        pTemplate = &(DB_TEMP(hCmdBld).ArpRsp);
         CMD_BLD_MARK_INIT_SEQUENCE_CMD_AS_VALID(hCmdBld, __CMD_ARP_RSP_JOIN)
         break;
 
@@ -869,19 +874,19 @@ TI_STATUS cmdBld_CmdTemplate (TI_HANDLE hCmdBld, TSetTemplate *pTemplateParams, 
     /* Save template information to DB (for recovery) */
     pTemplate->Size = pTemplateParams->len;
     pTemplate->uRateMask = pTemplateParams->uRateMask;
-    os_memoryCopy (pCmdBld->hOs, 
-                   (void *)(pTemplate->Buffer), 
-                   (void *)(pTemplateParams->ptr), 
+    os_memoryCopy (pCmdBld->hOs,
+                   (void *)(pTemplate->Buffer),
+                   (void *)(pTemplateParams->ptr),
                    pTemplateParams->len);
 
 
     /* Configure template to FW */
-    Stt = cmdBld_CmdIeConfigureTemplateFrame (hCmdBld, 
-                                              pTemplate, 
+    Stt = cmdBld_CmdIeConfigureTemplateFrame (hCmdBld,
+                                              pTemplate,
                                               (TI_UINT16)pTemplateParams->len,
                                               eType,
                                               uIndex, /* index is only relevant for keep-alive template */
-                                              fCb, 
+                                              fCb,
                                               hCb);
 
     return Stt;
@@ -891,12 +896,12 @@ TI_STATUS cmdBld_CmdTemplate (TI_HANDLE hCmdBld, TSetTemplate *pTemplateParams, 
 /****************************************************************************
  *                      cmdBld_switchChannel()
  ****************************************************************************
- * DESCRIPTION: Switching the serving channel 
- * 
- * INPUTS: channel  -   new channel number  
- * 
+ * DESCRIPTION: Switching the serving channel
+ *
+ * INPUTS: channel  -   new channel number
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CmdEnableTx (TI_HANDLE hCmdBld, TI_UINT8 channel, void *fCb, TI_HANDLE hCb)
@@ -908,12 +913,12 @@ TI_STATUS cmdBld_CmdEnableTx (TI_HANDLE hCmdBld, TI_UINT8 channel, void *fCb, TI
 /****************************************************************************
  *                      cmdBld_DisableTx()
  ****************************************************************************
- * DESCRIPTION: Disable Tx path. 
- * 
+ * DESCRIPTION: Disable Tx path.
+ *
  * INPUTS: None
- * 
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CmdDisableTx (TI_HANDLE hCmdBld, void *fCb, TI_HANDLE hCb)
@@ -926,12 +931,12 @@ TI_STATUS cmdBld_CmdDisableTx (TI_HANDLE hCmdBld, void *fCb, TI_HANDLE hCb)
 /****************************************************************************
  *                      cmdBld_SwitchChannelCmd()
  ****************************************************************************
- * DESCRIPTION: Send Switch Channel command 
- * 
- * INPUTS: None  
- * 
+ * DESCRIPTION: Send Switch Channel command
+ *
+ * INPUTS: None
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CmdSwitchChannel (TI_HANDLE hCmdBld, TSwitchChannelParams *pSwitchChannelCmd, void *fCb, TI_HANDLE hCb)
@@ -949,12 +954,12 @@ TI_STATUS cmdBld_CmdSwitchChannel (TI_HANDLE hCmdBld, TSwitchChannelParams *pSwi
 /****************************************************************************
  *                      cmdBld_SwitchChannelCmd()
  ****************************************************************************
- * DESCRIPTION: Send Switch Channel command 
- * 
- * INPUTS: None  
- * 
+ * DESCRIPTION: Send Switch Channel command
+ *
+ * INPUTS: None
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CmdSwitchChannelCancel (TI_HANDLE hCmdBld, TI_UINT8 channel, void *fCb, TI_HANDLE hCb)
@@ -972,12 +977,12 @@ TI_STATUS cmdBld_CmdSwitchChannelCancel (TI_HANDLE hCmdBld, TI_UINT8 channel, vo
 /****************************************************************************
  *                      cmdBld_FwDisconnect()
  ****************************************************************************
- * DESCRIPTION: Disconnect. 
- * 
+ * DESCRIPTION: Disconnect.
+ *
  * INPUTS: None
- * 
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CmdFwDisconnect (TI_HANDLE hCmdBld, TI_UINT32 uConfigOptions, TI_UINT32 uFilterOptions, DisconnectType_e uDisconType, TI_UINT16 uDisconReason, void *fCb, TI_HANDLE hCb)
@@ -995,9 +1000,9 @@ TI_STATUS cmdBld_CmdFwDisconnect (TI_HANDLE hCmdBld, TI_UINT32 uConfigOptions, T
 }
 
 
-TI_STATUS cmdBld_CmdMeasurement (TI_HANDLE          hCmdBld, 
+TI_STATUS cmdBld_CmdMeasurement (TI_HANDLE          hCmdBld,
                                  TMeasurementParams *pMeasurementParams,
-                                 void               *fCommandResponseCB, 
+                                 void               *fCommandResponseCB,
                                  TI_HANDLE          hCb)
 {
     return cmdBld_CmdIeMeasurement (hCmdBld, pMeasurementParams, fCommandResponseCB, hCb);
@@ -1007,12 +1012,12 @@ TI_STATUS cmdBld_CmdMeasurement (TI_HANDLE          hCmdBld,
 /****************************************************************************
  *                      cmdBld_measurementStop()
  ****************************************************************************
- * DESCRIPTION: send Command for stoping measurement  
- * 
- * INPUTS: None 
- * 
+ * DESCRIPTION: send Command for stoping measurement
+ *
+ * INPUTS: None
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CmdMeasurementStop (TI_HANDLE hCmdBld, void* fMeasureCommandResponseCB, TI_HANDLE hCb)
@@ -1028,13 +1033,13 @@ TI_STATUS cmdBld_CmdMeasurementStop (TI_HANDLE hCmdBld, void* fMeasureCommandRes
 /****************************************************************************
  *                      cmdBld_ApDiscovery()
  ****************************************************************************
- * DESCRIPTION: send Command for AP Discovery 
+ * DESCRIPTION: send Command for AP Discovery
  *              to the mailbox
- * 
- * INPUTS: None 
- * 
+ *
+ * INPUTS: None
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CmdApDiscovery (TI_HANDLE hCmdBld, TApDiscoveryParams *pApDiscoveryParams, void *fCb, TI_HANDLE hCb)
@@ -1051,11 +1056,11 @@ TI_STATUS cmdBld_CmdApDiscovery (TI_HANDLE hCmdBld, TApDiscoveryParams *pApDisco
  *                      cmdBld_ApDiscoveryStop()
  ****************************************************************************
  * DESCRIPTION: send Command for stoping AP Discovery
- * 
- * INPUTS: None 
- * 
+ *
+ * INPUTS: None
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CmdApDiscoveryStop (TI_HANDLE hCmdBld, void *fCb, TI_HANDLE hCb)
@@ -1063,7 +1068,7 @@ TI_STATUS cmdBld_CmdApDiscoveryStop (TI_HANDLE hCmdBld, void *fCb, TI_HANDLE hCb
     TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
 
     TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, "cmdBld_ApDiscoveryStop\n");
-    
+
     return cmdBld_CmdIeApDiscoveryStop (hCmdBld, fCb, hCb);
 }
 
@@ -1078,11 +1083,11 @@ TI_STATUS cmdBld_CmdNoiseHistogram (TI_HANDLE hCmdBld, TNoiseHistogram *pNoiseHi
  *                      cmdBld_PowerMgmtConfigurationSet ()
  ****************************************************************************
  * DESCRIPTION: Set the ACX power management option IE
- * 
+ *
  * INPUTS: powerSaveParams
- * 
- * OUTPUT:  
- * 
+ *
+ * OUTPUT:
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CmdSetPsMode (TI_HANDLE hCmdBld, TPowerSaveParams* powerSaveParams, void *fCb, TI_HANDLE hCb)
@@ -1090,8 +1095,8 @@ TI_STATUS cmdBld_CmdSetPsMode (TI_HANDLE hCmdBld, TPowerSaveParams* powerSavePar
     TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
 
     /* Rate conversion is done in the HAL */
-    cmdBld_ConvertAppRatesBitmap (powerSaveParams->NullPktRateModulation, 
-                                  0, 
+    cmdBld_ConvertAppRatesBitmap (powerSaveParams->NullPktRateModulation,
+                                  0,
                                   &powerSaveParams->NullPktRateModulation);
 
     TRACE5(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, " cmdBld_PowerMgmtConfigurationSet  ps802_11Enable=0x%x hangOverPeriod=%d needToSendNullData=0x%x  numNullPktRetries=%d  NullPktRateModulation=0x%x\n", powerSaveParams->ps802_11Enable, powerSaveParams->hangOverPeriod, powerSaveParams->needToSendNullData, powerSaveParams->numNullPktRetries, powerSaveParams->NullPktRateModulation);
@@ -1103,12 +1108,12 @@ TI_STATUS cmdBld_CmdSetPsMode (TI_HANDLE hCmdBld, TPowerSaveParams* powerSavePar
 /****************************************************************************
  *                      cmdBld_EnableRx()
  ****************************************************************************
- * DESCRIPTION: Enable Rx and send Start/Join command 
- * 
- * INPUTS: None 
- * 
+ * DESCRIPTION: Enable Rx and send Start/Join command
+ *
+ * INPUTS: None
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CmdEnableRx (TI_HANDLE hCmdBld, void *fCb, TI_HANDLE hCb)
@@ -1139,18 +1144,18 @@ TI_STATUS cmdBld_CmdAddKey (TI_HANDLE hCmdBld, TSecurityKeys* pKey, TI_BOOL reco
             return TI_NOK;
         }
 
-        os_memoryCopy (pCmdBld->hOs, 
+        os_memoryCopy (pCmdBld->hOs,
                        (void *)(DB_KEYS(pCmdBld).pReconfKeys + keyIdx),
-                       (void *)pKey, 
+                       (void *)pKey,
                        sizeof(TSecurityKeys));
     }
-    
+
     switch (pCmdBld->tSecurity.eSecurityMode)
     {
         case TWD_CIPHER_WEP:
         case TWD_CIPHER_WEP104:
 				return cmdBld_CmdAddWepDefaultKey (hCmdBld, pKey, fCb, hCb);
-    
+
         case TWD_CIPHER_TKIP:
         case TWD_CIPHER_AES_CCMP:
         #ifdef GEM_SUPPORTED
@@ -1167,37 +1172,37 @@ TI_STATUS cmdBld_CmdAddKey (TI_HANDLE hCmdBld, TSecurityKeys* pKey, TI_BOOL reco
 TI_STATUS cmdBld_CmdAddWpaKey (TI_HANDLE hCmdBld, TSecurityKeys* pKey, void *fCb, TI_HANDLE hCb)
 {
     TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
- 
+
     /* Only WEP, TKIP, AES keys are handled*/
     switch (pKey->keyType)
     {
         case KEY_WEP:
             /* Configure the encKeys to the HW - default keys cache*/
             return cmdBld_CmdAddWepDefaultKey (hCmdBld, pKey, fCb, hCb);
-        
+
         case KEY_TKIP:
             /* Set the REAL TKIP key into the TKIP key cache*/
             if (cmdBld_CmdAddTkipMicMappingKey (hCmdBld, pKey, fCb, hCb) != TI_OK)
                 return TI_NOK;
 
             break;
-        
+
         case KEY_AES:
             if (cmdBld_CmdAddAesMappingKey (hCmdBld, pKey, fCb, hCb) != TI_OK)
                 return TI_NOK;
             break;
-        
+
         #ifdef GEM_SUPPORTED
             case KEY_GEM:
                 if (cmdBld_CmdAddGemMappingKey (hCmdBld, pKey, fCb, hCb) != TI_OK)
                     return TI_NOK;
                 break;
         #endif
-        
+
         default:
             return TI_NOK;
     }
-    
+
     /* AES or TKIP key has been successfully added. Store the current */
     /* key type of the unicast (i.e. transmit !) key                  */
     if (!MAC_BROADCAST (pKey->macAddress))
@@ -1217,7 +1222,7 @@ TI_STATUS cmdBld_CmdRemoveWpaKey (TI_HANDLE hCmdBld, TSecurityKeys* pKey, void *
         case KEY_WEP:
             /* Configure the encKeys to the HW - default keys cache*/
             return cmdBld_CmdRemoveWepDefaultKey (hCmdBld, pKey, fCb, hCb);
-        
+
         case KEY_TKIP:
             /* Configure the encKeys to the HW - mapping keys cache*/
             /* configure through SET_KEYS command */
@@ -1226,23 +1231,23 @@ TI_STATUS cmdBld_CmdRemoveWpaKey (TI_HANDLE hCmdBld, TSecurityKeys* pKey, void *
             if (cmdBld_CmdRemoveTkipMicMappingKey (hCmdBld, pKey, fCb, hCb) != TI_OK)
                 return (TI_NOK);
             break;
-        
+
         case KEY_AES:
             if (cmdBld_CmdRemoveAesMappingKey (hCmdBld, pKey, fCb, hCb) != TI_OK)
                 return TI_NOK;
             break;
-        
+
         #ifdef GEM_SUPPORTED
             case KEY_GEM:
                 if (cmdBld_CmdRemoveGemMappingKey (hCmdBld, pKey, fCb, hCb) != TI_OK)
                     return TI_NOK;
                 break;
         #endif
-        
+
         default:
             return TI_NOK;
     }
-    
+
     return TI_OK;
 }
 
@@ -1251,7 +1256,7 @@ TI_STATUS cmdBld_CmdRemoveWpaKey (TI_HANDLE hCmdBld, TSecurityKeys* pKey, void *
  * ----------------------------------------------------------------------------
  * Function : cmdBld_CmdRemoveKey
  *
- * Input    : 
+ * Input    :
  * Output   :
  * Process  :
  * Note(s)  :
@@ -1276,7 +1281,7 @@ TI_STATUS cmdBld_CmdRemoveKey (TI_HANDLE hCmdBld, TSecurityKeys* pKey, void *fCb
             case TWD_CIPHER_GEM:
         #endif
             return cmdBld_CmdRemoveWpaKey (hCmdBld, pKey, fCb, hCb);
-        
+
         default:
             return TI_NOK;
     }
@@ -1287,34 +1292,34 @@ TI_STATUS cmdBld_CmdRemoveKey (TI_HANDLE hCmdBld, TSecurityKeys* pKey, void *fCb
  *                      cmdBld_WepDefaultKeyAdd()
  ****************************************************************************
  * DESCRIPTION: Set the actual default key
- * 
- * INPUTS:  
- * 
- * OUTPUT:  
- * 
+ *
+ * INPUTS:
+ *
+ * OUTPUT:
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
-TI_STATUS cmdBld_CmdAddWepDefaultKey (TI_HANDLE hCmdBld, TSecurityKeys* aSecurityKey, void *fCb, TI_HANDLE hCb) 
+TI_STATUS cmdBld_CmdAddWepDefaultKey (TI_HANDLE hCmdBld, TSecurityKeys* aSecurityKey, void *fCb, TI_HANDLE hCb)
 {
     TI_STATUS  status;
-   
+
     /* Non WEP keys are trashed*/
     if (aSecurityKey->keyType != KEY_WEP)
     {
         return TI_NOK;
     }
 
-    status = cmdBld_CmdIeSetKey (hCmdBld, 
+    status = cmdBld_CmdIeSetKey (hCmdBld,
                                  KEY_ADD_OR_REPLACE,
-                                 aSecurityKey->hlid, 
+                                 aSecurityKey->hlid,
                                  aSecurityKey->lidKeyType,
-                                 aSecurityKey->encLen, 
+                                 aSecurityKey->encLen,
                                  CIPHER_SUITE_WEP,
-                                 aSecurityKey->keyIndex, 
-                                 (TI_UINT8*)aSecurityKey->encKey, 
+                                 aSecurityKey->keyIndex,
+                                 (TI_UINT8*)aSecurityKey->encKey,
                                  0,
                                  0,
-                                 fCb, 
+                                 fCb,
                                  hCb);
     return status;
 }
@@ -1323,23 +1328,23 @@ TI_STATUS cmdBld_CmdAddWepDefaultKey (TI_HANDLE hCmdBld, TSecurityKeys* aSecurit
  *                      cmdBld_WepDefaultKeyRemove()
  ****************************************************************************
  * DESCRIPTION: Set the actual default key
- * 
- * INPUTS:  
- * 
- * OUTPUT:  
- * 
+ *
+ * INPUTS:
+ *
+ * OUTPUT:
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
-TI_STATUS cmdBld_CmdSetWepDefaultKeyId (TI_HANDLE hCmdBld, TI_UINT8 aKeyIdVal, void *fCb, TI_HANDLE hCb) 
+TI_STATUS cmdBld_CmdSetWepDefaultKeyId (TI_HANDLE hCmdBld, TI_UINT8 aKeyIdVal, void *fCb, TI_HANDLE hCb)
 {
     TCmdBld  *pCmdBld          = (TCmdBld *)hCmdBld;
-    
+
     /* Save the deafult key ID for reconfigure phase */
     DB_KEYS(pCmdBld).bDefaultKeyIdValid  = TI_TRUE;
     DB_KEYS(pCmdBld).uReconfDefaultKeyId = aKeyIdVal;
 
-    
-    return cmdBld_CmdIeSetKey (hCmdBld, 
+
+    return cmdBld_CmdIeSetKey (hCmdBld,
                                KEY_SET_ID,
                                1,
 #ifdef AP_MODE_ENABLED
@@ -1347,13 +1352,13 @@ TI_STATUS cmdBld_CmdSetWepDefaultKeyId (TI_HANDLE hCmdBld, TI_UINT8 aKeyIdVal, v
 #else
                                0,
 #endif
-                               0, 
-                               CIPHER_SUITE_WEP,
-                               aKeyIdVal, 
-                               0, 
-                               0, 
                                0,
-                               fCb, 
+                               CIPHER_SUITE_WEP,
+                               aKeyIdVal,
+                               0,
+                               0,
+                               0,
+                               fCb,
                                hCb);
 }
 
@@ -1362,14 +1367,14 @@ TI_STATUS cmdBld_CmdSetWepDefaultKeyId (TI_HANDLE hCmdBld, TI_UINT8 aKeyIdVal, v
  *                      cmdBld_WepDefaultKeyRemove()
  ****************************************************************************
  * DESCRIPTION: Set the actual default key
- * 
- * INPUTS:  
- * 
- * OUTPUT:  
- * 
+ *
+ * INPUTS:
+ *
+ * OUTPUT:
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
-TI_STATUS cmdBld_CmdRemoveWepDefaultKey (TI_HANDLE hCmdBld, TSecurityKeys* aSecurityKey, void *fCb, TI_HANDLE hCb) 
+TI_STATUS cmdBld_CmdRemoveWepDefaultKey (TI_HANDLE hCmdBld, TSecurityKeys* aSecurityKey, void *fCb, TI_HANDLE hCb)
 {
     /* Non WEP keys are trashed*/
     if (aSecurityKey->keyType != KEY_WEP)
@@ -1377,17 +1382,17 @@ TI_STATUS cmdBld_CmdRemoveWepDefaultKey (TI_HANDLE hCmdBld, TSecurityKeys* aSecu
         return TI_NOK;
     }
 
-    return cmdBld_CmdIeSetKey (hCmdBld, 
+    return cmdBld_CmdIeSetKey (hCmdBld,
                                KEY_REMOVE,
-                               aSecurityKey->hlid, 
+                               aSecurityKey->hlid,
                                aSecurityKey->lidKeyType,
-                               aSecurityKey->encLen, 
+                               aSecurityKey->encLen,
                                CIPHER_SUITE_WEP,
-                               aSecurityKey->keyIndex, 
-                               (TI_UINT8*)aSecurityKey->encKey, 
-                               0, 
+                               aSecurityKey->keyIndex,
+                               (TI_UINT8*)aSecurityKey->encKey,
                                0,
-                               fCb, 
+                               0,
+                               fCb,
                                hCb);
 }
 
@@ -1395,26 +1400,26 @@ TI_STATUS cmdBld_CmdRemoveWepDefaultKey (TI_HANDLE hCmdBld, TSecurityKeys* aSecu
  *                      cmdBld_WepMappingKeyAdd()
  ****************************************************************************
  * DESCRIPTION: Set the actual mapping key
- * 
- * INPUTS:  
- * 
- * OUTPUT:  
- * 
+ *
+ * INPUTS:
+ *
+ * OUTPUT:
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CmdAddWepMappingKey (TI_HANDLE hCmdBld, TSecurityKeys* aSecurityKey, void *fCb, TI_HANDLE hCb)
 {
-    return cmdBld_CmdIeSetKey (hCmdBld, 
+    return cmdBld_CmdIeSetKey (hCmdBld,
                                KEY_ADD_OR_REPLACE,
-                               aSecurityKey->hlid, 
+                               aSecurityKey->hlid,
                                aSecurityKey->lidKeyType,
-                               aSecurityKey->encLen, 
+                               aSecurityKey->encLen,
                                CIPHER_SUITE_WEP,
-                               aSecurityKey->keyIndex, 
-                               (TI_UINT8*)aSecurityKey->encKey, 
-                               0, 
+                               aSecurityKey->keyIndex,
+                               (TI_UINT8*)aSecurityKey->encKey,
                                0,
-                               fCb, 
+                               0,
+                               fCb,
                                hCb);
 }
 
@@ -1422,31 +1427,31 @@ TI_STATUS cmdBld_CmdAddWepMappingKey (TI_HANDLE hCmdBld, TSecurityKeys* aSecurit
  *                      cmdBld_WepMappingKeyRemove()
  ****************************************************************************
  * DESCRIPTION: Set the actual mapping key
- * 
- * INPUTS:  
- * 
- * OUTPUT:  
- * 
+ *
+ * INPUTS:
+ *
+ * OUTPUT:
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CmdRemoveWepMappingKey (TI_HANDLE hCmdBld, TSecurityKeys* aSecurityKey, void *fCb, TI_HANDLE hCb)
 {
 	/*In the new security interface it is not allowed to remove uni-cast keys. it will be cleaned on the next join command*/
-	if (!MAC_BROADCAST(aSecurityKey->macAddress) ) 
+	if (!MAC_BROADCAST(aSecurityKey->macAddress) )
 	{
 		return TI_OK;
 	}
-    return cmdBld_CmdIeSetKey (hCmdBld, 
+    return cmdBld_CmdIeSetKey (hCmdBld,
                                KEY_REMOVE,
-                               aSecurityKey->hlid, 
+                               aSecurityKey->hlid,
                                aSecurityKey->lidKeyType,
-                               aSecurityKey->encLen, 
+                               aSecurityKey->encLen,
                                CIPHER_SUITE_WEP,
-                               aSecurityKey->keyIndex, 
-                               (TI_UINT8*)aSecurityKey->encKey, 
-                               0, 
+                               aSecurityKey->keyIndex,
+                               (TI_UINT8*)aSecurityKey->encKey,
                                0,
-                               fCb, 
+                               0,
+                               fCb,
                                hCb);
 }
 
@@ -1455,11 +1460,11 @@ TI_STATUS cmdBld_CmdRemoveWepMappingKey (TI_HANDLE hCmdBld, TSecurityKeys* aSecu
  *                      cmdBld_TkipMicMappingKeyAdd()
  ****************************************************************************
  * DESCRIPTION: Set the actual mapping key
- * 
- * INPUTS:  
- * 
- * OUTPUT:  
- * 
+ *
+ * INPUTS:
+ *
+ * OUTPUT:
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CmdAddTkipMicMappingKey (TI_HANDLE hCmdBld, TSecurityKeys* aSecurityKey, void *fCb, TI_HANDLE hCb)
@@ -1474,17 +1479,17 @@ TI_STATUS cmdBld_CmdAddTkipMicMappingKey (TI_HANDLE hCmdBld, TSecurityKeys* aSec
     os_memoryCopy (pCmdBld->hOs, (void*)(&keyBuffer[16]), (void*)aSecurityKey->micRxKey, 8);
     os_memoryCopy (pCmdBld->hOs, (void*)(&keyBuffer[24]), (void*)aSecurityKey->micTxKey, 8);
 
-    return cmdBld_CmdIeSetKey (hCmdBld, 
+    return cmdBld_CmdIeSetKey (hCmdBld,
                                KEY_ADD_OR_REPLACE,
-                               aSecurityKey->hlid, 
+                               aSecurityKey->hlid,
                                aSecurityKey->lidKeyType,
-                               KEY_SIZE_TKIP, 
+                               KEY_SIZE_TKIP,
                                keyType,
-                               aSecurityKey->keyIndex, 
-                               (TI_UINT8*)keyBuffer, 
-                               pCmdBld->uSecuritySeqNumLow, 
+                               aSecurityKey->keyIndex,
+                               (TI_UINT8*)keyBuffer,
+                               pCmdBld->uSecuritySeqNumLow,
                                pCmdBld->uSecuritySeqNumHigh,
-                               fCb, 
+                               fCb,
                                hCb);
 }
 
@@ -1492,11 +1497,11 @@ TI_STATUS cmdBld_CmdAddTkipMicMappingKey (TI_HANDLE hCmdBld, TSecurityKeys* aSec
  *                      cmdBld_TkipMappingKeyAdd()
  ****************************************************************************
  * DESCRIPTION: Set the actual mapping key
- * 
- * INPUTS:  
- * 
- * OUTPUT:  
- * 
+ *
+ * INPUTS:
+ *
+ * OUTPUT:
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CmdRemoveTkipMicMappingKey (TI_HANDLE hCmdBld, TSecurityKeys* aSecurityKey, void *fCb, TI_HANDLE hCb)
@@ -1506,23 +1511,23 @@ TI_STATUS cmdBld_CmdRemoveTkipMicMappingKey (TI_HANDLE hCmdBld, TSecurityKeys* a
     keyType = CIPHER_SUITE_TKIP;
 
 	/*In the new security interface it is not allowed to remove uni-cast keys. it will be cleaned on the next join command*/
-	if (!MAC_BROADCAST(aSecurityKey->macAddress) ) 
+	if (!MAC_BROADCAST(aSecurityKey->macAddress) )
 	{
 		return TI_OK;
 	}
 
 
-    return cmdBld_CmdIeSetKey (hCmdBld, 
+    return cmdBld_CmdIeSetKey (hCmdBld,
                                KEY_REMOVE,
-                               aSecurityKey->hlid, 
+                               aSecurityKey->hlid,
                                aSecurityKey->lidKeyType,
-                               aSecurityKey->encLen, 
+                               aSecurityKey->encLen,
                                keyType,
-                               aSecurityKey->keyIndex, 
+                               aSecurityKey->keyIndex,
                                (TI_UINT8*)aSecurityKey->encKey,
                                0,
                                0,
-                               fCb, 
+                               fCb,
                                hCb);
 }
 
@@ -1531,11 +1536,11 @@ TI_STATUS cmdBld_CmdRemoveTkipMicMappingKey (TI_HANDLE hCmdBld, TSecurityKeys* a
  *                      cmdBld_AesMappingKeyAdd()
  ****************************************************************************
  * DESCRIPTION: Set the actual Aes mapping key
- * 
- * INPUTS:  
- * 
- * OUTPUT:  
- * 
+ *
+ * INPUTS:
+ *
+ * OUTPUT:
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CmdAddAesMappingKey (TI_HANDLE hCmdBld, TSecurityKeys* aSecurityKey, void *fCb, TI_HANDLE hCb)
@@ -1547,16 +1552,16 @@ TI_STATUS cmdBld_CmdAddAesMappingKey (TI_HANDLE hCmdBld, TSecurityKeys* aSecurit
 
     TRACE2(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, "cmdBld_AesMappingKeyAdd: uSecuritySeqNumHigh=%ld, pHwCtrl->uSecuritySeqNumLow=%ld \n", pCmdBld->uSecuritySeqNumHigh, pCmdBld->uSecuritySeqNumLow);
 
-    return cmdBld_CmdIeSetKey (hCmdBld, 
+    return cmdBld_CmdIeSetKey (hCmdBld,
                                KEY_ADD_OR_REPLACE,
-                               aSecurityKey->hlid, 
+                               aSecurityKey->hlid,
                                aSecurityKey->lidKeyType,
                                aSecurityKey->encLen, keyType,
-                               aSecurityKey->keyIndex, 
-                               (TI_UINT8*)aSecurityKey->encKey, 
-                               pCmdBld->uSecuritySeqNumLow, 
+                               aSecurityKey->keyIndex,
+                               (TI_UINT8*)aSecurityKey->encKey,
+                               pCmdBld->uSecuritySeqNumLow,
                                pCmdBld->uSecuritySeqNumHigh,
-                               fCb, 
+                               fCb,
                                hCb);
 }
 
@@ -1565,11 +1570,11 @@ TI_STATUS cmdBld_CmdAddAesMappingKey (TI_HANDLE hCmdBld, TSecurityKeys* aSecurit
  *                      cmdBld_AesMappingKeyRemove()
  ****************************************************************************
  * DESCRIPTION: Remove  Aes mapping key
- * 
- * INPUTS:  
- * 
- * OUTPUT:  
- * 
+ *
+ * INPUTS:
+ *
+ * OUTPUT:
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CmdRemoveAesMappingKey (TI_HANDLE hCmdBld, TSecurityKeys* aSecurityKey, void *fCb, TI_HANDLE hCb)
@@ -1579,34 +1584,34 @@ TI_STATUS cmdBld_CmdRemoveAesMappingKey (TI_HANDLE hCmdBld, TSecurityKeys* aSecu
     keyType = CIPHER_SUITE_AES;
 
 	/*In the new security interface it is not allowed to remove uni-cast keys. it will be cleaned on the next join command*/
-	if (!MAC_BROADCAST(aSecurityKey->macAddress) ) 
+	if (!MAC_BROADCAST(aSecurityKey->macAddress) )
 	{
 		return TI_OK;
 	}
 
-	return cmdBld_CmdIeSetKey (hCmdBld, 
+	return cmdBld_CmdIeSetKey (hCmdBld,
                                KEY_REMOVE,
-                               aSecurityKey->hlid, 
+                               aSecurityKey->hlid,
                                aSecurityKey->lidKeyType,
-                               aSecurityKey->encLen, 
+                               aSecurityKey->encLen,
                                keyType,
-                               aSecurityKey->keyIndex, 
-                               (TI_UINT8*)aSecurityKey->encKey, 
-                               0, 
+                               aSecurityKey->keyIndex,
+                               (TI_UINT8*)aSecurityKey->encKey,
                                0,
-                               fCb, 
+                               0,
+                               fCb,
                                hCb);
  }
 
 /****************************************************************************
  *                      cmdBld_CmdSetStaState()
  ****************************************************************************
- * DESCRIPTION: Set station status . 
- * 
+ * DESCRIPTION: Set station status .
+ *
  * INPUTS: None
- * 
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CmdSetStaState (TI_HANDLE hCmdBld, TI_UINT8 staState, void *fCb, TI_HANDLE hCb)
@@ -1626,11 +1631,11 @@ TI_STATUS cmdBld_CmdSetStaState (TI_HANDLE hCmdBld, TI_UINT8 staState, void *fCb
  *                      cmdBld_CmdAddGemMappingKey()
  ****************************************************************************
  * DESCRIPTION: Set the actual GEM mapping key
- * 
- * INPUTS:  
- * 
- * OUTPUT:  
- * 
+ *
+ * INPUTS:
+ *
+ * OUTPUT:
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CmdAddGemMappingKey (TI_HANDLE hCmdBld, TSecurityKeys* aSecurityKey, void *fCb, TI_HANDLE hCb)
@@ -1640,17 +1645,17 @@ TI_STATUS cmdBld_CmdAddGemMappingKey (TI_HANDLE hCmdBld, TSecurityKeys* aSecurit
 
     keyType = CIPHER_SUITE_GEM;
 
-    return cmdBld_CmdIeSetKey (hCmdBld, 
+    return cmdBld_CmdIeSetKey (hCmdBld,
                                KEY_ADD_OR_REPLACE,
-                               aSecurityKey->hlid, 
+                               aSecurityKey->hlid,
                                aSecurityKey->lidKeyType,
-                               MAX_KEY_SIZE, 
+                               MAX_KEY_SIZE,
                                keyType,
-                               aSecurityKey->keyIndex, 
-							   aSecurityKey->encKey, 
-                               pCmdBld->uSecuritySeqNumLow, 
+                               aSecurityKey->keyIndex,
+							   aSecurityKey->encKey,
+                               pCmdBld->uSecuritySeqNumLow,
                                pCmdBld->uSecuritySeqNumHigh,
-                               fCb, 
+                               fCb,
                                hCb);
 }
 
@@ -1659,11 +1664,11 @@ TI_STATUS cmdBld_CmdAddGemMappingKey (TI_HANDLE hCmdBld, TSecurityKeys* aSecurit
  *                      cmdBld_CmdRemoveGemMappingKey()
  ****************************************************************************
  * DESCRIPTION: Remove  GEM mapping key
- * 
- * INPUTS:  
- * 
- * OUTPUT:  
- * 
+ *
+ * INPUTS:
+ *
+ * OUTPUT:
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS cmdBld_CmdRemoveGemMappingKey (TI_HANDLE hCmdBld, TSecurityKeys* aSecurityKey, void *fCb, TI_HANDLE hCb)
@@ -1673,22 +1678,22 @@ TI_STATUS cmdBld_CmdRemoveGemMappingKey (TI_HANDLE hCmdBld, TSecurityKeys* aSecu
     keyType = CIPHER_SUITE_GEM;
 
 	/*In the new security interface it is not allowed to remove uni-cast keys. it will be cleaned on the next join command*/
-	if (!MAC_BROADCAST(aSecurityKey->macAddress) ) 
+	if (!MAC_BROADCAST(aSecurityKey->macAddress) )
 	{
 		return TI_OK;
 	}
 
-	return cmdBld_CmdIeSetKey (hCmdBld, 
+	return cmdBld_CmdIeSetKey (hCmdBld,
                                KEY_REMOVE,
                                aSecurityKey->hlid,
                                aSecurityKey->lidKeyType,
-                               aSecurityKey->encLen, 
+                               aSecurityKey->encLen,
                                keyType,
-                               aSecurityKey->keyIndex, 
-                               aSecurityKey->encKey, 
-                               0, 
+                               aSecurityKey->keyIndex,
+                               aSecurityKey->encKey,
                                0,
-                               fCb, 
+                               0,
+                               fCb,
                                hCb);
  }
 #endif /*GEM_SUPPORTED*/
@@ -1696,20 +1701,20 @@ TI_STATUS cmdBld_CmdRemoveGemMappingKey (TI_HANDLE hCmdBld, TSecurityKeys* aSecu
 /****************************************************************************
  *                      cmdBld_healthCheck()
  ****************************************************************************
- * DESCRIPTION: 
- * 
- * INPUTS:  
- * 
- * OUTPUT:  
- * 
- * RETURNS: 
+ * DESCRIPTION:
+ *
+ * INPUTS:
+ *
+ * OUTPUT:
+ *
+ * RETURNS:
  ****************************************************************************/
 TI_STATUS cmdBld_CmdHealthCheck (TI_HANDLE hCmdBld, void *fCb, TI_HANDLE hCb)
 {
     TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
 
     TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, "cmdBld_CmdIeHealthCheck\n");
-    
+
     return cmdBld_CmdIeHealthCheck (hCmdBld, fCb, hCb);
 }
 

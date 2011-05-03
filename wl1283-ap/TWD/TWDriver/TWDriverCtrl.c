@@ -1,36 +1,41 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * TWDriverCtrl.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
-/** \file  TWDriver.c 
+
+/** \file  TWDriver.c
  *  \brief TI WLAN Hardware Access Driver, Parameters control
  *
- *  \see   TWDriver.h 
+ *  \see   TWDriver.h
  */
 
 #define __FILE_ID__  FILE_ID_118
@@ -40,7 +45,7 @@
 #include "txHwQueue_api.h"
 #include "txXfer_api.h"
 #include "txResult_api.h"
-#include "eventMbox_api.h" 
+#include "eventMbox_api.h"
 #include "TWDriver.h"
 #include "TWDriverInternal.h"
 #include "FwEvent_api.h"
@@ -79,7 +84,7 @@ TI_STATUS TWD_SetParam (TI_HANDLE hTWD, TTwdParamInfo *pParamInfo)
             if (cmdBld_CfgServicePeriodTimeout (pTWD->hCmdBld, &pParamInfo->content.halCtrlRxTimeOut, NULL, NULL) == TI_OK)
             {
                 pWlanParams->rxTimeOut.psPoll = pParamInfo->content.halCtrlRxTimeOut.psPoll;
-                pWlanParams->rxTimeOut.UPSD   = pParamInfo->content.halCtrlRxTimeOut.UPSD;  
+                pWlanParams->rxTimeOut.UPSD   = pParamInfo->content.halCtrlRxTimeOut.UPSD;
             }
             break;
 
@@ -132,7 +137,7 @@ TI_STATUS TWD_SetParam (TI_HANDLE hTWD, TTwdParamInfo *pParamInfo)
             if (cmdBld_CmdAddKey (pTWD->hCmdBld,
                                   (TSecurityKeys *) pParamInfo->content.configureCmdCBParams.pCb,
                                   TI_FALSE,
-                                  pParamInfo->content.configureCmdCBParams.fCb, 
+                                  pParamInfo->content.configureCmdCBParams.fCb,
                                   pParamInfo->content.configureCmdCBParams.hCb) != TI_OK)
                 return TI_NOK;
             break;
@@ -140,9 +145,9 @@ TI_STATUS TWD_SetParam (TI_HANDLE hTWD, TTwdParamInfo *pParamInfo)
         case TWD_RSN_KEY_REMOVE_PARAM_ID:
             TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION, "TWD########KEY_REMOVE\n");
 
-            if (cmdBld_CmdRemoveKey (pTWD->hCmdBld, 
+            if (cmdBld_CmdRemoveKey (pTWD->hCmdBld,
                                      (TSecurityKeys *) pParamInfo->content.configureCmdCBParams.pCb,
-                                     pParamInfo->content.configureCmdCBParams.fCb, 
+                                     pParamInfo->content.configureCmdCBParams.fCb,
                                      pParamInfo->content.configureCmdCBParams.hCb) != TI_OK)
                 return TI_NOK;
             break;
@@ -155,8 +160,8 @@ TI_STATUS TWD_SetParam (TI_HANDLE hTWD, TTwdParamInfo *pParamInfo)
 
 			if (cmdBld_CmdSetWepDefaultKeyId (pTWD->hCmdBld,
 									  *((TI_UINT8 *)pParamInfo->content.interogateCmdCBParams.pCb),
-									  pParamInfo->content.interogateCmdCBParams.fCb, 
-									  pParamInfo->content.interogateCmdCBParams.hCb) != TI_OK) 
+									  pParamInfo->content.interogateCmdCBParams.fCb,
+									  pParamInfo->content.interogateCmdCBParams.hCb) != TI_OK)
                 return TI_NOK;
 
             break;
@@ -168,23 +173,23 @@ TI_STATUS TWD_SetParam (TI_HANDLE hTWD, TTwdParamInfo *pParamInfo)
                 return TI_NOK;
             break;
 
-#ifdef CCX_MODULE_INCLUDED
-        case TWD_RSN_CCX_SW_ENC_ENABLE_PARAM_ID:
-        
-            TRACE1(pTWD->hReport, REPORT_SEVERITY_INFORMATION, "TWD: CCX_SW_ENC_ENABLE %d\n", pParamInfo->content.rsnCcxSwEncFlag);
+#ifdef XCC_MODULE_INCLUDED
+        case TWD_RSN_XCC_SW_ENC_ENABLE_PARAM_ID:
+
+            TRACE1(pTWD->hReport, REPORT_SEVERITY_INFORMATION, "TWD: XCC_SW_ENC_ENABLE %d\n", pParamInfo->content.rsnXCCSwEncFlag);
 
             /* when SW encryption is ON, HW encryption should be turned OFF and vice versa */
 
-            TRACE1(pTWD->hReport, REPORT_SEVERITY_INFORMATION, "TWD: Set HwEncDecrEnable to %d\n", !pParamInfo->content.rsnCcxSwEncFlag);
+            TRACE1(pTWD->hReport, REPORT_SEVERITY_INFORMATION, "TWD: Set HwEncDecrEnable to %d\n", !pParamInfo->content.rsnXCCSwEncFlag);
 
             /* Set the Encryption/Decryption on the HW*/
-            if (cmdBld_CfgHwEncDecEnable (pTWD->hCmdBld, !pParamInfo->content.rsnCcxSwEncFlag, NULL, NULL) != TI_OK)
+            if (cmdBld_CfgHwEncDecEnable (pTWD->hCmdBld, !pParamInfo->content.rsnXCCSwEncFlag, NULL, NULL) != TI_OK)
                 return TI_NOK;
             break;
              /* not supported - CKIP*/
-        case TWD_RSN_CCX_MIC_FIELD_ENABLE_PARAM_ID:
+        case TWD_RSN_XCC_MIC_FIELD_ENABLE_PARAM_ID:
             break;
-#endif /* CCX_MODULE_INCLUDED*/
+#endif /* XCC_MODULE_INCLUDED*/
 
         case TWD_TX_POWER_PARAM_ID:
 
@@ -198,9 +203,9 @@ TI_STATUS TWD_SetParam (TI_HANDLE hTWD, TTwdParamInfo *pParamInfo)
             break;
 
         case TWD_SG_ENABLE_PARAM_ID:
-            return cmdBld_CfgSgEnable (pTWD->hCmdBld, 
-                                       (ESoftGeminiEnableModes)pParamInfo->content.SoftGeminiEnable, 
-                                       NULL, 
+            return cmdBld_CfgSgEnable (pTWD->hCmdBld,
+                                       (ESoftGeminiEnableModes)pParamInfo->content.SoftGeminiEnable,
+                                       NULL,
                                        NULL);
 
         case TWD_SG_CONFIG_PARAM_ID:
@@ -210,8 +215,8 @@ TI_STATUS TWD_SetParam (TI_HANDLE hTWD, TTwdParamInfo *pParamInfo)
             return cmdBld_CfgFmCoex (pTWD->hCmdBld, &pParamInfo->content.tFmCoexParams, NULL, NULL);
 
         /*
-         *  TX Parameters 
-         */ 
+         *  TX Parameters
+         */
 
         case TWD_TX_RATE_CLASS_PARAM_ID:
             return cmdBld_CfgTxRatePolicy (pTWD->hCmdBld, pParamInfo->content.pTxRatePlicy, NULL, NULL);
@@ -232,7 +237,7 @@ TI_STATUS TWD_SetParam (TI_HANDLE hTWD, TTwdParamInfo *pParamInfo)
             break;
 
         case TWD_DCO_ITRIM_PARAMS_ID:
-            cmdBld_CfgDcoItrimParams (pTWD->hCmdBld, pParamInfo->content.tDcoItrimParams.enable, 
+            cmdBld_CfgDcoItrimParams (pTWD->hCmdBld, pParamInfo->content.tDcoItrimParams.enable,
                                       pParamInfo->content.tDcoItrimParams.moderationTimeoutUsec, NULL, NULL);
             break;
 
@@ -252,7 +257,7 @@ TI_STATUS TWD_GetParam (TI_HANDLE hTWD, TTwdParamInfo *pParamInfo)
 
     return cmdBld_GetParam (pTWD->hCmdBld, pParamInfo);
 }
-   
+
 TI_STATUS TWD_CfgRx (TI_HANDLE hTWD, TI_UINT32 uRxConfigOption, TI_UINT32 uRxFilterOption)
 {
     TTwd     *pTWD = (TTwd *)hTWD;
@@ -273,15 +278,15 @@ TI_STATUS TWD_CfgArpIpAddrTable (TI_HANDLE hTWD, TIpAddr tIpAddr, EArpFilterType
 
 /** @ingroup Misc
  * \brief  Configure ARP IP Filter
- * 
+ *
  * \param hTWD 			- TWD module object handle
  * \param  bEnabled   	- Indicates if ARP filtering is Enabled (1) or Disabled (0)
  * \return TI_OK on success or TI_NOK on failure
- * 
+ *
  * \par Description
- * 
+ *
  * \sa
- */ 
+ */
 TI_STATUS TWD_CfgArpIpFilter (TI_HANDLE hTWD, TIpAddr staIp)
 {
     TTwd *pTWD = (TTwd *)hTWD;
@@ -366,16 +371,16 @@ TI_STATUS TWD_CfgPacketDetectionThreshold (TI_HANDLE hTWD, TI_UINT32 threshold)
 TI_STATUS TWD_CmdDisableTx (TI_HANDLE hTWD)
 {
     TTwd   *pTWD = (TTwd *)hTWD;
-    
+
     TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CmdDisableTx: called\n");
 
     return cmdBld_CmdDisableTx (pTWD->hCmdBld, NULL, NULL);
 }
-    
+
 TI_STATUS TWD_CmdEnableTx (TI_HANDLE hTWD, TI_UINT8 channel)
 {
     TTwd   *pTWD = (TTwd *)hTWD;
-        
+
     TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CmdEnableTx: called\n");
 
     return cmdBld_CmdEnableTx (pTWD->hCmdBld, channel, NULL, NULL);
@@ -401,18 +406,18 @@ TI_STATUS TWD_ItrRoammingStatisitics (TI_HANDLE hTWD, void *fCb, TI_HANDLE hCb, 
 
 /** @ingroup UnKnown
  * \brief	Interrogate Error Count
- * 
+ *
  * \param  hTWD     	- TWD module object handle
  * \param  fCb          - Pointer to Command CB Function
  * \param  hCb          - Handle to Command CB Function Obj Parameters
  * \param  pCb          - Pointer to read parameters
  * \return TI_OK on success or TI_NOK on failure
- * 
+ *
  * \par Description
  * Interrogate ACX Error counter
- * 
+ *
  * \sa
- */ 
+ */
 TI_STATUS TWD_ItrErrorCnt (TI_HANDLE hTWD, void *fCb, TI_HANDLE hCb, void *pCb)
 {
     TTwd   *pTWD = (TTwd *)hTWD;
@@ -434,7 +439,7 @@ TI_STATUS TWD_CmdNoiseHistogram (TI_HANDLE hTWD, TNoiseHistogram *pNoiseHistPara
 TI_STATUS TWD_CfgBeaconFilterOpt (TI_HANDLE hTWD, TI_UINT8 uBeaconFilteringStatus, TI_UINT8 uNumOfBeaconsToBuffer)
 {
     TTwd   *pTWD = (TTwd *)hTWD;
-       
+
     TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CfgBeaconFilterOpt: called\n");
 
     return cmdBld_CfgBeaconFilterOpt (pTWD->hCmdBld, uBeaconFilteringStatus, uNumOfBeaconsToBuffer, NULL, NULL);
@@ -461,7 +466,7 @@ TI_STATUS TWD_SetRateMngDebug(TI_HANDLE hTWD, RateMangeParams_t *pRateMngParams)
 TI_STATUS TWD_CfgBeaconFilterTable (TI_HANDLE hTWD, TI_UINT8 uNumOfIe, TI_UINT8 *pIeTable, TI_UINT8 uIeTableSize)
 {
     TTwd   *pTWD = (TTwd *)hTWD;
-      
+
     TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CfgBeaconFilterTable: called\n");
 
     return cmdBld_CfgBeaconFilterTable (pTWD->hCmdBld, uNumOfIe, pIeTable, uIeTableSize, NULL, NULL);
@@ -543,18 +548,18 @@ TI_STATUS TWD_CmdFwDisconnect (TI_HANDLE hTWD, DisconnectType_e uDisconType, TI_
 {
     TTwd   *pTWD = (TTwd *)hTWD;
 
-    return cmdBld_CmdFwDisconnect (pTWD->hCmdBld, 
-                                   RX_CONFIG_OPTION_MY_DST_MY_BSS, 
-                                   RX_FILTER_OPTION_FILTER_ALL, 
-                                   uDisconType, 
-                                   uDisconReason, 
-                                   NULL, 
+    return cmdBld_CmdFwDisconnect (pTWD->hCmdBld,
+                                   RX_CONFIG_OPTION_MY_DST_MY_BSS,
+                                   RX_FILTER_OPTION_FILTER_ALL,
+                                   uDisconType,
+                                   uDisconReason,
+                                   NULL,
                                    NULL);
 }
 
-TI_STATUS TWD_CmdMeasurement (TI_HANDLE           hTWD, 
+TI_STATUS TWD_CmdMeasurement (TI_HANDLE           hTWD,
                               TMeasurementParams *pMeasurementParams,
-                              void               *fCommandResponseCb, 
+                              void               *fCommandResponseCb,
                               TI_HANDLE           hCb)
 {
     TTwd   *pTWD = (TTwd *)hTWD;
@@ -591,8 +596,8 @@ TI_STATUS TWD_CmdApDiscoveryStop (TI_HANDLE hTWD)
     return cmdBld_CmdApDiscoveryStop (pTWD->hCmdBld, NULL, NULL);
 }
 
-TI_STATUS TWD_CfgGroupAddressTable (TI_HANDLE     hTWD, 
-                                    TI_UINT8      uNumGroupAddrs, 
+TI_STATUS TWD_CfgGroupAddressTable (TI_HANDLE     hTWD,
+                                    TI_UINT8      uNumGroupAddrs,
                                     TMacAddr      *pGroupAddr,
                                     TI_BOOL       bEnabled)
 {
@@ -650,7 +655,7 @@ TI_STATUS TWD_CfgBurstMode (TI_HANDLE hTWD, TI_BOOL bEnabled)
 TI_STATUS TWD_CmdHealthCheck (TI_HANDLE hTWD)
 {
     TTwd   *pTWD = (TTwd *)hTWD;
-    
+
     TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CmdHealthCheck: called\n");
 
     return cmdBld_CmdHealthCheck (pTWD->hCmdBld, NULL, NULL);
@@ -709,26 +714,26 @@ TI_STATUS TWD_CfgEnableRxDataFilter (TI_HANDLE hTWD, TI_BOOL bEnabled, filter_e 
     return cmdBld_CfgEnableRxDataFilter (pTWD->hCmdBld, bEnabled, eDefaultAction, NULL, NULL);
 }
 
-TI_STATUS TWD_CfgRxDataFilter (TI_HANDLE    hTWD, 
-                               TI_UINT8     index, 
-                               TI_UINT8     command, 
-                               filter_e     eAction, 
-                               TI_UINT8     uNumFieldPatterns, 
-                               TI_UINT8     uLenFieldPatterns, 
+TI_STATUS TWD_CfgRxDataFilter (TI_HANDLE    hTWD,
+                               TI_UINT8     index,
+                               TI_UINT8     command,
+                               filter_e     eAction,
+                               TI_UINT8     uNumFieldPatterns,
+                               TI_UINT8     uLenFieldPatterns,
                                TI_UINT8     *pFieldPatterns)
 {
     TTwd *pTWD = (TTwd *)hTWD;
 
     TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CfgRxDataFilter: called\n");
 
-    return cmdBld_CfgRxDataFilter (pTWD->hCmdBld, 
-                                   index, 
-                                   command, 
-                                   eAction, 
-                                   uNumFieldPatterns, 
-                                   uLenFieldPatterns, 
-                                   pFieldPatterns, 
-                                   NULL, 
+    return cmdBld_CfgRxDataFilter (pTWD->hCmdBld,
+                                   index,
+                                   command,
+                                   eAction,
+                                   uNumFieldPatterns,
+                                   uLenFieldPatterns,
+                                   pFieldPatterns,
+                                   NULL,
                                    NULL);
 }
 
@@ -777,17 +782,17 @@ TI_STATUS TWD_SetSecuritySeqNum (TI_HANDLE hTWD, TI_UINT8 securitySeqNumLsByte)
     return cmdBld_SetSecuritySeqNum (pTWD->hCmdBld, securitySeqNumLsByte);
 }
 
-TI_STATUS TWD_CfgSetFwHtCapabilities (TI_HANDLE hTWD, 
-									  Tdot11HtCapabilitiesUnparse *pHtCapabilitiesIe, 
+TI_STATUS TWD_CfgSetFwHtCapabilities (TI_HANDLE hTWD,
+									  Tdot11HtCapabilitiesUnparse *pHtCapabilitiesIe,
 									  TI_BOOL bAllowHtOperation)
 {
     TTwd        *pTWD           = (TTwd *)hTWD;
     TI_UINT32   uHtCapabilites;
     TI_UINT8    uAmpduMaxLeng = 0;
-    TI_UINT8    uAmpduMinSpac = 0; 
+    TI_UINT8    uAmpduMinSpac = 0;
     TI_UINT16   uHtCapabilitesField;
 
-    /* Note, currently this value will be set to FFFFFFFFFFFF to indicate it is relevant for all peers 
+    /* Note, currently this value will be set to FFFFFFFFFFFF to indicate it is relevant for all peers
        since we only support HT in infrastructure mode. Later on this field will be relevant to IBSS/DLS operation */
     TMacAddr    tMacAddress = {0xff,0xff,0xff,0xff,0xff,0xff};
 
@@ -823,7 +828,7 @@ TI_STATUS TWD_CfgSetFwHtCapabilities (TI_HANDLE hTWD,
                                           tMacAddress,
                                           uAmpduMaxLeng,
                                           uAmpduMinSpac,
-                                          NULL, 
+                                          NULL,
                                           NULL);
 }
 
@@ -831,7 +836,7 @@ TI_STATUS TWD_CfgSetFwHtInformation (TI_HANDLE hTWD, Tdot11HtInformationUnparse 
 {
     TTwd        *pTWD           = (TTwd *)hTWD;
     TI_UINT8    uRifsMode;
-    TI_UINT8    uHtProtection; 
+    TI_UINT8    uHtProtection;
     TI_UINT8    uGfProtection;
     TI_UINT8    uHtTxBurstLimit;
     TI_UINT8    uDualCtsProtection;
@@ -842,11 +847,11 @@ TI_STATUS TWD_CfgSetFwHtInformation (TI_HANDLE hTWD, Tdot11HtInformationUnparse 
 
     uHtProtection = (pHtInformationIe->aHtInformationIe[2] & HT_INF_OPERATION_MOD_BITMASK);
 
-    uGfProtection = (pHtInformationIe->aHtInformationIe[3] & HT_INF_NON_GF_PRES_BITMASK) >> 2; 
+    uGfProtection = (pHtInformationIe->aHtInformationIe[3] & HT_INF_NON_GF_PRES_BITMASK) >> 2;
 
-    uHtTxBurstLimit = (pHtInformationIe->aHtInformationIe[3] & HT_INF_TX_BURST_LIMIT_BITMASK) >> 3; 
+    uHtTxBurstLimit = (pHtInformationIe->aHtInformationIe[3] & HT_INF_TX_BURST_LIMIT_BITMASK) >> 3;
 
-    uDualCtsProtection = (pHtInformationIe->aHtInformationIe[4] & HT_INF_DUAL_BEACON_BITMASK) >> 6; 
+    uDualCtsProtection = (pHtInformationIe->aHtInformationIe[4] & HT_INF_DUAL_BEACON_BITMASK) >> 6;
 
     return cmdBld_CfgSetFwHtInformation (pTWD->hCmdBld,
                                          uRifsMode,
@@ -854,7 +859,7 @@ TI_STATUS TWD_CfgSetFwHtInformation (TI_HANDLE hTWD, Tdot11HtInformationUnparse 
                                          uGfProtection,
                                          uHtTxBurstLimit,
                                          uDualCtsProtection,
-                                         NULL, 
+                                         NULL,
                                          NULL);
 }
 
@@ -872,12 +877,12 @@ TI_STATUS TWD_CfgSetBaInitiator (TI_HANDLE hTWD,
 
     return cmdBld_CfgSetBaSession (pTWD->hCmdBld,
                                    ACX_BA_SESSION_INITIATOR_POLICY,
-                                   uTid,               
-                                   uState,             
-                                   tRa,                
-                                   uWinSize,          
+                                   uTid,
+                                   uState,
+                                   tRa,
+                                   uWinSize,
                                    uInactivityTimeout,
-                                   NULL, 
+                                   NULL,
                                    NULL);
 }
 
@@ -893,16 +898,16 @@ TI_STATUS TWD_CfgSetBaReceiver (TI_HANDLE hTWD,
 
     return cmdBld_CfgSetBaSession (pTWD->hCmdBld,
                                    ACX_BA_SESSION_RESPONDER_POLICY,
-                                   uTid,               
-                                   uState,             
-                                   tRa,                
-                                   uWinSize,          
+                                   uTid,
+                                   uState,
+                                   tRa,
+                                   uWinSize,
                                    0,
-                                   (void *)NULL, 
+                                   (void *)NULL,
                                    (TI_HANDLE)NULL);
 }
 
-void TWD_CloseAllBaSessions(TI_HANDLE hTWD) 
+void TWD_CloseAllBaSessions(TI_HANDLE hTWD)
 {
     TTwd        *pTWD = (TTwd *)hTWD;
     TI_UINT32    i;
@@ -958,7 +963,7 @@ TI_STATUS TWD_SendGenricCmdToFW(TI_HANDLE hTWD, TI_UINT16 uCmdID, TI_UINT8 *pCmd
 /* \fn TWD_AddSta
  *
  * \brief Add Station to FW
- */ 
+ */
 TI_STATUS TWD_AddSta(TI_HANDLE hTWD, TTwdAddStaParams *addStaParams)
 {
     TTwd *pTWD = (TTwd*)hTWD;
@@ -975,7 +980,7 @@ TI_STATUS TWD_AddSta(TI_HANDLE hTWD, TTwdAddStaParams *addStaParams)
 /* \fn TWD_RemSta
  *
  * \brief Remove Station from FW
- */ 
+ */
 TI_STATUS TWD_RemSta(TI_HANDLE hTWD, TI_UINT8 uHlid, TI_UINT8 uDeauthReason, TI_BOOL bSendDeauth)
 {
     TTwd *pTWD = (TTwd*)hTWD;
@@ -992,7 +997,7 @@ TI_STATUS TWD_RemSta(TI_HANDLE hTWD, TI_UINT8 uHlid, TI_UINT8 uDeauthReason, TI_
 /* \fn TWD_NopCmd
  *
  * \brief Nop command for synchronization with TWD command queue
- */ 
+ */
 TI_STATUS TWD_NopCmd(TI_HANDLE hTWD, void *fCb, TI_HANDLE  hCb)
 {
     TTwd *pTWD = (TTwd*)hTWD;
@@ -1003,7 +1008,7 @@ TI_STATUS TWD_NopCmd(TI_HANDLE hTWD, void *fCb, TI_HANDLE  hCb)
 /* \fn TWD_SetConnectionPhase
  *
  * \brief Set Connection phase of specific STA
- */ 
+ */
 TI_STATUS TWD_SetConnectionPhase(TI_HANDLE hTWD, TTwdConnPhaseParam *pParam, void *fCb, TI_HANDLE  hCb)
 {
     TTwd *pTWD = (TTwd*)hTWD;

@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * Device1273.h
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 /**********************************************************************************************************************
 
@@ -349,7 +354,7 @@
 #define CIS_MAP                        (REGISTERS_BASE + 0x2458) /* new*/
 #define ENDIAN_CTRL                    (REGISTERS_BASE + 0x245C) /* new*/
 #define GS_SLEEP_ACCESS                (REGISTERS_BASE + 0x2480) /* new*/
-#define PCMCIA_PWR_DN                  (REGISTERS_BASE + 0x04C4) 
+#define PCMCIA_PWR_DN                  (REGISTERS_BASE + 0x04C4)
 #define PCI_OUTPUT_DLY_CFG             (REGISTERS_BASE + 0x2464) /* new*/
 
 /* VLYNQ registers*/
@@ -432,7 +437,7 @@
 #define PCI_BE_PM_D3_CTRL_REG          (REGISTERS_BASE + 0x856C)
 #define PCI_BE_SLV_CFG_REG             (REGISTERS_BASE + 0x8580)
 #define PCI_BE_ARB_CTRL_REG            (REGISTERS_BASE + 0x8584)
-                                       
+
 #define FER                            (REGISTERS_BASE + 0x85A0) /* PCI_BE_STSCHG_FE_REG*/
 #define FEMR                           (REGISTERS_BASE + 0x85A4) /* PCI_BE_STSCHG_FEM_REG*/
 #define FPSR                           (REGISTERS_BASE + 0x85A8) /* PCI_BE_STSCHG_FPS_REG*/
@@ -945,7 +950,7 @@
 
 #define TNET1150_LAST_REG_ADDR			PCI_CONTROL
 
-#define ECPU_CONTROL_HALT			   0x00000101				
+#define ECPU_CONTROL_HALT			   0x00000101
 
 /*0x03bc00 address is 1KB from end of FW RAM in 125x chip*/
 #define FW_STATIC_NVS_TRAGET_ADDRESS   0x03bc00
@@ -961,12 +966,12 @@
 #define OCP_CMD                        (REGISTERS_BASE + 0x9C0)
 #define FUNC7_SEL                      0xC8C
 #define FUNC7_PULL                     0xCB0
-#define FN0_CCCR_REG_32                0x64  
+#define FN0_CCCR_REG_32                0x64
 
-#define PLL_PARAMETERS_CLK_VAL_19_2M   0x01			
-#define PLL_PARAMETERS_CLK_VAL_26M     0x02				
-#define PLL_PARAMETERS_CLK_VAL_38_4M   0x03				
-#define PLL_PARAMETERS_CLK_VAL_52M     0x04				
+#define PLL_PARAMETERS_CLK_VAL_19_2M   0x01
+#define PLL_PARAMETERS_CLK_VAL_26M     0x02
+#define PLL_PARAMETERS_CLK_VAL_38_4M   0x03
+#define PLL_PARAMETERS_CLK_VAL_52M     0x04
 
 #define WU_COUNTER_PAUSE_VAL           0x3FF
 

@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * scanMngr.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file  scanMngr.c
  *  \brief This file include the scan manager module implementation
  *
@@ -58,12 +63,12 @@
 ****************************************************************************
 DESCRIPTION:    returns the reminder of a 64 bit number division by a 32
                 bit number.
-                                                                                                   
+
 INPUT:      The dividee (64 bit number to divide)
             The divider (32 bit number to divide by)
 
-OUTPUT:     
-            
+OUTPUT:
+
 
 RETURN:     The reminder
 ****************************************************************************/
@@ -95,8 +100,8 @@ static void scanMngr_setManualScanDefaultParams(TI_HANDLE hScanMngr)
 
     pScanMngr->manualScanParams.desiredSsid.len = 1;        /* will be set by the scan concentrator */
     pScanMngr->manualScanParams.scanType= SCAN_TYPE_NORMAL_ACTIVE;
-    pScanMngr->manualScanParams.band = RADIO_BAND_2_4_GHZ; 
-    pScanMngr->manualScanParams.probeReqNumber =  3; 
+    pScanMngr->manualScanParams.band = RADIO_BAND_2_4_GHZ;
+    pScanMngr->manualScanParams.probeReqNumber =  3;
     pScanMngr->manualScanParams.probeRequestRate = RATE_MASK_UNSPECIFIED;
 }
 
@@ -106,7 +111,7 @@ static void scanMngr_reportContinuousScanResults (TI_HANDLE hScanMngr,  EScanCnc
     scanMngr_t* pScanMngr = (scanMngr_t*)hScanMngr;
     BssListEx_t   BssListEx;
 
-    
+
     if (resultStatus == SCAN_CRS_SCAN_COMPLETE_OK)
     {
         BssListEx.pListOfAPs = scanMngr_getBSSList(hScanMngr);
@@ -164,7 +169,7 @@ void scanMngrFreeMem (TI_HANDLE hScanMngr)
  * \param frameInfo - frame related information (in case of a frame reception).\n
  * \param SPSStatus - bitmap indicating which channels were scan, in case of an SPS scan.\n
  */
-void scanMngr_immedScanCB( TI_HANDLE hScanMngr, EScanCncnResultStatus resultStatus, 
+void scanMngr_immedScanCB( TI_HANDLE hScanMngr, EScanCncnResultStatus resultStatus,
                            TScanFrameInfo* frameInfo, TI_UINT16 SPSStatus )
 {
     scanMngr_t* pScanMngr = (scanMngr_t*)hScanMngr;
@@ -205,7 +210,7 @@ void scanMngr_immedScanCB( TI_HANDLE hScanMngr, EScanCncnResultStatus resultStat
                 pScanMngr->immedScanState = SCAN_ISS_A_BAND;
 
                 /* send scan command to scan concentrator */
-                nextResultStatus = 
+                nextResultStatus =
                     scanCncn_Start1ShotScan( pScanMngr->hScanCncn, SCAN_SCC_ROAMING_IMMED, &(pScanMngr->scanParams));
                 if ( SCAN_CRS_SCAN_RUNNING != nextResultStatus )
                 {
@@ -213,7 +218,7 @@ void scanMngr_immedScanCB( TI_HANDLE hScanMngr, EScanCncnResultStatus resultStat
                     TRACE1( pScanMngr->hReport, REPORT_SEVERITY_WARNING, "Failed to start immediate scan on band A, return code %d.\n", resultStatus);
 #ifdef TI_DBG
                     pScanMngr->stats.ImmediateAByStatus[ nextResultStatus ]++;
-#endif              
+#endif
                     scanMngr_immediateScanComplete(hScanMngr,SCAN_MRS_SCAN_COMPLETE_OK);
                 }
             }
@@ -221,7 +226,7 @@ void scanMngr_immedScanCB( TI_HANDLE hScanMngr, EScanCncnResultStatus resultStat
             {
                 /* mark that immediate scan is not running */
                 pScanMngr->immedScanState = SCAN_ISS_IDLE;
-                
+
                 /* no channels are actually available for scan - notify the roaming manager of the scan complete */
                 scanMngr_immediateScanComplete(hScanMngr,SCAN_MRS_SCAN_COMPLETE_OK);
             }
@@ -255,7 +260,7 @@ void scanMngr_immedScanCB( TI_HANDLE hScanMngr, EScanCncnResultStatus resultStat
             /* otherwise, notify the roaming manager of the scan complete */
             scanMngr_immediateScanComplete(hScanMngr,SCAN_MRS_SCAN_COMPLETE_OK);
             break;
-        
+
         default:
             /* should not be at any other stage when CB is invoked */
             TRACE1( pScanMngr->hReport, REPORT_SEVERITY_WARNING, "Immediate scan CB called with scan complete TI_OK reason in state:%d", pScanMngr->immedScanState);
@@ -284,7 +289,7 @@ void scanMngr_immedScanCB( TI_HANDLE hScanMngr, EScanCncnResultStatus resultStat
         }
 #endif
         /* mark that immediate scan is not running */
-        pScanMngr->immedScanState = SCAN_ISS_IDLE;     
+        pScanMngr->immedScanState = SCAN_ISS_IDLE;
         scanMngr_immediateScanComplete(hScanMngr,scanMngrConvertResultStatus(resultStatus));
         break;
     }
@@ -301,7 +306,7 @@ void scanMngr_immedScanCB( TI_HANDLE hScanMngr, EScanCncnResultStatus resultStat
  * \param frameInfo - frame related info (in case of a frame reception).\n
  * \param SPSStatus - bitmap indicating which channels were scan, in case of an SPS scan.\n
  */
-void scanMngr_contScanCB( TI_HANDLE hScanMngr, EScanCncnResultStatus resultStatus, 
+void scanMngr_contScanCB( TI_HANDLE hScanMngr, EScanCncnResultStatus resultStatus,
                          TScanFrameInfo* frameInfo, TI_UINT16 SPSStatus )
 {
     scanMngr_t* pScanMngr = (scanMngr_t*)hScanMngr;
@@ -347,16 +352,16 @@ void scanMngr_contScanCB( TI_HANDLE hScanMngr, EScanCncnResultStatus resultStatu
             }
         }
 #endif
-    
+
         /* first, remove APs that were not tracked. Note that this function does NOT
-           increase the retry counter, and therefore there's no harm in calling it even if only 
+           increase the retry counter, and therefore there's no harm in calling it even if only
            some of the APs were searched in the previous tracking command, or previous command was
            discovery */
         scanMngrPerformAging( hScanMngr );
-        
+
 
         /* if new BSS's were found (or enough scan iterations passed w/o finding any), notify the roaming manager */
-        if ( ((TI_TRUE == pScanMngr->bNewBSSFound) || 
+        if ( ((TI_TRUE == pScanMngr->bNewBSSFound) ||
               (SCAN_MNGR_CONSEC_SCAN_ITER_FOR_PRE_AUTH < pScanMngr->consecNotFound)) &&
              (pScanMngr->BSSList.numOfEntries > 0)) /* in case no AP was found for specified iterations number,
                                                         but no AP is present, and so is pre-auth */
@@ -365,7 +370,7 @@ void scanMngr_contScanCB( TI_HANDLE hScanMngr, EScanCncnResultStatus resultStatu
             pScanMngr->consecNotFound = 0;
             roamingMngr_updateNewBssList( pScanMngr->hRoamingMngr, (bssList_t*)&(pScanMngr->BSSList));
 
-             if (SCANNING_OPERATIONAL_MODE_MANUAL == pScanMngr->scanningOperationalMode) 
+             if (SCANNING_OPERATIONAL_MODE_MANUAL == pScanMngr->scanningOperationalMode)
              {
                  scanMngr_reportContinuousScanResults(hScanMngr, resultStatus);
              }
@@ -377,7 +382,7 @@ void scanMngr_contScanCB( TI_HANDLE hScanMngr, EScanCncnResultStatus resultStatu
         case SCAN_CSS_TRACKING_G_BAND:
 #ifdef TI_DBG
             pScanMngr->stats.TrackingGByStatus[ resultStatus ]++;
-#endif    
+#endif
             TRACE0(pScanMngr->hReport , REPORT_SEVERITY_INFORMATION, "\n Starting SCAN_CSS_TRACKING_G_BAND \n");
           /* if necessary, attempt tracking on A */
             aPolicy = scanMngrGetPolicyByBand( hScanMngr, RADIO_BAND_5_0_GHZ );
@@ -387,7 +392,7 @@ void scanMngr_contScanCB( TI_HANDLE hScanMngr, EScanCncnResultStatus resultStatu
             {
                 /* recalculate current TSF, to adjust the TSF read at the beginning of
                    the continuous scan process with the tracking on G duration */
-                pScanMngr->currentTSF += 
+                pScanMngr->currentTSF +=
                     ((os_timeStampMs( pScanMngr->hOS ) - pScanMngr->currentHostTimeStamp) * 1000);
 
                 /* build scan command */
@@ -400,7 +405,7 @@ void scanMngr_contScanCB( TI_HANDLE hScanMngr, EScanCncnResultStatus resultStatu
                     pScanMngr->contScanState = SCAN_CSS_TRACKING_A_BAND;
 
                     /* send scan command */
-                    nextResultStatus = 
+                    nextResultStatus =
                         scanCncn_Start1ShotScan( pScanMngr->hScanCncn, SCAN_SCC_ROAMING_CONT, &(pScanMngr->scanParams));
                     if ( SCAN_CRS_SCAN_RUNNING != nextResultStatus )
                     {
@@ -419,7 +424,7 @@ void scanMngr_contScanCB( TI_HANDLE hScanMngr, EScanCncnResultStatus resultStatu
             /* in case a TSF error was received on last continuous scan cycle, mark (now, that tracking
                on both bands was attempted), that TSF values are synchronized */
             pScanMngr->bSynchronized = TI_TRUE;
-            
+
             /* the break is missing on purpose: if tracking on A was not successful (or not needed), continue to discovery */
 
         case SCAN_CSS_TRACKING_A_BAND:
@@ -448,7 +453,7 @@ void scanMngr_contScanCB( TI_HANDLE hScanMngr, EScanCncnResultStatus resultStatu
                     pScanMngr->bNewBSSFound = TI_FALSE;
 
                     /* send scan command */
-                    nextResultStatus = 
+                    nextResultStatus =
                         scanCncn_Start1ShotScan( pScanMngr->hScanCncn, SCAN_SCC_ROAMING_CONT, &(pScanMngr->scanParams));
                     if ( SCAN_CRS_SCAN_RUNNING != nextResultStatus )
                     {
@@ -492,7 +497,7 @@ void scanMngr_contScanCB( TI_HANDLE hScanMngr, EScanCncnResultStatus resultStatu
         default:
             /* should not be at any other stage when CB is invoked */
             TRACE1( pScanMngr->hReport, REPORT_SEVERITY_WARNING, "Continuous scan CB called with scan complete TI_OK reason in state:%d\n", pScanMngr->contScanState);
-            
+
             /* reset continuous scan to idle */
             pScanMngr->contScanState = SCAN_CSS_IDLE;
             pScanMngr->bNewBSSFound = TI_FALSE;
@@ -521,7 +526,7 @@ void scanMngr_contScanCB( TI_HANDLE hScanMngr, EScanCncnResultStatus resultStatu
             break;
         }
 #endif
-        /* stop continuous scan cycle for this time (to avoid tracking using discovery only on A, thus 
+        /* stop continuous scan cycle for this time (to avoid tracking using discovery only on A, thus
            having mixed results - some are synchronized, some are not */
         pScanMngr->contScanState = SCAN_CSS_IDLE;
         break;
@@ -555,7 +560,7 @@ void scanMngr_contScanCB( TI_HANDLE hScanMngr, EScanCncnResultStatus resultStatu
         default:
             break;
         }
-#endif  
+#endif
         /* finish scan for this iteration */
         pScanMngr->contScanState = SCAN_CSS_IDLE;
         break;
@@ -645,10 +650,10 @@ void scanMngr_setScanPolicy( TI_HANDLE hScanMngr, TScanPolicy* scanPolicy )
  * \param status - read status (TI_OK / TI_NOK).\n
  * \param CB_buf - a pointer to the data read.\n
  */
-void scanMngrGetCurrentTsfDtimMibCB(TI_HANDLE hScanMngr, TI_STATUS status, TI_UINT8* CB_buf) 
+void scanMngrGetCurrentTsfDtimMibCB(TI_HANDLE hScanMngr, TI_STATUS status, TI_UINT8* CB_buf)
 {
     scanMngr_t* pScanMngr = (scanMngr_t*)hScanMngr;
-    
+
     os_memoryCopy(pScanMngr->hOS, (TI_UINT8*)&(pScanMngr->currTsfDtimMib), CB_buf, sizeof(TTsfDtim));
 
     /* set the current TSF and last beacon TSF and DTIM count */
@@ -657,9 +662,9 @@ void scanMngrGetCurrentTsfDtimMibCB(TI_HANDLE hScanMngr, TI_STATUS status, TI_UI
 
     INT64_HIGHER( pScanMngr->lastLocalBcnTSF ) = pScanMngr->currTsfDtimMib.lastTBTTHigh;
     INT64_LOWER( pScanMngr->lastLocalBcnTSF )  = pScanMngr->currTsfDtimMib.lastTBTTLow;
-    
+
     pScanMngr->lastLocalBcnDTIMCount = pScanMngr->currTsfDtimMib.LastDTIMCount;
-    
+
     TRACE5( pScanMngr->hReport , REPORT_SEVERITY_INFORMATION, "\n currentTSF = %u-%u lastLocalBcnTSF = %u-%u lastDTIMCount = %d \n", INT64_HIGHER( pScanMngr->currentTSF ), INT64_LOWER( pScanMngr->currentTSF ), INT64_HIGHER( pScanMngr->lastLocalBcnTSF ), INT64_LOWER( pScanMngr->lastLocalBcnTSF ), pScanMngr->lastLocalBcnDTIMCount );
 
     /* get the current host time stamp */
@@ -684,9 +689,9 @@ void scanMngr_GetUpdatedTsfDtimMibForScan (TI_HANDLE hScanMngr, TI_BOOL bTwdInit
     scanMngr_t* pScanMngr = (scanMngr_t*)hScanMngr;
     TTwdParamInfo param;
     TI_STATUS reqStatus = TI_OK;
-    
+
     TRACE0( pScanMngr->hReport , REPORT_SEVERITY_INFORMATION, "\nscanMngr_GetUpdatedTsfDtimMibForScan called\n");
-    
+
     /* Getting the current TSF and DTIM values */
     param.paramType = TWD_TSF_DTIM_MIB_PARAM_ID;
     param.content.interogateCmdCBParams.fCb = (void *)scanMngrGetCurrentTsfDtimMibCB;
@@ -719,7 +724,7 @@ void scanMngrPerformContinuousScan( TI_HANDLE hScanMngr )
     TRACE1( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "scanMngrPerformContinuousScan called, hScanMngr=0x%x.\n", hScanMngr);
     scanMngrDebugPrintBSSList( hScanMngr );
 #endif
-    
+
     /* this function is called due to continuous scan timer expiry, to start a new continuous scan cycle.
        If the continuous scan is anything but idle, a new cycle is not started. */
     if ( SCAN_CSS_IDLE != pScanMngr->contScanState )
@@ -729,14 +734,14 @@ void scanMngrPerformContinuousScan( TI_HANDLE hScanMngr )
     }
 
     /* retrieve the current BSS DTIM period and beacon interval, for SPS DTIM avoidance
-       calculations later. This is done before the continuous scan process is started, 
-       to check that they are not zero (in case the STA disconnected and somehow the 
+       calculations later. This is done before the continuous scan process is started,
+       to check that they are not zero (in case the STA disconnected and somehow the
        scan manager was not notified of the event). If the STA disconnected, the continuous
        scan process is aborted */
     param.paramType = SITE_MGR_BEACON_INTERVAL_PARAM;
     siteMgr_getParam( pScanMngr->hSiteMngr, &param );
     pScanMngr->currentBSSBeaconInterval = param.content.beaconInterval;
-    
+
     param.paramType = SITE_MGR_DTIM_PERIOD_PARAM;
     siteMgr_getParam( pScanMngr->hSiteMngr, &param );
     pScanMngr->currentBSSDtimPeriod = param.content.siteMgrDtimPeriod;
@@ -778,7 +783,7 @@ void scanMngrPerformContinuousScan( TI_HANDLE hScanMngr )
             }
 #ifdef SCAN_MNGR_DBG
             TRACE0( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "Tracking on G started.\n");
-#endif            
+#endif
             return;
         }
     }
@@ -816,7 +821,7 @@ void scanMngrPerformContinuousScan( TI_HANDLE hScanMngr )
     }
     /* in case a TSF error was received on last continuous scan cycle, mark (now, that tracking
        on both bands was attempted), that TSF values are synchronized */
-    pScanMngr->bSynchronized = TI_TRUE;                   
+    pScanMngr->bSynchronized = TI_TRUE;
 
     /* if this does not work as well, try discovery */
     /* discovery can be performed if discovery part is valid (this is maintained whenever a new policy or neighbor AP list
@@ -837,7 +842,7 @@ void scanMngrPerformContinuousScan( TI_HANDLE hScanMngr )
             pScanMngr->bNewBSSFound = TI_FALSE;
 
             /* send scan command to scan concentrator with the required scan params according to scanning operational mode */
-            resultStatus = scanMngr_Start1ShotScan(hScanMngr, SCAN_SCC_ROAMING_CONT);    
+            resultStatus = scanMngr_Start1ShotScan(hScanMngr, SCAN_SCC_ROAMING_CONT);
             if ( SCAN_CRS_SCAN_RUNNING != resultStatus )
             {
                 TRACE1( pScanMngr->hReport, REPORT_SEVERITY_WARNING, "Failed to start discovery continuous scan, resultStatus %d.\n", resultStatus);
@@ -889,11 +894,11 @@ void scanMngrPerformAging( TI_HANDLE hScanMngr )
         handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
         return;
     }
-    /* loop on all entries in the BSS list */   
+    /* loop on all entries in the BSS list */
     for (BSSEntryIndex = 0; BSSEntryIndex < pScanMngr->BSSList.numOfEntries; )
     {
         /* if an entry failed enough consecutive track attempts - remove it */
-        if ( pScanMngr->BSSList.scanBSSList[ BSSEntryIndex ].trackFailCount > 
+        if ( pScanMngr->BSSList.scanBSSList[ BSSEntryIndex ].trackFailCount >
              pScanMngr->scanPolicy.maxTrackFailures )
         {
             /* will replace this entry with one further down the array, if any. Therefore, index is not increased
@@ -943,7 +948,7 @@ void scanMngrUpdateReceivedFrame( TI_HANDLE hScanMngr, TScanFrameInfo* frameInfo
         handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
         return;
     }
-    
+
 #ifdef SCAN_MNGR_DBG
     scanMngrDebugPrintReceivedFrame( hScanMngr, frameInfo );
 #endif
@@ -969,7 +974,7 @@ void scanMngrUpdateReceivedFrame( TI_HANDLE hScanMngr, TScanFrameInfo* frameInfo
 #endif
         return;
     }
-    
+
     /* search for this AP in the tracking list */
     BSSListIndex = scanMngrGetTrackIndexByBssid( hScanMngr, frameInfo->bssId );
 
@@ -979,13 +984,13 @@ void scanMngrUpdateReceivedFrame( TI_HANDLE hScanMngr, TScanFrameInfo* frameInfo
         scanMngrUpdateBSSInfo( hScanMngr, BSSListIndex, frameInfo );
     }
     /* otherwise, if the list is not full and AP is either a neighbor AP or on a policy defined channel: */
-    else 
+    else
     {
         neighborAPIndex = scanMngrGetNeighborAPIndex( hScanMngr, frameInfo->band, frameInfo->bssId );
 
         if ( (pScanMngr->BSSList.numOfEntries < pScanMngr->scanPolicy.BSSListSize) &&
              ((TI_TRUE == scanMngrIsPolicyChannel( hScanMngr, frameInfo->band, frameInfo->channel )) ||
-              (-1 != neighborAPIndex))) 
+              (-1 != neighborAPIndex)))
         {
             /* insert the AP to the list */
             scanMngrInsertNewBSSToTrackingList( hScanMngr, frameInfo );
@@ -996,7 +1001,7 @@ void scanMngrUpdateReceivedFrame( TI_HANDLE hScanMngr, TScanFrameInfo* frameInfo
                 /* mark in the neighbor AP list that it's being tracked */
                 pScanMngr->neighborAPsDiscoveryList[ frameInfo->band ].trackStatusList[ neighborAPIndex ] = SCAN_NDS_DISCOVERED;
 
-                /* if the discovery index for this neighbor AP band points to this AP, 
+                /* if the discovery index for this neighbor AP band points to this AP,
                    advance it and advance discovery part if needed */
                 if ( pScanMngr->neighborAPsDiscoveryIndex[ frameInfo->band ] == neighborAPIndex )
                 {
@@ -1040,7 +1045,7 @@ void scanMngrInsertNewBSSToTrackingList( TI_HANDLE hScanMngr, TScanFrameInfo* fr
 #ifdef SCAN_SPS_USE_DRIFT_COMPENSATION
     int i;
 #endif
-    
+
     /* mark that a new AP was discovered (for discovery stage) */
     pScanMngr->bNewBSSFound = TI_TRUE;
 
@@ -1054,7 +1059,7 @@ void scanMngrInsertNewBSSToTrackingList( TI_HANDLE hScanMngr, TScanFrameInfo* fr
         return;
     }
     /* insert fields that are not update regulary */
-    pScanMngr->BSSList.BSSList[ pScanMngr->BSSList.numOfEntries ].bNeighborAP = 
+    pScanMngr->BSSList.BSSList[ pScanMngr->BSSList.numOfEntries ].bNeighborAP =
         ( -1 == scanMngrGetNeighborAPIndex( hScanMngr, frameInfo->band, frameInfo->bssId ) ?
           TI_FALSE :
           TI_TRUE );
@@ -1106,36 +1111,36 @@ void scanMngrUpdateBSSInfo( TI_HANDLE hScanMngr, TI_UINT8 BSSListIndex, TScanFra
        last beacon of current AP and this frame). */
     if ( INT64_LOWER( (pScanMngr->currentTSF))  > frameInfo->staTSF )
     {
-        INT64_HIGHER( (pScanMngr->BSSList.scanBSSList[ BSSListIndex ].localTSF)) = 
+        INT64_HIGHER( (pScanMngr->BSSList.scanBSSList[ BSSListIndex ].localTSF)) =
             INT64_HIGHER( (pScanMngr->currentTSF)) + 1;
     }
     else
     {
-        INT64_HIGHER( (pScanMngr->BSSList.scanBSSList[ BSSListIndex ].localTSF)) = 
+        INT64_HIGHER( (pScanMngr->BSSList.scanBSSList[ BSSListIndex ].localTSF)) =
             INT64_HIGHER( (pScanMngr->currentTSF));
     }
     INT64_LOWER( (pScanMngr->BSSList.scanBSSList[ BSSListIndex ].localTSF)) = frameInfo->staTSF;
-    
+
     if ( BEACON == frameInfo->parsedIEs->subType )
     {
         os_memoryCopy( pScanMngr->hOS, &(pScanMngr->BSSList.BSSList[ BSSListIndex ].lastRxTSF),
                        (void *)frameInfo->parsedIEs->content.iePacket.timestamp, TIME_STAMP_LEN );
-        pScanMngr->BSSList.BSSList[ BSSListIndex ].beaconInterval = 
+        pScanMngr->BSSList.BSSList[ BSSListIndex ].beaconInterval =
             frameInfo->parsedIEs->content.iePacket.beaconInerval;
-        pScanMngr->BSSList.BSSList[ BSSListIndex ].capabilities = 
+        pScanMngr->BSSList.BSSList[ BSSListIndex ].capabilities =
             frameInfo->parsedIEs->content.iePacket.capabilities;
     }
     else
     {
         os_memoryCopy( pScanMngr->hOS, &(pScanMngr->BSSList.BSSList[ BSSListIndex ].lastRxTSF),
                        (void *)frameInfo->parsedIEs->content.iePacket.timestamp, TIME_STAMP_LEN );
-        pScanMngr->BSSList.BSSList[ BSSListIndex ].beaconInterval = 
+        pScanMngr->BSSList.BSSList[ BSSListIndex ].beaconInterval =
             frameInfo->parsedIEs->content.iePacket.beaconInerval;
-        pScanMngr->BSSList.BSSList[ BSSListIndex ].capabilities = 
+        pScanMngr->BSSList.BSSList[ BSSListIndex ].capabilities =
             frameInfo->parsedIEs->content.iePacket.capabilities;
     }
 #ifdef TI_DBG
-    /* 
+    /*
        update track fail histogram:
        1. only done when tracking (to avoid updating due to "accidental re-discovery"
        2. only done for APs which have their track fail count larger than 0. The reason for that is because
@@ -1146,7 +1151,7 @@ void scanMngrUpdateBSSInfo( TI_HANDLE hScanMngr, TI_UINT8 BSSListIndex, TScanFra
           (SCAN_CSS_TRACKING_G_BAND == pScanMngr->contScanState)) &&
          (0 < pScanMngr->BSSList.scanBSSList[ BSSListIndex ].trackFailCount))
     {
-        if ( SCAN_MNGR_STAT_MAX_TRACK_FAILURE <= 
+        if ( SCAN_MNGR_STAT_MAX_TRACK_FAILURE <=
             pScanMngr->BSSList.scanBSSList[ BSSListIndex ].trackFailCount )
         {
             pScanMngr->stats.ConsecutiveTrackFailCountHistogram[ SCAN_MNGR_STAT_MAX_TRACK_FAILURE - 1 ]++;
@@ -1166,17 +1171,17 @@ void scanMngrUpdateBSSInfo( TI_HANDLE hScanMngr, TI_UINT8 BSSListIndex, TScanFra
                               ((10-RSSI_PREVIOUS_COEFFICIENT) * frameInfo->rssi)) / 10;
 
         pScanMngr->BSSList.BSSList[ BSSListIndex ].lastRSSI = frameInfo->rssi;
-        
+
         if (rssiPrevVal!=0)
         {
-             /* for faster convergence on RSSI changes use rounding error calculation with latest sample and not 
+             /* for faster convergence on RSSI changes use rounding error calculation with latest sample and not
                 on latest average */
             if (frameInfo->rssi > tmpRssiAvg)
                 tmpRssiAvg++;
             else
                 if (frameInfo->rssi < tmpRssiAvg)
                     tmpRssiAvg--;
-        
+
             pScanMngr->BSSList.BSSList[ BSSListIndex ].RSSI = tmpRssiAvg;
         }
         else
@@ -1188,8 +1193,8 @@ void scanMngrUpdateBSSInfo( TI_HANDLE hScanMngr, TI_UINT8 BSSListIndex, TScanFra
     }
 
     pScanMngr->BSSList.BSSList[ BSSListIndex ].rxRate = frameInfo->rate;
-    os_memoryCopy( pScanMngr->hOS, pScanMngr->BSSList.BSSList[ BSSListIndex ].pBuffer, 
-                   frameInfo->buffer, frameInfo->bufferLength );    
+    os_memoryCopy( pScanMngr->hOS, pScanMngr->BSSList.BSSList[ BSSListIndex ].pBuffer,
+                   frameInfo->buffer, frameInfo->bufferLength );
     pScanMngr->BSSList.BSSList[ BSSListIndex ].bufferLength = frameInfo->bufferLength;
 }
 
@@ -1258,7 +1263,7 @@ void scanMngrSetNextDiscoveryPart( TI_HANDLE hScanMngr )
 {
     scanMngr_t* pScanMngr = (scanMngr_t*)hScanMngr;
     scan_discoveryPart_e nextDiscoveryPart, originalDiscoveryPart;
-    
+
     /* sanity check - if discovery part is not valid, restart from first discovery part */
     if ( SCAN_SDP_NO_DISCOVERY <= pScanMngr->currentDiscoveryPart )
     {
@@ -1454,7 +1459,7 @@ void scanMngrBuildImmediateScanCommand( TI_HANDLE hScanMngr, TScanBandPolicy* ba
     {
         /* loop on all neighbor APs */
         channelIndex = 0;
-        while ( (channelIndex < pScanMngr->neighborAPsDiscoveryList[ bandPolicy->band ].numOfEntries) && 
+        while ( (channelIndex < pScanMngr->neighborAPsDiscoveryList[ bandPolicy->band ].numOfEntries) &&
                 (pScanMngr->scanParams.numOfChannels < SCAN_MAX_NUM_OF_NORMAL_CHANNELS_PER_COMMAND))
         {
             /* verify channel with reg domain */
@@ -1470,14 +1475,14 @@ void scanMngrBuildImmediateScanCommand( TI_HANDLE hScanMngr, TScanBandPolicy* ba
             {
                 param.content.channelCapabilityReq.scanOption = ACTIVE_SCANNING;
             }
-            param.content.channelCapabilityReq.channelNum = 
+            param.content.channelCapabilityReq.channelNum =
                 pScanMngr->neighborAPsDiscoveryList[ bandPolicy->band ].APListPtr[ channelIndex ].channel;
             regulatoryDomain_getParam( pScanMngr->hRegulatoryDomain, &param );
 
             /* if the channel is allowed, insert it to the scan command */
             if (param.content.channelCapabilityRet.channelValidity)
             {
-                scanMngrAddNormalChannel( hScanMngr, &(bandPolicy->immediateScanMethod), 
+                scanMngrAddNormalChannel( hScanMngr, &(bandPolicy->immediateScanMethod),
                                           pScanMngr->neighborAPsDiscoveryList[ bandPolicy->band ].APListPtr[ channelIndex ].channel,
                                           &(pScanMngr->neighborAPsDiscoveryList[ bandPolicy->band ].APListPtr[ channelIndex ].BSSID),
                                           param.content.channelCapabilityRet.maxTxPowerDbm );
@@ -1518,7 +1523,7 @@ void scanMngrBuildImmediateScanCommand( TI_HANDLE hScanMngr, TScanBandPolicy* ba
             /* if the channel is allowed, insert it to the scan command */
             if (param.content.channelCapabilityRet.channelValidity)
             {
-                scanMngrAddNormalChannel( hScanMngr, &(bandPolicy->immediateScanMethod), 
+                scanMngrAddNormalChannel( hScanMngr, &(bandPolicy->immediateScanMethod),
                                           bandPolicy->channelList[ channelIndex ],
                                           &broadcastAddress,
                                           param.content.channelCapabilityRet.maxTxPowerDbm );
@@ -1554,7 +1559,7 @@ void scanMngrBuildTrackScanCommand( TI_HANDLE hScanMngr, TScanBandPolicy* bandPo
         /* build the command header */
         TRACE0(pScanMngr->hReport , REPORT_SEVERITY_INFORMATION, "\nSPS invoked\n");
         scanMngrBuildScanCommandHeader( hScanMngr, &(bandPolicy->trackingMethod), band );
-     
+
         /* build the channel list */
         scanMngrAddSPSChannels( hScanMngr, &(bandPolicy->trackingMethod), band );
         return;
@@ -1619,7 +1624,7 @@ void scanMngrBuildTrackScanCommand( TI_HANDLE hScanMngr, TScanBandPolicy* bandPo
             /* if channel is verified for requested scan type */
             if ( param.content.channelCapabilityRet.channelValidity )
             {
-                scanMngrAddNormalChannel( hScanMngr, scanMethod, 
+                scanMngrAddNormalChannel( hScanMngr, scanMethod,
                                           pScanMngr->BSSList.BSSList[ BSSListIndex ].channel,
                                           &(pScanMngr->BSSList.BSSList[ BSSListIndex ].BSSID),
                                           param.content.channelCapabilityRet.maxTxPowerDbm );
@@ -1627,7 +1632,7 @@ void scanMngrBuildTrackScanCommand( TI_HANDLE hScanMngr, TScanBandPolicy* bandPo
                 /* increase AP track attempts counter */
                 if ( (SCAN_TYPE_SPS == bandPolicy->trackingMethod.scanType) && (TI_FALSE == pScanMngr->bSynchronized))
                 {
-                    pScanMngr->BSSList.scanBSSList[ BSSListIndex ].trackFailCount = 
+                    pScanMngr->BSSList.scanBSSList[ BSSListIndex ].trackFailCount =
                         pScanMngr->scanPolicy.maxTrackFailures + 1;
                 }
                 else
@@ -1647,7 +1652,7 @@ void scanMngrBuildTrackScanCommand( TI_HANDLE hScanMngr, TScanBandPolicy* bandPo
                 /* removing an AP is done by increasing its track failure counter to maximum. Since it is
                    not tracked, it would not be found, and thus would be removed by aging process performed
                    at scan completion */
-                pScanMngr->BSSList.scanBSSList[ BSSListIndex ].trackFailCount = 
+                pScanMngr->BSSList.scanBSSList[ BSSListIndex ].trackFailCount =
                     pScanMngr->scanPolicy.maxTrackFailures + 1;
 #ifdef TI_DBG
                 /* update statistics */
@@ -1687,7 +1692,7 @@ void scanMngrBuildDiscoveryScanCommand( TI_HANDLE hScanMngr )
     }
 
     if( NULL == bandPolicy)
-    {        
+    {
         TRACE0( pScanMngr->hReport, REPORT_SEVERITY_WARNING, "scanMngrGetPolicyByBand() returned NULL.\n");
         return;
     }
@@ -1890,7 +1895,7 @@ void scanMngrAddNeighborAPsForDiscovery( TI_HANDLE hScanMngr, TScanBandPolicy* b
             (neighborAPIndex < pScanMngr->neighborAPsDiscoveryList[ bandPolicy->band ].numOfEntries))
     {
         /* if the AP is not being tracked */
-        if ( SCAN_NDS_NOT_DISCOVERED == 
+        if ( SCAN_NDS_NOT_DISCOVERED ==
              pScanMngr->neighborAPsDiscoveryList[ bandPolicy->band ].trackStatusList[ neighborAPIndex ] )
         {
             /* verify channel with reg domain */
@@ -1906,14 +1911,14 @@ void scanMngrAddNeighborAPsForDiscovery( TI_HANDLE hScanMngr, TScanBandPolicy* b
             {
                 param.content.channelCapabilityReq.scanOption = ACTIVE_SCANNING;
             }
-            param.content.channelCapabilityReq.channelNum = 
+            param.content.channelCapabilityReq.channelNum =
                 pScanMngr->neighborAPsDiscoveryList[ bandPolicy->band ].APListPtr[ neighborAPIndex ].channel;
             regulatoryDomain_getParam( pScanMngr->hRegulatoryDomain, &param );
 
             /* if the channel is allowed, insert it to the scan command */
             if (param.content.channelCapabilityRet.channelValidity)
             {
-                scanMngrAddNormalChannel( hScanMngr, &(bandPolicy->discoveryMethod), 
+                scanMngrAddNormalChannel( hScanMngr, &(bandPolicy->discoveryMethod),
                                           pScanMngr->neighborAPsDiscoveryList[ bandPolicy->band ].APListPtr[ neighborAPIndex ].channel,
                                           &(pScanMngr->neighborAPsDiscoveryList[ bandPolicy->band ].APListPtr[ neighborAPIndex ].BSSID),
                                           param.content.channelCapabilityRet.maxTxPowerDbm );
@@ -1994,21 +1999,21 @@ void scanMngrAddChannelListForDiscovery( TI_HANDLE hScanMngr, TScanBandPolicy* b
         {
             param.content.channelCapabilityReq.scanOption = ACTIVE_SCANNING;
         }
-        param.content.channelCapabilityReq.channelNum = 
+        param.content.channelCapabilityReq.channelNum =
             bandPolicy->channelList[ channelListIndex ];
         regulatoryDomain_getParam( pScanMngr->hRegulatoryDomain, &param );
 
         /* if the channel is allowed, insert it to the scan command */
         if (param.content.channelCapabilityRet.channelValidity)
         {
-            scanMngrAddNormalChannel( hScanMngr, &(bandPolicy->discoveryMethod), 
+            scanMngrAddNormalChannel( hScanMngr, &(bandPolicy->discoveryMethod),
                                       bandPolicy->channelList[ channelListIndex ],
                                       &broadcastAddress,
                                       param.content.channelCapabilityRet.maxTxPowerDbm );
         }
         channelListIndex++;
     }
-        
+
     /* if channel discovery list has been exhuasted */
     if ( channelListIndex == bandPolicy->numOfChannles )
     {
@@ -2087,15 +2092,15 @@ void scanMngrAddSPSChannels( TI_HANDLE hScanMngr, TScanMethod* scanMethod, ERadi
                 if ( pScanMngr->BSSList.scanBSSList[ BSSListIndex ].localTSF > pScanMngr->scanParams.latestTSFValue )
                 {
                     /* the latest TSF value is used by the FW to detect TSF error (an AP recovery). When a TSF
-                       error occurs, the latest TSF value should be in the future (because the AP TSF was 
+                       error occurs, the latest TSF value should be in the future (because the AP TSF was
                        reset). */
                     pScanMngr->scanParams.latestTSFValue = pScanMngr->BSSList.scanBSSList[ BSSListIndex ].localTSF;
                 }
 
-                /* calculate the TSF of the next event for tracked AP. Scan should start 
+                /* calculate the TSF of the next event for tracked AP. Scan should start
                    SCAN_SPS_DURATION_PART_IN_ADVANCE before the calculated event */
-                nextEventArray[ nextEventArraySize ].nextEventTSF = 
-                    scanMngrCalculateNextEventTSF( hScanMngr, &(pScanMngr->BSSList), BSSListIndex, 
+                nextEventArray[ nextEventArraySize ].nextEventTSF =
+                    scanMngrCalculateNextEventTSF( hScanMngr, &(pScanMngr->BSSList), BSSListIndex,
                                                    pScanMngr->currentTSF + SCAN_SPS_GUARD_FROM_CURRENT_TSF +
                                                    timeToStartInAdvance ) - timeToStartInAdvance;
 #ifdef SCAN_MNGR_SPS_DBG
@@ -2140,7 +2145,7 @@ void scanMngrAddSPSChannels( TI_HANDLE hScanMngr, TScanMethod* scanMethod, ERadi
             {
                 /* removing the AP is done by increasing its track count to maximum - and since it is
                    not tracked it will not be discovered, and thus will be deleted when the scan is complete */
-                pScanMngr->BSSList.scanBSSList[ BSSListIndex ].trackFailCount = 
+                pScanMngr->BSSList.scanBSSList[ BSSListIndex ].trackFailCount =
                     pScanMngr->scanPolicy.maxTrackFailures + 1;
 #ifdef TI_DBG
                 /*update statistics */
@@ -2169,15 +2174,15 @@ void scanMngrAddSPSChannels( TI_HANDLE hScanMngr, TScanMethod* scanMethod, ERadi
                                                nextEventArray[ nextEventArrayHead ].nextEventTSF + scanMethod->method.spsMethodParams.scanDuration ))
             {
                 /* insert it to scan command */
-                pScanMngr->scanParams.channelEntry[ pScanMngr->scanParams.numOfChannels ].SPSChannelEntry.scanStartTime = 
+                pScanMngr->scanParams.channelEntry[ pScanMngr->scanParams.numOfChannels ].SPSChannelEntry.scanStartTime =
                     INT64_LOWER( (nextEventArray[ nextEventArrayHead ].nextEventTSF));
-                pScanMngr->scanParams.channelEntry[ pScanMngr->scanParams.numOfChannels ].SPSChannelEntry.scanDuration = 
+                pScanMngr->scanParams.channelEntry[ pScanMngr->scanParams.numOfChannels ].SPSChannelEntry.scanDuration =
                     scanMethod->method.spsMethodParams.scanDuration;
-                pScanMngr->scanParams.channelEntry[ pScanMngr->scanParams.numOfChannels ].SPSChannelEntry.ETMaxNumOfAPframes = 
+                pScanMngr->scanParams.channelEntry[ pScanMngr->scanParams.numOfChannels ].SPSChannelEntry.ETMaxNumOfAPframes =
                     scanMethod->method.spsMethodParams.ETMaxNumberOfApFrames;
-                pScanMngr->scanParams.channelEntry[ pScanMngr->scanParams.numOfChannels ].SPSChannelEntry.earlyTerminationEvent = 
+                pScanMngr->scanParams.channelEntry[ pScanMngr->scanParams.numOfChannels ].SPSChannelEntry.earlyTerminationEvent =
                     scanMethod->method.spsMethodParams.earlyTerminationEvent;
-                pScanMngr->scanParams.channelEntry[ pScanMngr->scanParams.numOfChannels ].SPSChannelEntry.channel = 
+                pScanMngr->scanParams.channelEntry[ pScanMngr->scanParams.numOfChannels ].SPSChannelEntry.channel =
                     pScanMngr->BSSList.BSSList[ nextEventArray[ nextEventArrayHead ].trackListIndex ].channel;
                 MAC_COPY (pScanMngr->scanParams.channelEntry[ pScanMngr->scanParams.numOfChannels ].SPSChannelEntry.bssId,
                           pScanMngr->BSSList.BSSList[ nextEventArray[ nextEventArrayHead ].trackListIndex ].BSSID);
@@ -2186,8 +2191,8 @@ void scanMngrAddSPSChannels( TI_HANDLE hScanMngr, TScanMethod* scanMethod, ERadi
                 /* increase number of channels in scan command */
                 pScanMngr->scanParams.numOfChannels++;
                 /* set earliest TSF that would fit in scan command */
-                EarliestTSFToInsert = nextEventArray[ nextEventArrayHead ].nextEventTSF + 
-                                      scanMethod->method.spsMethodParams.scanDuration + 
+                EarliestTSFToInsert = nextEventArray[ nextEventArrayHead ].nextEventTSF +
+                                      scanMethod->method.spsMethodParams.scanDuration +
                                       SCAN_SPS_GUARD_FROM_LAST_BSS;
                 /* remove it from next event array */
                 nextEventArrayHead = nextEventArray[ nextEventArrayHead ].nextAPIndex;
@@ -2195,17 +2200,17 @@ void scanMngrAddSPSChannels( TI_HANDLE hScanMngr, TScanMethod* scanMethod, ERadi
             }
             else
             {
-                TI_UINT32 beaconIntervalUsec = 
+                TI_UINT32 beaconIntervalUsec =
                     pScanMngr->BSSList.BSSList[ nextEventArray[ nextEventArrayHead ].trackListIndex ].beaconInterval * 1024;
 
                 /* if the next beacon also collide with DTIM */
                 if ( TI_TRUE == scanMngrDTIMInRange( hScanMngr, nextEventArray[ nextEventArrayHead ].nextEventTSF + beaconIntervalUsec,
                                                   nextEventArray[ nextEventArrayHead ].nextEventTSF + scanMethod->method.spsMethodParams.scanDuration + beaconIntervalUsec ))
                 {
-                    /* An AP whose two consecutive beacons collide with current AP DTIM is not trackable by SPS!!! 
+                    /* An AP whose two consecutive beacons collide with current AP DTIM is not trackable by SPS!!!
                        Shouldn't happen at a normal setup, but checked to avoid endless loop.
                        First, remove it from the tracking list (by increasing it's track count above the maximum) */
-                    pScanMngr->BSSList.scanBSSList[ nextEventArray[ nextEventArrayHead ].trackListIndex ].trackFailCount = 
+                    pScanMngr->BSSList.scanBSSList[ nextEventArray[ nextEventArrayHead ].trackListIndex ].trackFailCount =
                         pScanMngr->scanPolicy.maxTrackFailures + 1;
 
                     /* and also remove it from the SPS list */
@@ -2220,10 +2225,10 @@ void scanMngrAddSPSChannels( TI_HANDLE hScanMngr, TScanMethod* scanMethod, ERadi
                 else
                 {
                     /* calculate next event TSF - will get the next beacon, since timeToStartInAdvance is added to current beacon TSF */
-                    nextEventArray[ nextEventArrayHead ].nextEventTSF = 
+                    nextEventArray[ nextEventArrayHead ].nextEventTSF =
                         scanMngrCalculateNextEventTSF( hScanMngr, &(pScanMngr->BSSList),
                                                        nextEventArray[ nextEventArrayHead ].trackListIndex,
-                                                       nextEventArray[ nextEventArrayHead ].nextEventTSF + timeToStartInAdvance + 1) 
+                                                       nextEventArray[ nextEventArrayHead ].nextEventTSF + timeToStartInAdvance + 1)
                                                             - timeToStartInAdvance;
 
 #ifdef SCAN_MNGR_SPS_DBG
@@ -2268,7 +2273,7 @@ void scanMngrAddSPSChannels( TI_HANDLE hScanMngr, TScanMethod* scanMethod, ERadi
         else
         {
             /* calculate next event TSF */
-            nextEventArray[ nextEventArrayHead ].nextEventTSF = 
+            nextEventArray[ nextEventArrayHead ].nextEventTSF =
                 scanMngrCalculateNextEventTSF( hScanMngr, &(pScanMngr->BSSList),
                                                nextEventArray[ nextEventArrayHead ].trackListIndex,
                                                EarliestTSFToInsert + timeToStartInAdvance ) - timeToStartInAdvance;
@@ -2307,11 +2312,11 @@ void scanMngrAddSPSChannels( TI_HANDLE hScanMngr, TScanMethod* scanMethod, ERadi
 #endif
         }
     }
-    /* For SPS scan, the scan duration is added to the command, since later on current TSF cannot be 
+    /* For SPS scan, the scan duration is added to the command, since later on current TSF cannot be
        reevaluated. The scan duration is TSF at end of scan minus current TSF, divided by 1000 (convert
        to milliseconds) plus 1 (for the division reminder). */
-    pScanMngr->scanParams.SPSScanDuration = 
-        (((TI_UINT32)(EarliestTSFToInsert - SCAN_SPS_GUARD_FROM_LAST_BSS - pScanMngr->currentTSF)) / 1000) + 1;    
+    pScanMngr->scanParams.SPSScanDuration =
+        (((TI_UINT32)(EarliestTSFToInsert - SCAN_SPS_GUARD_FROM_LAST_BSS - pScanMngr->currentTSF)) / 1000) + 1;
 }
 
 /**
@@ -2332,7 +2337,7 @@ TI_UINT64 scanMngrCalculateNextEventTSF( TI_HANDLE hScanMngr, scan_BSSList_t* BS
     TI_INT64 localRemoteTSFDelta;
     TI_UINT32 reminder;
     TI_INT32 averageDeltaChange = 0;
-    int i; 
+    int i;
 #ifdef SCAN_MNGR_SPS_DBG
     scanMngr_t* pScanMngr = (scanMngr_t*)hScanMngr;
 #endif /* SCAN_MNGR_SPS_DBG */
@@ -2355,22 +2360,22 @@ Local TSF Line:
   4. returned value is the TSF (in local scale!) of the next event of the tracked AP.
   5. an E represents an occurring event, which is a scheduled frame transmission (beacon or GPR) of the tracked AP.
 */
-  
+
     /*
      * The next event TSF is calculated as follows:
-     * first, the difference between the local TSF (that of the AP the STA is currently connected to) and the 
+     * first, the difference between the local TSF (that of the AP the STA is currently connected to) and the
      * remote TSF (that of the AP being tracked) is calculated using the TSF values measured when last scan was
      * performed. Than, the initial TSF value is converted to remote TSF value, using the delta just calculated.
      * The next remote TSF is found (in remote TSF value) by subtracting the reminder of dividing the current
      * remote TSF value by the remote beacon interval (time passed from last beacon) from the current remote TSF
-     * (hence amounting to the last beacon remote TSF), and than adding beacon interval. This is finally converted 
+     * (hence amounting to the last beacon remote TSF), and than adding beacon interval. This is finally converted
      * back to local TSF, which is the requested value.
      *
      * After all this is done, clock drift between current AP and remote AP is compensated. This is done in thr
      * following way: the delte between local TSF and remote TSF is compared to this value at the last scan
      * (if they are equal, the clocks tick at the same rate). This difference is store in an array holding a
      * configured number of such previous differences (currenlty 4). The average value of these previous values
-     * is then calculated, and added the the TSF value calculated before. This way, the average drift between 
+     * is then calculated, and added the the TSF value calculated before. This way, the average drift between
      * the local AP and the candidate AP is measured, and the next drift value can be estimated and thus
      * taken into account.
      */
@@ -2380,7 +2385,7 @@ Local TSF Line:
     TRACE2( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "local time stamp:%x-%x\n", INT64_HIGHER( BSSList->scanBSSList[ entryIndex ].localTSF ), INT64_LOWER( BSSList->scanBSSList[ entryIndex ].localTSF ));
 #endif
     /* calculate the delta between local and remote TSF */
-    localRemoteTSFDelta = BSSList->scanBSSList[ entryIndex ].localTSF - 
+    localRemoteTSFDelta = BSSList->scanBSSList[ entryIndex ].localTSF -
         BSSList->BSSList[ entryIndex ].lastRxTSF;
     /* convert initial TSF to remote timeline */
     remoteBeaconTSF = initialTSFValue - localRemoteTSFDelta;
@@ -2408,7 +2413,7 @@ Local TSF Line:
     /* update delta change array with the change between current and last delta (if last delta is valid) */
     if ( 0 != BSSList->scanBSSList[ entryIndex ].prevTSFDelta )
     {
-        BSSList->scanBSSList[ entryIndex ].deltaChangeArray[ BSSList->scanBSSList[ entryIndex ].deltaChangeArrayIndex ] = 
+        BSSList->scanBSSList[ entryIndex ].deltaChangeArray[ BSSList->scanBSSList[ entryIndex ].deltaChangeArrayIndex ] =
             (TI_INT32)(localRemoteTSFDelta - BSSList->scanBSSList[ entryIndex ].prevTSFDelta);
 #ifdef SCAN_MNGR_SPS_DBG
         TRACE1( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "current delta^2:%d\n", localRemoteTSFDelta - BSSList->scanBSSList[ entryIndex ].prevTSFDelta);
@@ -2419,7 +2424,7 @@ Local TSF Line:
         }
     }
     BSSList->scanBSSList[ entryIndex ].prevTSFDelta = localRemoteTSFDelta;
-    
+
     /* calculate average delta change, and add (or subtract) it from beacon timing */
     for ( i = 0; i < SCAN_SPS_NUM_OF_TSF_DELTA_ENTRIES; i++ )
     {
@@ -2484,7 +2489,7 @@ TI_BOOL scanMngrDTIMInRange( TI_HANDLE hScanMngr, TI_UINT64 rangeStart, TI_UINT6
     }
     else
     {   /* The last beacon was not a DTIM - calculate the next beacon that will be a DTIM */
-        DTIMEventStart = pScanMngr->lastLocalBcnTSF + 
+        DTIMEventStart = pScanMngr->lastLocalBcnTSF +
             ((pScanMngr->currentBSSDtimPeriod - pScanMngr->lastLocalBcnDTIMCount) * pScanMngr->currentBSSBeaconInterval);
         TRACE6(pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "\n Next DTIM TSF:%u-%u , last beacon TSF:%u-%u, last DTIM count: %d, beacon interval: %d\n", INT64_HIGHER(DTIMEventStart), INT64_LOWER(DTIMEventStart), INT64_HIGHER(pScanMngr->lastLocalBcnTSF), INT64_LOWER(pScanMngr->lastLocalBcnTSF), pScanMngr->lastLocalBcnDTIMCount, pScanMngr->currentBSSBeaconInterval);
     }
@@ -2511,12 +2516,12 @@ TI_BOOL scanMngrDTIMInRange( TI_HANDLE hScanMngr, TI_UINT64 rangeStart, TI_UINT6
     {
 #ifdef SCAN_MNGR_DTIM_DBG
         TRACE0( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "Collision beacuse DTIM is not before SPS\n");
-#endif        
+#endif
         return TI_TRUE;
     }
     /* the DTIM is before the SPS range - find the first DTIM after the SPS start (and check if it's colliding
        with the SPS range */
-    else 
+    else
     {
         /* get the usec difference from the SPS range start to the last DTIM */
         TI_UINT64 usecDiffFromRangeStartToLastDTIM = rangeStart - DTIMEventStart;
@@ -2561,7 +2566,7 @@ TI_BOOL scanMngrDTIMInRange( TI_HANDLE hScanMngr, TI_UINT64 rangeStart, TI_UINT6
  * \param BSSID - pointer to the BSSID to use (may be broadcast.\n
  * \param txPowerDbm - tx power to transmit probe requests.\n
  */
-void scanMngrAddNormalChannel( TI_HANDLE hScanMngr, TScanMethod* scanMethod, TI_UINT8 channel, 
+void scanMngrAddNormalChannel( TI_HANDLE hScanMngr, TScanMethod* scanMethod, TI_UINT8 channel,
                                TMacAddr* BSSID, TI_UINT8 txPowerDbm )
 {
     scanMngr_t* pScanMngr = (scanMngr_t*)hScanMngr;
@@ -2576,7 +2581,7 @@ void scanMngrAddNormalChannel( TI_HANDLE hScanMngr, TScanMethod* scanMethod, TI_
     switch ( scanMethod->scanType )
     {
     case SCAN_TYPE_NORMAL_PASSIVE:
-    case SCAN_TYPE_NORMAL_ACTIVE:  
+    case SCAN_TYPE_NORMAL_ACTIVE:
         basicMethodParams = &(scanMethod->method.basicMethodParams);
         break;
 
@@ -2593,20 +2598,20 @@ void scanMngrAddNormalChannel( TI_HANDLE hScanMngr, TScanMethod* scanMethod, TI_
 
     /* set params */
     pScanMngr->scanParams.channelEntry[ commandChannelIndex ].normalChannelEntry.channel = channel;
-    pScanMngr->scanParams.channelEntry[ commandChannelIndex ].normalChannelEntry.txPowerDbm = 
+    pScanMngr->scanParams.channelEntry[ commandChannelIndex ].normalChannelEntry.txPowerDbm =
         TI_MIN( txPowerDbm, basicMethodParams->probReqParams.txPowerDbm );
-    pScanMngr->scanParams.channelEntry[ commandChannelIndex ].normalChannelEntry.maxChannelDwellTime = 
+    pScanMngr->scanParams.channelEntry[ commandChannelIndex ].normalChannelEntry.maxChannelDwellTime =
         basicMethodParams->maxChannelDwellTime;
-    pScanMngr->scanParams.channelEntry[ commandChannelIndex ].normalChannelEntry.minChannelDwellTime = 
+    pScanMngr->scanParams.channelEntry[ commandChannelIndex ].normalChannelEntry.minChannelDwellTime =
         basicMethodParams->minChannelDwellTime;
-    pScanMngr->scanParams.channelEntry[ commandChannelIndex ].normalChannelEntry.earlyTerminationEvent = 
+    pScanMngr->scanParams.channelEntry[ commandChannelIndex ].normalChannelEntry.earlyTerminationEvent =
         basicMethodParams->earlyTerminationEvent;
-    pScanMngr->scanParams.channelEntry[ commandChannelIndex ].normalChannelEntry.ETMaxNumOfAPframes = 
+    pScanMngr->scanParams.channelEntry[ commandChannelIndex ].normalChannelEntry.ETMaxNumOfAPframes =
         basicMethodParams->ETMaxNumberOfApFrames;
-    
+
    MAC_COPY (pScanMngr->scanParams.channelEntry[ commandChannelIndex ].normalChannelEntry.bssId, *BSSID);
 }
-                                    
+
 /**
  * \\n
  * \date 02-Mar-2005\n
@@ -2679,7 +2684,7 @@ void scanMngrUpdateBSSList( TI_HANDLE hScanMngr, TI_BOOL bCheckNeighborAPs, TI_B
 
     /* It looks like it never happens. Anyway decided to check */
     if (pScanMngr->BSSList.numOfEntries > MAX_SIZE_OF_BSS_TRACK_LIST)
-    {        
+    {
         TRACE2( pScanMngr->hReport, REPORT_SEVERITY_ERROR,
                  "scanMngrUpdateBSSList problem. BSSList.numOfEntries=%d exceeds the limit %d\n",
                  pScanMngr->BSSList.numOfEntries, MAX_SIZE_OF_BSS_TRACK_LIST);
@@ -2687,7 +2692,7 @@ void scanMngrUpdateBSSList( TI_HANDLE hScanMngr, TI_BOOL bCheckNeighborAPs, TI_B
         return;
     }
 
-    /* loop on all BSS list entry */    
+    /* loop on all BSS list entry */
     for ( BSSEntryIndex = 0; BSSEntryIndex < pScanMngr->BSSList.numOfEntries; )
     {
         /* an AP can be in the BSS list either because it's a neighbor AP or, if not, because it's on a
@@ -2697,9 +2702,9 @@ void scanMngrUpdateBSSList( TI_HANDLE hScanMngr, TI_BOOL bCheckNeighborAPs, TI_B
 
         /* if a check for neighbor APs is requested, check only APs that are designated as neighbor APs,
            and only check if they still are neighbor APs */
-        if ( (TI_TRUE == bCheckNeighborAPs) && 
+        if ( (TI_TRUE == bCheckNeighborAPs) &&
              (TI_TRUE == pScanMngr->BSSList.BSSList[ BSSEntryIndex ].bNeighborAP) &&
-             (-1 == scanMngrGetNeighborAPIndex( hScanMngr, 
+             (-1 == scanMngrGetNeighborAPIndex( hScanMngr,
                                                 pScanMngr->BSSList.BSSList[ BSSEntryIndex ].band,
                                                 &(pScanMngr->BSSList.BSSList[ BSSEntryIndex ].BSSID))))
         {
@@ -2709,12 +2714,12 @@ void scanMngrUpdateBSSList( TI_HANDLE hScanMngr, TI_BOOL bCheckNeighborAPs, TI_B
             continue;
         }
 
-        /* if a check for policy defined channels is requested, check only APs that are not designated as 
+        /* if a check for policy defined channels is requested, check only APs that are not designated as
            neighbor APs */
         if ( (TI_TRUE == bCheckChannels) &&
              (TI_FALSE == pScanMngr->BSSList.BSSList[ BSSEntryIndex ].bNeighborAP) &&
-             (TI_FALSE == scanMngrIsPolicyChannel( hScanMngr, 
-                                                pScanMngr->BSSList.BSSList[ BSSEntryIndex ].band, 
+             (TI_FALSE == scanMngrIsPolicyChannel( hScanMngr,
+                                                pScanMngr->BSSList.BSSList[ BSSEntryIndex ].band,
                                                 pScanMngr->BSSList.BSSList[ BSSEntryIndex ].channel )))
         {
             /* remove it */
@@ -2772,7 +2777,7 @@ TI_BOOL scanMngrIsPolicyChannel( TI_HANDLE hScanMngr, ERadioBand band, TI_UINT8 
     int i;
     TScanBandPolicy* bandPolicy = scanMngrGetPolicyByBand( hScanMngr, band );
 
-    
+
     /* check if the AP's band is defined in the policy */
     if ( NULL == bandPolicy )
     {
@@ -2845,7 +2850,7 @@ scan_mngrResultStatus_e scanMngrConvertResultStatus( EScanCncnResultStatus resul
 
 #ifdef REPORT_LOG
 
-static char scanTypeDesc[ 6 ][ MAX_DESC_LENGTH ] = 
+static char scanTypeDesc[ 6 ][ MAX_DESC_LENGTH ] =
 {
     "passive normal scan",
     "active normal scan",
@@ -2879,7 +2884,7 @@ static char contScanStatesDesc[ SCAN_CSS_NUM_OF_STATES ][ MAX_DESC_LENGTH ] =
     "STOPPING"
 };
 
-static char immedScanStatesDesc[ SCAN_ISS_NUM_OF_STATES ][ MAX_DESC_LENGTH ] = 
+static char immedScanStatesDesc[ SCAN_ISS_NUM_OF_STATES ][ MAX_DESC_LENGTH ] =
 {
     "IDLE",
     "IMMEDIATE ON G",
@@ -2939,7 +2944,7 @@ void scanMngrTracePrintNeighborAPsList( TI_HANDLE hScanMngr, neighborAPList_t *n
     }
     /* print number of entries */
     TRACE1( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "Neighbor AP list with %d entries.\n\n", neighborAPList->numOfEntries);
-    
+
     /* print all APs in list */
     for ( i = 0; i < neighborAPList->numOfEntries; i++ )
     {
@@ -2981,7 +2986,7 @@ void scanMngrTracePrintScanPolicy( TScanPolicy* scanPolicy )
     WLAN_OS_REPORT(("Normal scan interval: %d, deteriorating scan interval: %d\n",
                     scanPolicy->normalScanInterval, scanPolicy->deterioratingScanInterval));
     WLAN_OS_REPORT(("BSS list size: %d, numnber of tracked APs to start discovery: %d, "
-                    "Max track failures:% d\n", scanPolicy->BSSListSize, 
+                    "Max track failures:% d\n", scanPolicy->BSSListSize,
                     scanPolicy->BSSNumberToStartDiscovery, scanPolicy->maxTrackFailures));
     /* It looks like it never happens. Anyway decided to check */
     if ( scanPolicy->numOfBands > RADIO_BAND_NUM_OF_BANDS )
@@ -3010,9 +3015,9 @@ void scanMngrTracePrintBandScanPolicy( TScanBandPolicy* bandPolicy )
 {
     int i;
 
-    WLAN_OS_REPORT(("Band scan policy for band: %s\n", 
+    WLAN_OS_REPORT(("Band scan policy for band: %s\n",
                     (RADIO_BAND_2_4_GHZ == bandPolicy->band ? "2.4 GHz (b/g)" : "5.0 GHz (a)")));
-    WLAN_OS_REPORT(("Maximal number of channels to scan at each discovery interval %d:\n", 
+    WLAN_OS_REPORT(("Maximal number of channels to scan at each discovery interval %d:\n",
                     bandPolicy->numOfChannlesForDiscovery));
     WLAN_OS_REPORT(("RSSI Threshold: %d\n", bandPolicy->rxRSSIThreshold));
     WLAN_OS_REPORT(("Tracking method:\n"));
@@ -3055,7 +3060,7 @@ void scanMngrTracePrintScanMethod( TScanMethod* scanMethod )
     case SCAN_TYPE_NORMAL_PASSIVE:
         scanMngrTracePrintNormalScanMethod( &(scanMethod->method.basicMethodParams));
         break;
-    
+
     case SCAN_TYPE_TRIGGERED_ACTIVE:
     case SCAN_TYPE_TRIGGERED_PASSIVE:
         scanMngrTracePrintTriggeredScanMethod( &(scanMethod->method.TidTriggerdMethodParams));
@@ -3087,7 +3092,7 @@ void scanMngrTracePrintNormalScanMethod( TScanBasicMethodParams* basicMethodPara
     WLAN_OS_REPORT(("Early termination condition: %s, frame number for early termination: %d\n",
                     earlyTerminationConditionDesc[ basicMethodParams->earlyTerminationEvent >> 4 ],
                     basicMethodParams->ETMaxNumberOfApFrames));
-    WLAN_OS_REPORT(("Number of probe requests: %d, TX level: %d, probe request rate: %d\n", 
+    WLAN_OS_REPORT(("Number of probe requests: %d, TX level: %d, probe request rate: %d\n",
                     basicMethodParams->probReqParams.numOfProbeReqs,
                     basicMethodParams->probReqParams.txPowerDbm,
                     basicMethodParams->probReqParams.bitrate));
@@ -3179,7 +3184,7 @@ void scanMngrDebugPrintBSSList( TI_HANDLE hScanMngr )
         handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
         limit = MAX_SIZE_OF_BSS_TRACK_LIST;
     }
-    
+
     WLAN_OS_REPORT(("-------------------------------- BSS List--------------------------------\n"));
 
     for ( i = 0; i < limit; i++ )
@@ -3212,15 +3217,15 @@ void scanMngrDebugPrintBSSEntry( TI_HANDLE hScanMngr, TI_UINT8 entryIndex )
                               pBssEntry->BSSID[ 1 ], pBssEntry->BSSID[ 2 ],
                               pBssEntry->BSSID[ 3 ], pBssEntry->BSSID[ 4 ],
                               pBssEntry->BSSID[ 5 ], pBssEntry->band));
-    WLAN_OS_REPORT( ("channel: %d, beacon interval: %d, average RSSI: %d dBm\n", 
+    WLAN_OS_REPORT( ("channel: %d, beacon interval: %d, average RSSI: %d dBm\n",
                               pBssEntry->channel, pBssEntry->beaconInterval, pBssEntry->RSSI));
-    WLAN_OS_REPORT(  ("Neighbor AP: %s, track fail count: %d\n", 
+    WLAN_OS_REPORT(  ("Neighbor AP: %s, track fail count: %d\n",
                               (TI_TRUE == pBssEntry->bNeighborAP ? "YES" : "NO"),
                               pScanBssEntry->trackFailCount));
-    WLAN_OS_REPORT(  ("local TSF: %d-%d, remote TSF: %x-%x\n", 
+    WLAN_OS_REPORT(  ("local TSF: %d-%d, remote TSF: %x-%x\n",
                               INT64_HIGHER( pScanBssEntry->localTSF ), INT64_LOWER( pScanBssEntry->localTSF ),
                               INT64_HIGHER( pBssEntry->lastRxTSF ), INT64_LOWER( pBssEntry->lastRxTSF )));
-    WLAN_OS_REPORT( ("Host Time Stamp: %d, last received rate: %d\n", 
+    WLAN_OS_REPORT( ("Host Time Stamp: %d, last received rate: %d\n",
                               pBssEntry->lastRxHostTimestamp, pBssEntry->rxRate));
 
 #endif
@@ -3260,7 +3265,7 @@ TI_HANDLE scanMngr_create( TI_HANDLE hOS )
 {
     int i,j = 0;
     scanMngr_t* pScanMngr ;
-    
+
     /* allocate the scan manager object */
     pScanMngr = os_memoryAlloc( hOS, sizeof(scanMngr_t));
     if ( NULL == pScanMngr )
@@ -3270,7 +3275,7 @@ TI_HANDLE scanMngr_create( TI_HANDLE hOS )
     }
 
     os_memoryZero( pScanMngr->hOS, pScanMngr, sizeof(scanMngr_t));
-    
+
     pScanMngr->hOS = hOS;
 
     /* allocate frame storage space for BSS list */
@@ -3330,10 +3335,10 @@ void scanMngr_init (TStadHandlesList *pStadHandles)
     pScanMngr->immedScanState = SCAN_ISS_IDLE;
     pScanMngr->bNewBSSFound = TI_FALSE;
     pScanMngr->consecNotFound = 0;
-    
+
     /* mark no AP recovery occured */
     pScanMngr->bSynchronized = TI_TRUE;
-    
+
     /* mark no neighbor APs */
     pScanMngr->neighborAPsDiscoveryList[ RADIO_BAND_2_4_GHZ ].numOfEntries = 0;
     pScanMngr->neighborAPsDiscoveryList[ RADIO_BAND_5_0_GHZ ].numOfEntries = 0;
@@ -3387,7 +3392,7 @@ scan_mngrResultStatus_e scanMngr_startImmediateScan( TI_HANDLE hScanMngr, TI_BOO
     EScanCncnResultStatus resultStatus;
 
     TRACE1( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "scanMngr_startImmediateScan called, hScanMngr=0x%x, bNeighborAPsOnly=.\n", hScanMngr);
- 
+
     /* sanity check - whether immediate scan is already running */
     if ( SCAN_ISS_IDLE != pScanMngr->immedScanState )
     {
@@ -3413,7 +3418,7 @@ scan_mngrResultStatus_e scanMngr_startImmediateScan( TI_HANDLE hScanMngr, TI_BOO
     {
         /* build scan command */
         scanMngrBuildImmediateScanCommand( hScanMngr, gPolicy, bNeighborAPsOnly );
-        
+
         /* if no channels are available, proceed to band A */
         if ( 0 < pScanMngr->scanParams.numOfChannels )
         {
@@ -3430,7 +3435,7 @@ scan_mngrResultStatus_e scanMngr_startImmediateScan( TI_HANDLE hScanMngr, TI_BOO
             }
 
              /* send scan command to scan concentrator with the required scan params according to scanning operational mode */
-            resultStatus = scanMngr_Start1ShotScan(hScanMngr, SCAN_SCC_ROAMING_IMMED);    
+            resultStatus = scanMngr_Start1ShotScan(hScanMngr, SCAN_SCC_ROAMING_IMMED);
 
             if ( SCAN_CRS_SCAN_RUNNING != resultStatus )
             {
@@ -3471,7 +3476,7 @@ scan_mngrResultStatus_e scanMngr_startImmediateScan( TI_HANDLE hScanMngr, TI_BOO
             }
 
              /* send scan command to scan concentrator with the required scan params according to scanning operational mode */
-             resultStatus = scanMngr_Start1ShotScan(hScanMngr, SCAN_SCC_ROAMING_IMMED);    
+             resultStatus = scanMngr_Start1ShotScan(hScanMngr, SCAN_SCC_ROAMING_IMMED);
             if ( SCAN_CRS_SCAN_RUNNING != resultStatus )
             {
                 TRACE1( pScanMngr->hReport, REPORT_SEVERITY_WARNING, "Failed to start immediate scan on band A, return code %d.\n", resultStatus);
@@ -3558,12 +3563,12 @@ void scanMngr_startContScan( TI_HANDLE hScanMngr, TMacAddr* currentBSS, ERadioBa
 
     /* mark that continuous scan was started */
     pScanMngr->bContinuousScanStarted = TI_TRUE;
-    
+
     /* before reading and marking the new BSS - make sure that the old one is marked as NOT DISCOVERED */
     currentBSSNeighborIndex = scanMngrGetNeighborAPIndex( hScanMngr, pScanMngr->currentBSSBand, &(pScanMngr->currentBSS));
     if (( -1 != currentBSSNeighborIndex ) && ( currentBSSNeighborIndex < MAX_NUM_OF_NEIGHBOR_APS ))
     {
-        pScanMngr->neighborAPsDiscoveryList[ pScanMngr->currentBSSBand ].trackStatusList[ currentBSSNeighborIndex ] = 
+        pScanMngr->neighborAPsDiscoveryList[ pScanMngr->currentBSSBand ].trackStatusList[ currentBSSNeighborIndex ] =
             SCAN_NDS_NOT_DISCOVERED;
     }
 
@@ -3575,7 +3580,7 @@ void scanMngr_startContScan( TI_HANDLE hScanMngr, TMacAddr* currentBSS, ERadioBa
     currentBSSNeighborIndex = scanMngrGetNeighborAPIndex( hScanMngr, currentBSSBand, currentBSS );
     if (( -1 != currentBSSNeighborIndex ) && ( currentBSSNeighborIndex < MAX_NUM_OF_NEIGHBOR_APS ))
     {
-        pScanMngr->neighborAPsDiscoveryList[ currentBSSBand ].trackStatusList[ currentBSSNeighborIndex ] = 
+        pScanMngr->neighborAPsDiscoveryList[ currentBSSBand ].trackStatusList[ currentBSSNeighborIndex ] =
             SCAN_NDS_CURRENT_AP;
     }
 
@@ -3614,7 +3619,7 @@ void scanMngr_stopContScan( TI_HANDLE hScanMngr )
     TI_UINT8 i;
 
     TRACE2( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "scanMngr_stopContScan called, hScanMngr=0x%x, state =%d\n", hScanMngr, pScanMngr->contScanState);
-        
+
     /* if continuous scan is not running, it means we get a stop command w/o start */
     if ( TI_FALSE == pScanMngr->bContinuousScanStarted )
     {
@@ -3688,7 +3693,7 @@ bssList_t* scanMngr_getBSSList( TI_HANDLE hScanMngr )
     TI_UINT8 BSSIndex;
     paramInfo_t param;
 
-    
+
     TRACE1( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "scanMngr_getBSSList called, hScanMngr=0x%x.\n", hScanMngr);
     /* It looks like it never happens. Anyway decided to check */
     if (pScanMngr->BSSList.numOfEntries > MAX_SIZE_OF_BSS_TRACK_LIST)
@@ -3701,10 +3706,10 @@ bssList_t* scanMngr_getBSSList( TI_HANDLE hScanMngr )
          use the returned pointer without checking it for correctness. */
         pScanMngr->BSSList.numOfEntries = MAX_SIZE_OF_BSS_TRACK_LIST;
     }
-    /* loop on all BSS'es */    
+    /* loop on all BSS'es */
     for ( BSSIndex = 0; BSSIndex < pScanMngr->BSSList.numOfEntries; )
     {
-        /* verify channel validity with the reg domain - for active scan! 
+        /* verify channel validity with the reg domain - for active scan!
            (because connection will be attempted on the channel... */
         param.paramType = REGULATORY_DOMAIN_GET_SCAN_CAPABILITIES;
         param.content.channelCapabilityReq.band = pScanMngr->BSSList.BSSList[ BSSIndex ].band;
@@ -3781,8 +3786,8 @@ void scanMngr_setNeighborAPs( TI_HANDLE hScanMngr, neighborAPList_t* neighborAPL
         if ( TI_TRUE == pScanMngr->bContinuousScanStarted )
         {
         pScanMngr->neighborAPsDiscoveryList[ neighborAPList->APListPtr[ neighborAPIndex ].band  ].trackStatusList[ pScanMngr->neighborAPsDiscoveryList[ neighborAPList->APListPtr[ neighborAPIndex ].band  ].numOfEntries ] =
-            ( -1 == scanMngrGetTrackIndexByBssid( hScanMngr, &(neighborAPList->APListPtr[ neighborAPIndex ].BSSID)) ? 
-              SCAN_NDS_NOT_DISCOVERED : 
+            ( -1 == scanMngrGetTrackIndexByBssid( hScanMngr, &(neighborAPList->APListPtr[ neighborAPIndex ].BSSID)) ?
+              SCAN_NDS_NOT_DISCOVERED :
               SCAN_NDS_DISCOVERED );
         }
         else
@@ -3795,19 +3800,19 @@ void scanMngr_setNeighborAPs( TI_HANDLE hScanMngr, neighborAPList_t* neighborAPL
         /* increase neighbor AP count */
         pScanMngr->neighborAPsDiscoveryList[ neighborAPList->APListPtr[ neighborAPIndex ].band  ].numOfEntries++;
     }
-    
+
     /* remove all tracked APs that are designated as neighbor APs, but are not anymore. Policy has not
        changed, so there's no need to check APs that are not neighbor APs and were inserted to the BSS
        list because they are on a policy defined channel. */
     scanMngrUpdateBSSList( hScanMngr, TI_TRUE, TI_FALSE );
 
     /* if current BSS is a neighbor AP, mark it */
-    currentBSSNeighborIndex = scanMngrGetNeighborAPIndex( hScanMngr, 
-                                                          pScanMngr->currentBSSBand, 
+    currentBSSNeighborIndex = scanMngrGetNeighborAPIndex( hScanMngr,
+                                                          pScanMngr->currentBSSBand,
                                                           &(pScanMngr->currentBSS));
     if ( -1 != currentBSSNeighborIndex )
     {
-        pScanMngr->neighborAPsDiscoveryList[ pScanMngr->currentBSSBand ].trackStatusList[ currentBSSNeighborIndex ] = 
+        pScanMngr->neighborAPsDiscoveryList[ pScanMngr->currentBSSBand ].trackStatusList[ currentBSSNeighborIndex ] =
             SCAN_NDS_CURRENT_AP;
     }
 
@@ -3903,7 +3908,7 @@ void scanMngr_handoverDone( TI_HANDLE hScanMngr, TMacAddr* macAddress, ERadioBan
                                                           &(pScanMngr->currentBSS));
     if ( -1 != currentBSSNeighborIndex )
     {
-        pScanMngr->neighborAPsDiscoveryList[ pScanMngr->currentBSSBand ].trackStatusList[ currentBSSNeighborIndex ] = 
+        pScanMngr->neighborAPsDiscoveryList[ pScanMngr->currentBSSBand ].trackStatusList[ currentBSSNeighborIndex ] =
             SCAN_NDS_NOT_DISCOVERED;
     }
 
@@ -3915,7 +3920,7 @@ void scanMngr_handoverDone( TI_HANDLE hScanMngr, TMacAddr* macAddress, ERadioBan
     currentBSSNeighborIndex = scanMngrGetNeighborAPIndex( hScanMngr, band, macAddress );
     if ( -1 != currentBSSNeighborIndex )
     {
-        pScanMngr->neighborAPsDiscoveryList[ band ].trackStatusList[ currentBSSNeighborIndex ] = 
+        pScanMngr->neighborAPsDiscoveryList[ band ].trackStatusList[ currentBSSNeighborIndex ] =
             SCAN_NDS_CURRENT_AP;
         /* note - no need to update discovery index - when adding neighbor APs the check (whether discovery should
            be attempted) is done for every channel! */
@@ -3972,14 +3977,14 @@ TI_STATUS scanMngr_setParam( TI_HANDLE hScanMngr, paramInfo_t *pParam )
     scanMngr_t* pScanMngr = (scanMngr_t*)hScanMngr;
 
     TRACE3( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "scanMngr_setParam called, hScanMngr=0x%x, pParam=0x%x, pParam->paramType=%d\n", hScanMngr, pParam, pParam->paramType);
-    
+
     /* act according to parameter type */
     switch ( pParam->paramType )
     {
     case SCAN_MNGR_SET_CONFIGURATION:
         scanMngr_setScanPolicy( hScanMngr, pParam->content.pScanPolicy);
         break;
-        
+
     default:
         TRACE1( pScanMngr->hReport, REPORT_SEVERITY_ERROR, "Set param, Params is not supported:%d\n", pParam->paramType);
         return PARAM_NOT_SUPPORTED;
@@ -3989,14 +3994,14 @@ TI_STATUS scanMngr_setParam( TI_HANDLE hScanMngr, paramInfo_t *pParam )
 }
 
 
-/** 
+/**
  * \fn     scanMngr_SetDefaults
  * \brief  Set default values to the Scan Manager
- * 
+ *
  * \param  hScanMngr - handle to the SME object
  * \param  pInitParams - values read from registry / ini file
  * \return None
- */ 
+ */
 void scanMngr_SetDefaults (TI_HANDLE hScanMngr, TRoamScanMngrInitParams *pInitParams)
 {
     scanMngr_t* pScanMngr = (scanMngr_t*)hScanMngr;
@@ -4012,7 +4017,7 @@ void scanMngr_SetDefaults (TI_HANDLE hScanMngr, TRoamScanMngrInitParams *pInitPa
         return;
     }
 
-    if (pInitParams->RoamingScanning_2_4G_enable) 
+    if (pInitParams->RoamingScanning_2_4G_enable)
     {
         /* Configure default scan policy for 2.4G  */
         defaultScanPolicy.normalScanInterval = 10000;
@@ -4021,23 +4026,23 @@ void scanMngr_SetDefaults (TI_HANDLE hScanMngr, TRoamScanMngrInitParams *pInitPa
         defaultScanPolicy.BSSListSize = 4;
         defaultScanPolicy.BSSNumberToStartDiscovery = 1;
         defaultScanPolicy.numOfBands = 1;
-        
+
         defaultScanPolicy.bandScanPolicy[0].band = RADIO_BAND_2_4_GHZ;
         defaultScanPolicy.bandScanPolicy[0].rxRSSIThreshold = -80;
         defaultScanPolicy.bandScanPolicy[0].numOfChannlesForDiscovery = 3;
         defaultScanPolicy.bandScanPolicy[0].numOfChannles = 14;
-        
+
         for ( i = 0; i < 14; i++ )
         {
             defaultScanPolicy.bandScanPolicy[0].channelList[ i ] = i + 1;
         }
-       
+
         defaultScanPolicy.bandScanPolicy[0].trackingMethod.scanType = SCAN_TYPE_NO_SCAN;
         defaultScanPolicy.bandScanPolicy[ 0 ].trackingMethod.method.basicMethodParams.earlyTerminationEvent = SCAN_ET_COND_DISABLE;
         defaultScanPolicy.bandScanPolicy[ 0 ].trackingMethod.method.basicMethodParams.ETMaxNumberOfApFrames = 0;
         defaultScanPolicy.bandScanPolicy[ 0 ].trackingMethod.method.basicMethodParams.maxChannelDwellTime = 0;
         defaultScanPolicy.bandScanPolicy[ 0 ].trackingMethod.method.basicMethodParams.minChannelDwellTime = 0;
-                
+
         defaultScanPolicy.bandScanPolicy[ 0 ].trackingMethod.method.basicMethodParams.probReqParams.bitrate = RATE_MASK_UNSPECIFIED; /* Let the FW select */
         defaultScanPolicy.bandScanPolicy[ 0 ].trackingMethod.method.basicMethodParams.probReqParams.numOfProbeReqs = 0;
         defaultScanPolicy.bandScanPolicy[ 0 ].trackingMethod.method.basicMethodParams.probReqParams.txPowerDbm = 0;
@@ -4075,14 +4080,14 @@ void scanMngr_SetDefaults (TI_HANDLE hScanMngr, TRoamScanMngrInitParams *pInitPa
 *
 * scanMngr_startManual API
 *
-* Description: 
+* Description:
 *
 * save the manual scan params later to be used upon the scan concentrator object
-* and change the conn status to connected  
-* 
+* and change the conn status to connected
+*
 * ARGS:
 *  hScanMngr - Scan manager handle \n
-*  
+*
 * RETURNS:
 *  void
 */
@@ -4096,7 +4101,7 @@ void scanMngr_startManual(TI_HANDLE hScanMngr)
 
     scanMngr_setManualScanDefaultParams(hScanMngr);
     TRACE0(pScanMngr->hReport,REPORT_SEVERITY_INFORMATION, "scanMngr_startManual() called. \n");
-    
+
     /* get policies by band */
     gPolicy = scanMngrGetPolicyByBand( hScanMngr, RADIO_BAND_2_4_GHZ ); /* TODO: check if neccessary!!!*/
 }
@@ -4105,14 +4110,14 @@ void scanMngr_startManual(TI_HANDLE hScanMngr)
 *
 * scanMngr_stopManual API
 *
-* Description: 
+* Description:
 *
 * set the connection status to NOT_CONNECTED
-* 
+*
 * ARGS:
 *  hScanMngr - Scan manager handle \n
-*  pTargetAp - the target AP to connect with info. 
-*  
+*  pTargetAp - the target AP to connect with info.
+*
 * RETURNS:
 *  void
 */
@@ -4126,14 +4131,14 @@ void scanMngr_stopManual(TI_HANDLE hScanMngr)
 *
 * scanMngr_setManualScanChannelList API
 *
-* Description: 
+* Description:
 *
-* save the channel list received form the application. 
-* 
+* save the channel list received form the application.
+*
 * ARGS:
 *  hScanMngr - Scan manager handle \n
-*  pTargetAp - the target AP to connect with info. 
-*  
+*  pTargetAp - the target AP to connect with info.
+*
 * RETURNS:
 *  TI_OK
 */
@@ -4154,15 +4159,15 @@ TI_STATUS scanMngr_setManualScanChannelList (TI_HANDLE  hScanMngr, channelList_t
 *
 * scanMngr_Start1ShotScan API
 *
-* Description: 
+* Description:
 *
 * send the required scan params to the scan concentartor module
 * according to the scanning manual mode.
-* 
+*
 * ARGS:
 *  hScanMngr - scan manager handle \n
 *  eClient - the client that requests this scan command.
-*  
+*
 * RETURNS:
 *  EScanCncnResultStatus - the scan concentrator result
 */
@@ -4172,12 +4177,12 @@ EScanCncnResultStatus scanMngr_Start1ShotScan (TI_HANDLE hScanMngr, EScanCncnCli
     TScanParams* pScanParams;
     EScanCncnResultStatus status;
 
-    TRACE2(pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "scanMngr_Start1ShotScan started... .Operational mode: %d, ScanClient=%d. \n", 
+    TRACE2(pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "scanMngr_Start1ShotScan started... .Operational mode: %d, ScanClient=%d. \n",
                     pScanMngr->scanningOperationalMode, eClient);
 
     if(SCANNING_OPERATIONAL_MODE_AUTO == pScanMngr->scanningOperationalMode)
     {
-        pScanParams = &(pScanMngr->scanParams); 
+        pScanParams = &(pScanMngr->scanParams);
     }
     else
     {
@@ -4187,20 +4192,20 @@ EScanCncnResultStatus scanMngr_Start1ShotScan (TI_HANDLE hScanMngr, EScanCncnCli
     status = scanCncn_Start1ShotScan(pScanMngr->hScanCncn, eClient, pScanParams);
     return status;
 }
-    
+
 /**
 *
 * scanMngr_immediateScanComplete API
 *
-* Description: 
+* Description:
 *
 * called upon the immediate scan complete (manual or auto),
-  and call the roaming manager to handle this callback.  
-* 
+  and call the roaming manager to handle this callback.
+*
 * ARGS:
 *  hScanMngr - Scan manager handle \n
 *  scanCmpltStatus - the scan complete status
-*  
+*
 * RETURNS:
 *  EScanCncnResultStatus - the scan concentrator result
 */
@@ -4225,14 +4230,14 @@ TI_STATUS scanMngr_immediateScanComplete(TI_HANDLE hScanMngr, scan_mngrResultSta
 *
 * scanMngr_reportImmediateScanResults API
 *
-* Description: 
+* Description:
 *
-* report the immediate scan results to the application  
-* 
+* report the immediate scan results to the application
+*
 * ARGS:
 *  hScanMngr - Scan manager handle \n
 *  scanCmpltStatus - the scan complete status
-*  
+*
 * RETURNS:
 *  EScanCncnResultStatus - the scan concentrator result
 */
@@ -4241,7 +4246,7 @@ TI_STATUS scanMngr_reportImmediateScanResults(TI_HANDLE hScanMngr, scan_mngrResu
     scanMngr_t* pScanMngr = (scanMngr_t*)hScanMngr;
     bssList_t   *pListOfAPs;
 
-    
+
     if (scanCmpltStatus == SCAN_MRS_SCAN_COMPLETE_OK)
     {
         TRACE0(pScanMngr->hReport, REPORT_SEVERITY_INFORMATION ,"scanMngr_reportImmediateScanResults(): reporting scan results to App \n");
@@ -4262,14 +4267,14 @@ TI_STATUS scanMngr_reportImmediateScanResults(TI_HANDLE hScanMngr, scan_mngrResu
 *
 * scanMngr_startContinuousScanByApp API
 *
-* Description: 
+* Description:
 *
 * start continuous scan by application
-* 
+*
 * ARGS:
 *  hScanMngr - Scan manager handle \n
 *  pChannelList - the channel list to scan
-*  
+*
 * RETURNS:
 *  TI_OK - if connected, if not returns TI_NOK
 */
@@ -4301,13 +4306,13 @@ TI_STATUS scanMngr_startContinuousScanByApp (TI_HANDLE hScanMngr, channelList_t*
 *
 * scanMngr_stopContinuousScanByApp API
 *
-* Description: 
+* Description:
 *
 * stop the continuous scan already started by and reoprt to application
-* 
+*
 * ARGS:
 *  hScanMngr - Scan manager handle \n
-*  
+*
 * RETURNS:
 *  TI_OK - always
 */
@@ -4344,17 +4349,17 @@ void scanMngr_statsPrint( TI_HANDLE hScanMngr )
     WLAN_OS_REPORT(("\nDiscovery scans on A result histogram:\n"));
     scanMngrStatsPrintScanResultHistogram( pScanMngr->stats.DiscoveryAByStatus );
     WLAN_OS_REPORT(("\nTracking scans on G result histogram:\n"));
-    scanMngrStatsPrintScanResultHistogram( pScanMngr->stats.TrackingGByStatus );    
+    scanMngrStatsPrintScanResultHistogram( pScanMngr->stats.TrackingGByStatus );
     WLAN_OS_REPORT(("\nTracking scans on A result histogram:\n"));
-    scanMngrStatsPrintScanResultHistogram( pScanMngr->stats.TrackingAByStatus );    
+    scanMngrStatsPrintScanResultHistogram( pScanMngr->stats.TrackingAByStatus );
     WLAN_OS_REPORT(("\nImmediate scans on G result histogram:\n"));
-    scanMngrStatsPrintScanResultHistogram( pScanMngr->stats.ImmediateGByStatus );    
+    scanMngrStatsPrintScanResultHistogram( pScanMngr->stats.ImmediateGByStatus );
     WLAN_OS_REPORT(("\nImmediate scans on A result histogram:\n"));
     scanMngrStatsPrintScanResultHistogram( pScanMngr->stats.ImmediateAByStatus );
     WLAN_OS_REPORT(("\nTrack fail count histogram:\n"));
     scanMngrStatsPrintTrackFailHistogrsm( pScanMngr->stats.ConsecutiveTrackFailCountHistogram );
     WLAN_OS_REPORT(("Frames received:%d, frames discarded low RSSI:%d, frames discarded other:%d\n",
-                    pScanMngr->stats.receivedFrames, pScanMngr->stats.discardedFramesLowRSSI, 
+                    pScanMngr->stats.receivedFrames, pScanMngr->stats.discardedFramesLowRSSI,
                     pScanMngr->stats.discardedFramesOther));
     WLAN_OS_REPORT(("\nSPS channels not attened histogram:\n"));
     scanMngrStatsPrintSPSChannelsHistogram( pScanMngr->stats.SPSChannelsNotAttended );
@@ -4380,7 +4385,7 @@ void scanMngrStatsPrintScanResultHistogram( TI_UINT32 scanResultHistogram[] )
                     scanResultHistogram[ SCAN_CRS_SCAN_STOPPED ],
                     scanResultHistogram[ SCAN_CRS_TSF_ERROR ],
                     scanResultHistogram[ SCAN_CRS_SCAN_ABORTED_FW_RESET ],
-                    scanResultHistogram[ SCAN_CRS_SCAN_ABORTED_HIGHER_PRIORITY ]));    
+                    scanResultHistogram[ SCAN_CRS_SCAN_ABORTED_HIGHER_PRIORITY ]));
 }
 
 /**
@@ -4458,7 +4463,7 @@ void scanMngrDebugPrintNeighborAPList( TI_HANDLE hScanMngr )
 {
     scanMngr_t* pScanMngr = (scanMngr_t*)hScanMngr;
     int i,j;
-    
+
     WLAN_OS_REPORT(("-------------- Scan Manager Neighbor APs List ---------------\n"));
     for ( i = 0; i < RADIO_BAND_NUM_OF_BANDS; i++ )
     {
@@ -4489,7 +4494,7 @@ void scanMngrDebugPrintNeighborAPList( TI_HANDLE hScanMngr )
  */
 void scanMngrDebugPrintNeighborAP( neighborAP_t* pNeighborAp, scan_neighborDiscoveryState_e discoveryState )
 {
-    WLAN_OS_REPORT(("%02x:%02x:%02x:%02x:%02x:%02x %-4d %-7d %-30s\n", 
+    WLAN_OS_REPORT(("%02x:%02x:%02x:%02x:%02x:%02x %-4d %-7d %-30s\n",
                     pNeighborAp->BSSID[ 0 ], pNeighborAp->BSSID[ 1 ], pNeighborAp->BSSID[ 2 ],
                     pNeighborAp->BSSID[ 3 ], pNeighborAp->BSSID[ 4 ], pNeighborAp->BSSID[ 5 ],
                     pNeighborAp->band, pNeighborAp->channel, neighborDiscovreyStateDesc[ discoveryState ]));
@@ -4521,7 +4526,7 @@ void scanMngrDebugPrintScanCommand( TScanParams* pScanParams )
         return;
     }
     WLAN_OS_REPORT(("Scan type: %s, band: %d\n", scanTypeDesc[ pScanParams->scanType ], pScanParams->band));
-    
+
     switch (pScanParams->scanType)
     {
     case SCAN_TYPE_NORMAL_ACTIVE:
@@ -4531,7 +4536,7 @@ void scanMngrDebugPrintScanCommand( TScanParams* pScanParams )
 
     case SCAN_TYPE_NORMAL_PASSIVE:
         WLAN_OS_REPORT(("SSID: %s\n", (char*)pScanParams->desiredSsid.str));
-        WLAN_OS_REPORT(("%-4s %-17s %-17s %-20s %-8s %-14s %-14s\n", "Chnl", "BSSID", "Early ter. event", 
+        WLAN_OS_REPORT(("%-4s %-17s %-17s %-20s %-8s %-14s %-14s\n", "Chnl", "BSSID", "Early ter. event",
                         "Early ter. frame num", "TX level", "Max dwell time", "Min dwell time"));
         WLAN_OS_REPORT(("------------------------------------------------------------------------------------------------------\n"));
         for ( i = 0; i < pScanParams->numOfChannels; i++ )
@@ -4547,7 +4552,7 @@ void scanMngrDebugPrintScanCommand( TScanParams* pScanParams )
 
     case SCAN_TYPE_TRIGGERED_PASSIVE:
         WLAN_OS_REPORT(("SSID: %s, Tid: %d\n", (char*)pScanParams->desiredSsid.str, pScanParams->Tid));
-        WLAN_OS_REPORT(("%-4s %-17s %-17s %-20s %-8s %-14s %-14s\n", "Chnl", "BSSID", "Early ter. event", 
+        WLAN_OS_REPORT(("%-4s %-17s %-17s %-20s %-8s %-14s %-14s\n", "Chnl", "BSSID", "Early ter. event",
                         "Early ter. frame num", "TX level", "Max dwell time", " Min dwell time"));
         WLAN_OS_REPORT(("------------------------------------------------------------------------------------------------------\n"));
         for ( i = 0; i < pScanParams->numOfChannels; i++ )
@@ -4557,8 +4562,8 @@ void scanMngrDebugPrintScanCommand( TScanParams* pScanParams )
         break;
 
     case SCAN_TYPE_SPS:
-        WLAN_OS_REPORT(("Total scan duration (for scan timer): %d, latest TSF value: %x-%x\n", 
-                        (TI_INT32)pScanParams->SPSScanDuration, 
+        WLAN_OS_REPORT(("Total scan duration (for scan timer): %d, latest TSF value: %x-%x\n",
+                        (TI_INT32)pScanParams->SPSScanDuration,
                         (TI_UINT32)INT64_HIGHER(pScanParams->latestTSFValue), (TI_UINT32)INT64_LOWER(pScanParams->latestTSFValue)));
         WLAN_OS_REPORT(("%-4s %-17s %-17s %-7s %-16s %-20s\n", "Chnl", "BSSID", "Start time (TSF)", "Duration",
                         "Early ter. event", "Early ter. frame num"));
@@ -4574,7 +4579,7 @@ void scanMngrDebugPrintScanCommand( TScanParams* pScanParams )
         WLAN_OS_REPORT(("Invalid scan type: %d\n", pScanParams->scanType));
         break;
     }
-    
+
 }
 
 /**
@@ -4587,7 +4592,7 @@ void scanMngrDebugPrintScanCommand( TScanParams* pScanParams )
  */
 void scanMngrDebugPrintNormalChannelParam( TScanNormalChannelEntry* pNormalChannel )
 {
-    WLAN_OS_REPORT(("%-4d %02x:%02x:%02x:%02x:%02x:%02x %-17s %-20d %-8d %-14d %-14d\n", pNormalChannel->channel, 
+    WLAN_OS_REPORT(("%-4d %02x:%02x:%02x:%02x:%02x:%02x %-17s %-20d %-8d %-14d %-14d\n", pNormalChannel->channel,
                     pNormalChannel->bssId[ 0 ], pNormalChannel->bssId[ 1 ], pNormalChannel->bssId[ 2 ],
                     pNormalChannel->bssId[ 3 ], pNormalChannel->bssId[ 4 ], pNormalChannel->bssId[ 5 ],
                     earlyTerminationDesc[ pNormalChannel->earlyTerminationEvent >> 8 ],
@@ -4605,11 +4610,11 @@ void scanMngrDebugPrintNormalChannelParam( TScanNormalChannelEntry* pNormalChann
  */
 void scanMngrDebugPrintSPSChannelParam( TScanSpsChannelEntry* pSPSChannel )
 {
-    WLAN_OS_REPORT(("%-4d %02x:%02x:%02x:%02x:%02x:%02x %8x-%8x %-7d %-16s %-3d\n", 
-                    pSPSChannel->channel, pSPSChannel->bssId[ 0 ], pSPSChannel->bssId[ 1 ], 
+    WLAN_OS_REPORT(("%-4d %02x:%02x:%02x:%02x:%02x:%02x %8x-%8x %-7d %-16s %-3d\n",
+                    pSPSChannel->channel, pSPSChannel->bssId[ 0 ], pSPSChannel->bssId[ 1 ],
                     pSPSChannel->bssId[ 2 ], pSPSChannel->bssId[ 3 ], pSPSChannel->bssId[ 4 ],
-                    pSPSChannel->bssId[ 5 ], INT64_HIGHER(pSPSChannel->scanStartTime), 
-                    INT64_LOWER(pSPSChannel->scanStartTime), pSPSChannel->scanDuration, 
+                    pSPSChannel->bssId[ 5 ], INT64_HIGHER(pSPSChannel->scanStartTime),
+                    INT64_LOWER(pSPSChannel->scanStartTime), pSPSChannel->scanDuration,
                     earlyTerminationDesc[ pSPSChannel->earlyTerminationEvent >> 8 ], pSPSChannel->ETMaxNumOfAPframes));
 }
 
@@ -4633,7 +4638,7 @@ void scanMngrDebugPrintObject( TI_HANDLE hScanMngr )
     WLAN_OS_REPORT(("Continuous scan state: %s, Immediate scan state: %s\n",
                     contScanStatesDesc[ pScanMngr->contScanState ], immedScanStatesDesc[ pScanMngr->immedScanState ]));
     WLAN_OS_REPORT(("Discovery part: %s, G channels discovery Index: %d, A channels discovery index: %d\n",
-                    discoveryPartDesc[ pScanMngr->currentDiscoveryPart ], 
+                    discoveryPartDesc[ pScanMngr->currentDiscoveryPart ],
                     pScanMngr->channelDiscoveryIndex[ RADIO_BAND_2_4_GHZ ],
                     pScanMngr->channelDiscoveryIndex[ RADIO_BAND_5_0_GHZ ]));
     WLAN_OS_REPORT(("G neighbor APs discovery index: %d, A neighbor APs discovery index: %d\n",
@@ -4644,7 +4649,7 @@ void scanMngrDebugPrintObject( TI_HANDLE hScanMngr )
                     pScanMngr->currentBSS[ 3 ], pScanMngr->currentBSS[ 4 ], pScanMngr->currentBSS[ 5 ],
                     pScanMngr->currentBSSBand));
     WLAN_OS_REPORT(("Last beacon DTIM count:%d, TSF:%x-%x\n",
-                    pScanMngr->lastLocalBcnDTIMCount, 
+                    pScanMngr->lastLocalBcnDTIMCount,
                     INT64_HIGHER(pScanMngr->currentTSF), INT64_LOWER(pScanMngr->currentTSF)));
     WLAN_OS_REPORT(("-------------- Scan Manager Policy ---------------\n"));
     scanMngrTracePrintScanPolicy( &(pScanMngr->scanPolicy));
@@ -4654,7 +4659,7 @@ void scanMngrDebugPrintObject( TI_HANDLE hScanMngr )
     scanMngr_statsPrint( hScanMngr );
     WLAN_OS_REPORT(("New BSS found during last discovery:%s, Number of scan cycles during which no new AP was found: %d\n",
                     booleanDesc[ pScanMngr->bNewBSSFound ], pScanMngr->consecNotFound));
-    WLAN_OS_REPORT(("Scan for neighbor APs only at last immediate scan: %s\n", 
+    WLAN_OS_REPORT(("Scan for neighbor APs only at last immediate scan: %s\n",
                     booleanDesc[ pScanMngr->bImmedNeighborAPsOnly ]));
     WLAN_OS_REPORT(("-------------- Last issued scan command ---------------\n"));
     scanMngrDebugPrintScanCommand( &(pScanMngr->scanParams));

@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * mainSecKeysOnly.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file mainSecSm.c
  *  \brief 802.1X finite state machine header file
  *
@@ -76,7 +81,7 @@ TI_STATUS mainSecKeysOnly_setAuthIdentity(mainSec_t *pMainSec, authIdentity_t *a
 *
 * rsn_mainSecSmKeysOnlyInit
 *
-* \b Description: 
+* \b Description:
 *
 * Init main security state machine state machine
 *
@@ -88,9 +93,9 @@ TI_STATUS mainSecKeysOnly_setAuthIdentity(mainSec_t *pMainSec, authIdentity_t *a
 *
 *  TI_OK on success, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
-TI_STATUS mainSecKeysOnly_config(mainSec_t *pMainSec, 
+TI_STATUS mainSecKeysOnly_config(mainSec_t *pMainSec,
 						  TRsnPaeConfig *pPaeConfig)
 {
 	TI_STATUS				status;
@@ -123,7 +128,7 @@ TI_STATUS mainSecKeysOnly_config(mainSec_t *pMainSec,
 		}
 	};
 
-    status = fsm_Config(pMainSec->pMainSecSm, &mainSecKeysOnly_matrix[0][0], 
+    status = fsm_Config(pMainSec->pMainSecSm, &mainSecKeysOnly_matrix[0][0],
 						MAIN_SEC_KEYS_ONLY_NUM_STATES, MAIN_SEC_KEYS_ONLY_NUM_EVENTS, NULL, pMainSec->hOs);
 	if (status != TI_OK)
 	{
@@ -143,7 +148,7 @@ TRACE0(pMainSec->hReport, REPORT_SEVERITY_ERROR, "MAIN_SEC_SM: Error in configur
 	pMainSec->getAuthIdentity  		= (mainSecSm_getAuthIdentity_t)mainSecKeysOnly_unexpected;
 	pMainSec->setAuthIdentity  		= (mainSecSm_getAuthIdentity_t)mainSecKeysOnly_setAuthIdentity;
     pMainSec->reportAuthFailure     = (mainSecSm_reportAuthFailure_t)mainSecKeysOnly_reportAuthFailure;
-    
+
     TRACE0(pMainSec->hReport, REPORT_SEVERITY_INFORMATION, "mainSecKeysOnly_config\n");
 
     return TI_OK;
@@ -153,7 +158,7 @@ TRACE0(pMainSec->hReport, REPORT_SEVERITY_ERROR, "MAIN_SEC_SM: Error in configur
 *
 * mainSecSmNull_Start
 *
-* \b Description: 
+* \b Description:
 *
 * Start the NULL main security SM. Reports success to the rsn module immediately.
 *
@@ -165,14 +170,14 @@ TRACE0(pMainSec->hReport, REPORT_SEVERITY_ERROR, "MAIN_SEC_SM: Error in configur
 *
 *  TI_OK on success, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 TI_STATUS mainSecKeysOnly_start(mainSec_t *pMainSec)
 {
     TI_STATUS status;
 
-    status = fsm_Event(pMainSec->pMainSecSm, &pMainSec->currentState, MAIN_KO_EVENT_START, pMainSec); 
-    
+    status = fsm_Event(pMainSec->pMainSecSm, &pMainSec->currentState, MAIN_KO_EVENT_START, pMainSec);
+
     return status;
 }
 
@@ -180,7 +185,7 @@ TI_STATUS mainSecKeysOnly_start(mainSec_t *pMainSec)
 *
 * mainSecSmNull_Stop
 *
-* \b Description: 
+* \b Description:
 *
 * Start the NULL main security SM. Reports success to the rsn module immediately.
 *
@@ -192,22 +197,22 @@ TI_STATUS mainSecKeysOnly_start(mainSec_t *pMainSec)
 *
 *  TI_OK on success, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 TI_STATUS mainSecKeysOnly_stop(mainSec_t *pMainSec)
 {
     TI_STATUS status;
 
-    status = fsm_Event(pMainSec->pMainSecSm, &pMainSec->currentState, MAIN_KO_EVENT_STOP, pMainSec); 
-    
+    status = fsm_Event(pMainSec->pMainSecSm, &pMainSec->currentState, MAIN_KO_EVENT_STOP, pMainSec);
+
     return status;
 }
- 
+
 /**
 *
 * mainSecSmNull_Stop
 *
-* \b Description: 
+* \b Description:
 *
 * Start the NULL main security SM. Reports success to the rsn module immediately.
 *
@@ -219,7 +224,7 @@ TI_STATUS mainSecKeysOnly_stop(mainSec_t *pMainSec)
 *
 *  TI_OK on success, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 TI_STATUS mainSecKeysOnly_reportKeysStatus(mainSec_t *pMainSec, TI_STATUS keysStatus)
 {
@@ -242,7 +247,7 @@ TRACE0(pMainSec->hReport, REPORT_SEVERITY_ERROR, "MAIN_SEC_SM: Error in Keys\n")
 *
 * mainSecSmNull_setKey
 *
-* \b Description: 
+* \b Description:
 *
 * Start the NULL main security SM. Reports success to the rsn module immediately.
 *
@@ -254,7 +259,7 @@ TRACE0(pMainSec->hReport, REPORT_SEVERITY_ERROR, "MAIN_SEC_SM: Error in Keys\n")
 *
 *  TI_OK on success, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 TI_STATUS mainSecKeysOnly_setSessionKey(mainSec_t *pMainSec, TI_UINT8* pKey, TI_UINT8 keyLen)
 {
@@ -268,7 +273,7 @@ TI_STATUS mainSecKeysOnly_setSessionKey(mainSec_t *pMainSec, TI_UINT8* pKey, TI_
 *
 * mainSecSmNull_setKey
 *
-* \b Description: 
+* \b Description:
 *
 * Start the NULL main security SM. Reports success to the rsn module immediately.
 *
@@ -280,7 +285,7 @@ TI_STATUS mainSecKeysOnly_setSessionKey(mainSec_t *pMainSec, TI_UINT8* pKey, TI_
 *
 *  TI_OK on success, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 TI_STATUS mainSecKeysOnly_getSessionKey(mainSec_t *pMainSec, TI_UINT8* pKey, TI_UINT32* pKeyLen)
 {
@@ -300,7 +305,7 @@ TI_STATUS mainSecKeysOnly_startIdle(struct _mainSec_t *pMainSec)
 
 TRACE0(pMainSec->hReport, REPORT_SEVERITY_SM, "MAIN_SEC_SM: mainSecKeysOnly_StartIdle...\n");
 	status =  pMainSec->pMainKeys->start(pMainSec->pMainKeys);
-	
+
 	return status;
 }
 
@@ -320,7 +325,7 @@ TI_STATUS mainSecKeysOnly_keysCompleteStart(struct _mainSec_t *pMainSec)
 
 TRACE0(pMainSec->hReport, REPORT_SEVERITY_SM, "MAIN_SEC_SM: mainSecKeysOnly_KeysCompleteAuthenticated...\n");
 	status =  pMainSec->pParent->reportStatus(pMainSec->pParent, pMainSec->data.status);
-	
+
 	return(status);
 }
 
@@ -337,7 +342,7 @@ TI_STATUS mainSecKeysOnly_stopAuthorized(struct _mainSec_t *pMainSec)
 
 TRACE0(pMainSec->hReport, REPORT_SEVERITY_SM, "MAIN_SEC_SM: mainSecKeysOnly_StopAuthorized...\n");
 	status =  pMainSec->pMainKeys->stop(pMainSec->pMainKeys);
-	
+
 	return(status);
 }
 
@@ -347,7 +352,7 @@ TI_STATUS mainSecKeysOnly_stopNonAuthorized(struct _mainSec_t *pMainSec)
 
 TRACE0(pMainSec->hReport, REPORT_SEVERITY_SM, "MAIN_SEC_SM: mainSecKeysOnly_StopNonAuthorized...\n");
 	status =  pMainSec->pMainKeys->stop(pMainSec->pMainKeys);
-	
+
 	return(status);
 }
 
@@ -365,9 +370,9 @@ TI_STATUS mainSecKeysOnly_unexpected(void* pData)
 
  /**
 *
-* mainSecKeysOnly_getAuthState:  \n 
+* mainSecKeysOnly_getAuthState:  \n
 *
-* \b Description: 
+* \b Description:
 *
 * Get authentication state from supp1x SM.
 *
@@ -380,7 +385,7 @@ TI_STATUS mainSecKeysOnly_unexpected(void* pData)
 *
 *  TI_OK if successful, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 
 TI_STATUS mainSecKeysOnly_getAuthState(mainSec_t *pMainSec, TIWLN_SECURITY_STATE *secState)
@@ -403,13 +408,13 @@ TI_STATUS mainSecKeysOnly_getAuthState(mainSec_t *pMainSec, TIWLN_SECURITY_STATE
 		*secState = eSecurityStateHalted;
 		break;
 	}
-	
+
 	return TI_OK;
 
 } /*mainSecKeysOnly_getAuthState*/
 
 
-TI_STATUS mainSecKeysOnly_reportAuthFailure(mainSec_t *pMainSec, EAuthStatus authStatus) 
+TI_STATUS mainSecKeysOnly_reportAuthFailure(mainSec_t *pMainSec, EAuthStatus authStatus)
 {
 
     return TI_OK;
@@ -420,4 +425,4 @@ TI_STATUS mainSecKeysOnly_setAuthIdentity(mainSec_t *pMainSec, authIdentity_t *a
 {
 
 	return TI_OK;
-} 
+}

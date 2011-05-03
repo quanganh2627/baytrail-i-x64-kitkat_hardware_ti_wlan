@@ -1,33 +1,38 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * spectrumMngmntMgr.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file spectrumMngmntMgr.c
- *  
+ *
  *
  *  \see spectrumMngmntMgr.h
  */
@@ -96,15 +101,15 @@ typedef struct
 
 
 /***********************************************************************
- *                   measurementMgr_getBasicMeasurementParam									
+ *                   measurementMgr_getBasicMeasurementParam
  ***********************************************************************
-DESCRIPTION:	
-				
-				
+DESCRIPTION:
+
+
 INPUT:      hMeasurementMgr	    -	MeasurementMgr Handle
-			
-OUTPUT:		pAcxStatisitics     -   
-            pMediumOccupancy    -   
+
+OUTPUT:		pAcxStatisitics     -
+            pMediumOccupancy    -
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 ************************************************************************/
@@ -121,25 +126,25 @@ TI_STATUS measurementMgr_getBasicMeasurementParam(TI_HANDLE hMeasurementMgr,
 	whalParamInfo_t	whalParam;
     measurementMgr_t *pMeasurementMgr = (measurementMgr_t*)hMeasurementMgr;
 
-	/* getting the ACX statisitc counters by calling the HAL */ 
+	/* getting the ACX statisitc counters by calling the HAL */
 	whalParam.paramType = HAL_CTRL_ACX_STATISTICS_PARAM;
 	if( (status = whalCtrl_GetParam(pMeasurementMgr->hHalCtrl,&whalParam)) == TI_OK)
 	{
-		pAcxStatisitics->FWpacketReceived = whalParam.content.acxStatisitics.FWpacketReceived;	
+		pAcxStatisitics->FWpacketReceived = whalParam.content.acxStatisitics.FWpacketReceived;
 		pAcxStatisitics->HALpacketReceived	= whalParam.content.acxStatisitics.HALpacketReceived;
 	}
-	
+
 	/*FIXME*/
-	WLAN_OS_REPORT(("-------------- FW total---------------, %d\n\n", 
+	WLAN_OS_REPORT(("-------------- FW total---------------, %d\n\n",
                     pAcxStatisitics->FWpacketReceived));
-	WLAN_OS_REPORT(("-------------- Driver Total---------------, %d\n\n", 
+	WLAN_OS_REPORT(("-------------- Driver Total---------------, %d\n\n",
                     pAcxStatisitics->HALpacketReceived));
 
     /*******************************************************
     * NOTE: If not using a call back function the required *
     *       information will not be received               *
     *******************************************************/
-	/* getting the Medium Occupancy by calling the HAL */ 
+	/* getting the Medium Occupancy by calling the HAL */
 	whalParam.paramType = HAL_CTRL_MEDIUM_OCCUPANCY_PARAM;
     whalParam.content.interogateCmdCBParams.CB_Func = NULL;
     whalParam.content.interogateCmdCBParams.CB_handle = hMeasurementMgr;
@@ -156,18 +161,18 @@ TI_STATUS measurementMgr_getBasicMeasurementParam(TI_HANDLE hMeasurementMgr,
 #endif
 
 /***********************************************************************
- * NOTE: The next 4 functions (dot11h...) should be corrected according 
+ * NOTE: The next 4 functions (dot11h...) should be corrected according
  *       to the 802.11h standered.
  ***********************************************************************/
 
 /************************************************************************
 *					measurementMgr_dot11hParserFrameReq					*
 ************************************************************************
-DESCRIPTION: Frame Request Parser function, called by the Measurement 
-             object when a measurement request frame is received. 
+DESCRIPTION: Frame Request Parser function, called by the Measurement
+             object when a measurement request frame is received.
 				performs the following:
 				-	Parsers the received frame request.
-					
+
 INPUT:      hMeasurementMgr - MeasurementMgr Handle
 			pData			- The frame request
             dataLen         - The frame'sa length
@@ -177,14 +182,14 @@ OUTPUT:		fraemReq        - The Parsered Frame Request
 RETURN:     TI_OK on success, TI_NOK otherwise
 
 ************************************************************************/
-TI_STATUS measurementMgr_dot11hParseFrameReq(TI_HANDLE hMeasurementMgr, 
+TI_STATUS measurementMgr_dot11hParseFrameReq(TI_HANDLE hMeasurementMgr,
                                            TI_UINT8 *pData, TI_INT32 dataLen,
                                            TMeasurementFrameRequest *frameReq)
 {
     dot11hFrameReqHdr_t     *dot11hFrameReqHdr;
 
     dot11hFrameReqHdr = (dot11hFrameReqHdr_t*)pData;
-    
+
     frameReq->hdr->dialogToken = (TI_UINT16)dot11hFrameReqHdr->dialogToken;
     frameReq->hdr->activatioDelay = dot11hFrameReqHdr->activatioDelay;
     frameReq->hdr->measurementOffset = dot11hFrameReqHdr->measurementOffset;
@@ -198,12 +203,12 @@ TI_STATUS measurementMgr_dot11hParseFrameReq(TI_HANDLE hMeasurementMgr,
 /************************************************************************
  *					measurementMgr_dot11hParserRequestIEHdr				*
  ************************************************************************
-DESCRIPTION: Spectrom Manager Request IE Header Parser function, 
-             called by the Request Handler object when inserting 
-             a request IE to the queue. 
+DESCRIPTION: Spectrom Manager Request IE Header Parser function,
+             called by the Request Handler object when inserting
+             a request IE to the queue.
 				performs the following:
 				-	Parsers the received request IE hdr.
-					
+
 INPUT:      hRequestHandler	-	Request Handler handle
 			pData			-	The request IE
 
@@ -217,41 +222,41 @@ TI_STATUS measurementMgr_dot11hParseRequestIEHdr(TI_UINT8 *pData, TI_UINT16 *req
                                                TI_UINT16 *measurementToken)
 {
     dot11hReqIEHdr_t *dot11hReqIEHdr;
-    
+
     dot11hReqIEHdr = (dot11hReqIEHdr_t*)pData;
-    
+
     /* checking if received the correct information element ID */
     if(dot11hReqIEHdr->IeId != DOT11_MEASUREMENT_REQUEST_ELE_ID)
         return TI_NOK;
-        
+
     /* checking that len is valid */
     if(dot11hReqIEHdr->Length != DOT11H_REQUEST_IE_LEN)
         return TI_NOK;
-    
+
     *measurementToken = (TI_UINT16)dot11hReqIEHdr->Token;
-    
+
     *reqestHdrLen = DOT11H_REQUEST_IE_HDR_LEN;
-    
+
     return TI_OK;
 }
 
 /************************************************************************
  *					measurementMgr_dot11hIsTypeValid         				*
  ************************************************************************
-DESCRIPTION: Spectrom Manager function that checks if the given 
-             measurement type is valid. 
-					
+DESCRIPTION: Spectrom Manager function that checks if the given
+             measurement type is valid.
+
 INPUT:      hMeasurementMgr -	MeasurementMgr Handle
             type			-	The measurement type.
             scanMode        -   The Measurement scan Mode.
 
-OUTPUT:		
+OUTPUT:
 
 RETURN:     TI_TRUE if type is valid, TI_FALSE otherwise
 
 ************************************************************************/
-TI_BOOL measurementMgr_dot11hIsTypeValid(TI_HANDLE hMeasurementMgr, 
-                                         EMeasurementType type, 
+TI_BOOL measurementMgr_dot11hIsTypeValid(TI_HANDLE hMeasurementMgr,
+                                         EMeasurementType type,
                                          EMeasurementScanMode scanMode)
 {
     if(type != MSR_TYPE_BASIC_MEASUREMENT)
@@ -261,7 +266,7 @@ TI_BOOL measurementMgr_dot11hIsTypeValid(TI_HANDLE hMeasurementMgr,
 }
 
 /***********************************************************************
- *                  measurementMgr_dot11hBuildRejectReport							
+ *                  measurementMgr_dot11hBuildRejectReport
  ***********************************************************************
 DESCRIPTION:	Send reject measurement report frame Function.
                 The function does the following:
@@ -269,11 +274,11 @@ DESCRIPTION:	Send reject measurement report frame Function.
 				-	builds measurement report Frame.
 				-	Calls the mlmeBuolder to allocate a mangement frame
 					and to transmit it.
-				
+
 INPUT:      hMeasurementMgr -	MeasurementMgr Handle
-			pRequestArr		-	Array of pointer to all measurement 
+			pRequestArr		-	Array of pointer to all measurement
 								request that should be rejected.
-			numOfRequestsInParallel - indicates the number of 
+			numOfRequestsInParallel - indicates the number of
 								request that should be rejected.
 			rejectReason	-	Indicated the rejection reason.
 
@@ -299,13 +304,13 @@ TI_STATUS measurementMgr_dot11hBuildRejectReport(TI_HANDLE hMeasurementMgr,
 	measurementReport.hdr[1] = DOT11_MIN_MEASUREMENT_REPORT_IE_LEN;
 	measurementReport.measurementToken = (TI_UINT8)pRequestArr[0]->measurementToken;
 	measurementReport.measurementType = pRequestArr[0]->Type;
-	
+
 	/* Building the measurement mode bit field */
 
 	/* setting Parallel Bit */
 	if(numOfRequestsInParallel > 0 )
 		measurementMode |= 0x1;
-	
+
 	/* setting Incapable and Refused bits */
 	switch(rejectReason)
 	{
@@ -324,7 +329,7 @@ TI_STATUS measurementMgr_dot11hBuildRejectReport(TI_HANDLE hMeasurementMgr,
 			measurementMode |= 0x4;
 			break;
 		}
-	
+
 		default:
 		{
 TRACE1(pMeasurementMgr->hReport, REPORT_SEVERITY_ERROR, "Reject reason is not supported, %d\n\n", rejectReason);
@@ -332,7 +337,7 @@ TRACE1(pMeasurementMgr->hReport, REPORT_SEVERITY_ERROR, "Reject reason is not su
 			break;
 		}
 	}
-	
+
 	measurementReport.measurementMode = measurementMode;
 TRACE1(pMeasurementMgr->hReport, REPORT_SEVERITY_WARNING, "Measurement was rejected due to %d,\n\n", rejectReason);
 
@@ -342,18 +347,18 @@ TRACE1(pMeasurementMgr->hReport, REPORT_SEVERITY_WARNING, "Measurement was rejec
 
 
 /***********************************************************************
- *                        measurementMgr_dot11hBuildReport							
+ *                        measurementMgr_dot11hBuildReport
  ***********************************************************************
 DESCRIPTION:	build measurement report Function.
                 The function does the following:
 				-	builds measurement report IE.
-				
+
 INPUT:      hMeasurementMgr -	MeasurementMgr Handle
-			pRequestArr		-	Array of pointer to all measurement 
+			pRequestArr		-	Array of pointer to all measurement
 								request that should be reported.
-			numOfRequestsInParallel - indicates the number of 
+			numOfRequestsInParallel - indicates the number of
 								request that should be reported.
-			
+
 OUTPUT:		None
 
 RETURN:     TI_OK on success, TI_NOK otherwise
@@ -373,18 +378,18 @@ TI_STATUS measurementMgr_dot11hBuildReport(TI_HANDLE hMeasurementMgr, Measuremen
 
 	measurementReport.hdr[0] = DOT11_MEASUREMENT_REPORT_ELE_ID;
 	measurementReport.measurementToken = (TI_UINT8)request.measurementToken;
-	
+
 	/* setting Parallel Bit in the measurement mode */
 	if(request.isParallel)
 		measurementReport.measurementMode = 0x1;
-	
+
 	measurementReport.measurementType = request.Type;
-	
-	
+
+
 	/* Building the reports included in the current measurement report IE */
 	/* Note: The current implementation supports only Basic Report */
 	if(request.Type == MSR_TYPE_BASIC_MEASUREMENT)
-	{		
+	{
 			*pMeasurReport++ = request.channelNumber;
 			*pMeasurReport++ = (TI_UINT8)request.DurationTime;
 
@@ -402,16 +407,16 @@ TI_STATUS measurementMgr_dot11hBuildReport(TI_HANDLE hMeasurementMgr, Measuremen
 }
 
 /***********************************************************************
- *                   measurementMgr_dot11hSendReportAndCleanObject							
+ *                   measurementMgr_dot11hSendReportAndCleanObject
  ***********************************************************************
 DESCRIPTION:	Send measurement report frame Function.
                 The function does the following:
 				-	Calls the mlmeBuilder to allocate a mangement frame
 					and to transmit it.
 				-	Cleans the Measurement Object and reset its Params.
-				
+
 INPUT:      hMeasurementMgr -	MeasurementMgr Handle
-			
+
 OUTPUT:		None
 
 RETURN:     TI_OK on success, TI_NOK otherwise
@@ -432,13 +437,13 @@ TI_STATUS measurementMgr_dot11hSendReportAndCleanObject(TI_HANDLE hMeasurementMg
         /* Sending the Rport Frame */
         status =  mlmeBuilder_sendFrame(pMeasurementMgr->hMlme,ACTION,
                                         (TI_UINT8*)&pMeasurementMgr->dot11hFrameReport,
-                                        sizeof(dot11_ACTION_FIELD_t) + sizeof(TI_UINT8) + 
-                                        sizeof(dot11_eleHdr_t) + 
-                                        DOT11_MIN_MEASUREMENT_REPORT_IE_LEN + 
+                                        sizeof(dot11_ACTION_FIELD_t) + sizeof(TI_UINT8) +
+                                        sizeof(dot11_eleHdr_t) +
+                                        DOT11_MIN_MEASUREMENT_REPORT_IE_LEN +
                                         pMeasurementMgr->frameLength,0);
         if(status != TI_OK)
             return status;
-        
+
         /* clearing reports data base */
         os_memoryZero(pMeasurementMgr->hOs,&(pMeasurementMgr->dot11hFrameReport),
             sizeof(MeasurementReportFrame_t));
@@ -461,14 +466,14 @@ TI_STATUS measurementMgr_dot11hSendReportAndCleanObject(TI_HANDLE hMeasurementMg
 
 
 /***********************************************************************
- *                     buildMapSubFieldForBasicReport									
+ *                     buildMapSubFieldForBasicReport
  ***********************************************************************
-DESCRIPTION:	
-				
-				
+DESCRIPTION:
+
+
 INPUT:      hMeasurementMgr -	MeasurementMgr Handle
 
-OUTPUT:		map             -   
+OUTPUT:		map             -
 
 RETURN:     None
 ************************************************************************/
@@ -487,7 +492,7 @@ static void buildMapSubFieldForBasicReport(TI_HANDLE hMeasurementMgr,TI_UINT8* m
 	TI_INT32	periodTimeDelta;
 	TI_INT32	occupancyDelta;
     measurementMgr_t* pMeasurementMgr = (measurementMgr_t*)hMeasurementMgr;
-	
+
 	/* getting the AcxStatisitcs from the FW */
     /* NOTE: The medium occupancy will not be updated - FIX */
 
@@ -499,27 +504,27 @@ static void buildMapSubFieldForBasicReport(TI_HANDLE hMeasurementMgr,TI_UINT8* m
 #endif
 
 	/* Calculating the delta for packetReceived from the HAL*/
-	deltaHALReceivedPacked = pMeasurementMgr->acxStatisticEnd.HALpacketReceived - 
-                             pMeasurementMgr->acxStatisticStart.HALpacketReceived; 
-	
+	deltaHALReceivedPacked = pMeasurementMgr->acxStatisticEnd.HALpacketReceived -
+                             pMeasurementMgr->acxStatisticStart.HALpacketReceived;
+
 	if(deltaHALReceivedPacked < 0)
 TRACE1(pMeasurementMgr->hReport, REPORT_SEVERITY_ERROR, "HAL delta packets is negative , %d\n\n", deltaHALReceivedPacked);
-	
+
 	if(deltaHALReceivedPacked != 0 )
 		*map = DOT11_BSS_ONLY;
 	else
 	{
 		/* Calculating the delta for FCS Error*/
-		deltaFWReceivedPacked = pMeasurementMgr->acxStatisticEnd.FWpacketReceived - 
+		deltaFWReceivedPacked = pMeasurementMgr->acxStatisticEnd.FWpacketReceived -
                                 pMeasurementMgr->acxStatisticStart.FWpacketReceived;
-		
+
 		if(deltaFWReceivedPacked < 0)
         {
 TRACE1(pMeasurementMgr->hReport, REPORT_SEVERITY_ERROR, "FW delta packets is negative , %d\n\n", deltaFWReceivedPacked);
         }
 
 		deltaFCSError = deltaFWReceivedPacked - deltaHALReceivedPacked;
-		
+
 		if(deltaFCSError < 0)
         {
 TRACE1(pMeasurementMgr->hReport, REPORT_SEVERITY_ERROR, "FCS error is negative , %d\n\n", deltaFCSError);
@@ -530,7 +535,7 @@ TRACE1(pMeasurementMgr->hReport, REPORT_SEVERITY_ERROR, "FCS error is negative ,
 		else
 		{
 			/* Calculating the delta for Medium occupancy */
-			occupancyDelta = pMeasurementMgr->mediumOccupancyEnd.MediumUsage - 
+			occupancyDelta = pMeasurementMgr->mediumOccupancyEnd.MediumUsage -
                              pMeasurementMgr->mediumOccupancyStart.MediumUsage;
 
 			if(occupancyDelta < 0)
@@ -538,14 +543,14 @@ TRACE1(pMeasurementMgr->hReport, REPORT_SEVERITY_ERROR, "FCS error is negative ,
 TRACE1(pMeasurementMgr->hReport, REPORT_SEVERITY_ERROR, "Medium Occupancy is negative , %d\n\n", occupancyDelta);
             }
 
-			periodTimeDelta = pMeasurementMgr->mediumOccupancyEnd.Period - 
+			periodTimeDelta = pMeasurementMgr->mediumOccupancyEnd.Period -
                               pMeasurementMgr->mediumOccupancyStart.Period;
-			
+
 			if(periodTimeDelta < 0)
             {
 TRACE1(pMeasurementMgr->hReport, REPORT_SEVERITY_ERROR, "Period time delta is negative , %d\n\n", periodTimeDelta);
             }
-			
+
 			if( ((occupancyDelta * 100) / periodTimeDelta)  > RADAR_THRESHOLD_IN_PRECENTS )
 				*map = DOT11_RADAR_AND_UNIDENTIFIED;
 			else

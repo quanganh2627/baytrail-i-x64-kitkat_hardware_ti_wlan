@@ -1,35 +1,40 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * coreDefaultParams.h
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 #ifndef _CORE_DEFAULT_PARAMS_H
 #define _CORE_DEFAULT_PARAMS_H
-                  
-#if defined(__ARMCC__) 
+
+#if defined(__ARMCC__)
 #include "public_infoele.h"
 #endif
 /************************************/
@@ -79,19 +84,19 @@
 #define SITE_MGR_ROAMING_STATS_RESET_TIMEOUT_MAX   60
 #define SITE_MGR_ROAMING_STATS_RESET_TIMEOUT_DEF   10
 
-#define SITE_MGR_LNA_BEACON_INT_COUNT_MIN       2   
+#define SITE_MGR_LNA_BEACON_INT_COUNT_MIN       2
 #define SITE_MGR_LNA_BEACON_INT_COUNT_MAX       0xFFFF
 #define SITE_MGR_LNA_BEACON_INT_COUNT_DEF       3
 
-#define SITE_MGR_LNA_PD_THRESHOLD_LOW_MIN       0x00    
-#define SITE_MGR_LNA_PD_THRESHOLD_LOW_MAX       0xff    
-#define SITE_MGR_LNA_PD_THRESHOLD_LOW_DEF       0x90    
+#define SITE_MGR_LNA_PD_THRESHOLD_LOW_MIN       0x00
+#define SITE_MGR_LNA_PD_THRESHOLD_LOW_MAX       0xff
+#define SITE_MGR_LNA_PD_THRESHOLD_LOW_DEF       0x90
 
-#define SITE_MGR_LNA_PD_THRESHOLD_HIGH_MIN      0x00    
-#define SITE_MGR_LNA_PD_THRESHOLD_HIGH_MAX      0xff    
-#define SITE_MGR_LNA_PD_THRESHOLD_HIGH_DEF      0xD5    
+#define SITE_MGR_LNA_PD_THRESHOLD_HIGH_MIN      0x00
+#define SITE_MGR_LNA_PD_THRESHOLD_HIGH_MAX      0xff
+#define SITE_MGR_LNA_PD_THRESHOLD_HIGH_DEF      0xD5
 
-#define SITE_MGR_LNA_EN_DINAMYC_TX_ALGO_DEF     0   
+#define SITE_MGR_LNA_EN_DINAMYC_TX_ALGO_DEF     0
 #define SITE_MGR_LNA_EN_DINAMYC_TX_ALGO_MAX     1
 #define SITE_MGR_LNA_EN_DINAMYC_TX_ALGO_MIN     0
 
@@ -120,9 +125,9 @@
 #define BCN_RX_TIMEOUT_DEF_VALUE 10000
 #define BCN_RX_TIMEOUT_MIN_VALUE 1
 #define BCN_RX_TIMEOUT_MAX_VALUE 65535
-    
+
 #define BROADCAST_RX_TIMEOUT_DEF_VALUE 20000
-#define BROADCAST_RX_TIMEOUT_MIN_VALUE 1 
+#define BROADCAST_RX_TIMEOUT_MIN_VALUE 1
 #define BROADCAST_RX_TIMEOUT_MAX_VALUE 65535
 
 #define RX_BROADCAST_IN_PS_DEF_VALUE 1
@@ -141,26 +146,26 @@
 /*  Classifier parameters    */
 /*---------------------------*/
 
-/* 1 - Dtag, 2 - Port, 3 - IP & port */ 
-#define CLSFR_TYPE_MIN                          1 
+/* 1 - Dtag, 2 - Port, 3 - IP & port */
+#define CLSFR_TYPE_MIN                          1
 #define CLSFR_TYPE_DEF                      3
 #define CLSFR_TYPE_MAX                      3
 
 /* general values of D-tags */
-#define CLASSIFIER_DTAG_MIN                 0 
+#define CLASSIFIER_DTAG_MIN                 0
 #define CLASSIFIER_DTAG_MAX                 7
-#define CLASSIFIER_DTAG_DEF                 0 
+#define CLASSIFIER_DTAG_DEF                 0
 
-/* general values of code points in 
+/* general values of code points in
 the DSCP classification table*/
-#define CLASSIFIER_CODE_POINT_MIN       0 
+#define CLASSIFIER_CODE_POINT_MIN       0
 #define CLASSIFIER_CODE_POINT_MAX       63
 #define CLASSIFIER_CODE_POINT_DEF       0
 
 /* general values of port numbers */
-#define CLASSIFIER_PORT_MIN                 1 
+#define CLASSIFIER_PORT_MIN                 1
 #define CLASSIFIER_PORT_MAX                 65535
-#define CLASSIFIER_PORT_DEF                 1024 
+#define CLASSIFIER_PORT_DEF                 1024
 
 /* General values of IP addresses */
 /* TBD according to spec!*/
@@ -170,10 +175,10 @@ the DSCP classification table*/
 /* TBD according to spec!*/
 #define CLASSIFIER_IPADDRESS_MAX                0xFFFFFFFF
 
-/* DSCP (differentiated services code 
-point) classifier parameters  
+/* DSCP (differentiated services code
+point) classifier parameters
 --------------------------------*/
-/* number of classifier entries in the 
+/* number of classifier entries in the
    classification table (in case of DSCP classifier) */
 
 #define NUM_OF_CODE_POINTS_MIN              0
@@ -194,7 +199,7 @@ point) classifier parameters
 #define DSCP_CLASSIFIER_DTAG_02            5
 #define DSCP_CLASSIFIER_DTAG_03            6
 
-/* Port Classifier parameters 
+/* Port Classifier parameters
 --------------------------------*/
 
 /* number of entries in the classification table (in case of destination port classifier) */
@@ -208,10 +213,10 @@ point) classifier parameters
 /* def values of D-tags in the destination port classification table*/
 #define PORT_CLASSIFIER_DTAG_DEF            7
 
-/* IP&Port Classifier parameters 
+/* IP&Port Classifier parameters
 --------------------------------*/
 
-/* number of active entries in the 
+/* number of active entries in the
 IP&Port classification table  */
 #define NUM_OF_IPPORT_CLASSIFIERS_MIN       0
 #define NUM_OF_IPPORT_CLASSIFIERS_MAX       16
@@ -237,8 +242,8 @@ IP&Port classification table  */
 #define  WME_ENABLED_DEF                        TI_TRUE
 
 #define  QOS_TRAFFIC_ADM_CTRL_ENABLED_MIN       TI_FALSE
-#define  QOS_TRAFFIC_ADM_CTRL_ENABLED_MAX       TI_TRUE 
-#define  QOS_TRAFFIC_ADM_CTRL_ENABLED_DEF       TI_TRUE 
+#define  QOS_TRAFFIC_ADM_CTRL_ENABLED_MAX       TI_TRUE
+#define  QOS_TRAFFIC_ADM_CTRL_ENABLED_DEF       TI_TRUE
 
 #define  QOS_DESIRED_PS_MODE_MIN            PS_SCHEME_LEGACY
 #define  QOS_DESIRED_PS_MODE_MAX            MAX_PS_SCHEME
@@ -255,7 +260,7 @@ IP&Port classification table  */
 #define  QOS_TX_OP_CONTINUATION_DEF            1
 
 #define  QOS_TX_OP_LIMIT_MIN                   0
-#define  QOS_TX_OP_LIMIT_MAX                   32000     
+#define  QOS_TX_OP_LIMIT_MAX                   32000
 #define  QOS_TX_OP_LIMIT_DEF                   0
 
 /* for packet burst in non-qos protocol */
@@ -264,7 +269,7 @@ IP&Port classification table  */
 #define  QOS_PACKET_BURST_ENABLE_MAX             1
 
 #define  QOS_PACKET_BURST_TXOP_LIMIT_MIN         0
-#define  QOS_PACKET_BURST_TXOP_LIMIT_MAX         1000     
+#define  QOS_PACKET_BURST_TXOP_LIMIT_MAX         1000
 #define  QOS_PACKET_BURST_TXOP_LIMIT_DEF         93
 
 #define  QOS_RX_TIMEOUT_PS_POLL_MIN                0
@@ -484,9 +489,9 @@ IP&Port classification table  */
 
 
 /* MAX_SP_LEN_VALUES
-  00 - all buffered frames 
+  00 - all buffered frames
   01 - 2
-  10 - 4 
+  10 - 4
   11 - 6
 */
 
@@ -514,9 +519,9 @@ IP&Port classification table  */
 #define  HT_11N_ENABLED_MIN                         TI_FALSE
 #define  HT_11N_ENABLED_MAX                         TI_TRUE
 #define  HT_11N_ENABLED_DEF                         TI_TRUE
-                                                    
+
 /* policies: 0 - disable, 1 - initiator, 2 - receiver, 3 -  initiator& receiver. */
-#define  HT_BA_POLICY_MIN                           0    
+#define  HT_BA_POLICY_MIN                           0
 #define  HT_BA_POLICY_MAX                           3
 #define  HT_BA_POLICY_DEF                           0
 
@@ -584,15 +589,15 @@ IP&Port classification table  */
 
 
 /*---------------------------
-      CCX Manager parameters
+      XCC Manager parameters
 -----------------------------*/
-#define CCX_MNGR_ENABLE_MIN             CCX_MODE_DISABLED
-#define CCX_MNGR_ENABLE_MAX             CCX_MODE_STANDBY
-#define CCX_MNGR_ENABLE_DEF             CCX_MODE_ENABLED
+#define XCC_MNGR_ENABLE_MIN             XCC_MODE_DISABLED
+#define XCC_MNGR_ENABLE_MAX             XCC_MODE_STANDBY
+#define XCC_MNGR_ENABLE_DEF             XCC_MODE_ENABLED
 
-#define CCX_TEST_IGNORE_DEAUTH_0_DEF            1
-#define CCX_TEST_IGNORE_DEAUTH_0_MIN            0
-#define CCX_TEST_IGNORE_DEAUTH_0_MAX            1
+#define XCC_TEST_IGNORE_DEAUTH_0_DEF            1
+#define XCC_TEST_IGNORE_DEAUTH_0_MIN            0
+#define XCC_TEST_IGNORE_DEAUTH_0_MAX            1
 
 #define SITE_MGR_ROAMING_TX_RATE_PERCENTAGE_MIN         30
 #define SITE_MGR_ROAMING_TX_RATE_PERCENTAGE_MAX         75
@@ -604,7 +609,7 @@ IP&Port classification table  */
 #define SITE_MGR_ROAMING_RSSI_DEF                       80
 
 #define SITE_MGR_ROAMING_CONS_TX_ERRORS_MIN             1
-#define SITE_MGR_ROAMING_CONS_TX_ERRORS_MAX             200 
+#define SITE_MGR_ROAMING_CONS_TX_ERRORS_MAX             200
 #define SITE_MGR_ROAMING_CONS_TX_ERRORS_DEF             10
 
 /*6 sec*/
@@ -612,7 +617,7 @@ IP&Port classification table  */
 #define SITE_MGR_POSTDISCONNECT_TIMEOUT_MIN     1000
 #define SITE_MGR_POSTDISCONNECT_TIMEOUT_MAX     10000
 
-/* 1 seconds */                                                                
+/* 1 seconds */
 #define CONN_SELF_TIMEOUT_MIN                   (1 * 1000)
 /* 1 minute */
 #define CONN_SELF_TIMEOUT_MAX                   (60 * 1000)
@@ -709,50 +714,50 @@ IP&Port classification table  */
 #define RATE_ADAPTATION_TIMEOUT_DEF             300
 
 #define RATE_ADAPT_HIGH_TRSH_AC_VO_MIN          0
-#define RATE_ADAPT_HIGH_TRSH_AC_VO_MAX          54  
+#define RATE_ADAPT_HIGH_TRSH_AC_VO_MAX          54
 #define RATE_ADAPT_HIGH_TRSH_AC_VO_DEF          0
 
 #define RATE_ADAPT_HIGH_TRSH_AC_VI_MIN          0
-#define RATE_ADAPT_HIGH_TRSH_AC_VI_MAX          54  
+#define RATE_ADAPT_HIGH_TRSH_AC_VI_MAX          54
 #define RATE_ADAPT_HIGH_TRSH_AC_VI_DEF          0
 
 #define RATE_ADAPT_HIGH_TRSH_AC_BE_MIN          0
-#define RATE_ADAPT_HIGH_TRSH_AC_BE_MAX          54  
+#define RATE_ADAPT_HIGH_TRSH_AC_BE_MAX          54
 #define RATE_ADAPT_HIGH_TRSH_AC_BE_DEF          0
 
 #define RATE_ADAPT_HIGH_TRSH_AC_BK_MIN          0
-#define RATE_ADAPT_HIGH_TRSH_AC_BK_MAX          54  
+#define RATE_ADAPT_HIGH_TRSH_AC_BK_MAX          54
 #define RATE_ADAPT_HIGH_TRSH_AC_BK_DEF          0
 
 #define RATE_ADAPT_LOW_TRSH_AC_VO_MIN           0
-#define RATE_ADAPT_LOW_TRSH_AC_VO_MAX           54  
+#define RATE_ADAPT_LOW_TRSH_AC_VO_MAX           54
 #define RATE_ADAPT_LOW_TRSH_AC_VO_DEF           0
 
 #define RATE_ADAPT_LOW_TRSH_AC_VI_MIN           0
-#define RATE_ADAPT_LOW_TRSH_AC_VI_MAX           54  
+#define RATE_ADAPT_LOW_TRSH_AC_VI_MAX           54
 #define RATE_ADAPT_LOW_TRSH_AC_VI_DEF           0
 
 #define RATE_ADAPT_LOW_TRSH_AC_BE_MIN           0
-#define RATE_ADAPT_LOW_TRSH_AC_BE_MAX           54  
+#define RATE_ADAPT_LOW_TRSH_AC_BE_MAX           54
 #define RATE_ADAPT_LOW_TRSH_AC_BE_DEF           0
 
 #define RATE_ADAPT_LOW_TRSH_AC_BK_MIN           0
-#define RATE_ADAPT_LOW_TRSH_AC_BK_MAX           54  
+#define RATE_ADAPT_LOW_TRSH_AC_BK_MAX           54
 #define RATE_ADAPT_LOW_TRSH_AC_BK_DEF           0
 
 #define CTRL_DATA_RATE_POLICY_USER_SHORT_RETRY_LIMIT_MIN 1
 #define CTRL_DATA_RATE_POLICY_USER_SHORT_RETRY_LIMIT_MAX 255
 #define CTRL_DATA_RATE_POLICY_USER_SHORT_RETRY_LIMIT_DEF 10
 
-#define CTRL_DATA_RATE_POLICY_USER_LONG_RETRY_LIMIT_MIN 1  
+#define CTRL_DATA_RATE_POLICY_USER_LONG_RETRY_LIMIT_MIN 1
 #define CTRL_DATA_RATE_POLICY_USER_LONG_RETRY_LIMIT_MAX 255
-#define CTRL_DATA_RATE_POLICY_USER_LONG_RETRY_LIMIT_DEF 10  
+#define CTRL_DATA_RATE_POLICY_USER_LONG_RETRY_LIMIT_DEF 10
 
 #define CTRL_DATA_RATE_POLICY_USER_EN_DIS_MASK_MIN			0
 #define CTRL_DATA_RATE_POLICY_USER_EN_DIS_MASK_MAX 			0xFFFFFFFF
-#define CTRL_DATA_RATE_POLICY_USER_EN_DIS_MASK_CCK_DEF	 	0x0000001F	   		
-#define CTRL_DATA_RATE_POLICY_USER_EN_DIS_MASK_OFDM_DEF	 	0x00001FEF	   		
-#define CTRL_DATA_RATE_POLICY_USER_EN_DIS_MASK_OFDMA_DEF	0x00001FE0	   		
+#define CTRL_DATA_RATE_POLICY_USER_EN_DIS_MASK_CCK_DEF	 	0x0000001F
+#define CTRL_DATA_RATE_POLICY_USER_EN_DIS_MASK_OFDM_DEF	 	0x00001FEF
+#define CTRL_DATA_RATE_POLICY_USER_EN_DIS_MASK_OFDMA_DEF	0x00001FE0
 #define CTRL_DATA_RATE_POLICY_USER_EN_DIS_MASK_OFDMN_DEF	0x001FFFEF
 
 #define CTRL_DATA_RATE_POLICY_USER_BITMASK_AC_BK	CTRL_DATA_RATE_POLICY_USER_EN_DIS_MASK_MAX
@@ -906,7 +911,7 @@ IP&Port classification table  */
 
 /* Tx Power table (Power level to Dbm)*/
 #define TX_POWER_LEVEL_TABLE_24                 "21,13,10,7"
-#define TX_POWER_LEVEL_TABLE_5                  "20,12,9,6" 
+#define TX_POWER_LEVEL_TABLE_5                  "20,12,9,6"
 
 /* Scan concentrator init parameters - number of entries in app scan result table */
 #define SCAN_CNCN_MIN_DURATION_FOR_OS_SCANS_DEF 5
@@ -926,7 +931,7 @@ IP&Port classification table  */
 /* Current BSS init paramaters - keep alive default interval */
 #define NULL_KL_PERIOD_DEF      10
 #define NULL_KL_PERIOD_MIN      0
-#define NULL_KL_PERIOD_MAX      3600       
+#define NULL_KL_PERIOD_MAX      3600
 
 /* Context-Engine init paramaters */
 #define CONTEXT_SWITCH_REQUIRED_DEF     TI_TRUE
@@ -992,33 +997,33 @@ IP&Port classification table  */
 
 #define SOFT_GEMINI_HV3_MAX_OVERRIDE_MIN       0
 #define SOFT_GEMINI_HV3_MAX_OVERRIDE_MAX       10
-#define SOFT_GEMINI_HV3_MAX_OVERRIDE_DEF       0 
+#define SOFT_GEMINI_HV3_MAX_OVERRIDE_DEF       0
 
 #define SOFT_GEMINI_ANTENNA_CONFIGURATION_MIN       0
 #define SOFT_GEMINI_ANTENNA_CONFIGURATION_MAX       1
 #define SOFT_GEMINI_ANTENNA_CONFIGURATION_DEF       0
 
-#define SOFT_GEMINI_BEACON_MISS_PERCENT_MIN       0 
+#define SOFT_GEMINI_BEACON_MISS_PERCENT_MIN       0
 #define SOFT_GEMINI_BEACON_MISS_PERCENT_MAX       100
 #define SOFT_GEMINI_BEACON_MISS_PERCENT_DEF       60
 
-#define SOFT_GEMINI_RATE_ADAPT_THRESH_MIN       1 
+#define SOFT_GEMINI_RATE_ADAPT_THRESH_MIN       1
 #define SOFT_GEMINI_RATE_ADAPT_THRESH_MAX       54
 #define SOFT_GEMINI_RATE_ADAPT_THRESH_DEF       12
 
-#define SOFT_GEMINI_RATE_ADAPT_SNR_MIN       0 
+#define SOFT_GEMINI_RATE_ADAPT_SNR_MIN       0
 #define SOFT_GEMINI_RATE_ADAPT_SNR_MAX       255
 #define SOFT_GEMINI_RATE_ADAPT_SNR_DEF       1
 
-#define SOFT_GEMINI_AP_BEACON_MISS_TX_MIN       0 
+#define SOFT_GEMINI_AP_BEACON_MISS_TX_MIN       0
 #define SOFT_GEMINI_AP_BEACON_MISS_TX_MAX       255
 #define SOFT_GEMINI_AP_BEACON_MISS_TX_DEF       3
 
-#define SOFT_GEMINI_RX_WINDOW_LENGTH_MIN       0 
+#define SOFT_GEMINI_RX_WINDOW_LENGTH_MIN       0
 #define SOFT_GEMINI_RX_WINDOW_LENGTH_MAX       50
 #define SOFT_GEMINI_RX_WINDOW_LENGTH_DEF       6
 
-#define SOFT_GEMINI_AP_CONNECTION_PROTECTION_TIME_MIN       0 
+#define SOFT_GEMINI_AP_CONNECTION_PROTECTION_TIME_MIN       0
 #define SOFT_GEMINI_AP_CONNECTION_PROTECTION_TIME_MAX       5000
 #define SOFT_GEMINI_AP_CONNECTION_PROTECTION_TIME_DEF       50
 
@@ -1121,15 +1126,15 @@ IP&Port classification table  */
 #define SOFT_GEMINI_WLAN_ACTIVE_MAX_BT_ACL_SLAVE_EDR_MAX 	1000
 #define SOFT_GEMINI_WLAN_ACTIVE_MAX_BT_ACL_SLAVE_EDR_DEF 	15
 
-#define SOFT_GEMINI_WLAN_ACTIVE_BT_ACL_SLAVE_MIN_BR_MIN    0    
+#define SOFT_GEMINI_WLAN_ACTIVE_BT_ACL_SLAVE_MIN_BR_MIN    0
 #define SOFT_GEMINI_WLAN_ACTIVE_BT_ACL_SLAVE_MIN_BR_MAX    1000
 #define SOFT_GEMINI_WLAN_ACTIVE_BT_ACL_SLAVE_MIN_BR_DEF    20
 
-#define SOFT_GEMINI_WLAN_ACTIVE_BT_ACL_SLAVE_MAX_BR_MIN    0    
+#define SOFT_GEMINI_WLAN_ACTIVE_BT_ACL_SLAVE_MAX_BR_MIN    0
 #define SOFT_GEMINI_WLAN_ACTIVE_BT_ACL_SLAVE_MAX_BR_MAX    1000
 #define SOFT_GEMINI_WLAN_ACTIVE_BT_ACL_SLAVE_MAX_BR_DEF    50
 
-#define SOFT_GEMINI_WLAN_ACTIVE_MAX_BT_ACL_SLAVE_BR_MIN    0    
+#define SOFT_GEMINI_WLAN_ACTIVE_MAX_BT_ACL_SLAVE_BR_MIN    0
 #define SOFT_GEMINI_WLAN_ACTIVE_MAX_BT_ACL_SLAVE_BR_MAX    1000
 #define SOFT_GEMINI_WLAN_ACTIVE_MAX_BT_ACL_SLAVE_BR_DEF    10
 
@@ -1184,36 +1189,36 @@ IP&Port classification table  */
 #define SOFT_GEMINI_TEMP6_PARAM_DEF 	1
 
 
-#define WIFI_WMM_PS_MIN                         0  
+#define WIFI_WMM_PS_MIN                         0
 #define WIFI_WMM_PS_MAX                         1
-#define WIFI_WMM_PS_DEF                         0 
-#define SOFT_GEMINI_PARAMS_ALLOW_PA_SD_MIN                  (0)  
+#define WIFI_WMM_PS_DEF                         0
+#define SOFT_GEMINI_PARAMS_ALLOW_PA_SD_MIN                  (0)
 #define SOFT_GEMINI_PARAMS_ALLOW_PA_SD_MAX                  (1)
-#define SOFT_GEMINI_PARAMS_ALLOW_PA_SD_DEF                  (1) 
+#define SOFT_GEMINI_PARAMS_ALLOW_PA_SD_DEF                  (1)
 
-#define SOFT_GEMINI_PARAMS_TIME_BEFORE_BEACON_MIN           (0)  
+#define SOFT_GEMINI_PARAMS_TIME_BEFORE_BEACON_MIN           (0)
 #define SOFT_GEMINI_PARAMS_TIME_BEFORE_BEACON_MAX           (20000)
-#define SOFT_GEMINI_PARAMS_TIME_BEFORE_BEACON_DEF           (6300) 
+#define SOFT_GEMINI_PARAMS_TIME_BEFORE_BEACON_DEF           (6300)
 
-#define SOFT_GEMINI_PARAMS_HPDM_MAX_GUARD_MIN           (0)  
+#define SOFT_GEMINI_PARAMS_HPDM_MAX_GUARD_MIN           (0)
 #define SOFT_GEMINI_PARAMS_HPDM_MAX_GUARD_MAX           (50000)
-#define SOFT_GEMINI_PARAMS_HPDM_MAX_GUARD_DEF           (1050) 
+#define SOFT_GEMINI_PARAMS_HPDM_MAX_GUARD_DEF           (1050)
 
-#define SOFT_GEMINI_PARAMS_TIME_OUT_NEXT_WLAN_MIN           (100)  
+#define SOFT_GEMINI_PARAMS_TIME_OUT_NEXT_WLAN_MIN           (100)
 #define SOFT_GEMINI_PARAMS_TIME_OUT_NEXT_WLAN_MAX           (50000)
-#define SOFT_GEMINI_PARAMS_TIME_OUT_NEXT_WLAN_DEF           (2550) 
+#define SOFT_GEMINI_PARAMS_TIME_OUT_NEXT_WLAN_DEF           (2550)
 
-#define SOFT_GEMINI_PARAMS_AUTO_MODE_NO_CTS_MIN         (0)  
+#define SOFT_GEMINI_PARAMS_AUTO_MODE_NO_CTS_MIN         (0)
 #define SOFT_GEMINI_PARAMS_AUTO_MODE_NO_CTS_MAX         (1)
-#define SOFT_GEMINI_PARAMS_AUTO_MODE_NO_CTS_DEF         (0) 
+#define SOFT_GEMINI_PARAMS_AUTO_MODE_NO_CTS_DEF         (0)
 
-#define SOFT_GEMINI_PARAMS_BT_HP_RESPECTED_MIN          (0)  
+#define SOFT_GEMINI_PARAMS_BT_HP_RESPECTED_MIN          (0)
 #define SOFT_GEMINI_PARAMS_BT_HP_RESPECTED_MAX          (20)
-#define SOFT_GEMINI_PARAMS_BT_HP_RESPECTED_DEF          (3) 
+#define SOFT_GEMINI_PARAMS_BT_HP_RESPECTED_DEF          (3)
 
-#define SOFT_GEMINI_PARAMS_WLAN_RX_MIN_RATE_MIN         (0)  
+#define SOFT_GEMINI_PARAMS_WLAN_RX_MIN_RATE_MIN         (0)
 #define SOFT_GEMINI_PARAMS_WLAN_RX_MIN_RATE_MAX         (54)
-#define SOFT_GEMINI_PARAMS_WLAN_RX_MIN_RATE_DEF         (24) 
+#define SOFT_GEMINI_PARAMS_WLAN_RX_MIN_RATE_DEF         (24)
 
 /* CoexActivity table */
 #define COEX_ACTIVITY_PARAMS_COEX_IP_MIN               (0)
@@ -1241,9 +1246,9 @@ IP&Port classification table  */
 #define COEX_ACTIVITY_PARAMS_MAX_SERVICE_DEF           (0)
 
 /* FM Coexistence */
-#define FM_COEX_ENABLE_DEF                             TI_TRUE 
-#define FM_COEX_ENABLE_MIN                             TI_FALSE  
-#define FM_COEX_ENABLE_MAX                             TI_TRUE 
+#define FM_COEX_ENABLE_DEF                             TI_TRUE
+#define FM_COEX_ENABLE_MIN                             TI_FALSE
+#define FM_COEX_ENABLE_MAX                             TI_TRUE
 
 #define FM_COEX_SWALLOW_PERIOD_DEF                     0xFF
 #define FM_COEX_SWALLOW_PERIOD_MIN                     0
@@ -1253,19 +1258,19 @@ IP&Port classification table  */
 #define FM_COEX_N_DIVIDER_FREF_SET1_MIN                0
 #define FM_COEX_N_DIVIDER_FREF_SET1_MAX                0xFF
 
-#define FM_COEX_N_DIVIDER_FREF_SET2_DEF                0xFF                  
-#define FM_COEX_N_DIVIDER_FREF_SET2_MIN                0   
+#define FM_COEX_N_DIVIDER_FREF_SET2_DEF                0xFF
+#define FM_COEX_N_DIVIDER_FREF_SET2_MIN                0
 #define FM_COEX_N_DIVIDER_FREF_SET2_MAX                0xFF
 
-#define FM_COEX_M_DIVIDER_FREF_SET1_DEF                0xFFFF   
-#define FM_COEX_M_DIVIDER_FREF_SET1_MIN                0   
+#define FM_COEX_M_DIVIDER_FREF_SET1_DEF                0xFFFF
+#define FM_COEX_M_DIVIDER_FREF_SET1_MIN                0
 #define FM_COEX_M_DIVIDER_FREF_SET1_MAX                0xFFFF
 
-#define FM_COEX_M_DIVIDER_FREF_SET2_DEF                0xFFFF 
-#define FM_COEX_M_DIVIDER_FREF_SET2_MIN                0    
+#define FM_COEX_M_DIVIDER_FREF_SET2_DEF                0xFFFF
+#define FM_COEX_M_DIVIDER_FREF_SET2_MIN                0
 #define FM_COEX_M_DIVIDER_FREF_SET2_MAX                0xFFFF
 
-#define FM_COEX_PLL_STABILIZATION_TIME_DEF             0xFFFFFFFF 
+#define FM_COEX_PLL_STABILIZATION_TIME_DEF             0xFFFFFFFF
 #define FM_COEX_PLL_STABILIZATION_TIME_MIN             0
 #define FM_COEX_PLL_STABILIZATION_TIME_MAX             0xFFFFFFFF
 
@@ -1292,9 +1297,9 @@ IP&Port classification table  */
 #define RATE_MNG_PER_ADD_MIN             0
 #define RATE_MNG_PER_ADD_MAX             65536
 
-#define RATE_MNG_PER_TH1_DEF             2048                       
+#define RATE_MNG_PER_TH1_DEF             2048
 #define RATE_MNG_PER_TH1_MIN             0
-#define RATE_MNG_PER_TH1_MAX             65536 
+#define RATE_MNG_PER_TH1_MAX             65536
 
 #define RATE_MNG_PER_TH2_DEF             4096
 #define RATE_MNG_PER_TH2_MIN             0
@@ -1349,7 +1354,7 @@ IP&Port classification table  */
 #define RATE_MNG_MAX_STR_LEN  255
 
 
-#define ROLE_AP_BEACON_TX_TIMEOUT_DEF		20		
+#define ROLE_AP_BEACON_TX_TIMEOUT_DEF		20
 #define ROLE_AP_BEACON_TX_TIMEOUT_MIN		0
 #define ROLE_AP_BEACON_TX_TIMEOUT_MAX		255
 
@@ -1463,12 +1468,12 @@ IP&Port classification table  */
 
 #define RADIO_FREF_CLOCK_MIN                        		0	/* 19.2, 26, 38.4, 52 MHz */
 #define RADIO_FREF_CLOCK_DEF                        		2
-#define RADIO_FREF_CLOCK_MAX                        		31   
+#define RADIO_FREF_CLOCK_MAX                        		31
 
 #ifdef TNETW1283
 #define RADIO_TCXO_CLOCK_MIN                        		0	/* 19.2, 26, 38.4, 52 MHz, 38.4 XTAL, 16.368, 32.736 */
 #define RADIO_TCXO_CLOCK_DEF                        		1
-#define RADIO_TCXO_CLOCK_MAX                        		6   
+#define RADIO_TCXO_CLOCK_MAX                        		6
 #define RADIO_TCXO_CLOCK_SETTING_TIME_MIN    				0
 #define RADIO_TCXO_CLOCK_SETTING_TIME_DEF    				5
 #define RADIO_TCXO_CLOCK_SETTING_TIME_MAX    				15
@@ -1477,7 +1482,7 @@ IP&Port classification table  */
 #define RADIO_TCXO_CLOCK_LDO_VOLTAGE_MAX    			    2
 #endif
 
-/* 
+/*
  * Driver-Main parameters values
  */
 /* Set WLAN driver thread priority - Note that this is an OS dependent parameter! */
@@ -1501,7 +1506,7 @@ IP&Port classification table  */
  *****************************************************************************/
 /** \enum PowerMode_e */
 /* MUST be sync with OS_802_11_POWER_PROFILE */
-typedef enum 
+typedef enum
 {
     POWER_MODE_AUTO,        /**< In this mode the power manager module is toggle states
                              * (ACTIVE, SHORT_DOZE and LONG_DOZE) by its own inner algorithm.
@@ -1524,8 +1529,8 @@ typedef enum
                              * a lot of time in ELP-Doze, and the F/W rarely wakes up the host.
                              */
 
-    POWER_MODE_PS_ONLY,     /**< In this mode the system is setting the Ps as ON. 
-                             * the ELP state is changing to SHORT or LONG DOZE (According to last configuration). 
+    POWER_MODE_PS_ONLY,     /**< In this mode the system is setting the Ps as ON.
+                             * the ELP state is changing to SHORT or LONG DOZE (According to last configuration).
                              * Auto mode won't be used here.
                              */
 
@@ -1534,13 +1539,13 @@ typedef enum
 
 
 /** \enum PowerMgr_Priority_e */
-typedef enum 
+typedef enum
 {
     POWER_MANAGER_USER_PRIORITY,           /**< indicates the default user priority. */
     POWER_MANAGER_SG_PRIORITY,             /**< Indicate the Soft Gemini priority */
     POWER_MANAGER_REAUTH_PRIORITY,         /**< Indicate 802.1x reauthentication priority */
     POWER_MANAGER_PS_POLL_FAILURE_PRIORITY,/**< After receiving the PsPoll failure event */
-    POWER_MANAGER_MAX_PRIORITY                                                      
+    POWER_MANAGER_MAX_PRIORITY
 }PowerMgr_Priority_e;
 
 
@@ -1621,7 +1626,7 @@ enum PowerMgr_registryDefinitions
     /*
      bit14 - "1" send Prob Request in PBCC
      bit15 - "1" short preamble, "0" long preammle
-     bit0:bit12  Rates 
+     bit0:bit12  Rates
      */
     POWER_MGMNT_NULL_PACKET_RATE_MOD_DEF_VALUE =  ((1<<DRV_RATE_1M) | (1<<DRV_RATE_2M)),
     POWER_MGMNT_NULL_PACKET_RATE_MOD_MIN_VALUE = 0,
@@ -1634,7 +1639,7 @@ enum PowerMgr_registryDefinitions
 	POWER_MGMNT_RE_AUTH_ACTIVE_PRIO_DEF_VALUE = 0,
     POWER_MGMNT_RE_AUTH_ACTIVE_PRIO_MIN_VALUE = 0,
     POWER_MGMNT_RE_AUTH_ACTIVE_PRIO_MAX_VALUE = 1,
-    
+
 	/*BET*/
     POWER_MGMNT_BET_ENABLE_MIN = 0,
     POWER_MGMNT_BET_ENABLE_MAX = 1,

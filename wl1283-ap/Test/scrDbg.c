@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * scrDbg.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file  scrDbg.c
  *  \brief This file include the SCR debug module implementation
  *
@@ -40,12 +45,12 @@
 
 #define MAX_DESC_LENGTH     50
 
-char clientDesc[ SCR_CID_NO_CLIENT + 1 ][ MAX_DESC_LENGTH ] = 
+char clientDesc[ SCR_CID_NO_CLIENT + 1 ][ MAX_DESC_LENGTH ] =
 {
     "SCR_CID_APP_SCAN",
     "SCR_CID_DRIVER_FG_SCAN",
     "SCR_CID_CONT_SCAN",
-    "SCR_CID_CCX_MEASURE",
+    "SCR_CID_XCC_MEASURE",
     "SCR_CID_BASIC_MEASURE",
     "SCR_CID_CONNECT",
     "SCR_CID_IMMED_SCAN",
@@ -54,7 +59,7 @@ char clientDesc[ SCR_CID_NO_CLIENT + 1 ][ MAX_DESC_LENGTH ] =
     "SCR_CID_NO_CLIENT"
 };
 
-char requestStatusDesc[ 4 ][ MAX_DESC_LENGTH ] = 
+char requestStatusDesc[ 4 ][ MAX_DESC_LENGTH ] =
 {
     "SCR_CRS_RUN",
     "SCR_CRS_PEND",
@@ -62,7 +67,7 @@ char requestStatusDesc[ 4 ][ MAX_DESC_LENGTH ] =
     "SCR_CRS_FW_RESET"
 };
 
-char pendReasonDesc[ SCR_PR_NONE + 1 ][ MAX_DESC_LENGTH ] = 
+char pendReasonDesc[ SCR_PR_NONE + 1 ][ MAX_DESC_LENGTH ] =
 {
     "SCR_PR_OTHER_CLIENT_ABORTING",
     "SCR_PR_OTHER_CLIENT_RUNNING",
@@ -80,7 +85,7 @@ char groupDesc[ SCR_GID_NUM_OF_GROUPS ][ MAX_DESC_LENGTH ] =
     "SCR_GID_ROAMING"
 };
 
-char stateDesc[ SCR_CS_ABORTING + 1 ][ MAX_DESC_LENGTH ] = 
+char stateDesc[ SCR_CS_ABORTING + 1 ][ MAX_DESC_LENGTH ] =
 {
     "SCR_CS_IDLE",
     "SCR_CS_PENDING",
@@ -88,7 +93,7 @@ char stateDesc[ SCR_CS_ABORTING + 1 ][ MAX_DESC_LENGTH ] =
     "SCR_CS_ABORTING"
 };
 
-char modeDesc[ SCR_MID_NUM_OF_MODES][ MAX_DESC_LENGTH ] = 
+char modeDesc[ SCR_MID_NUM_OF_MODES][ MAX_DESC_LENGTH ] =
 {
     "SCR_MID_NORMAL",
     "SCR_MID_SG",
@@ -119,19 +124,19 @@ void scrDebugFunction( TI_HANDLE hScr, TI_UINT32 funcType, void *pParam )
         break;
 
     case DBG_SCR_CLIENT_REQUEST_SERVING_CHANNEL:
-        requestAsClient( hScr, *((EScrClientId*)pParam), SCR_RESOURCE_SERVING_CHANNEL );  
+        requestAsClient( hScr, *((EScrClientId*)pParam), SCR_RESOURCE_SERVING_CHANNEL );
         break;
 
     case DBG_SCR_CLIENT_RELEASE_SERVING_CHANNEL:
-        releaseAsClient( hScr, *((EScrClientId*)pParam), SCR_RESOURCE_SERVING_CHANNEL );  
+        releaseAsClient( hScr, *((EScrClientId*)pParam), SCR_RESOURCE_SERVING_CHANNEL );
         break;
 
     case DBG_SCR_CLIENT_REQUEST_PERIODIC_SCAN:
-        requestAsClient( hScr, *((EScrClientId*)pParam), SCR_RESOURCE_PERIODIC_SCAN ); 
+        requestAsClient( hScr, *((EScrClientId*)pParam), SCR_RESOURCE_PERIODIC_SCAN );
         break;
 
     case DBG_SCR_CLIENT_RELEASE_PERIODIC_SCAN:
-        releaseAsClient( hScr, *((EScrClientId*)pParam), SCR_RESOURCE_PERIODIC_SCAN ); 
+        releaseAsClient( hScr, *((EScrClientId*)pParam), SCR_RESOURCE_PERIODIC_SCAN );
         break;
 
     case DBG_SCR_SET_GROUP:
@@ -256,18 +261,18 @@ void printSCRObject( TI_HANDLE hScr )
     int i;
 
     WLAN_OS_REPORT( ("SCR current group:%s, mode: %s, serving channel owner:%s, periodic scan owner: %s "
-                     "within request:%s\n", 
+                     "within request:%s\n",
                      groupDesc[ pScr->currentGroup ],modeDesc[ pScr->currentMode ],
                      clientDesc[ pScr->runningClient[ SCR_RESOURCE_SERVING_CHANNEL ] ],
                      clientDesc[ pScr->runningClient[ SCR_RESOURCE_PERIODIC_SCAN ] ],
                      (TI_TRUE == pScr->statusNotficationPending ? "Yes" : "No" )) );
-    
+
     WLAN_OS_REPORT( ("%-22s %-15s %-15s %-15s %-15s\n", "Client", "State (SC)", "State (PS)", "Pend Reason (SC)", "Pend Reason (PS)") );
     WLAN_OS_REPORT( ("----------------------------------------------------------------------\n"));
     for ( i = 0; i < SCR_CID_NUM_OF_CLIENTS; i++ )
     {
         WLAN_OS_REPORT( ("%-22s %-15s %-15s %-15s %-15s \n",
-                         clientDesc[ i ], stateDesc[ pScr->clientArray[ i ].state[ SCR_RESOURCE_SERVING_CHANNEL ] ], 
+                         clientDesc[ i ], stateDesc[ pScr->clientArray[ i ].state[ SCR_RESOURCE_SERVING_CHANNEL ] ],
                          stateDesc[ pScr->clientArray[ i ].state[ SCR_RESOURCE_PERIODIC_SCAN ] ],
                          pendReasonDesc[ pScr->clientArray[ i ].currentPendingReason[ SCR_RESOURCE_SERVING_CHANNEL ] ],
                          pendReasonDesc[ pScr->clientArray[ i ].currentPendingReason[ SCR_RESOURCE_PERIODIC_SCAN ] ]) );

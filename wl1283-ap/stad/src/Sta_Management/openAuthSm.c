@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * openAuthSm.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file authSM.c
  *  \brief 802.11 authentication SM source
  *
@@ -80,7 +85,7 @@
 *
 * openAuth_smConfig - configure a new authentication SM
 *
-* \b Description: 
+* \b Description:
 *
 * Configure a new authentication SM.
 *
@@ -134,7 +139,7 @@ TI_STATUS openAuth_Config(TI_HANDLE hAuth, TI_HANDLE hOs)
 		 {OPEN_AUTH_SM_STATE_AUTH, (fsm_Action_t)openAuth_smActionUnexpected},
 		 {OPEN_AUTH_SM_STATE_AUTH, (fsm_Action_t)openAuth_smActionUnexpected}
 		}};
-	
+
 
 	if (hAuth == NULL)
 	{
@@ -142,16 +147,16 @@ TI_STATUS openAuth_Config(TI_HANDLE hAuth, TI_HANDLE hOs)
 	}
 
 	pHandle = (auth_t*)hAuth;
-	
-	status = fsm_Config(pHandle->pAuthSm, &openAuth_smMatrix[0][0], 
+
+	status = fsm_Config(pHandle->pAuthSm, &openAuth_smMatrix[0][0],
 						OPEN_AUTH_SM_NUM_STATES, OPEN_AUTH_SM_NUM_EVENTS, auth_osSMEvent, hOs);
 	if (status != TI_OK)
-	{ 
+	{
 		return TI_NOK;
 	}
 
 	pHandle->currentState = OPEN_AUTH_SM_STATE_IDLE;
-	
+
 	return TI_OK;
 }
 
@@ -180,7 +185,7 @@ TI_STATUS auth_osSMEvent(TI_UINT8 *currentState, TI_UINT8 event, TI_HANDLE hAuth
 *
 * openAuth_Recv - Recive a message from the AP
 *
-* \b Description: 
+* \b Description:
 *
 * Parse a message form the AP and perform the appropriate event.
 *
@@ -195,7 +200,7 @@ TI_STATUS auth_osSMEvent(TI_UINT8 *currentState, TI_UINT8 event, TI_HANDLE hAuth
 * \sa openAuth_Start, openAuth_Stop
 */
 TI_STATUS openAuth_Recv(TI_HANDLE hAuth, mlmeFrameInfo_t *pFrame)
-{ 
+{
 	TI_STATUS 			status;
 	auth_t			*pHandle;
 	TI_UINT16			authAlgo;
@@ -206,7 +211,7 @@ TI_STATUS openAuth_Recv(TI_HANDLE hAuth, mlmeFrameInfo_t *pFrame)
 	{
 		return TI_NOK;
 	}
-	
+
 	/* check response status */
 	authAlgo = ENDIAN_HANDLE_WORD(pFrame->content.auth.authAlgo);
 	if ((authAlgo != AUTH_LEGACY_OPEN_SYSTEM) &&
@@ -216,7 +221,7 @@ TRACE0(pHandle->hReport, REPORT_SEVERITY_SM, "OPEN_AUTH_SM: DEBUG recieved authe
         rsn_reportAuthFailure(pHandle->hRsn, RSN_AUTH_STATUS_INVALID_TYPE);
         return TI_NOK;
 	}
-    
+
     if ((pHandle->authType==AUTH_LEGACY_RESERVED1) && (authAlgo !=AUTH_LEGACY_RESERVED1))
     {
         rsn_reportAuthFailure(pHandle->hRsn, RSN_AUTH_STATUS_INVALID_TYPE);
@@ -281,7 +286,7 @@ TI_STATUS openAuth_smStopWait(auth_t *hAuth)
 
 	return status;
 }
- 
+
 TI_STATUS openAuth_smSuccessWait(auth_t *hAuth)
 {
 	TI_STATUS		status;
@@ -291,7 +296,7 @@ TI_STATUS openAuth_smSuccessWait(auth_t *hAuth)
 
 	return status;
 }
- 
+
 TI_STATUS openAuth_smFailureWait(auth_t *hAuth)
 {
 	TI_STATUS		status;
@@ -351,9 +356,9 @@ TI_STATUS openAuth_smResetRetry(auth_t *hAuth)
 	{
 		return TI_NOK;
 	}
-	
+
 	hAuth->retryCount = 0;
-	
+
 	return TI_OK;
 }
 
@@ -363,9 +368,9 @@ TI_STATUS openAuth_smIncRetry(auth_t *hAuth)
 	{
 		return TI_NOK;
 	}
-	
+
 	hAuth->retryCount++;
-	
+
 	return TI_OK;
 }
 
@@ -385,12 +390,12 @@ TI_STATUS openAuth_smReportSuccess(auth_t *hAuth)
 TI_STATUS openAuth_smReportFailure(auth_t *hAuth)
 {
 	TI_STATUS 		status;
-    
+
 	if (hAuth == NULL)
 	{
 		return TI_NOK;
 	}
-	
+
     status = mlme_reportAuthStatus(hAuth->hMlme, hAuth->authData.status);
 
 	return status;
@@ -402,7 +407,7 @@ TI_STATUS openAuth_smStartTimer(auth_t *hAuth)
 	{
 		return TI_NOK;
 	}
-	
+
     tmr_StartTimer (hAuth->hAuthSmTimer,
                     auth_smTimeout,
                     (TI_HANDLE)hAuth,
@@ -410,7 +415,7 @@ TI_STATUS openAuth_smStartTimer(auth_t *hAuth)
                     TI_FALSE);
 
 	return TI_OK;
-}                        
+}
 
 TI_STATUS openAuth_smStopTimer(auth_t *hAuth)
 {
@@ -418,7 +423,7 @@ TI_STATUS openAuth_smStopTimer(auth_t *hAuth)
 	{
 		return TI_NOK;
 	}
-	
+
 	tmr_StopTimer (hAuth->hAuthSmTimer);
 
 	return TI_OK;

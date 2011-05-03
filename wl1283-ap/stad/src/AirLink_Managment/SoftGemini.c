@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * SoftGemini.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file softGemini.c
  *  \brief BlueTooth-Wlan coexistence module interface
  *
@@ -89,12 +94,12 @@ static char* SoftGemini_ConvertModeToString(ESoftGeminiEnableModes SoftGeminiEna
 DESCRIPTION: SoftGemini module, called by the conn_Infra on connection
 				performs the following:
 				-	Enables SG if needed
-                                -       Enables the SG power mode				                                                                                                   
-INPUT:      hSoftGemini -		Handle to SoftGemini		
+                                -       Enables the SG power mode
+INPUT:      hSoftGemini -		Handle to SoftGemini
 
-OUTPUT:		
+OUTPUT:
 
-RETURN:     
+RETURN:
 
 ************************************************************************/
 void SoftGemini_SetPSmode(TI_HANDLE hSoftGemini)
@@ -103,7 +108,7 @@ void SoftGemini_SetPSmode(TI_HANDLE hSoftGemini)
 
 	if (pSoftGemini)
 	{
-		if (pSoftGemini->bDriverEnabled) 
+		if (pSoftGemini->bDriverEnabled)
 		{
 			/* Check if coexAutoPsMode is enabled to enter/exit P.S */
 			if ( pSoftGemini->SoftGeminiParam.coexParams[SOFT_GEMINI_AUTO_PS_MODE])
@@ -111,12 +116,12 @@ void SoftGemini_SetPSmode(TI_HANDLE hSoftGemini)
 				SoftGemini_SetPS(pSoftGemini);
 			}
 		}
-		if (pSoftGemini->bProtectiveMode) 
+		if (pSoftGemini->bProtectiveMode)
 		{
 			SoftGemini_EnableProtectiveMode(hSoftGemini);
 		}
 	}
-	else 
+	else
         {
           TRACE0(pSoftGemini->hReport, REPORT_SEVERITY_ERROR, "  SoftGemini_SetPSmode() - Error hSoftGemini= NULL \n");
         }
@@ -125,15 +130,15 @@ void SoftGemini_SetPSmode(TI_HANDLE hSoftGemini)
 /************************************************************************
  *                        SoftGemini_unSetPSmode									*
  ************************************************************************
-DESCRIPTION: SoftGemini module, called by the conn_Infra after disconnecting 
+DESCRIPTION: SoftGemini module, called by the conn_Infra after disconnecting
 				performs the following:
 				-	Disables the SG
-                                -       Disables the SG power mode				                                                                                                   
-INPUT:      hSoftGemini -		Handle to SoftGemini		
+                                -       Disables the SG power mode
+INPUT:      hSoftGemini -		Handle to SoftGemini
 
-OUTPUT:		
+OUTPUT:
 
-RETURN:     
+RETURN:
 
 ************************************************************************/
 void SoftGemini_unSetPSmode(TI_HANDLE hSoftGemini)
@@ -142,7 +147,7 @@ void SoftGemini_unSetPSmode(TI_HANDLE hSoftGemini)
 
     if (pSoftGemini)
 	{
-		if (pSoftGemini->bDriverEnabled) 
+		if (pSoftGemini->bDriverEnabled)
 		{
 			/* Check if coexAutoPsMode is enabled to enter/exit P.S */
 			if ( pSoftGemini->SoftGeminiParam.coexParams[SOFT_GEMINI_AUTO_PS_MODE])
@@ -150,7 +155,7 @@ void SoftGemini_unSetPSmode(TI_HANDLE hSoftGemini)
 				SoftGemini_unSetPS(pSoftGemini);
 			}
 		}
-		if (pSoftGemini->bProtectiveMode) 
+		if (pSoftGemini->bProtectiveMode)
 		{
 			SoftGemini_RemoveProtectiveModeParameters(hSoftGemini);
 		}
@@ -164,14 +169,14 @@ void SoftGemini_unSetPSmode(TI_HANDLE hSoftGemini)
 /************************************************************************
  *                        SoftGemini_create									*
  ************************************************************************
-DESCRIPTION: SoftGemini module creation function, called by the config mgr in creation phase 
+DESCRIPTION: SoftGemini module creation function, called by the config mgr in creation phase
 				performs the following:
 				-	Allocate the SoftGemini handle
-				                                                                                                   
-INPUT:      hOs -			Handle to OS		
+
+INPUT:      hOs -			Handle to OS
 
 
-OUTPUT:		
+OUTPUT:
 
 RETURN:     Handle to the SoftGemini module on success, NULL otherwise
 
@@ -184,7 +189,7 @@ TI_HANDLE SoftGemini_create(TI_HANDLE hOs)
 	pSoftGemini = os_memoryAlloc(hOs,sizeof(SoftGemini_t));
 
 	if (pSoftGemini == NULL)
-		return NULL;				
+		return NULL;
 
 	pSoftGemini->hOs = hOs;
 
@@ -198,10 +203,10 @@ DESCRIPTION: SoftGemini module init function, called by the rvMain in init phase
 				performs the following:
 				-	Init local variables
 				-	Init the handles to be used by the module
-                                                                                                   
-INPUT:       pStadHandles  - The driver modules handles		
 
-OUTPUT:		
+INPUT:       pStadHandles  - The driver modules handles
+
+OUTPUT:
 
 RETURN:      void
 ************************************************************************/
@@ -246,24 +251,24 @@ TI_STATUS SoftGemini_SetDefaults (TI_HANDLE hSoftGemini, SoftGeminiInitParams_t 
     /* register Indication interrupts  */
 	/*****************************/
 
-    TWD_RegisterEvent (pSoftGemini->hTWD, 
+    TWD_RegisterEvent (pSoftGemini->hTWD,
                        TWD_OWN_EVENT_SOFT_GEMINI_SENSE,
-                       (void *)SoftGemini_SenseIndicationCB, 
+                       (void *)SoftGemini_SenseIndicationCB,
                        hSoftGemini);
 
     TWD_EnableEvent (pSoftGemini->hTWD, TWD_OWN_EVENT_SOFT_GEMINI_SENSE);
 
 #ifndef AP_MODE_ENABLED
-	TWD_RegisterEvent (pSoftGemini->hTWD, 
+	TWD_RegisterEvent (pSoftGemini->hTWD,
                        TWD_OWN_EVENT_SOFT_GEMINI_PREDIC,
-                       (void *)SoftGemini_ProtectiveIndicationCB, 
+                       (void *)SoftGemini_ProtectiveIndicationCB,
                        hSoftGemini);
 	TWD_EnableEvent (pSoftGemini->hTWD, TWD_OWN_EVENT_SOFT_GEMINI_PREDIC);
 #endif
 
 	/* On system initialization SG is disabled but later calls to SoftGemini_setEnableParam() */
-	pSoftGemini->bProtectiveMode = TI_FALSE;	
-	pSoftGemini->SoftGeminiEnable = SG_DISABLE; 
+	pSoftGemini->bProtectiveMode = TI_FALSE;
+	pSoftGemini->SoftGeminiEnable = SG_DISABLE;
 	pSoftGemini->bDriverEnabled = TI_FALSE;
         pSoftGemini->bPsPollFailureActive = TI_FALSE;
 
@@ -287,14 +292,14 @@ TRACE0(pSoftGemini->hReport, REPORT_SEVERITY_ERROR, "  SoftGemini_config() - Err
 /************************************************************************
  *                        SoftGemini_destroy							*
  ************************************************************************
-DESCRIPTION: SoftGemini module destroy function, called by the config mgr in the destroy phase 
+DESCRIPTION: SoftGemini module destroy function, called by the config mgr in the destroy phase
 				performs the following:
 				-	Free all memory aloocated by the module
-                                                                                                   
-INPUT:      hSoftGemini	-	SoftGemini handle.		
+
+INPUT:      hSoftGemini	-	SoftGemini handle.
 
 
-OUTPUT:		
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
@@ -307,22 +312,22 @@ TI_STATUS SoftGemini_destroy(TI_HANDLE hSoftGemini)
 	{
 		os_memoryFree( pSoftGemini->hOs, (TI_HANDLE)pSoftGemini , sizeof(SoftGemini_t));
 	}
-	
+
 	return TI_OK;
 }
 
 
 /***********************************************************************
- *                        SoftGemini_setParam									
+ *                        SoftGemini_setParam
  ***********************************************************************
 DESCRIPTION: SoftGemini set param function, called by the following:
 			-	config mgr in order to set a parameter receiving from the OS abstraction layer.
-			-	From inside the driver	
-                                                                                                   
-INPUT:      hSoftGemini	-	SoftGemini handle.
-			pParam	-	Pointer to the parameter		
+			-	From inside the driver
 
-OUTPUT:		
+INPUT:      hSoftGemini	-	SoftGemini handle.
+			pParam	-	Pointer to the parameter
+
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
@@ -334,12 +339,12 @@ TI_STATUS SoftGemini_setParam(TI_HANDLE	hSoftGemini,
 	TI_STATUS return_value = TI_OK;
 
 TRACE1(pSoftGemini->hReport, REPORT_SEVERITY_INFORMATION, "  SoftGemini_setParam() (0x%x)\n", pParam->paramType);
-	
+
 	switch(pParam->paramType)
 	{
 
 	case SOFT_GEMINI_SET_ENABLE:
-		
+
 		return_value = SoftGemini_setEnableParam(hSoftGemini,pParam->content.SoftGeminiEnable, TI_FALSE);
 		break;
 
@@ -360,7 +365,7 @@ TRACE1(pSoftGemini->hReport, REPORT_SEVERITY_INFORMATION, "  SoftGemini_setParam
 										   pSoftGemini->SoftGeminiParam.coexParams[SOFT_GEMINI_ACTIVE_SCAN_DURATION_FACTOR_HV3]);
 		}
 		break;
-		
+
 	default:
 TRACE1(pSoftGemini->hReport, REPORT_SEVERITY_ERROR, "  SoftGemini_setParam(), Params is not supported, %d\n\n", pParam->paramType);
 		return PARAM_NOT_SUPPORTED;
@@ -370,23 +375,23 @@ TRACE1(pSoftGemini->hReport, REPORT_SEVERITY_ERROR, "  SoftGemini_setParam(), Pa
 }
 
 /***********************************************************************
- *			      SoftGemini_getParam									
+ *			      SoftGemini_getParam
  ***********************************************************************
 DESCRIPTION: SoftGemini get param function, called by the following:
 			-	config mgr in order to get a parameter from the OS abstraction layer.
-			-	From inside the dirver	
-                                                                                                   
-INPUT:      hSoftGemini	-	SoftGemini handle.
-				
+			-	From inside the dirver
 
-OUTPUT:		pParam	-	Pointer to the parameter	
+INPUT:      hSoftGemini	-	SoftGemini handle.
+
+
+OUTPUT:		pParam	-	Pointer to the parameter
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
 ************************************************************************/
 TI_STATUS SoftGemini_getParam(TI_HANDLE		hSoftGemini,
 											paramInfo_t	*pParam)
-{ 
+{
 		switch (pParam->paramType)
 		{
 			case SOFT_GEMINI_GET_CONFIG:
@@ -396,16 +401,16 @@ TI_STATUS SoftGemini_getParam(TI_HANDLE		hSoftGemini,
 
 	return TI_OK;
 }
- 
+
 
 
 /***************************************************************************
 *					SoftGemini_setEnableParam					    	       *
 ****************************************************************************
 * DESCRIPTION:	The function sets the  appropriate Enable value,
-*				configures SCR , POWER MGR , DATA CTRL , FW.   
+*				configures SCR , POWER MGR , DATA CTRL , FW.
 *
-* INPUTS:		pSoftGemini - the object		
+* INPUTS:		pSoftGemini - the object
 ***************************************************************************/
 static TI_STATUS SoftGemini_setEnableParam(TI_HANDLE hSoftGemini, ESoftGeminiEnableModes SoftGeminiEnable, TI_BOOL recovery)
 {
@@ -431,9 +436,9 @@ TRACE0(pSoftGemini->hReport, REPORT_SEVERITY_INFORMATION, "  setSoftGeminiEnable
 	/* Sanity check on enable values */
 	/********************************/
 
-	/*				Old Value						New Value		    */        
-	/*					|							    |			    */        
-	/*			  	   \|/							   \|/			    */        
+	/*				Old Value						New Value		    */
+	/*					|							    |			    */
+	/*			  	   \|/							   \|/			    */
 
 	if ((pSoftGemini->SoftGeminiEnable == SoftGeminiEnable) && !recovery)
 	{
@@ -444,13 +449,13 @@ TRACE0(pSoftGemini->hReport, REPORT_SEVERITY_ERROR, "   - setting same value \n"
 	/*******************************/
 	/* Make the necessary actions */
 	/*****************************/
-	
+
 	switch (SoftGeminiEnable)
 	{
 	case SG_PROTECTIVE:
 	case SG_OPPORTUNISTIC:
-		
-		/* set FW with SG_ENABLE */ 
+
+		/* set FW with SG_ENABLE */
 		param.paramType = TWD_SG_ENABLE_PARAM_ID;
 		param.content.SoftGeminiEnable = SoftGeminiEnable;
 		return_value = TWD_SetParam (pSoftGemini->hTWD, &param);
@@ -458,17 +463,17 @@ TRACE0(pSoftGemini->hReport, REPORT_SEVERITY_ERROR, "   - setting same value \n"
 		break;
 
 	case SG_DISABLE:
-		
+
 		/* set FW with SG_DISABLE */
 		param.paramType = TWD_SG_ENABLE_PARAM_ID;
 		param.content.SoftGeminiEnable = SG_DISABLE;
 		return_value = TWD_SetParam (pSoftGemini->hTWD, &param);
 
 		if (pSoftGemini->bDriverEnabled)
-		{	
+		{
 			SoftGemini_DisableDriver(hSoftGemini);
 		}
-		
+
 		break;
 
 	default:
@@ -483,33 +488,33 @@ TRACE1(pSoftGemini->hReport, REPORT_SEVERITY_ERROR, " defualt :%d\n",SoftGeminiE
 	{
 TRACE0(pSoftGemini->hReport, REPORT_SEVERITY_ERROR, " can't configure enable param to FW :\n");
 	}
-	
+
 	return return_value;
 }
 
 /***************************************************************************
 *					SoftGemini_setConfigParam				    	       *
 ****************************************************************************
-* DESCRIPTION:	The function sets params 
+* DESCRIPTION:	The function sets params
 *
 * INPUTS:		pSoftGemini - the object
-*				param       - params to be configured	
+*				param       - params to be configured
 ***************************************************************************/
 static void SoftGemini_setConfigParam(TI_HANDLE hSoftGemini, TI_UINT32 *param)
 {
 	SoftGemini_t *pSoftGemini = (SoftGemini_t *)hSoftGemini;
 
 	/* param[0] - SG parameter index, param[1] - SG parameter value */
-	pSoftGemini->SoftGeminiParam.coexParams[(TI_UINT8)param[0]] = (TI_UINT32)param[1]; 
+	pSoftGemini->SoftGeminiParam.coexParams[(TI_UINT8)param[0]] = (TI_UINT32)param[1];
 	pSoftGemini->SoftGeminiParam.paramIdx = (TI_UINT8)param[0];
 }
 
 /***************************************************************************
 *					SoftGemini_printParams					    	       *
 ****************************************************************************
-* DESCRIPTION:	Print SG Parameters.  
+* DESCRIPTION:	Print SG Parameters.
 *
-* INPUTS:		pSoftGemini - the object	
+* INPUTS:		pSoftGemini - the object
 ***************************************************************************/
 void SoftGemini_printParams(TI_HANDLE hSoftGemini)
 {
@@ -518,12 +523,12 @@ void SoftGemini_printParams(TI_HANDLE hSoftGemini)
 	SoftGemini_t *pSoftGemini = (SoftGemini_t *)hSoftGemini;
 	TSoftGeminiParams *SoftGeminiParam = &pSoftGemini->SoftGeminiParam;
 
-	WLAN_OS_REPORT(("[0]:  coexBtPerThreshold = %d\n", SoftGeminiParam->coexParams[SOFT_GEMINI_BT_PER_THRESHOLD])); 
-	WLAN_OS_REPORT(("[1]:  coexHv3MaxOverride = %d \n", SoftGeminiParam->coexParams[SOFT_GEMINI_HV3_MAX_OVERRIDE])); 
-	WLAN_OS_REPORT(("[2]:  coexBtNfsSampleInterval = %d (msec)\n", SoftGeminiParam->coexParams[SOFT_GEMINI_BT_NFS_SAMPLE_INTERVAL])); 
-	WLAN_OS_REPORT(("[3]:  coexBtLoadRatio = %d (%)\n", SoftGeminiParam->coexParams[SOFT_GEMINI_BT_LOAD_RATIO])); 
-	WLAN_OS_REPORT(("[4]:  coexAutoPsMode = %s \n", (SoftGeminiParam->coexParams[SOFT_GEMINI_AUTO_PS_MODE]?"Enabled":"Disabled"))); 
-	WLAN_OS_REPORT(("[5]:  coexAutoScanEnlargedNumOfProbeReqPercent = %d (%)\n", SoftGeminiParam->coexParams[SOFT_GEMINI_AUTO_SCAN_PROBE_REQ])); 
+	WLAN_OS_REPORT(("[0]:  coexBtPerThreshold = %d\n", SoftGeminiParam->coexParams[SOFT_GEMINI_BT_PER_THRESHOLD]));
+	WLAN_OS_REPORT(("[1]:  coexHv3MaxOverride = %d \n", SoftGeminiParam->coexParams[SOFT_GEMINI_HV3_MAX_OVERRIDE]));
+	WLAN_OS_REPORT(("[2]:  coexBtNfsSampleInterval = %d (msec)\n", SoftGeminiParam->coexParams[SOFT_GEMINI_BT_NFS_SAMPLE_INTERVAL]));
+	WLAN_OS_REPORT(("[3]:  coexBtLoadRatio = %d (%)\n", SoftGeminiParam->coexParams[SOFT_GEMINI_BT_LOAD_RATIO]));
+	WLAN_OS_REPORT(("[4]:  coexAutoPsMode = %s \n", (SoftGeminiParam->coexParams[SOFT_GEMINI_AUTO_PS_MODE]?"Enabled":"Disabled")));
+	WLAN_OS_REPORT(("[5]:  coexAutoScanEnlargedNumOfProbeReqPercent = %d (%)\n", SoftGeminiParam->coexParams[SOFT_GEMINI_AUTO_SCAN_PROBE_REQ]));
 	WLAN_OS_REPORT(("[6]:  coexHv3AutoScanEnlargedScanWinodowPercent = %d (%)\n", SoftGeminiParam->coexParams[SOFT_GEMINI_ACTIVE_SCAN_DURATION_FACTOR_HV3]));
 	WLAN_OS_REPORT(("[7]:  coexAntennaConfiguration = %s (0 = Single, 1 = Dual) \n", (SoftGeminiParam->coexParams[SOFT_GEMINI_ANTENNA_CONFIGURATION]?"Dual":"Single")));
 	WLAN_OS_REPORT(("[8]:  coexMaxConsecutiveBeaconMissPrecent = %d (%)\n", SoftGeminiParam->coexParams[SOFT_GEMINI_BEACON_MISS_PERCENT]));
@@ -543,7 +548,7 @@ void SoftGemini_printParams(TI_HANDLE hSoftGemini)
     WLAN_OS_REPORT(("[22]: coexWlanPsMaxBtAclSlaveEDR = %d (msec)\n", SoftGeminiParam->coexParams[SOFT_GEMINI_WLAN_PS_MAX_BT_ACL_SLAVE_EDR]));
 	WLAN_OS_REPORT(("[23]: coexRxt = %d (usec)\n", SoftGeminiParam->coexParams[SOFT_GEMINI_RXT]));
 	WLAN_OS_REPORT(("[24]: coexTxt = %d (usec)\n", SoftGeminiParam->coexParams[SOFT_GEMINI_TXT]));
-	WLAN_OS_REPORT(("[25]: coexAdaptiveRxtTxt = %s \n", (SoftGeminiParam->coexParams[SOFT_GEMINI_ADAPTIVE_RXT_TXT]?"Enabled":"Disabled"))); 
+	WLAN_OS_REPORT(("[25]: coexAdaptiveRxtTxt = %s \n", (SoftGeminiParam->coexParams[SOFT_GEMINI_ADAPTIVE_RXT_TXT]?"Enabled":"Disabled")));
 	WLAN_OS_REPORT(("[26]: coexPsPollTimeout = %d (msec)\n", SoftGeminiParam->coexParams[SOFT_GEMINI_PS_POLL_TIMEOUT]));
 	WLAN_OS_REPORT(("[27]: coexUpsdTimeout = %d (msec) \n", SoftGeminiParam->coexParams[SOFT_GEMINI_UPSD_TIMEOUT]));
 	WLAN_OS_REPORT(("[28]: coexWlanActiveBtAclMasterMinEDR = %d (msec)\n", SoftGeminiParam->coexParams[SOFT_GEMINI_WLAN_ACTIVE_BT_ACL_MASTER_MIN_EDR]));
@@ -575,10 +580,10 @@ void SoftGemini_printParams(TI_HANDLE hSoftGemini)
 	WLAN_OS_REPORT(("[54]: coexTempParam8 = %d \n", SoftGeminiParam->coexParams[SOFT_GEMINI_TEMP_PARAM_8]));
 	WLAN_OS_REPORT(("[55]: coexTempParam9 = %d \n", SoftGeminiParam->coexParams[SOFT_GEMINI_TEMP_PARAM_9]));
 	WLAN_OS_REPORT(("[56]: coexTempParam10 = %d \n", SoftGeminiParam->coexParams[SOFT_GEMINI_TEMP_PARAM_10]));
-	WLAN_OS_REPORT(("Enable mode : %s\n", SoftGemini_ConvertModeToString(pSoftGemini->SoftGeminiEnable))); 
-	WLAN_OS_REPORT(("Driver Enabled : %s\n",(pSoftGemini->bDriverEnabled ? "YES" : "NO"))); 
-	WLAN_OS_REPORT(("Protective mode : %s\n", (pSoftGemini->bProtectiveMode ? "ON" : "OFF"))); 
-    WLAN_OS_REPORT(("PsPoll failure active : %s\n", (pSoftGemini->bPsPollFailureActive ? "YES" : "NO"))); 
+	WLAN_OS_REPORT(("Enable mode : %s\n", SoftGemini_ConvertModeToString(pSoftGemini->SoftGeminiEnable)));
+	WLAN_OS_REPORT(("Driver Enabled : %s\n",(pSoftGemini->bDriverEnabled ? "YES" : "NO")));
+	WLAN_OS_REPORT(("Protective mode : %s\n", (pSoftGemini->bProtectiveMode ? "ON" : "OFF")));
+    WLAN_OS_REPORT(("PsPoll failure active : %s\n", (pSoftGemini->bPsPollFailureActive ? "YES" : "NO")));
 
 #endif
 }
@@ -586,14 +591,14 @@ void SoftGemini_printParams(TI_HANDLE hSoftGemini)
 /***************************************************************************
 *					SoftGemini_setParamsToFW					    	       *
 ****************************************************************************
-* DESCRIPTION:	The function sets the FW with the appropriate parameters set.  
+* DESCRIPTION:	The function sets the FW with the appropriate parameters set.
 *
 * INPUTS:		pSoftGemini - the object
 *
 *
-* OUTPUT:			
-* 
-* RETURNS:		
+* OUTPUT:
+*
+* RETURNS:
 ***************************************************************************/
 static TI_STATUS SoftGemini_setParamsToFW(TI_HANDLE hSoftGemini, TSoftGeminiParams *softGeminiParams)
 {
@@ -612,7 +617,7 @@ static TI_STATUS SoftGemini_setParamsToFW(TI_HANDLE hSoftGemini, TSoftGeminiPara
 * DESCRIPTION:	Activated when SG is enabled (after CLI or FW command)
 *
 * INPUTS:		pSoftGemini - the object
-*	
+*
 ***************************************************************************/
 static TI_STATUS SoftGemini_EnableDriver(TI_HANDLE hSoftGemini)
 {
@@ -640,7 +645,7 @@ TRACE0(pSoftGemini->hReport, REPORT_SEVERITY_INFORMATION, "\n");
 * DESCRIPTION:	Activated when SG is disabled (after CLI or FW command)
 *
 * INPUTS:		pSoftGemini - the object
-*	
+*
 ***************************************************************************/
 static TI_STATUS SoftGemini_DisableDriver(TI_HANDLE hSoftGemini)
 {
@@ -665,7 +670,7 @@ TRACE0(pSoftGemini->hReport, REPORT_SEVERITY_INFORMATION, "\n");
 	{
 		SoftGemini_DisableProtectiveMode(hSoftGemini);
 	}
-	
+
 	return return_value;
 }
 
@@ -675,7 +680,7 @@ TRACE0(pSoftGemini->hReport, REPORT_SEVERITY_INFORMATION, "\n");
 * DESCRIPTION:	Set Always PS to PowerMgr
 *
 * INPUTS:		pSoftGemini - the object
-*	
+*
 ***************************************************************************/
 static TI_STATUS SoftGemini_SetPS(SoftGemini_t	*pSoftGemini)
 {
@@ -724,7 +729,7 @@ static TI_STATUS SoftGemini_SetPS(SoftGemini_t	*pSoftGemini)
 * DESCRIPTION:	unSet Always PS to PowerMgr
 *
 * INPUTS:		pSoftGemini - the object
-*	
+*
 ***************************************************************************/
 static TI_STATUS SoftGemini_unSetPS(SoftGemini_t	*pSoftGemini)
 {
@@ -736,17 +741,17 @@ TRACE0(pSoftGemini->hReport, REPORT_SEVERITY_INFORMATION, ", SG-unSetPS \n");
 	param.paramType = POWER_MGR_DISABLE_PRIORITY;
 	param.content.powerMngPriority = POWER_MANAGER_SG_PRIORITY;
 	return powerMgr_setParam(pSoftGemini->hPowerMgr,&param);
-	
+
 }
 
 /***************************************************************************
 *					SoftGemini_EnableProtectiveMode  		    	       *
 ****************************************************************************
 * DESCRIPTION:	Activated when FW inform us that protective mode is ON
-*				
+*
 *
 * INPUTS:		pSoftGemini - the object
-*	
+*
 ***************************************************************************/
 void SoftGemini_EnableProtectiveMode(TI_HANDLE hSoftGemini)
 {
@@ -763,7 +768,7 @@ void SoftGemini_EnableProtectiveMode(TI_HANDLE hSoftGemini)
 	/* set new configurations of scan to scancncn */
     scanCncn_SGconfigureScanParams(pSoftGemini->hScanCncn,TI_TRUE,
 								   (TI_UINT8)pSoftGemini->SoftGeminiParam.coexParams[SOFT_GEMINI_AUTO_SCAN_PROBE_REQ],
-								   pSoftGemini->SoftGeminiParam.coexParams[SOFT_GEMINI_HV3_MAX_OVERRIDE], 
+								   pSoftGemini->SoftGeminiParam.coexParams[SOFT_GEMINI_HV3_MAX_OVERRIDE],
 								   pSoftGemini->SoftGeminiParam.coexParams[SOFT_GEMINI_ACTIVE_SCAN_DURATION_FACTOR_HV3]);
 
     /* Call the power manager to enter short doze */
@@ -782,7 +787,7 @@ TRACE0(pSoftGemini->hReport, REPORT_SEVERITY_INFORMATION, " SoftGemini_EnablePro
 * DESCRIPTION:	Activated when FW inform us that protective mode is OFF or SG is disabled
 *
 * INPUTS:		pSoftGemini - the object
-*	
+*
 ***************************************************************************/
 void SoftGemini_DisableProtectiveMode(TI_HANDLE hSoftGemini)
 {
@@ -798,12 +803,12 @@ TRACE0(pSoftGemini->hReport, REPORT_SEVERITY_INFORMATION, "\n");
 /***************************************************************************
 *					SoftGemini_DisableProtectiveMode  		    	       *
 ****************************************************************************
-* DESCRIPTION:	Called from SoftGemini_DisableProtectiveMode() when FW inform 
+* DESCRIPTION:	Called from SoftGemini_DisableProtectiveMode() when FW inform
 *				us that protective mode is OFF or SG is disabled, or from
 *				SoftGemini_unSetPSmode() when driver disconnects from AP.
 *
 * INPUTS:		pSoftGemini - the object
-*	
+*
 ***************************************************************************/
 
 void SoftGemini_RemoveProtectiveModeParameters(TI_HANDLE hSoftGemini)
@@ -861,7 +866,7 @@ TRACE0(pSoftGemini->hReport, REPORT_SEVERITY_WARNING, ": SG is disabled, existin
 /***************************************************************************
 *					SoftGemini_ProtectiveIndicationCB  		    	       *
 ****************************************************************************
-* DESCRIPTION:	This is the the function which is called when FW starts Protective mode (i.e BT voice) 
+* DESCRIPTION:	This is the the function which is called when FW starts Protective mode (i.e BT voice)
 *
 *				PROTECTIVE_MODE_ON - FW is activated on protective mode (BT voice is running)
 *				PROTECTIVE_MODE_OFF - FW is not activated on protective mode
@@ -873,7 +878,7 @@ TRACE0(pSoftGemini->hReport, REPORT_SEVERITY_WARNING, ": SG is disabled, existin
 void SoftGemini_ProtectiveIndicationCB( TI_HANDLE hSoftGemini, char* str, TI_UINT32 strLen )
 {
 	SoftGemini_t	*pSoftGemini = (SoftGemini_t *)hSoftGemini;
-	
+
 TRACE1(pSoftGemini->hReport, REPORT_SEVERITY_INFORMATION, " with 0x%x\n",*str);
 
 	if (SG_DISABLE != pSoftGemini->SoftGeminiEnable)
@@ -922,7 +927,7 @@ char* SoftGemini_ConvertModeToString(ESoftGeminiEnableModes SoftGeminiEnable)
 ESoftGeminiEnableModes SoftGemini_getSGMode(TI_HANDLE hSoftGemini)
 {
 	SoftGemini_t	*pSoftGemini = (SoftGemini_t *)hSoftGemini;
-	return pSoftGemini->SoftGeminiEnable;	
+	return pSoftGemini->SoftGeminiEnable;
 }
 
 /***************************************************************************
@@ -930,7 +935,7 @@ ESoftGeminiEnableModes SoftGemini_getSGMode(TI_HANDLE hSoftGemini)
 ****************************************************************************
 * DESCRIPTION:	The function reconfigures WHAL with the SG parameters.
 *
-* INPUTS:		pSoftGemini - the object		
+* INPUTS:		pSoftGemini - the object
 ***************************************************************************/
 TI_STATUS SoftGemini_handleRecovery(TI_HANDLE hSoftGemini)
 {
@@ -949,7 +954,7 @@ TI_STATUS SoftGemini_handleRecovery(TI_HANDLE hSoftGemini)
     TRACE1(pSoftGemini->hReport, REPORT_SEVERITY_INFORMATION, "Set SG to-%d\n", pSoftGemini->SoftGeminiEnable);
 
 	/* Config the params to FW */
-	
+
 	SoftGemini_setParamsToFW(hSoftGemini, &pSoftGemini->SoftGeminiParam);
 	/*SoftGemini_printParams(hSoftGemini);*/
 	return TI_OK;
@@ -959,7 +964,7 @@ TI_STATUS SoftGemini_handleRecovery(TI_HANDLE hSoftGemini)
 ****************************************************************************
 * DESCRIPTION:	After Ps-Poll failure we disable the SG
 *
-* INPUTS:		pSoftGemini - the object		
+* INPUTS:		pSoftGemini - the object
 ***************************************************************************/
 void SoftGemini_startPsPollFailure(TI_HANDLE hSoftGemini)
 	{
@@ -973,7 +978,7 @@ void SoftGemini_startPsPollFailure(TI_HANDLE hSoftGemini)
 
         /* Disable SG if needed */
         if ( pSoftGemini->SoftGeminiEnable != SG_DISABLE )
-        {	
+        {
             SoftGemini_setEnableParam(hSoftGemini, SG_DISABLE, TI_FALSE);
 	}
 
@@ -988,9 +993,9 @@ void SoftGemini_startPsPollFailure(TI_HANDLE hSoftGemini)
 /***************************************************************************
 *					SoftGemini_endPsPollFailure					    	   *
 ****************************************************************************
-* DESCRIPTION:	Return to normal behavior after the PsPoll failure 
+* DESCRIPTION:	Return to normal behavior after the PsPoll failure
 *
-* INPUTS:		pSoftGemini - the object		
+* INPUTS:		pSoftGemini - the object
 ***************************************************************************/
 void SoftGemini_endPsPollFailure(TI_HANDLE hSoftGemini)
 {
@@ -998,7 +1003,7 @@ void SoftGemini_endPsPollFailure(TI_HANDLE hSoftGemini)
 
     TRACE0(pSoftGemini->hReport, REPORT_SEVERITY_INFORMATION, "\n");
 
-    if ( pSoftGemini->bPsPollFailureActive ) 
+    if ( pSoftGemini->bPsPollFailureActive )
     {
         pSoftGemini->bPsPollFailureActive = TI_FALSE;
 

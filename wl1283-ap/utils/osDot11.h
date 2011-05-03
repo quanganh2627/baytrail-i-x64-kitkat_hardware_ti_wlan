@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * osDot11.h
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 /*--------------------------------------------------------------------------*/
 /* Module:		osDot11.h */
@@ -78,7 +83,7 @@ typedef struct _OS_PACKET_8021Q_INFO
 
 typedef TI_UINT64 OS_802_11_KEY_RSC;
 
-typedef struct _OS_802_11_SSID 
+typedef struct _OS_802_11_SSID
 {
     TI_UINT32 SsidLength;
     TI_UINT8  Ssid[32];
@@ -94,7 +99,7 @@ typedef enum _OS_802_11_NETWORK_TYPE
   os802_11NetworkTypeMax
 } OS_802_11_NETWORK_TYPE;
 
-typedef struct _OS_802_11_NETWORK_TYPE_LIST 
+typedef struct _OS_802_11_NETWORK_TYPE_LIST
 {
   TI_UINT32                  NumberOfItems;
   OS_802_11_NETWORK_TYPE NetworkType [1];
@@ -104,7 +109,7 @@ typedef enum _OS_802_11_POWER_MODE
 {
   /*Continuous access mode (CAM). */
   /*When the power mode is set to CAM, the device is always on. */
-  os802_11PowerModeCAM, 
+  os802_11PowerModeCAM,
 
   /*Specifies maximum (MAX) power saving. A power mode of MAX */
   /*results in the greatest power savings for the 802.11 NIC radio. */
@@ -119,7 +124,7 @@ typedef enum _OS_802_11_POWER_MODE
 /*specified in milliwatts (mW).*/
 typedef TI_UINT32 OS_802_11_TX_POWER_LEVEL;
 /*Normal value from -10 and -200*/
-typedef TI_INT32 OS_802_11_RSSI; 
+typedef TI_INT32 OS_802_11_RSSI;
 
 /*Length */
 
@@ -133,12 +138,12 @@ typedef TI_INT32 OS_802_11_RSSI;
 /*  patterns to determine the hop sequence. */
 /*DwellTime*/
 /*  Specifies the maximum period of time during which the transmitter */
-/*  should remain fixed on a channel. This interval is described in Kµsec (1024 µsec). */
-typedef struct _OS_802_11_CONFIGURATION_FH 
+/*  should remain fixed on a channel. This interval is described in KÂµsec (1024 Âµsec). */
+typedef struct _OS_802_11_CONFIGURATION_FH
 {
-    TI_UINT32  Length; 
+    TI_UINT32  Length;
     TI_UINT32  HopPattern;
-    TI_UINT32  HopSet; 
+    TI_UINT32  HopSet;
     TI_UINT32  DwellTime;
 } OS_802_11_CONFIGURATION_FH, *POS_802_11_CONFIGURATION_FH;
 
@@ -147,10 +152,10 @@ typedef struct _OS_802_11_CONFIGURATION_FH
 /*  Specifies the length of the NDIS_802_11_CONFIGURATION structure in bytes. */
 /*BeaconPeriod */
 /*  Specifies the interval between beacon message transmissions. */
-/*  This value is specified in Kµsec (1024 µsec). */
+/*  This value is specified in KÂµsec (1024 Âµsec). */
 /*ATIMWindow */
 /*  Specifies the announcement traffic information message (ATIM) window in */
-/*  Kµsec (1024 µsec). The ATIM window is a short time period immediately */
+/*  KÂµsec (1024 Âµsec). The ATIM window is a short time period immediately */
 /*  after the transmission of each beacon in an IBSS configuration. */
 /*  During the ATIM window, any station can indicate the need to transfer data */
 /*  to another station during the following data-transmission window. */
@@ -158,12 +163,12 @@ typedef struct _OS_802_11_CONFIGURATION_FH
 /*  Specifies the frequency of the selected channel in kHz. */
 /*FHConfig */
 /*  Specifies the frequency hopping configuration in an OS_802_11_CONFIGURATION_FH structure. */
-typedef struct _OS_802_11_CONFIGURATION 
+typedef struct _OS_802_11_CONFIGURATION
 {
     TI_UINT32 Length;
     TI_UINT32 BeaconPeriod;
     TI_UINT32 ATIMWindow;
-  union 
+  union
   {
         TI_UINT32 DSConfig;
         TI_UINT32 channel;
@@ -198,14 +203,14 @@ typedef TI_UINT8 OS_802_11_RATES[8];
 
 typedef TI_UINT8 OS_802_11_RATES_EX[16];
 
-typedef struct _OS_802_11_FIXED_IEs 
+typedef struct _OS_802_11_FIXED_IEs
 {
-	TI_UINT8  TimeStamp[8]; 
+	TI_UINT8  TimeStamp[8];
 	TI_UINT16 BeaconInterval;
-	TI_UINT16 Capabilities; 
+	TI_UINT16 Capabilities;
 } OS_802_11_FIXED_IEs, *POS_802_11_FIXED_IEs;
 
-typedef struct _OS_802_11_VARIABLE_IEs 
+typedef struct _OS_802_11_VARIABLE_IEs
 {
 	TI_UINT8 ElementID;
 	TI_UINT8 Length;	/* Number of bytes in data field*/
@@ -216,7 +221,7 @@ typedef struct _OS_802_11_BSSID
 {
   TI_UINT32 Length;
   TMacAddr                  MacAddress;
-  TI_UINT16					Capabilities; 
+  TI_UINT16					Capabilities;
   OS_802_11_SSID            Ssid;
   TI_UINT32                 Privacy;
   OS_802_11_RSSI            Rssi;
@@ -237,7 +242,7 @@ typedef struct _OS_802_11_BSSID_EX
 {
   TI_UINT32					Length;
   TMacAddr		            MacAddress;
-  TI_UINT16					Capabilities; 
+  TI_UINT16					Capabilities;
   OS_802_11_SSID            Ssid;
   TI_UINT32                 Privacy;
   OS_802_11_RSSI            Rssi;
@@ -274,12 +279,12 @@ typedef TI_UINT32 OS_802_11_ANTENNA;
 /*  variable and depends upon the value of the KeyLength member. */
 
 typedef TI_UINT32 OS_802_11_KEY_INDEX;
-typedef struct _OS_802_11_WEP 
+typedef struct _OS_802_11_WEP
 {
     TI_UINT32 Length;
-    TI_UINT32 KeyIndex; 
+    TI_UINT32 KeyIndex;
     TI_UINT32 KeyLength;
-    TI_UINT8  KeyMaterial [32]; 
+    TI_UINT8  KeyMaterial [32];
 } OS_802_11_WEP, *POS_802_11_WEP;
 
 /* Key mapping keys require a BSSID*/
@@ -366,7 +371,7 @@ typedef enum _OS_802_11_ENCRYPTION_TYPES
 	OS_ENCRYPTION_TYPE_NONE = 0,
 	OS_ENCRYPTION_TYPE_WEP,
 	OS_ENCRYPTION_TYPE_TKIP,
-	OS_ENCRYPTION_TYPE_AES 
+	OS_ENCRYPTION_TYPE_AES
 } OS_802_11_ENCRYPTION_TYPES;
 
 /* Key type*/
@@ -424,7 +429,7 @@ typedef enum _OS_802_11_SCAN_TYPES
 typedef enum _OS_802_11_VOICE_DELIVERY_PROTOCOL
 {
     OS_VOICE_DELIVERY_PROTOCOL_DISABLED,
-    OS_VOICE_DELIVERY_PROTOCOL_PS_POLL   
+    OS_VOICE_DELIVERY_PROTOCOL_PS_POLL
 } OS_802_11_VOICE_DELIVERY_PROTOCOL;
 
 typedef struct _OS_802_11_TRAFFIC_INTENSITY_THRESHOLD_PARAMS
@@ -454,7 +459,7 @@ typedef struct _OS_802_11_PMKID
     OS_BSSIDInfo    osBSSIDInfo[1];
 }  OS_802_11_PMKID, *POS_802_11_PMKID;
 
-typedef enum _OS_802_11_WEP_STATUS 
+typedef enum _OS_802_11_WEP_STATUS
 {
   os802_11WEPEnabled = 0,
   os802_11Encryption1Enabled = os802_11WEPEnabled,
@@ -481,7 +486,7 @@ typedef enum _OS_802_11_WEP_STATUS
 /*  authentication mode first. If shared mode fails, the NIC attempts to use 802.11 open */
 /*  authentication mode. */
 
-typedef enum _OS_802_11_AUTHENTICATION_MODE 
+typedef enum _OS_802_11_AUTHENTICATION_MODE
 {
     os802_11AuthModeOpen,
     os802_11AuthModeShared,
@@ -502,10 +507,10 @@ typedef enum _OS_802_11_AUTHENTICATION_MODE
 /*  Specifies a filtering mode. In the 802.1X filtering mode, 802.1X packets are */
 /*  accepted even if they are not encrypted. However, the NIC accepts nothing else */
 /*  unless it is encrypted using WEP. */
-typedef enum _OS_802_11_PRIVACY_FILTER 
+typedef enum _OS_802_11_PRIVACY_FILTER
 {
-  os802_11PrivFilterAcceptAll, 
-  os802_11PrivFilter8021xWEP 
+  os802_11PrivFilterAcceptAll,
+  os802_11PrivFilter8021xWEP
 } OS_802_11_PRIVACY_FILTER;
 
 typedef enum _OS_802_11_RELOAD_DEFAULTS
@@ -535,7 +540,7 @@ typedef struct _OS_802_11_AUTHENTICATION_REQUEST
 
 typedef enum
 {
-	OS_DISASSOC_STATUS_UNSPECIFIED      		=   0,  
+	OS_DISASSOC_STATUS_UNSPECIFIED      		=   0,
 	OS_DISASSOC_STATUS_AUTH_REJECT				=   1,
 	OS_DISASSOC_STATUS_ASSOC_REJECT				=   2,
 	OS_DISASSOC_STATUS_SECURITY_FAILURE 		=   3,
@@ -555,7 +560,7 @@ typedef struct
 
 #define OS_802_11_PMKID_CANDIDATE_PREAUTH_ENABLE   0x01
 
-typedef struct _OS_802_11_PMKID_CANDIDATE 
+typedef struct _OS_802_11_PMKID_CANDIDATE
 {
     TMacAddr               BSSID;
     TI_UINT32              Flags;
@@ -608,7 +613,7 @@ typedef enum _OS_802_11_REG_DOMAIN
   os802_11_Domain_France = 0x32,
   os802_11_Domain_MKK = 0x40,
   os802_11_Domain_MKK1 = 0x41,
-  os802_11_Domain_US	= 0x50,		
+  os802_11_Domain_US	= 0x50,
   os802_11_Domain_WB	= 0x51,
   os802_11_Domain_EXWB	= 0x52
 } OS_802_11_REG_DOMAIN;
@@ -675,7 +680,7 @@ typedef enum _OS_802_11_REG_DOMAIN
 #define     OS_802_11_OPTION_ENABLE_PROMOTE_MODE        0x00000001 /*bit 0*/
 #define     OS_802_11_OPTION_ENABLE_PROMOTE_CIPHER      0x00000002 /*bit 1*/
 #define		OS_802_11_OPTION_DISABLE_PROMOTE_MODE		0
-#define     OS_802_11_OPTION_ENABLE_ALL                 0x00000003 
+#define     OS_802_11_OPTION_ENABLE_ALL                 0x00000003
 
 #endif
 

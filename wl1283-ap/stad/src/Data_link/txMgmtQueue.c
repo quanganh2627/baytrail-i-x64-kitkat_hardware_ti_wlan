@@ -1,53 +1,58 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * txMgmtQueue.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 
-/** \file   txMgmtQueue.c 
+
+/** \file   txMgmtQueue.c
  *  \brief  The Tx Mgmt Queues module.
- *  
- *	DESCRIPTION:															
- *	============ 													
- *	The Management-Queues module is responsible for the following tasks:	
- *		1.	Queue the driver generated Tx packets, including management,	
- *			EAPOL and null packets until they are transmitted.				
- *			The management packets are buffered in the management-queue,	
- *			and the others in the EAPOL-queue.								
- *		2.	Maintain a state machine that follows the queues state and		
- *			the connection states and enables specific transmission types	
- *			accordingly (e.g. only management).								
- *		3.	Gain access to the Tx path when the management queues are not	
- *			empty, and return the access to the data queues when the		
- *			management queues are empty.									
- *		4.	Schedule packets transmission with strict priority of the		
- *			management queue over the EAPOL queue, and according to the		
- *			backpressure controls from the Port (all queues) and from the	
- *			Tx-Ctrl (per queue). 
+ *
+ *	DESCRIPTION:
+ *	============
+ *	The Management-Queues module is responsible for the following tasks:
+ *		1.	Queue the driver generated Tx packets, including management,
+ *			EAPOL and null packets until they are transmitted.
+ *			The management packets are buffered in the management-queue,
+ *			and the others in the EAPOL-queue.
+ *		2.	Maintain a state machine that follows the queues state and
+ *			the connection states and enables specific transmission types
+ *			accordingly (e.g. only management).
+ *		3.	Gain access to the Tx path when the management queues are not
+ *			empty, and return the access to the data queues when the
+ *			management queues are empty.
+ *		4.	Schedule packets transmission with strict priority of the
+ *			management queue over the EAPOL queue, and according to the
+ *			backpressure controls from the Port (all queues) and from the
+ *			Tx-Ctrl (per queue).
  *
  *  \see    txMgmtQueue.h
  */
@@ -99,9 +104,9 @@ typedef enum
 /* State-Machine Actions */
 typedef enum
 {
-	SM_ACTION_NULL,				
-	SM_ACTION_ENABLE_DATA,		
-	SM_ACTION_ENABLE_MGMT,		
+	SM_ACTION_NULL,
+	SM_ACTION_ENABLE_DATA,
+	SM_ACTION_ENABLE_MGMT,
 	SM_ACTION_RUN_SCHEDULER,
     SM_ACTION_STOP_ALL
 } ESmAction;
@@ -120,15 +125,15 @@ typedef struct
 	TI_UINT32 uNoResourcesCount;
 } TDbgCount;
 
-#define LINK_MGMT_QUEUES_DEPTH MGMT_QUEUES_DEPTH 
+#define LINK_MGMT_QUEUES_DEPTH MGMT_QUEUES_DEPTH
 /* The LinkQ object. */
-typedef struct 
+typedef struct
 {
 	EWlanLinkType   eType;
 	TI_BOOL         bBusy;                         /* Link is busy. */
 	TI_BOOL         bEnabled;                      /* Link is enabled */
 	TI_BOOL         bEncrypt;                      /* encrypt data packet */
-	ESmState        eState;                        /* The current state of the Link SM. */	
+	ESmState        eState;                        /* The current state of the Link SM. */
 	ETxConnState	eTxConnState;                  /* See typedef in module API. */
 	TI_BOOL         bSendEvent_NotEmpty;           /* Used to sign if to send QUEUE_NOT_EMPTY event when switching to driver context */
 	TI_HANDLE   	aQueues[NUM_OF_MGMT_QUEUES];   /* The mgmt-aQueues handles. */
@@ -137,7 +142,7 @@ typedef struct
 } TMgmtLinkQ;
 
 /* The module object. */
-typedef struct 
+typedef struct
 {
 	/* Handles */
 	TI_HANDLE		hOs;
@@ -147,10 +152,10 @@ typedef struct
 	TI_HANDLE 		hTxPort;
 	TI_HANDLE 		hContext;
 	TI_HANDLE       hTWD;
-		
+
 	TI_BOOL			bMgmtPortEnable;/* Port open for mgmt-aQueues or not. */
 	TI_UINT32       uContextId;     /* ID allocated to this module on registration to context module */
-	
+
 	TMgmtLinkQ      aMgmtLinkQ[WLANLINKS_MAX_LINKS];   /* Link queues handles. */
 	TI_BOOL         aMgmtAcBusy;                       /* Mgmt AC is busy. */
 	TI_UINT32       uGlobalHlid;                       /* Generic link id */
@@ -172,17 +177,17 @@ static void	txMgmtQ_EnableLink (TTxMgmtQ *pTxMgmtQ, TI_UINT32 uHlid);
 ********************************************************************************/
 
 
-/** 
+/**
  * \fn     txMgmtQ_Create
  * \brief  Create the module and its queues
- * 
+ *
  * Create the Tx Mgmt Queue module and its queues.
- * 
- * \note   
- * \param  hOs - Handle to the Os Abstraction Layer                           
- * \return Handle to the allocated Tx Mgmt Queue module (NULL if failed) 
- * \sa     
- */ 
+ *
+ * \note
+ * \param  hOs - Handle to the Os Abstraction Layer
+ * \return Handle to the allocated Tx Mgmt Queue module (NULL if failed)
+ * \sa
+ */
 TI_HANDLE txMgmtQ_Create (TI_HANDLE hOs)
 {
     TTxMgmtQ *pTxMgmtQ;
@@ -203,19 +208,19 @@ TI_HANDLE txMgmtQ_Create (TI_HANDLE hOs)
 }
 
 
-/** 
+/**
  * \fn     txMgmtQ_Init
  * \brief  Configure module with default settings
 *
  * Get other modules handles.
  * Init the Tx Mgmt queues.
  * Register as the context-engine client.
- * 
- * \note   
+ *
+ * \note
  * \param  pStadHandles  - The driver modules handles
- * \return void  
- * \sa     
- */ 
+ * \return void
+ * \sa
+ */
 void txMgmtQ_Init (TStadHandlesList *pStadHandles)
 {
     TTxMgmtQ  *pTxMgmtQ = (TTxMgmtQ *)(pStadHandles->hTxMgmtQ);
@@ -223,7 +228,7 @@ void txMgmtQ_Init (TStadHandlesList *pStadHandles)
     int        uQueId;
     TMgmtLinkQ *pLinkQ;
     TI_UINT32  uHlid;
-    
+
     /* configure modules handles */
     pTxMgmtQ->hOs		= pStadHandles->hOs;
     pTxMgmtQ->hReport	= pStadHandles->hReport;
@@ -235,26 +240,26 @@ void txMgmtQ_Init (TStadHandlesList *pStadHandles)
 
     pTxMgmtQ->bMgmtPortEnable = TI_TRUE;	/* Port Default status is open (data-queues are disabled). */
     pTxMgmtQ->aMgmtAcBusy = TI_FALSE;       /* Init busy flag per for Mgmt ccess category (same for MGMT and EAPOL)  */
-    
-    /* 
-     * init all queues in all links 
+
+    /*
+     * init all queues in all links
      */
     for (uHlid = 0; uHlid < WLANLINKS_MAX_LINKS; uHlid++)
-    {       
+    {
         pLinkQ = &pTxMgmtQ->aMgmtLinkQ[uHlid]; /* Link queues */
         pLinkQ->eTxConnState = TX_CONN_STATE_CLOSE;
         pLinkQ->eState = SM_STATE_CLOSE; /* SM default state is CLOSE. */
         pLinkQ->bSendEvent_NotEmpty = TI_FALSE;
         pLinkQ->bBusy = TI_FALSE; /* default is not busy */
         pLinkQ->bEnabled = TI_FALSE; /* default is not enabled */
-    
+
         for (uQueId = 0; uQueId < NUM_OF_MGMT_QUEUES; uQueId++)
         {
-            pLinkQ->aQueues[uQueId] = que_Create (pTxMgmtQ->hOs, 
-                                                pTxMgmtQ->hReport, 
-                                                    LINK_MGMT_QUEUES_DEPTH, 
+            pLinkQ->aQueues[uQueId] = que_Create (pTxMgmtQ->hOs,
+                                                pTxMgmtQ->hReport,
+                                                    LINK_MGMT_QUEUES_DEPTH,
                                                 uNodeHeaderOffset);
-        
+
             /* If any Queues' allocation failed, print error, free TxMgmtQueue module and exit */
             if (pLinkQ->aQueues[uQueId] == NULL)
             {
@@ -263,12 +268,12 @@ void txMgmtQ_Init (TStadHandlesList *pStadHandles)
                 os_memoryFree (pTxMgmtQ->hOs, pTxMgmtQ, sizeof(TTxMgmtQ));
                 return;
             }
-    
+
             pLinkQ->aQenabled[uQueId] = TI_FALSE; /* Queue is disabled */
         }
     }
     pTxMgmtQ->uLastHlid = 0; /* scheduler starts from first link */
-    
+
     /* Register to the context engine and get the client ID */
     pTxMgmtQ->uContextId = context_RegisterClient (pTxMgmtQ->hContext,
                                                    txMgmtQ_QueuesNotEmpty,
@@ -276,22 +281,22 @@ void txMgmtQ_Init (TStadHandlesList *pStadHandles)
                                                    TI_TRUE,
                                                    "TX_MGMT",
                                                    sizeof("TX_MGMT"));
-    
+
     TRACE0(pTxMgmtQ->hReport, REPORT_SEVERITY_INIT, ".....Tx Mgmt Queue configured successfully\n");
 }
 
 
-/** 
+/**
  * \fn     txMgmtQ_Destroy
  * \brief  Destroy the module and its queues
- * 
+ *
  * Clear and destroy the queues and then destroy the module object.
- * 
- * \note   
- * \param  hTxMgmtQ - The module's object                                          
- * \return TI_OK - Unload succesfull, TI_NOK - Unload unsuccesfull 
- * \sa     
- */ 
+ *
+ * \note
+ * \param  hTxMgmtQ - The module's object
+ * \return TI_OK - Unload succesfull, TI_NOK - Unload unsuccesfull
+ * \sa
+ */
 TI_STATUS txMgmtQ_Destroy (TI_HANDLE hTxMgmtQ)
 {
     TTxMgmtQ  *pTxMgmtQ = (TTxMgmtQ *)hTxMgmtQ;
@@ -299,17 +304,17 @@ TI_STATUS txMgmtQ_Destroy (TI_HANDLE hTxMgmtQ)
     int        uQueId;
     TMgmtLinkQ *pLinkQ;
     TI_UINT32  uHlid;
-    
+
     /* Dequeue and free all queued packets */
     txMgmtQ_ClearQueues (hTxMgmtQ);
-    
-    /* 
-     * init all queues in all links 
+
+    /*
+     * init all queues in all links
      */
     for (uHlid = 0; uHlid < WLANLINKS_MAX_LINKS; uHlid++)
     {
         pLinkQ = &pTxMgmtQ->aMgmtLinkQ[uHlid]; /* Link queues */
-    
+
         for (uQueId = 0 ; uQueId < NUM_OF_MGMT_QUEUES ; uQueId++)
         {
             if (que_Destroy(pLinkQ->aQueues[uQueId]) != TI_OK)
@@ -319,30 +324,30 @@ TI_STATUS txMgmtQ_Destroy (TI_HANDLE hTxMgmtQ)
             }
         }
     }
-    
+
     /* free Tx Mgmt Queue Module */
     os_memoryFree (pTxMgmtQ->hOs, pTxMgmtQ, sizeof(TTxMgmtQ));
-    
+
     return eStatus;
 }
 
 
-/** 
+/**
  * \fn     txMgmtQ_ClearQueues
  * \brief  Clear all queues
- * 
+ *
  * Dequeue and free all queued packets.
- * 
- * \note   
- * \param  hTxMgmtQ - The object                                          
- * \return void 
- * \sa     
- */ 
+ *
+ * \note
+ * \param  hTxMgmtQ - The object
+ * \return void
+ * \sa
+ */
 void txMgmtQ_ClearQueues (TI_HANDLE hTxMgmtQ)
 {
     TI_UINT32  uHlid;
-    /* 
-     * flush all queues in all links 
+    /*
+     * flush all queues in all links
      */
     for (uHlid = 0; uHlid < WLANLINKS_MAX_LINKS; uHlid++)
     {
@@ -351,29 +356,29 @@ void txMgmtQ_ClearQueues (TI_HANDLE hTxMgmtQ)
 }
 
 
-/** 
+/**
  * \fn     txMgmtQ_Xmit
  * \brief  Insert non-data packet for transmission
- * 
- * This function is used by the driver applications to send Tx packets other than the 
+ *
+ * This function is used by the driver applications to send Tx packets other than the
  *   regular data traffic, including the following packet types:
 *				- Management
 *				- EAPOL
 *				- NULL
 *				- IAPP
  * The managment packets are enqueued to the Mgmt-queue and the others to the Eapol-queue.
- * EAPOL packets may be inserted from the network stack context, so it requires switching 
+ * EAPOL packets may be inserted from the network stack context, so it requires switching
  *   to the driver's context (after the packet is enqueued).
- * If the selected queue was empty before the packet insertion, the SM is called 
+ * If the selected queue was empty before the packet insertion, the SM is called
  *   with QUEUES_NOT_EMPTY event (in case of external context, only after the context switch).
  *
- * \note   
- * \param  hTxMgmtQ         - The module's object                                          
- * \param  pPktCtrlBlk      - Pointer to the packet CtrlBlk                                         
- * \param  bExternalContext - Indicates if called from non-driver context                                           
- * \return TI_OK - if the packet was queued, TI_NOK - if the packet was dropped. 
+ * \note
+ * \param  hTxMgmtQ         - The module's object
+ * \param  pPktCtrlBlk      - Pointer to the packet CtrlBlk
+ * \param  bExternalContext - Indicates if called from non-driver context
+ * \return TI_OK - if the packet was queued, TI_NOK - if the packet was dropped.
  * \sa     txMgmtQ_QueuesNotEmpty
- */ 
+ */
 TI_STATUS txMgmtQ_Xmit (TI_HANDLE hTxMgmtQ, TTxCtrlBlk *pPktCtrlBlk, TI_BOOL bExternalContext)
 {
     TTxMgmtQ *pTxMgmtQ = (TTxMgmtQ *)hTxMgmtQ;
@@ -405,9 +410,9 @@ TI_STATUS txMgmtQ_Xmit (TI_HANDLE hTxMgmtQ, TTxCtrlBlk *pPktCtrlBlk, TI_BOOL bEx
     pLinkQ = &pTxMgmtQ->aMgmtLinkQ[uHlid]; /* Link queues */
 
     /* Always set highest TID for mgmt-queues packets. */
-    pPktCtrlBlk->tTxDescriptor.tid = MGMT_QUEUES_TID; 
+    pPktCtrlBlk->tTxDescriptor.tid = MGMT_QUEUES_TID;
 
-    if ((pLinkQ->bEncrypt)&& (pPktCtrlBlk->tTxPktParams.uPktType == TX_PKT_TYPE_EAPOL)) 
+    if ((pLinkQ->bEncrypt)&& (pPktCtrlBlk->tTxPktParams.uPktType == TX_PKT_TYPE_EAPOL))
     {
         SET_PKT_TYPE_ENCRYPT(pPktCtrlBlk);
     }
@@ -447,10 +452,10 @@ TI_STATUS txMgmtQ_Xmit (TI_HANDLE hTxMgmtQ, TTxCtrlBlk *pPktCtrlBlk, TI_BOOL bEx
         pLinkQ->tDbgCounters.aEnqueuePackets[uQueId]++;
 
         /* If selected queue was empty before packet insertion */
-        if (uQueSize == 1) 
+        if (uQueSize == 1)
         {
             /* If called from external context (EAPOL from network), request switch to the driver's context. */
-            if (bExternalContext) 
+            if (bExternalContext)
             {
                 /* Set bSendEvent_NotEmpty flag to use in driver context */
                 pLinkQ->bSendEvent_NotEmpty = TI_TRUE;
@@ -458,7 +463,7 @@ TI_STATUS txMgmtQ_Xmit (TI_HANDLE hTxMgmtQ, TTxCtrlBlk *pPktCtrlBlk, TI_BOOL bEx
             }
 
             /* If already in the driver's context, call the SM with QUEUES_NOT_EMPTY event. */
-            else 
+            else
             {
                 mgmtQueuesSM(pTxMgmtQ, uHlid, SM_EVENT_QUEUES_NOT_EMPTY);
             }
@@ -476,19 +481,19 @@ TI_STATUS txMgmtQ_Xmit (TI_HANDLE hTxMgmtQ, TTxCtrlBlk *pPktCtrlBlk, TI_BOOL bEx
 }
 
 
-/** 
+/**
  * \fn     txMgmtQ_QueuesNotEmpty
  * \brief  Context-Engine Callback
- * 
+ *
  * Context-Engine Callback for processing queues in driver's context.
  * Called after driver's context scheduling was requested in txMgmtQ_Xmit().
  * Calls the SM with QUEUES_NOT_EMPTY event.
- * 
- * \note   
- * \param  hTxMgmtQ - The module's object                                          
- * \return void 
+ *
+ * \note
+ * \param  hTxMgmtQ - The module's object
+ * \return void
  * \sa     txMgmtQ_Xmit
- */ 
+ */
 void txMgmtQ_QueuesNotEmpty (TI_HANDLE hTxMgmtQ)
 {
     TTxMgmtQ  *pTxMgmtQ = (TTxMgmtQ *)hTxMgmtQ;
@@ -498,7 +503,7 @@ void txMgmtQ_QueuesNotEmpty (TI_HANDLE hTxMgmtQ)
     for (uHlid=0; uHlid<WLANLINKS_MAX_LINKS; uHlid++)
     {
         /* Call every link that is not in CLOSE state */
-        if (pTxMgmtQ->aMgmtLinkQ[uHlid].bSendEvent_NotEmpty) 
+        if (pTxMgmtQ->aMgmtLinkQ[uHlid].bSendEvent_NotEmpty)
         {
             /* reset bSendEvent_NotEmpty flag to use in driver context */
             pTxMgmtQ->aMgmtLinkQ[uHlid].bSendEvent_NotEmpty = TI_FALSE;
@@ -510,13 +515,13 @@ void txMgmtQ_QueuesNotEmpty (TI_HANDLE hTxMgmtQ)
 }
 
 
-/** 
+/**
  * \fn     txMgmtQ_StopLink
  * \brief  Stop all queues transmission for the link
- * 
- * \param  hTxMgmtQ   - The module's object                                          
- * \return void 
- */ 
+ *
+ * \param  hTxMgmtQ   - The module's object
+ * \return void
+ */
 void txMgmtQ_StopLink (TI_HANDLE hTxMgmtQ, TI_UINT32 uHlid)
 {
     TTxMgmtQ  *pTxMgmtQ = (TTxMgmtQ *)hTxMgmtQ;
@@ -525,19 +530,19 @@ void txMgmtQ_StopLink (TI_HANDLE hTxMgmtQ, TI_UINT32 uHlid)
     pLinkQ->bBusy = TI_TRUE;
 }
 
-/** 
+/**
  * \fn     txMgmtQ_StopQueue
  * \brief  Context-Engine Callback
- * 
+ *
  * This function is called by the txCtrl_xmitMgmt() if the queue's backpressure indication
  *   is set. It sets the internal queue's Busy indication.
- * 
- * \note   
- * \param  hTxMgmtQ   - The module's object                                          
- * \param  uTidBitMap - The busy TIDs bitmap                                          
- * \return void 
+ *
+ * \note
+ * \param  hTxMgmtQ   - The module's object
+ * \param  uTidBitMap - The busy TIDs bitmap
+ * \return void
  * \sa     txMgmtQ_UpdateBusyMap
- */ 
+ */
 void txMgmtQ_StopQueue (TI_HANDLE hTxMgmtQ, TI_UINT32 uTidBitMap)
 {
 	TTxMgmtQ *pTxMgmtQ = (TTxMgmtQ *)hTxMgmtQ;
@@ -547,25 +552,25 @@ void txMgmtQ_StopQueue (TI_HANDLE hTxMgmtQ, TI_UINT32 uTidBitMap)
 }
 
 
-/** 
+/**
  * \fn     txMgmtQ_UpdateBusyMap
  * \brief  Update the queues busy map
- * 
+ *
  * This function is called by the txCtrl if the backpressure map per TID is changed.
  * This could be as a result of Tx-Complete, admission change or association.
  * The function modifies the internal queues Busy indication and calls the scheduler.
- * 
- * \note   
- * \param  hTxMgmtQ   - The module's object                                          
- * \param  uTidBitMap - The busy TIDs bitmap                                          
- * \param  uLinkBitMap - The busy Links bitmap                                          
- * \return void 
+ *
+ * \note
+ * \param  hTxMgmtQ   - The module's object
+ * \param  uTidBitMap - The busy TIDs bitmap
+ * \param  uLinkBitMap - The busy Links bitmap
+ * \return void
  * \sa     txMgmtQ_StopQueue
- */ 
+ */
 void txMgmtQ_UpdateBusyMap (TI_HANDLE hTxMgmtQ, TI_UINT32 uTidBitMap, TI_UINT32 uLinkBitMap)
 {
 	TTxMgmtQ *pTxMgmtQ = (TTxMgmtQ *)hTxMgmtQ;
-	
+
 	/* Update the Queue(s) busy map. */
 	updateLinksBusyMap (pTxMgmtQ, uLinkBitMap);
 
@@ -576,12 +581,12 @@ void txMgmtQ_UpdateBusyMap (TI_HANDLE hTxMgmtQ, TI_UINT32 uTidBitMap, TI_UINT32 
 	runSchedulerNotFromSm (pTxMgmtQ);
 }
 
-/** 
+/**
  * \fn     txMgmtQ_SuspendTx
  * \brief  Stop all Tx
- * 
- * \param  hTxMgmtQ   - The module's object                                          
- */ 
+ *
+ * \param  hTxMgmtQ   - The module's object
+ */
 void txMgmtQ_SuspendTx (TI_HANDLE hTxMgmtQ)
 {
     TTxMgmtQ *pTxMgmtQ = (TTxMgmtQ *)hTxMgmtQ;
@@ -590,12 +595,12 @@ void txMgmtQ_SuspendTx (TI_HANDLE hTxMgmtQ)
     txDataQ_StopAll(pTxMgmtQ->hTxDataQ);
 }
 
-/** 
+/**
  * \fn     txMgmtQ_ResumeTx
- * \brief  Resume all Tx 
- * 
- * \param  hTxMgmtQ   - The module's object                                          
- */ 
+ * \brief  Resume all Tx
+ *
+ * \param  hTxMgmtQ   - The module's object
+ */
 void txMgmtQ_ResumeTx (TI_HANDLE hTxMgmtQ)
 {
     TTxMgmtQ *pTxMgmtQ = (TTxMgmtQ *)hTxMgmtQ;
@@ -604,18 +609,18 @@ void txMgmtQ_ResumeTx (TI_HANDLE hTxMgmtQ)
     txDataQ_WakeAll(pTxMgmtQ->hTxDataQ);
 }
 
-/** 
+/**
  * \fn     txMgmtQ_StopAll
  * \brief  enable all queues transmission
- * 
+ *
  * This function is called by the Tx-Port when the whole Mgmt-queue is stopped.
  * It clears the common queues enable indication.
- * 
- * \note   
- * \param  hTxMgmtQ   - The module's object                                          
- * \return void 
+ *
+ * \note
+ * \param  hTxMgmtQ   - The module's object
+ * \return void
  * \sa     txMgmtQ_WakeAll
- */ 
+ */
 void txMgmtQ_StopAll (TI_HANDLE hTxMgmtQ)
 {
     TTxMgmtQ *pTxMgmtQ = (TTxMgmtQ *)hTxMgmtQ;
@@ -624,18 +629,18 @@ void txMgmtQ_StopAll (TI_HANDLE hTxMgmtQ)
 	pTxMgmtQ->bMgmtPortEnable = TI_FALSE;
 }
 
-/** 
+/**
  * \fn     txMgmtQ_WakeAll
  * \brief  Enable all queues transmission
- * 
+ *
  * This function is called by the Tx-Port when the whole Mgmt-queue is enabled.
  * It sets the common queues enable indication and calls the scheduler.
- * 
- * \note   
- * \param  hTxMgmtQ   - The module's object                                          
- * \return void 
+ *
+ * \note
+ * \param  hTxMgmtQ   - The module's object
+ * \return void
  * \sa     txMgmtQ_WakeAll
- */ 
+ */
 void txMgmtQ_WakeAll (TI_HANDLE hTxMgmtQ)
 {
     TTxMgmtQ *pTxMgmtQ = (TTxMgmtQ *)hTxMgmtQ;
@@ -647,13 +652,13 @@ void txMgmtQ_WakeAll (TI_HANDLE hTxMgmtQ)
 	runSchedulerNotFromSm (pTxMgmtQ);
 }
 
-/** 
+/**
  * \fn     txMgmtQ_DisableLink
  * \brief  Disable all queues transmission for the link
- * 
- * \param  hTxMgmtQ   - The module's object                                          
- * \return void 
- */ 
+ *
+ * \param  hTxMgmtQ   - The module's object
+ * \return void
+ */
 static void txMgmtQ_DisableLink (TTxMgmtQ *pTxMgmtQ, TI_UINT32 uHlid)
 {
     TMgmtLinkQ *pLinkQ = &pTxMgmtQ->aMgmtLinkQ[uHlid];
@@ -661,14 +666,14 @@ static void txMgmtQ_DisableLink (TTxMgmtQ *pTxMgmtQ, TI_UINT32 uHlid)
     pLinkQ->bEnabled = TI_FALSE;
 }
 
-/** 
+/**
  * \fn     txMgmtQ_EnableLink
  * \brief  Enable all queues transmission for the link
- * 
- * \param  hTxMgmtQ   - The module's object                                          
- * \return void 
+ *
+ * \param  hTxMgmtQ   - The module's object
+ * \return void
  * \sa     txMgmtQ_DisableLink
- */ 
+ */
 static void txMgmtQ_EnableLink (TTxMgmtQ *pTxMgmtQ, TI_UINT32 uHlid)
 {
     TMgmtLinkQ *pLinkQ = &pTxMgmtQ->aMgmtLinkQ[uHlid];
@@ -680,20 +685,20 @@ static void txMgmtQ_EnableLink (TTxMgmtQ *pTxMgmtQ, TI_UINT32 uHlid)
 }
 
 
-/** 
+/**
  * \fn     txMgmtQ_SetConnState
  * \brief  Enable all queues transmission
- * 
- * Called by the connection SM and updates the connection state from Tx perspective 
+ *
+ * Called by the connection SM and updates the connection state from Tx perspective
  *   (i.e. which packet types are permitted).
 *               Calls the local SM to handle this state change.
 *
- * \note   
- * \param  hTxMgmtQ     - The module's object                                          
- * \param  eTxConnState - The new Tx connection state                                          
- * \return void 
+ * \note
+ * \param  hTxMgmtQ     - The module's object
+ * \param  eTxConnState - The new Tx connection state
+ * \return void
  * \sa     mgmtQueuesSM
- */ 
+ */
 void txMgmtQ_SetConnState (TI_HANDLE hTxMgmtQ, ETxConnState eTxConnState)
 {
     TTxMgmtQ *pTxMgmtQ = (TTxMgmtQ *)hTxMgmtQ;
@@ -717,16 +722,16 @@ TRACE1(pTxMgmtQ->hReport, REPORT_SEVERITY_ERROR, ": Unknown eTxConnState = %d\n"
 	}
 }
 
-/** 
+/**
  * \fn     txMgmtQ_SetLinkType
- * \brief  set link type 
- * 
- * \note   
- * \param  hTxMgmtQ     - The module's object                                          
- * \param  uHlid        - link id                                          
- * \param  eLinkType    - link type                                          
- * \return void 
- */ 
+ * \brief  set link type
+ *
+ * \note
+ * \param  hTxMgmtQ     - The module's object
+ * \param  uHlid        - link id
+ * \param  eLinkType    - link type
+ * \return void
+ */
 void txMgmtQ_SetLinkType (TI_HANDLE hTxMgmtQ, TI_UINT32 uHlid, EWlanLinkType eLinkType)
 {
     TTxMgmtQ *pTxMgmtQ = (TTxMgmtQ *)hTxMgmtQ;
@@ -738,7 +743,7 @@ void txMgmtQ_SetLinkType (TI_HANDLE hTxMgmtQ, TI_UINT32 uHlid, EWlanLinkType eLi
 	TRACE3(pTxMgmtQ->hReport, REPORT_SEVERITY_INFORMATION, "%s: link %d, LinkType %d\n", __FUNCTION__, uHlid, pLinkQ->eType);
 
     /* save global link id */
-    if (pLinkQ->eType == WLANLINK_TYPE_GLOBAL) 
+    if (pLinkQ->eType == WLANLINK_TYPE_GLOBAL)
     {
         pTxMgmtQ->uGlobalHlid = uHlid;
     }
@@ -746,17 +751,17 @@ void txMgmtQ_SetLinkType (TI_HANDLE hTxMgmtQ, TI_UINT32 uHlid, EWlanLinkType eLi
     txDataQ_SetLinkType(pTxMgmtQ->hTxDataQ, uHlid, eLinkType);
 }
 
-/** 
+/**
  * \fn     txMgmtQ_SetLinkState
  * \brief  set link state (enable/not)
- * 
- * \note   
- * \param  hTxMgmtQ     - The module's object                                          
- * \param  uHlid        - link id                                          
- * \param  eTxConnState - The new Tx connection state                                          
- * \return void 
+ *
+ * \note
+ * \param  hTxMgmtQ     - The module's object
+ * \param  uHlid        - link id
+ * \param  eTxConnState - The new Tx connection state
+ * \return void
  * \sa     mgmtQueuesSM
- */ 
+ */
 TI_STATUS txMgmtQ_SetLinkState (TI_HANDLE hTxMgmtQ, TI_UINT32 uHlid, ETxConnState eTxConnState)
 {
     TTxMgmtQ *pTxMgmtQ = (TTxMgmtQ *)hTxMgmtQ;
@@ -782,27 +787,27 @@ TI_STATUS txMgmtQ_SetLinkState (TI_HANDLE hTxMgmtQ, TI_UINT32 uHlid, ETxConnStat
     return TI_OK;
 }
 
-		
+
 /*******************************************************************************
 *                       INTERNAL  FUNCTIONS  IMPLEMENTATION					   *
 ********************************************************************************/
 
 
-/** 
+/**
  * \fn     mgmtQueuesSM
  * \brief  The module state-machine (static function)
- * 
+ *
  * The SM follows the system management states (see ETxConnState) and the Mgmt queues
  *   status (empty or not), and contorls the Tx queues flow accordingly (mgmt and data queues).
  * For detailed explanation, see the Tx-Path LLD document!
- * 
- * \note   To avoid recursion issues, all SM actions are done at the end of the function, 
+ *
+ * \note   To avoid recursion issues, all SM actions are done at the end of the function,
  *            since some of them may invoke the SM again.
- * \param  pTxMgmtQ - The module's object                                          
- * \param  eSmEvent - The event to act upon                                          
- * \return void 
+ * \param  pTxMgmtQ - The module's object
+ * \param  eSmEvent - The event to act upon
+ * \return void
  * \sa     txMgmtQ_SetConnState
- */ 
+ */
 static void mgmtQueuesSM (TTxMgmtQ *pTxMgmtQ, TI_UINT32 uHlid, ESmEvent eSmEvent)
 {
 	TMgmtLinkQ *pLinkQ = &pTxMgmtQ->aMgmtLinkQ[uHlid]; /* Link queues */
@@ -813,8 +818,8 @@ static void mgmtQueuesSM (TTxMgmtQ *pTxMgmtQ, TI_UINT32 uHlid, ESmEvent eSmEvent
 	switch(eSmEvent)
 	{
 		case SM_EVENT_CLOSE:
-			/* 
-			 * Tx link is closed (expected in any state), so disable both mgmt queues  
+			/*
+			 * Tx link is closed (expected in any state), so disable both mgmt queues
 			 *   and if data-queues are active disable them.
 			 */
 			pLinkQ->eState = SM_STATE_CLOSE;
@@ -828,7 +833,7 @@ static void mgmtQueuesSM (TTxMgmtQ *pTxMgmtQ, TI_UINT32 uHlid, ESmEvent eSmEvent
 			break;
 
 		case SM_EVENT_MGMT:
-			/* 
+			/*
 			 * Only Mgmt packets are permitted (expected from any state):
 			 *   - Enable the mgmt queue and disable the Eapol queue.
 			 *   - If data-queues are active disable them (this will run the scheduler).
@@ -844,8 +849,8 @@ static void mgmtQueuesSM (TTxMgmtQ *pTxMgmtQ, TI_UINT32 uHlid, ESmEvent eSmEvent
 			break;
 
 		case SM_EVENT_EAPOL:
-			/* 
-			 * EAPOL packets are also permitted (expected in MGMT or CLOSE state), so enable the 
+			/*
+			 * EAPOL packets are also permitted (expected in MGMT or CLOSE state), so enable the
 			 *   EAPOL queue and run the scheduler (to send packets from EAPOL queue if waiting).
 			 */
 			if ( (ePrevState != SM_STATE_CLOSE) && (ePrevState != SM_STATE_MGMT) )
@@ -859,7 +864,7 @@ static void mgmtQueuesSM (TTxMgmtQ *pTxMgmtQ, TI_UINT32 uHlid, ESmEvent eSmEvent
 			break;
 
 		case SM_EVENT_OPEN:
-			/* 
+			/*
 			 * All packets are now permitted (expected in EAPOL state), so if the mgmt-queues
 			 *   are empty disable them and enable the data queues.
 			 */
@@ -881,8 +886,8 @@ static void mgmtQueuesSM (TTxMgmtQ *pTxMgmtQ, TI_UINT32 uHlid, ESmEvent eSmEvent
 			break;
 
 		case SM_EVENT_QUEUES_EMPTY:
-			/* 
-			 * The mgmt-queues are empty, so if in OPEN_MGMT state disable the 
+			/*
+			 * The mgmt-queues are empty, so if in OPEN_MGMT state disable the
 			 *   mgmt-queues and enable the data-queues.
 			 */
 			if (ePrevState == SM_STATE_OPEN_MGMT)
@@ -902,7 +907,7 @@ static void mgmtQueuesSM (TTxMgmtQ *pTxMgmtQ, TI_UINT32 uHlid, ESmEvent eSmEvent
 		case SM_EVENT_QUEUES_NOT_EMPTY:
 
 			/* A packet was inserted to the mgmt-queues */
-			/* 
+			/*
 			 * If in OPEN_DATA state, enable mgmt-queues and disable data-queues.
 			 *
 			 * Note: The scheduler is not run here because it will called by
@@ -916,7 +921,7 @@ static void mgmtQueuesSM (TTxMgmtQ *pTxMgmtQ, TI_UINT32 uHlid, ESmEvent eSmEvent
 				eSmAction = SM_ACTION_ENABLE_MGMT;
 			}
 
-			/* 
+			/*
 			 * If in MGMT or EAPOL state, run the scheduler to transmit the packet.
 			 */
 			else if ( (ePrevState == SM_STATE_MGMT) || (ePrevState == SM_STATE_EAPOL) )
@@ -938,8 +943,8 @@ static void mgmtQueuesSM (TTxMgmtQ *pTxMgmtQ, TI_UINT32 uHlid, ESmEvent eSmEvent
 
     TRACE6( pTxMgmtQ->hReport, REPORT_SEVERITY_INFORMATION, "mgmtQueuesSM: <currentState = %d, event = %d> --> nextState = %d, action = %d, MgmtQueEnbl=%d, EapolQueEnbl=%d\n", ePrevState, eSmEvent, pLinkQ->eState, eSmAction, pLinkQ->aQenabled[0], pLinkQ->aQenabled[1]);
 
-	/* 
-	 * Execute the required action. 
+	/*
+	 * Execute the required action.
 	 * Note: This is done at the end of the SM because it may start a sequence that will call the SM again!
 	 */
 	switch (eSmAction)
@@ -973,20 +978,20 @@ static void mgmtQueuesSM (TTxMgmtQ *pTxMgmtQ, TI_UINT32 uHlid, ESmEvent eSmEvent
 }
 
 
-/** 
+/**
  * \fn     runSchedulerNotFromSm
  * \brief  Run scheduler due to other events then from SM (static function)
- * 
+ *
  * To comply with the SM behavior, this function is used for any case where the
  *    Mgmt-Queues scheduler may have work to do due to events external to the SM.
  * If the queues are not empty, this function runs the scheduler.
 *				If the scheduler emptied the queues, update the SM.
- * 
- * \note   
- * \param  pTxMgmtQ - The module's object                                          
- * \return void 
- * \sa     
- */ 
+ *
+ * \note
+ * \param  pTxMgmtQ - The module's object
+ * \return void
+ * \sa
+ */
 static void runSchedulerNotFromSm (TTxMgmtQ *pTxMgmtQ)
 {
 	TMgmtLinkQ *pLinkQ;
@@ -1000,7 +1005,7 @@ static void runSchedulerNotFromSm (TTxMgmtQ *pTxMgmtQ)
 		if ( !ARE_LINK_MGMT_QUEUES_EMPTY(pLinkQ->aQueues) )
 		{
 			runScheduler (pTxMgmtQ);
-		
+
 			/* If the queues are now both empty, call the SM with QUEUES_EMPTY event. */
 			if ( ARE_LINK_MGMT_QUEUES_EMPTY(pLinkQ->aQueues) )
 			{
@@ -1011,19 +1016,19 @@ static void runSchedulerNotFromSm (TTxMgmtQ *pTxMgmtQ)
 }
 
 
-/** 
+/**
  * \fn     runScheduler
  * \brief  The scheduler processing (static function)
- * 
+ *
  * Loops over the mgmt-queues (high priority first) and if queue enabled and
  *   has packets, dequeue a packet and send it to the TxCtrl.
 *				Exit if the port level is disabled or if couldn't send anything from both queues.
- * 
+ *
  * \note   Protect the queues access against preemption from external context (EAPOL).
- * \param  pTxMgmtQ - The module's object                                          
- * \return void 
- * \sa     
- */ 
+ * \param  pTxMgmtQ - The module's object
+ * \return void
+ * \sa
+ */
 static void runScheduler (TTxMgmtQ *pTxMgmtQ)
 {
 	TI_STATUS  eStatus;
@@ -1062,7 +1067,7 @@ static void runScheduler (TTxMgmtQ *pTxMgmtQ)
 				/* Send the packet */
 				eStatus = txCtrl_XmitMgmt (pTxMgmtQ->hTxCtrl, pPktCtrlBlk);
 
-              
+
 				/* In case the return status is busy it means that the packet wasn't handled
 					 so we need to requeue the packet for future try. */
 				if(eStatus == STATUS_XMIT_BUSY)
@@ -1081,7 +1086,7 @@ static void runScheduler (TTxMgmtQ *pTxMgmtQ)
 					pLinkQ->tDbgCounters.aXmittedPackets[uQueId]++;
 
 					/* Successful delivery so start next tx from the high priority queue (mgmt),
-					 *	 giving it strict priority over the lower queue. 
+					 *	 giving it strict priority over the lower queue.
 					 */
 					uQueId = 0;
 					continue;
@@ -1089,8 +1094,8 @@ static void runScheduler (TTxMgmtQ *pTxMgmtQ)
 			}
 		}
 
-		/* If we got here we couldn't deliver a packet from current queue, so progress to lower 
-		 *	 priority queue and if already in lowest queue exit. 
+		/* If we got here we couldn't deliver a packet from current queue, so progress to lower
+		 *	 priority queue and if already in lowest queue exit.
 		 */
         if (bLinkActive) /* Continue to next queue only if the link is active */
         {
@@ -1100,7 +1105,7 @@ static void runScheduler (TTxMgmtQ *pTxMgmtQ)
 			continue;	/* Try sending from next queue (i.e. the EAPOL queue). */
         }
         }
-    
+
         /*
          * continue to next link
          */
@@ -1114,7 +1119,7 @@ static void runScheduler (TTxMgmtQ *pTxMgmtQ)
 			{
             /* We couldn't send from both queues so indicate end of packets burst and exit. */
             TWD_txXfer_EndOfBurst (pTxMgmtQ->hTWD);
-			return;		
+			return;
 		}
 
 	} /* End of while */
@@ -1123,16 +1128,16 @@ static void runScheduler (TTxMgmtQ *pTxMgmtQ)
 }
 
 
-/** 
+/**
  * \fn     updateLinksBusyMap
  * \brief  Update links busy map (static function)
- * 
- * \note   
- * \param  pTxMgmtQ   - The module's object                                          
- * \param  uLinkBitMap - The LINKs bitmap of the Link(s) to update                                          
- * \return void 
- * \sa     
- */ 
+ *
+ * \note
+ * \param  pTxMgmtQ   - The module's object
+ * \param  uLinkBitMap - The LINKs bitmap of the Link(s) to update
+ * \return void
+ * \sa
+ */
 static void updateLinksBusyMap (TTxMgmtQ *pTxMgmtQ, TI_UINT32 uLinkBitMap)
 {
 	TI_UINT32 uHlid;
@@ -1151,20 +1156,20 @@ static void updateLinksBusyMap (TTxMgmtQ *pTxMgmtQ, TI_UINT32 uLinkBitMap)
 	}
 }
 
-/** 
+/**
  * \fn     updateQueuesBusyMap
  * \brief  Update queues busy map (static function)
- * 
- * Set the queues busy indication on or off according to the highest TID bit 
- *    in the tidBitMap (1 = busy). 
+ *
+ * Set the queues busy indication on or off according to the highest TID bit
+ *    in the tidBitMap (1 = busy).
 *				Note that both Mgmt and Eapol queues are mapped to TID 7.
 *
- * \note   
- * \param  pTxMgmtQ   - The module's object                                          
- * \param  uTidBitMap - The TIDs bitmap of the queue(s) to update                                          
- * \return void 
- * \sa     
- */ 
+ * \note
+ * \param  pTxMgmtQ   - The module's object
+ * \param  uTidBitMap - The TIDs bitmap of the queue(s) to update
+ * \return void
+ * \sa
+ */
 static void updateQueuesBusyMap (TTxMgmtQ *pTxMgmtQ, TI_UINT32 uTidBitMap)
 {
 	/* Set the queues busy indication on or off according to the highest TID bit (1 = busy). */
@@ -1178,16 +1183,16 @@ static void updateQueuesBusyMap (TTxMgmtQ *pTxMgmtQ, TI_UINT32 uTidBitMap)
 	}
 }
 
-/** 
+/**
  * \fn     TxMgmtQ_SetEncryptFlag
  * \brief  Update link encrypted bit
- * 
- * * \note   
- * \param  pTxMgmtQ   - The module's object                                          
- * \param  uHlid - link id                                          
- * \return void 
- * \sa     
- */ 
+ *
+ * * \note
+ * \param  pTxMgmtQ   - The module's object
+ * \param  uHlid - link id
+ * \return void
+ * \sa
+ */
 
 void TxMgmtQ_SetEncryptFlag(TI_HANDLE hTxMgmtQ, TI_UINT32  uHlid,int flag)
 {
@@ -1195,23 +1200,23 @@ void TxMgmtQ_SetEncryptFlag(TI_HANDLE hTxMgmtQ, TI_UINT32  uHlid,int flag)
     TMgmtLinkQ *pLinkQ;
 
 	TRACE3(pTxMgmtQ->hReport, REPORT_SEVERITY_INFORMATION, "%s: MGMT Encrypt flag %d , Hlid %d \n", __FUNCTION__,flag, uHlid);
-    
+
     pLinkQ = &pTxMgmtQ->aMgmtLinkQ[uHlid]; /* Link queues */
     pLinkQ->bEncrypt = flag;
-              
+
 }
 
 
-/** 
+/**
  * \fn     TxMgmtQ_FlushLinkQueues
  * \brief  Flush management queues the specific link
- * 
- * * \note   
- * \param  hTxMgmtQ   - The module's object                                          
- * \param  uHlid - link id                                          
- * \return void 
- * \sa     
- */ 
+ *
+ * * \note
+ * \param  hTxMgmtQ   - The module's object
+ * \param  uHlid - link id
+ * \return void
+ * \sa
+ */
 void TxMgmtQ_FlushLinkQueues(TI_HANDLE hTxMgmtQ, TI_UINT32 uHlid)
 {
     TTxMgmtQ   *pTxMgmtQ = (TTxMgmtQ *)hTxMgmtQ;
@@ -1229,7 +1234,7 @@ void TxMgmtQ_FlushLinkQueues(TI_HANDLE hTxMgmtQ, TI_UINT32 uHlid)
             context_EnterCriticalSection (pTxMgmtQ->hContext);
             pPktCtrlBlk = (TTxCtrlBlk *) que_Dequeue (pLinkQ->aQueues[uQueId]);
             context_LeaveCriticalSection (pTxMgmtQ->hContext);
-            if (pPktCtrlBlk == NULL) 
+            if (pPktCtrlBlk == NULL)
             {
                 break;
             }
@@ -1245,27 +1250,27 @@ void TxMgmtQ_FlushLinkQueues(TI_HANDLE hTxMgmtQ, TI_UINT32 uHlid)
 
 #ifdef TI_DBG
 
-/** 
+/**
  * \fn     txMgmtQ_PrintModuleParams
  * \brief  Print module's parameters (debug)
- * 
+ *
  * This function prints the module's parameters.
- * 
- * \note   
- * \param  hTxMgmtQ - The module's object                                          
- * \return void 
- * \sa     
- */ 
-void txMgmtQ_PrintModuleParams (TI_HANDLE hTxMgmtQ) 
+ *
+ * \note
+ * \param  hTxMgmtQ - The module's object
+ * \return void
+ * \sa
+ */
+void txMgmtQ_PrintModuleParams (TI_HANDLE hTxMgmtQ)
 {
     TTxMgmtQ *pTxMgmtQ = (TTxMgmtQ *)hTxMgmtQ;
     TI_UINT32 uQueId;
     TMgmtLinkQ *pLinkQ;
     TI_UINT32  uHlid;
-    
+
     WLAN_OS_REPORT(("-------------- txMgmtQueue Module Params -----------------\n"));
     WLAN_OS_REPORT(("==========================================================\n"));
-    
+
     WLAN_OS_REPORT(("bMgmtPortEnable = %d\n", pTxMgmtQ->bMgmtPortEnable));
     WLAN_OS_REPORT(("uContextId      = %d\n", pTxMgmtQ->uContextId));
     WLAN_OS_REPORT(("aMgmtAcBusy     = %2d\n", pTxMgmtQ->aMgmtAcBusy));
@@ -1273,10 +1278,10 @@ void txMgmtQ_PrintModuleParams (TI_HANDLE hTxMgmtQ)
     for (uHlid = 0; uHlid < WLANLINKS_MAX_LINKS; uHlid++)
     {
         pLinkQ = &pTxMgmtQ->aMgmtLinkQ[uHlid]; /* Link queues */
-        
+
         WLAN_OS_REPORT(("Link %3d--------------------------------------------------\n", uHlid));
         WLAN_OS_REPORT(("  eState=%01d, bEnabled=%1d, bBusy=%1d\n", pLinkQ->eState, pLinkQ->bEnabled, pLinkQ->bBusy));
-        if (pLinkQ->eState == SM_STATE_CLOSE) 
+        if (pLinkQ->eState == SM_STATE_CLOSE)
             continue;
         WLAN_OS_REPORT(("  bSendEvent_NotEmpty = %d\n", pLinkQ->bSendEvent_NotEmpty));
         WLAN_OS_REPORT(("  eTxConnState        = %d\n", pLinkQ->eTxConnState));
@@ -1293,32 +1298,32 @@ void txMgmtQ_PrintModuleParams (TI_HANDLE hTxMgmtQ)
 }
 
 
-/** 
+/**
  * \fn     txMgmtQ_PrintQueueStatistics
  * \brief  Print queues statistics (debug)
- * 
+ *
  * This function prints the module's Tx statistics per Queue.
- * 
- * \note   
- * \param  hTxMgmtQ - The module's object                                          
- * \return void 
- * \sa     
- */ 
+ *
+ * \note
+ * \param  hTxMgmtQ - The module's object
+ * \return void
+ * \sa
+ */
 void txMgmtQ_PrintQueueStatistics (TI_HANDLE hTxMgmtQ)
 {
     TTxMgmtQ *pTxMgmtQ = (TTxMgmtQ *)hTxMgmtQ;
     TMgmtLinkQ *pLinkQ;
     TI_UINT32  uHlid;
-    
+
     WLAN_OS_REPORT(("-------------- Mgmt Queues Statistics  -------------------\n"));
     for (uHlid = 0; uHlid < WLANLINKS_MAX_LINKS; uHlid++)
     {
         pLinkQ = &pTxMgmtQ->aMgmtLinkQ[uHlid]; /* Link queues */
         WLAN_OS_REPORT(("Link %3d--------------------------------------------------\n", uHlid));
         WLAN_OS_REPORT(("  eState=%01d, bEnabled=%1d, bBusy=%1d\n", pLinkQ->eState, pLinkQ->bEnabled, pLinkQ->bBusy));
-        if (pLinkQ->eState == SM_STATE_CLOSE) 
+        if (pLinkQ->eState == SM_STATE_CLOSE)
             continue;
-    
+
         WLAN_OS_REPORT(("  aEnqueuePackets: %8d %8d\n", pLinkQ->tDbgCounters.aEnqueuePackets[0], pLinkQ->tDbgCounters.aEnqueuePackets[1] ));
         WLAN_OS_REPORT(("  aDequeuePackets: %8d %8d\n", pLinkQ->tDbgCounters.aDequeuePackets[0], pLinkQ->tDbgCounters.aDequeuePackets[1] ));
         WLAN_OS_REPORT(("  aRequeuePackets: %8d %8d\n", pLinkQ->tDbgCounters.aRequeuePackets[0], pLinkQ->tDbgCounters.aRequeuePackets[1] ));
@@ -1329,17 +1334,17 @@ void txMgmtQ_PrintQueueStatistics (TI_HANDLE hTxMgmtQ)
 }
 
 
-/** 
+/**
  * \fn     txMgmtQ_ResetQueueStatistics
  * \brief  Reset queues statistics (debug)
- * 
+ *
  * This function Resets the module's Tx statistics per Queue.
- * 
- * \note   
- * \param  hTxMgmtQ - The module's object                                          
- * \return void 
- * \sa     
- */ 
+ *
+ * \note
+ * \param  hTxMgmtQ - The module's object
+ * \return void
+ * \sa
+ */
 void txMgmtQ_ResetQueueStatistics (TI_HANDLE hTxMgmtQ)
 {
 	TTxMgmtQ *pTxMgmtQ = (TTxMgmtQ *)hTxMgmtQ;
@@ -1353,6 +1358,6 @@ void txMgmtQ_ResetQueueStatistics (TI_HANDLE hTxMgmtQ)
 	}
 }
 
-		
+
 #endif /* TI_DBG */
-	  
+

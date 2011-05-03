@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * CmdBld.h
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 
 #ifndef CMDBLD_H
@@ -38,11 +43,11 @@
 TI_HANDLE cmdBld_Create                 (TI_HANDLE hOs);
 TI_STATUS cmdBld_Destroy                (TI_HANDLE hCmdBld);
 TI_STATUS cmdBld_Restart               (TI_HANDLE hCmdBld);
-TI_STATUS cmdBld_Config                 (TI_HANDLE  hCmdBld, 
-                                         TI_HANDLE  hReport, 
-                                         void      *fFinalizeDownload, 
-                                         TI_HANDLE  hFinalizeDownload, 
-                                         TI_HANDLE  hEventMbox, 
+TI_STATUS cmdBld_Config                 (TI_HANDLE  hCmdBld,
+                                         TI_HANDLE  hReport,
+                                         void      *fFinalizeDownload,
+                                         TI_HANDLE  hFinalizeDownload,
+                                         TI_HANDLE  hEventMbox,
                                          TI_HANDLE  hCmdQueue,
                                          TI_HANDLE  hTwIf);
 TI_STATUS cmdBld_ConfigFw               (TI_HANDLE hCmdBld, void *fConfigFwCb, TI_HANDLE hConfigFwCb);
@@ -135,7 +140,7 @@ TI_STATUS cmdBld_CfgArmClock            (TI_HANDLE hCmdBld, TI_UINT32 uArmClock,
 TI_STATUS cmdBld_CfgEnableRxDataFilter  (TI_HANDLE hCmdBld, TI_BOOL bEnabled, filter_e eDefaultAction, void *fCb, TI_HANDLE hCb);
 TI_STATUS cmdBld_CfgRxDataFilter        (TI_HANDLE hCmdBld, TI_UINT8 index, TI_UINT8 command, filter_e eAction, TI_UINT8 uNumFieldPatterns, TI_UINT8 uLenFieldPatterns, TI_UINT8 *pFieldPatterns, void *fCb, TI_HANDLE hCb);
 TI_STATUS cmdBld_CfgCtsProtection       (TI_HANDLE hCmdBld, TI_UINT8 uCtsProtection, void *fCb, TI_HANDLE hCb);
-TI_STATUS cmdBld_CfgServicePeriodTimeout(TI_HANDLE hCmdBld, TRxTimeOut *pRxTimeOut, void *fCb, TI_HANDLE hCb);                            
+TI_STATUS cmdBld_CfgServicePeriodTimeout(TI_HANDLE hCmdBld, TRxTimeOut *pRxTimeOut, void *fCb, TI_HANDLE hCb);
 TI_STATUS cmdBld_CfgRxMsduLifeTime      (TI_HANDLE hCmdBld, TI_UINT32 uRxMsduLifeTime, void *fCb, TI_HANDLE hCb);
 TI_STATUS cmdBld_CfgStatisitics         (TI_HANDLE hCmdBld, void *fCb, TI_HANDLE hCb);
 TI_STATUS cmdBld_CfgTxPowerDbm          (TI_HANDLE hCmdBld, TI_UINT8 uTxPowerDbm, void *fCb, TI_HANDLE hCb);
@@ -169,8 +174,8 @@ TI_UINT8  cmdBld_GetDtimCount               (TI_HANDLE hCmdBld);
 TI_UINT16 cmdBld_GetBeaconInterval          (TI_HANDLE hCmdBld);
 TFwInfo * cmdBld_GetFWInfo                  (TI_HANDLE hCmdBld);
 TI_STATUS cmdBld_GetRxFilters               (TI_HANDLE hCmdBld, TI_UINT32 *pRxConfigOption, TI_UINT32 *pRxFilterOption);
-TI_UINT8  cmdBld_GetBssType                 (TI_HANDLE hCmdBld); 
-TI_UINT32 cmdBld_GetAckPolicy               (TI_HANDLE hCmdBld, TI_UINT32 uQueueId); 
+TI_UINT8  cmdBld_GetBssType                 (TI_HANDLE hCmdBld);
+TI_UINT32 cmdBld_GetAckPolicy               (TI_HANDLE hCmdBld, TI_UINT32 uQueueId);
 TI_STATUS cmdBld_GetPltRxCalibrationStatus  ( TI_HANDLE hCmdBld, TI_STATUS *pLastStatus );
 
 /* Set */
@@ -184,42 +189,42 @@ TI_STATUS cmdBld_CmdBssStop             (TI_HANDLE hCmdBld, TI_UINT8 bssIdx ,voi
 
 TI_STATUS cmdBld_SendGenericCmdToFW    (TI_HANDLE hCmdBld, TI_UINT16 uCmdID, TI_UINT8 *pCmd, TI_UINT32 uCmdLen, void *fCb, TI_HANDLE  hCb);
 /* \brief cmdBld_CmdAddSta
- * 
+ *
  * \param  hCmdBld        		- handle to CmdBld object
  * \param  addStaParams			- Add Station params
  * \param  fCb				- command complete callback
  * \param  hCb				- command complete callback handler
- * \return TI_OK on success or TI_NOK on failure 
- * 
- */ 
+ * \return TI_OK on success or TI_NOK on failure
+ *
+ */
 TI_STATUS cmdBld_CmdAddSta (TI_HANDLE hCmdBld, TTwdAddStaParams *addStaParams,void *fCb, TI_HANDLE  hCb);
 
 /* \brief cmdBld_CmdRemSta
- * 
+ *
  * \param  hCmdBld        		- handle to CmdBld object
  * \param  uHlid			- link host LID
  * \param  uReasonOpcode	- deauth reason opcode
  * \param  bSendDeauth		- sendDeauth flag
  * \param  fCb				- command complete callback
  * \param  hCb				- command complete callback handler
- * \return TI_OK on success or TI_NOK on failure 
- * 
- */ 
+ * \return TI_OK on success or TI_NOK on failure
+ *
+ */
 TI_STATUS cmdBld_CmdRemSta (TI_HANDLE hCmdBld, TI_UINT8 uHlid, TI_UINT8 uReasonOpcode, TI_BOOL bSendDeauth,void *fCb, TI_HANDLE  hCb);
 
-/** 
- * \fn     cmdBld_CmdNop 
+/**
+ * \fn     cmdBld_CmdNop
  * \brief  NOP command
- * 
+ *
  * NOP command for TWD command queue synchronization
- * 
+ *
  * \note
  * \param  hCmdBld        	- handle to CmdBld object
  * \param  fCb				- command complete callback
  * \param  hCb				- command complete callback handler
  * \return TI_OK on success or TI_NOK on failure
  * \sa
- */ 
+ */
 TI_STATUS cmdBld_CmdNop (TI_HANDLE hCmdBld, void *fCb, TI_HANDLE  hCb);
 
 /* this is a solution for the EMP project Enable/Disable Rx Data*/
@@ -310,7 +315,7 @@ typedef enum
     __CFG_MAX_TX_RETRY,
     __CFG_SPLIT_SCAN_TIMEOUT,
 
-    /******************** Re-join sequence (57 cmds till here ) **********************/ 
+    /******************** Re-join sequence (57 cmds till here ) **********************/
     __CFG_TX_RATE_POLICY,
     __CMD_BEACON_JOIN,
     __CMD_PROBE_RESP_JOIN,
@@ -358,13 +363,13 @@ typedef struct
 {
     TI_UINT32                  uNumOfStations;
     ECipherSuite               eSecurityMode;
-    EKeyType                   eCurTxKeyType;  /* Key type of current configured unicast key */ 
+    EKeyType                   eCurTxKeyType;  /* Key type of current configured unicast key */
 
 } TSecurity;
 
 
 
-typedef struct 
+typedef struct
 {
     TI_HANDLE                  hOs;
     TI_HANDLE                  hReport;
@@ -401,12 +406,12 @@ typedef struct
 } TCmdBld;
 
 
-/* 
- * Define the number of keys allocated on reconfigure 
+/*
+ * Define the number of keys allocated on reconfigure
  * data structure for each station
  */
-#define NO_OF_RECONF_SECUR_KEYS_PER_STATION     1 
-#define NO_OF_EXTRA_RECONF_SECUR_KEYS           3 
+#define NO_OF_RECONF_SECUR_KEYS_PER_STATION     1
+#define NO_OF_EXTRA_RECONF_SECUR_KEYS           3
 
 
 #define DB_QUEUES(HCMDBLD) (((TCmdBld *)HCMDBLD)->tDb.queues)

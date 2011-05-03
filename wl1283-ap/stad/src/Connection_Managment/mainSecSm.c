@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * mainSecSm.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file mainSecSm.c
  *  \brief 802.1X finite state machine header file
  *
@@ -86,7 +91,7 @@ TI_STATUS mainSec_setDefaultKeyId(struct _mainSec_t *pMainSec, TI_UINT8 keyId);
 *
 * mainSec_create
 *
-* \b Description: 
+* \b Description:
 *
 * Allocate memory for the main security context, and create all the rest of the needed contexts.
 *
@@ -98,7 +103,7 @@ TI_STATUS mainSec_setDefaultKeyId(struct _mainSec_t *pMainSec, TI_UINT8 keyId);
 *
 *  pointer to main security context. If failed, returns NULL.
 *
-* \sa 
+* \sa
 */
 mainSec_t* mainSec_create(TI_HANDLE hOs)
 {
@@ -132,7 +137,7 @@ mainSec_t* mainSec_create(TI_HANDLE hOs)
 
     pHandle->pKeyParser = pHandle->pMainKeys->pKeyParser;
     pHandle->hOs = hOs;
-    
+
     /* created only for external security mode */
     pHandle->pExternalSec = externalSec_create(hOs);
 
@@ -151,7 +156,7 @@ mainSec_t* mainSec_create(TI_HANDLE hOs)
 *
 * mainSec_config
 *
-* \b Description: 
+* \b Description:
 *
 * Init main security state machine state machine
 *
@@ -163,10 +168,10 @@ mainSec_t* mainSec_create(TI_HANDLE hOs)
 *
 *  TI_OK on success, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
-TI_STATUS mainSec_config (mainSec_t *pMainSec, 
-                          mainSecInitData_t *pInitData, 
+TI_STATUS mainSec_config (mainSec_t *pMainSec,
+                          mainSecInitData_t *pInitData,
                           void *pParent,
                           TI_HANDLE hReport,
                           TI_HANDLE hOs,
@@ -185,7 +190,7 @@ TI_STATUS mainSec_config (mainSec_t *pMainSec,
     pMainSec->hReport = hReport;
     pMainSec->hOs = hOs;
 
-    TRACE4(pMainSec->hReport, REPORT_SEVERITY_SM, "MainSec SM: config, authProtocol = %d, keyExchangeProtocol=%d, unicastSuite=%d, broadcastSuite=%d\n", pInitData->pPaeConfig->authProtocol, pInitData->pPaeConfig->keyExchangeProtocol, pInitData->pPaeConfig->unicastSuite, pInitData->pPaeConfig->broadcastSuite); 
+    TRACE4(pMainSec->hReport, REPORT_SEVERITY_SM, "MainSec SM: config, authProtocol = %d, keyExchangeProtocol=%d, unicastSuite=%d, broadcastSuite=%d\n", pInitData->pPaeConfig->authProtocol, pInitData->pPaeConfig->keyExchangeProtocol, pInitData->pPaeConfig->unicastSuite, pInitData->pPaeConfig->broadcastSuite);
 
     if (TI_TRUE == pMainSec->pParent->bRsnExternalMode)
     {
@@ -206,15 +211,15 @@ TI_STATUS mainSec_config (mainSec_t *pMainSec,
                 break;
          }
     }
-  
-    status  = mainKeys_config (pMainSec->pMainKeys, 
-                               pInitData->pPaeConfig, 
-                               pMainSec, 
-                               pMainSec->hReport, 
-                               pMainSec->hOs, 
-                               hCtrlData, 
-                               hEvHandler, 
-                               hConn, 
+
+    status  = mainKeys_config (pMainSec->pMainKeys,
+                               pInitData->pPaeConfig,
+                               pMainSec,
+                               pMainSec->hReport,
+                               pMainSec->hOs,
+                               hCtrlData,
+                               hEvHandler,
+                               hConn,
                                pMainSec->pParent,
                                hTimer);
     if (status != TI_OK)
@@ -232,7 +237,7 @@ TI_STATUS mainSec_config (mainSec_t *pMainSec,
 *
 * mainSec_config
 *
-* \b Description: 
+* \b Description:
 *
 * Init main security state machine state machine
 *
@@ -244,7 +249,7 @@ TI_STATUS mainSec_config (mainSec_t *pMainSec,
 *
 *  TI_OK on success, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 TI_STATUS mainSec_unload(mainSec_t *pMainSec)
 {
@@ -285,7 +290,7 @@ TI_STATUS mainSec_unload(mainSec_t *pMainSec)
 *
 * mainSec_setKey
 *
-* \b Description: 
+* \b Description:
 *
 * Start the NULL main security SM. Reports success to the rsn module immediately.
 *
@@ -297,12 +302,12 @@ TI_STATUS mainSec_unload(mainSec_t *pMainSec)
 *
 *  TI_OK on success, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 TI_STATUS mainSec_setKey(struct _mainSec_t *pMainSec, TSecurityKeys *pKey)
 {
     TI_STATUS               status = TI_OK;
-    
+
     if ((pMainSec == NULL) || (pKey == NULL))
     {
         return TI_NOK;
@@ -314,7 +319,7 @@ TI_STATUS mainSec_setKey(struct _mainSec_t *pMainSec, TSecurityKeys *pKey)
 
         status = pMainSec->pParent->setKey(pMainSec->pParent, pKey);
     }
-    
+
     return status;
 }
 
@@ -322,7 +327,7 @@ TI_STATUS mainSec_setKey(struct _mainSec_t *pMainSec, TSecurityKeys *pKey)
 *
 * mainSec_removeKey
 *
-* \b Description: 
+* \b Description:
 *
 * Start the NULL main security SM. Reports success to the rsn module immediately.
 *
@@ -334,12 +339,12 @@ TI_STATUS mainSec_setKey(struct _mainSec_t *pMainSec, TSecurityKeys *pKey)
 *
 *  TI_OK on success, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 TI_STATUS mainSec_removeKey(struct _mainSec_t *pMainSec, TSecurityKeys *pKey)
 {
     TI_STATUS               status = TI_OK;
-    
+
     if ((pMainSec == NULL) || (pKey == NULL))
     {
         return TI_NOK;
@@ -351,7 +356,7 @@ TI_STATUS mainSec_removeKey(struct _mainSec_t *pMainSec, TSecurityKeys *pKey)
 
         status = pMainSec->pParent->removeKey(pMainSec->pParent, pKey);
     }
-    
+
     return status;
 }
 
@@ -359,7 +364,7 @@ TI_STATUS mainSec_removeKey(struct _mainSec_t *pMainSec, TSecurityKeys *pKey)
 *
 * mainSec_setDefaultKeyId
 *
-* \b Description: 
+* \b Description:
 *
 * Start the NULL main security SM. Reports success to the rsn module immediately.
 *
@@ -371,7 +376,7 @@ TI_STATUS mainSec_removeKey(struct _mainSec_t *pMainSec, TSecurityKeys *pKey)
 *
 *  TI_OK on success, TI_NOK otherwise.
 *
-* \sa 
+* \sa
 */
 TI_STATUS mainSec_setDefaultKeyId(struct _mainSec_t *pMainSec, TI_UINT8 keyId)
 {
@@ -383,7 +388,7 @@ TI_STATUS mainSec_setDefaultKeyId(struct _mainSec_t *pMainSec, TI_UINT8 keyId)
     }
 
     status = pMainSec->pParent->setDefaultKeyId(pMainSec->pParent, keyId);
-    
+
     return status;
 }
 

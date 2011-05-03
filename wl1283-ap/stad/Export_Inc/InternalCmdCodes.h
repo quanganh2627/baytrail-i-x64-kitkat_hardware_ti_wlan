@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * InternalCmdCodes.h
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 #ifndef __PARAM_MGR_H__
 #define __PARAM_MGR_H__
 
@@ -34,14 +39,14 @@
 
 /* Following are the parameters numbers. Each module can have 256 parameters */
 typedef enum
-{    
+{
      /* TWD Control section */
     TWD_COUNTERS_PARAM                     =           GET_BIT | TWD_MODULE_PARAM | TWD_COUNTERS_PARAM_ID,
     TWD_LISTEN_INTERVAL_PARAM              = SET_BIT | GET_BIT | TWD_MODULE_PARAM | TWD_LISTEN_INTERVAL_PARAM_ID,
     TWD_BEACON_INTERVAL_PARAM              =           GET_BIT | TWD_MODULE_PARAM | TWD_BEACON_INTERVAL_PARAM_ID,
     TWD_TX_POWER_PARAM                     = SET_BIT | GET_BIT | TWD_MODULE_PARAM | TWD_TX_POWER_PARAM_ID,
     TWD_CLK_RUN_ENABLE_PARAM               = SET_BIT |           TWD_MODULE_PARAM | TWD_CLK_RUN_ENABLE_PARAM_ID,
-    TWD_QUEUES_PARAM                       = SET_BIT |           TWD_MODULE_PARAM | TWD_QUEUES_PARAM_ID, 
+    TWD_QUEUES_PARAM                       = SET_BIT |           TWD_MODULE_PARAM | TWD_QUEUES_PARAM_ID,
     TWD_TX_RATE_CLASS_PARAM                = SET_BIT | GET_BIT | TWD_MODULE_PARAM | TWD_TX_RATE_CLASS_PARAM_ID,
     TWD_MAX_TX_MSDU_LIFE_TIME_PARAM        = SET_BIT | GET_BIT | TWD_MODULE_PARAM | TWD_MAX_TX_MSDU_LIFE_TIME_PARAM_ID,
     TWD_MAX_RX_MSDU_LIFE_TIME_PARAM        = SET_BIT | GET_BIT | TWD_MODULE_PARAM | TWD_MAX_RX_MSDU_LIFE_TIME_PARAM_ID,
@@ -49,7 +54,7 @@ typedef enum
     TWD_BCN_BRC_OPTIONS_PARAM              =           GET_BIT | TWD_MODULE_PARAM | TWD_BCN_BRC_OPTIONS_PARAM_ID,
 
     /* Site manager section */
-    SITE_MGR_DESIRED_BSSID_PARAM                    = SET_BIT           | SITE_MGR_MODULE_PARAM | 0x02, 
+    SITE_MGR_DESIRED_BSSID_PARAM                    = SET_BIT           | SITE_MGR_MODULE_PARAM | 0x02,
     SITE_MGR_DESIRED_SSID_PARAM                     = SET_BIT           | SITE_MGR_MODULE_PARAM | 0x03,
     SITE_MGR_DESIRED_BSS_TYPE_PARAM                 = SET_BIT           | SITE_MGR_MODULE_PARAM | 0x04,
     SITE_MGR_DESIRED_MODULATION_TYPE_PARAM          = SET_BIT | GET_BIT | SITE_MGR_MODULE_PARAM | 0x08,
@@ -73,7 +78,7 @@ typedef enum
 
     SITE_MGR_SITE_ENTRY_BY_INDEX                        =           GET_BIT | SITE_MGR_MODULE_PARAM | 0x28,
     SITE_MGR_CUR_NUM_OF_SITES                       =           GET_BIT | SITE_MGR_MODULE_PARAM | 0x29,
-    SITE_MGR_CURRENT_TSF_TIME_STAMP                 =           GET_BIT | SITE_MGR_MODULE_PARAM | 0x2A,    
+    SITE_MGR_CURRENT_TSF_TIME_STAMP                 =           GET_BIT | SITE_MGR_MODULE_PARAM | 0x2A,
     SITE_MGR_GET_SELECTED_BSSID_INFO                =           GET_BIT | SITE_MGR_MODULE_PARAM | 0x2B,
     SITE_MGR_DESIRED_CONS_TX_ERRORS_THREH           = SET_BIT | GET_BIT | SITE_MGR_MODULE_PARAM | 0x2C,
     SITE_MGR_SUPPORTED_NETWORK_TYPES                =           GET_BIT | SITE_MGR_MODULE_PARAM | 0x2D,
@@ -81,7 +86,7 @@ typedef enum
     SITE_MGR_LAST_RX_RATE_PARAM                     =           GET_BIT | SITE_MGR_MODULE_PARAM | 0x30,
     SITE_MGR_LAST_BEACON_BUF_PARAM                  =           GET_BIT | SITE_MGR_MODULE_PARAM | 0x31,
     SITE_MGR_CURRENT_BSS_TYPE_PARAM                 =           GET_BIT | SITE_MGR_MODULE_PARAM | 0x33,
-    SITE_MGR_GET_SELECTED_BSSID_INFO_EX             =           GET_BIT | SITE_MGR_MODULE_PARAM | 0x37,    
+    SITE_MGR_GET_SELECTED_BSSID_INFO_EX             =           GET_BIT | SITE_MGR_MODULE_PARAM | 0x37,
     SITE_MGR_RADIO_BAND_PARAM                       =           GET_BIT | SITE_MGR_MODULE_PARAM | 0x39,
 	SITE_MGR_GET_STATS		                        =           GET_BIT | SITE_MGR_MODULE_PARAM | 0x43,
 
@@ -97,7 +102,7 @@ typedef enum
     /* Scan concentrator section */
 
     /* Scan Manager module */
-    
+
     /* Connection section */
     CONN_SELF_TIMEOUT_PARAM                         = SET_BIT | GET_BIT | CONN_MODULE_PARAM | 0x01,
 
@@ -131,14 +136,14 @@ typedef enum
     RX_DATA_RATE_PARAM                              =           GET_BIT | RX_DATA_MODULE_PARAM | 0x08,
     RX_DATA_GENERIC_ETHERTYPE_PARAM                 = SET_BIT           | RX_DATA_MODULE_PARAM | 0x09,
 	RX_DATA_LINK_COUNTERS			                =           GET_BIT | RX_DATA_MODULE_PARAM | 0x0A,
-     
+
     /* TX data section */
     TX_CTRL_GET_MEDIUM_USAGE_THRESHOLD              = SET_BIT | GET_BIT | TX_CTRL_MODULE_PARAM | 0x04,
     TX_CTRL_POLL_AP_PACKETS_FROM_AC                 = SET_BIT           | TX_CTRL_MODULE_PARAM | 0x05,
     TX_CTRL_REPORT_TS_STATISTICS                    =           GET_BIT | TX_CTRL_MODULE_PARAM | 0x06,
     TX_CTRL_GET_DATA_FRAME_COUNTER                  =           GET_BIT | TX_CTRL_MODULE_PARAM | 0x07,
 	TX_CTRL_GET_DATA_LINK_COUNTER                   =           GET_BIT | TX_CTRL_MODULE_PARAM | 0x08,
-    
+
     /* CTRL data section */
     CTRL_DATA_RATE_CONTROL_ENABLE_PARAM             = SET_BIT           | CTRL_DATA_MODULE_PARAM | 0x02,
     CTRL_DATA_CURRENT_BSSID_PARAM                   =           GET_BIT | CTRL_DATA_MODULE_PARAM | 0x03,
@@ -169,23 +174,23 @@ typedef enum
     REGULATORY_DOMAIN_IS_COUNTRY_FOUND                  =           GET_BIT | REGULATORY_DOMAIN_MODULE_PARAM | 0x1D,
     REGULATORY_DOMAIN_TIME_TO_COUNTRY_EXPIRY            =           GET_BIT | REGULATORY_DOMAIN_MODULE_PARAM | 0x1E,
     /* measurement section */
-     
-#ifdef CCX_MODULE_INCLUDED
-    /* CCX */    
-    CCX_ROGUE_AP_DETECTED                               = SET_BIT           | CCX_MANAGER_MODULE_PARAM | 0x02,
-    CCX_REPORT_ROGUE_APS                                = SET_BIT           | CCX_MANAGER_MODULE_PARAM | 0x03,
-    CCX_AUTH_SUCCESS                                    = SET_BIT           | CCX_MANAGER_MODULE_PARAM | 0x04,
-    CCX_CCKM_REQUEST                                    = SET_BIT           | CCX_MANAGER_MODULE_PARAM | 0x05,
-    CCX_CCKM_RESULT                                 = SET_BIT           | CCX_MANAGER_MODULE_PARAM | 0x06,
-    CCX_ENABLED                                     = SET_BIT | GET_BIT | CCX_MANAGER_MODULE_PARAM | 0x07,
-    CCX_CURRENT_AP_SUPPORTED_VERSION                =           GET_BIT | CCX_MANAGER_MODULE_PARAM | 0x08,
+
+#ifdef XCC_MODULE_INCLUDED
+    /* XCC */
+    XCC_ROGUE_AP_DETECTED                               = SET_BIT           | XCC_MANAGER_MODULE_PARAM | 0x02,
+    XCC_REPORT_ROGUE_APS                                = SET_BIT           | XCC_MANAGER_MODULE_PARAM | 0x03,
+    XCC_AUTH_SUCCESS                                    = SET_BIT           | XCC_MANAGER_MODULE_PARAM | 0x04,
+    XCC_CCKM_REQUEST                                    = SET_BIT           | XCC_MANAGER_MODULE_PARAM | 0x05,
+    XCC_CCKM_RESULT                                 = SET_BIT           | XCC_MANAGER_MODULE_PARAM | 0x06,
+    XCC_ENABLED                                     = SET_BIT | GET_BIT | XCC_MANAGER_MODULE_PARAM | 0x07,
+    XCC_CURRENT_AP_SUPPORTED_VERSION                =           GET_BIT | XCC_MANAGER_MODULE_PARAM | 0x08,
 #endif
 
     /* Roaming manager */
-    
+
     /* Parameters used for DEBUG */
     ROAMING_MNGR_TRIGGER_EVENT                      = SET_BIT           | ROAMING_MANAGER_MODULE_PARAM | 0x03,
-    ROAMING_MNGR_CONN_STATUS                        = SET_BIT           | ROAMING_MANAGER_MODULE_PARAM | 0x04, 
+    ROAMING_MNGR_CONN_STATUS                        = SET_BIT           | ROAMING_MANAGER_MODULE_PARAM | 0x04,
 #ifdef TI_DBG
     ROAMING_MNGR_PRINT_STATISTICS                   =           GET_BIT | ROAMING_MANAGER_MODULE_PARAM | 0x05,
     ROAMING_MNGR_RESET_STATISTICS                   =           GET_BIT | ROAMING_MANAGER_MODULE_PARAM | 0x06,
@@ -194,7 +199,7 @@ typedef enum
 #endif
 
     /* Soft Gemini params */
-     
+
     /* QOS manager params */
     QOS_MNGR_SHORT_RETRY_LIMIT_PARAM            	= SET_BIT | GET_BIT | QOS_MANAGER_PARAM | 0x01,
     QOS_MNGR_LONG_RETRY_LIMIT_PARAM                 = SET_BIT | GET_BIT | QOS_MANAGER_PARAM | 0x02,
@@ -208,9 +213,9 @@ typedef enum
     QOS_MNGR_RESEND_TSPEC_REQUEST                   = SET_BIT           | QOS_MANAGER_PARAM | 0x0D,
 
     /* Power Manager params */
-    POWER_MGR_DISABLE_PRIORITY                      = SET_BIT |           POWER_MANAGER_PARAM | 0x02,   
+    POWER_MGR_DISABLE_PRIORITY                      = SET_BIT |           POWER_MANAGER_PARAM | 0x02,
     POWER_MGR_ENABLE_PRIORITY                       = SET_BIT |           POWER_MANAGER_PARAM | 0x03
-    
+
 }   EInternalParam;
 
 

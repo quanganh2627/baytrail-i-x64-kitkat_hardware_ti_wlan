@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * ScanSrv.h
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file ScanSrv.h
  *  \brief This file include private definitions for the scan SRV module.
  *
@@ -83,22 +88,22 @@ typedef struct
     TI_HANDLE           hTimer;                        /**< Timer module object handle */
     TI_HANDLE           hEventMbox;                    /**< EventMbox module object handle */
     TI_HANDLE           hCmdBld;                       /**< Command builder object handle */
-    TScanSrvCompleteCb  scanCompleteNotificationFunc;  /**< 
-                                                         * upper layer (scan concentrator) scan complete 
-                                                         * callback function
-                                                         */
-    TI_HANDLE           scanCompleteNotificationObj;    /**< 
+    TScanSrvCompleteCb  scanCompleteNotificationFunc;  /**<
                                                          * upper layer (scan concentrator) scan complete
                                                          * callback function
                                                          */
-    
+    TI_HANDLE           scanCompleteNotificationObj;    /**<
+                                                         * upper layer (scan concentrator) scan complete
+                                                         * callback function
+                                                         */
+
     TCmdResponseCb      commandResponseFunc;            /**<
                                                          * upper layer command response CB. Passed down into the HAL
                                                          * and called when the scan command has been received by the FW
                                                          */
     TI_HANDLE           commandResponseObj;             /**<
                                                          * object parameter passed to the commandResposeFunc by the HAL
-                                                         * when it is called 
+                                                         * when it is called
                                                          */
     TFailureEventCb     failureEventFunc;               /**<
                                                          * upper layer Failure Event CB.
@@ -106,34 +111,34 @@ typedef struct
                                                          */
     TI_HANDLE           failureEventObj;                /**<
                                                          * object parameter passed to the failureEventFunc
-                                                         * when it is called 
+                                                         * when it is called
                                                          */
-    TI_UINT16           SPSScanResult;                  /**< 
+    TI_UINT16           SPSScanResult;                  /**<
                                                          * bitmap indicating which channels were scanned
                                                          * in an SPS scan
                                                          */
-    TI_BOOL             bTSFError;                      /** indicates whether a TSF error occured */                                                        /**< 
-                                                         * scan result: indicates a TSF error event and 
+    TI_BOOL             bTSFError;                      /** indicates whether a TSF error occured */                                                        /**<
+                                                         * scan result: indicates a TSF error event and
                                                          * which channels were scanned in SPS
                                                          */
     TI_BOOL             bDtimOverlapping;               /**< Indicates whether the scan is overlapping DTIM */
-    TI_BOOL             bExitFromDriverMode;            /**< 
-                                                         * Indicates whether to exit driver mode once scan 
+    TI_BOOL             bExitFromDriverMode;            /**<
+                                                         * Indicates whether to exit driver mode once scan
                                                          * is finished
                                                          */
-    TI_BOOL             bSendNullData;                  /**< 
-                                                         * Indicates whether to send Null data when exiting driver  
+    TI_BOOL             bSendNullData;                  /**<
+                                                         * Indicates whether to send Null data when exiting driver
                                                          * mode once scan is finished
                                                          */
-    TI_BOOL             bScanOnDriverModeFailure;       /**< 
+    TI_BOOL             bScanOnDriverModeFailure;       /**<
                                                          * Indicates whether to scan if driver mode entry
                                                          * wasn't successful
                                                          */
     TI_BOOL             bHighPriority;                  /**<
-                                                         * Indicates whether to request high priority 
+                                                         * Indicates whether to request high priority
                                                          * (overlapping DTIM) scan
                                                          */
-    TI_BOOL             bSPSScan;                       /**< 
+    TI_BOOL             bSPSScan;                       /**<
                                                          * whether the running scan type is SPS (TI_TRUE)
                                                          * or something else (TI_FALSE). Used to stop a
                                                          * running scan.
@@ -150,31 +155,31 @@ typedef struct
                                                          * be called on failure, but rather an invalid
                                                          * status should be returned)
                                                          */
-    TI_STATUS           returnStatus;                   /**< 
+    TI_STATUS           returnStatus;                   /**<
                                                          * Holds the return code to the upper layer
                                                          * Used to save errors during SM operation.
                                                          */
     /* state machine */
-    fsm_stateMachine_t* SM;                             /**< 
+    fsm_stateMachine_t* SM;                             /**<
                                                          * state machines for different
                                                          * scan types
                                                          */
-    scan_SRVSMStates_e  SMState;                        /**< 
-                                                         * state machine current states 
+    scan_SRVSMStates_e  SMState;                        /**<
+                                                         * state machine current states
                                                          * for different scan types
                                                          */
-    E80211PsMode        psRequest;                      /**< 
+    E80211PsMode        psRequest;                      /**<
                                                          * Indicates if PS was requested or not
                                                          * for current scan
                                                          */
     TI_UINT32           numberOfNoScanCompleteToRecovery;
-                                                        /**< 
+                                                        /**<
                                                          * The number of consecutive no scan complete
                                                          * that will trigger a recovery notification
                                                          */
     TI_UINT32           currentNumberOfConsecutiveNoScanCompleteEvents;
                                                         /**<
-                                                         * The number of consecutivre no scan complete 
+                                                         * The number of consecutivre no scan complete
                                                          * events at present
                                                          */
     TI_BOOL             bNoScanCompleteFlag;            /**<
@@ -182,7 +187,7 @@ typedef struct
                                                          * (true) or no scan complete (false) to be able
                                                          * to nullify correctly the above counter */
     TI_UINT32           uTriggeredScanTimeOut;          /**<
-                                                         * Time out for starting triggered scan between 
+                                                         * Time out for starting triggered scan between
                                                          * 2 channels */
     TI_UINT8                uDtimPeriod;
     TI_UINT16               uBeaconInterval;
@@ -294,7 +299,7 @@ void MacServices_scanSRVCommandMailBoxCB(TI_HANDLE hScanSrv,TI_UINT16 MboxStatus
  * \param failureEventCB - the failure event callback function.\n
  * \param hFailureEventObj - handle to the object passed to the failure event callback function.\n
  */
-void scanSRV_registerFailureEventCB( TI_HANDLE hScanSRV, 
+void scanSRV_registerFailureEventCB( TI_HANDLE hScanSRV,
                                      void * failureEventCB, TI_HANDLE hFailureEventObj );
 
 void scanSRV_restart( TI_HANDLE hScanSRV);

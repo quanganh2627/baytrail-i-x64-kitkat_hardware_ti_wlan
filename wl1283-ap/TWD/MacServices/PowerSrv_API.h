@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * PowerSrv_API.h
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file powerSrv_API.h
  *  \brief This is the Power Manager module API.
  *  \
@@ -140,7 +145,7 @@ TI_STATUS powerSrv_config(TI_HANDLE 				hPowerSrv,
  *
  * Function Scope \e Public.\n
  * Parameters:\n
- * 1) hPowerSrv 						- handle to the PowerSrv object.\n		
+ * 1) hPowerSrv 						- handle to the PowerSrv object.\n
  * 2) psMode							- Power save/Active request.\n
  * 3) sendNullDataOnExit				- \n
  * 4) powerSaveCompleteCBObject		- handle to the Callback functin module.\n
@@ -222,7 +227,7 @@ TI_STATUS powerSrv_ReleasePS( 	TI_HANDLE 					hPowerSrv,
  * Function Scope \e Public.\n
  * Parameters:\n
  * 1) TI_HANDLE - handle to the powerSrv object.\n
- * Return Value:\n 
+ * Return Value:\n
  * TI_BOOL - thre is in PS false otherwise.\n
 */
 TI_BOOL powerSrv_getPsStatus(TI_HANDLE hPowerSrv);
@@ -237,7 +242,7 @@ TI_BOOL powerSrv_getPsStatus(TI_HANDLE hPowerSrv);
  * Parameters:\n
  * 1) TI_HANDLE 	- handle to the powerSrv object.\n
  * 2) TI_UINT16		- desierd rate .\n
- * Return Value:\n 
+ * Return Value:\n
  * void.\n
 */
 void powerSrv_SetRateModulation(TI_HANDLE hPowerSrv, TI_UINT16  rate);
@@ -251,11 +256,11 @@ void powerSrv_SetRateModulation(TI_HANDLE hPowerSrv, TI_UINT16  rate);
  *
  * Function Scope \e Public.\n
  * Parameters:\n
- * - hPowerSrv 		- handle to the PowerSrv object.		
+ * - hPowerSrv 		- handle to the PowerSrv object.
  * - failureEventCB 	- the failure event callback function.
  * - hFailureEventObj 	- handle to the object passed to the failure event callback function.
 */
-void powerSrvRegisterFailureEventCB( TI_HANDLE hPowerSrv, 
+void powerSrvRegisterFailureEventCB( TI_HANDLE hPowerSrv,
                                      void * failureEventCB, TI_HANDLE hFailureEventObj );
 
 

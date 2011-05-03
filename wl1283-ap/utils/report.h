@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * report.h
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 /***************************************************************************/
 /*                                                                          */
@@ -36,10 +41,10 @@
 #ifndef __REPORT_H__
 #define __REPORT_H__
 
-/** \file  report.h 
+/** \file  report.h
  * \brief Report module API \n
  * APIs which are used for reporting messages to the User while running. \n\n
- * 
+ *
  * The report mechanism: Messages are reported per file and severity Level  \n
  * Therefore, each file has a report flag which indicate if reporting for that file is enabled, \n
  * and each severity has a severity flag which indicate if reporting for that severity is enabled.  \n
@@ -48,14 +53,14 @@
  * The report flags of all severities  are indicated in a bit map Table which is contained in the report module handle  \n
  */
 
-/* in order to work without the driver logger use that definition here  
+/* in order to work without the driver logger use that definition here
  * #define PRINTF_ROLLBACK
  */
 
 #include "osApi.h"
 #include "commonTypes.h"
-    
-#define MAX_STRING_LEN         32 
+
+#define MAX_STRING_LEN         32
 
 
 /*******************************/
@@ -74,12 +79,12 @@ typedef enum
     FILE_ID_7      ,    /*   SwitchChannel            */
     FILE_ID_8      ,    /*   roamingMngr              */
     FILE_ID_9      ,    /*   scanMngr                 */
-    FILE_ID_10     ,    /*   admCtrlCcx               */
-    FILE_ID_11     ,    /*   ccxMngr                  */
-    FILE_ID_12     ,    /*   ccxRMMngr                */
-    FILE_ID_13     ,    /*   ccxTSMngr                */
+    FILE_ID_10     ,    /*   admCtrlXCC               */
+    FILE_ID_11     ,    /*   XCCMngr                  */
+    FILE_ID_12     ,    /*   XCCRMMngr                */
+    FILE_ID_13     ,    /*   XCCTSMngr                */
     FILE_ID_14     ,    /*   rogueAp                  */
-    FILE_ID_15     ,    /*   TransmitPowerCcx         */
+    FILE_ID_15     ,    /*   TransmitPowerXCC         */
     FILE_ID_16     ,    /*   admCtrl                  */
     FILE_ID_17     ,    /*   admCtrlNone              */
     FILE_ID_18     ,    /*   admCtrlWep               */
@@ -211,18 +216,18 @@ typedef enum
     REPORT_FILES_NUM    /*   Number of files with trace reports   */
 
 } EReportFiles;
- 
 
-/************************************/      
+
+/************************************/
 /*      Report Severity values      */
 /************************************/
 
 /** \enum EReportSeverity
  * \brief Report Severity Types
- * 
+ *
  * \par Description
  * All available severity Levels of the events which are reported to user.\n
- * 
+ *
  * \sa
  */
 typedef enum
@@ -240,10 +245,10 @@ typedef enum
 
 /** \enum EProblemType
  * \brief used to handle SW problems according to their types.
- * 
+ *
  * \par Description
  * All available SW problem types checked in run time.\n
- * 
+ *
  * \sa
  */
 typedef enum
@@ -256,13 +261,13 @@ typedef enum
 } EProblemType;
 /** \struct TReport
  * \brief Report Module Object
- * 
+ *
  * \par Description
  * All the Databases and other parameters which are needed for reporting messages to user
- * 
+ *
  * \sa
  */
-typedef struct 
+typedef struct
 {
     TI_HANDLE       hOs;                                                /**< Handle to Operating System Object                                                                                                  */
     TI_UINT8        aSeverityTable[REPORT_SEVERITY_MAX];                /**< Severities Table: Table which holds for each severity level a flag which indicates whether the severity is enabled for reporting   */
@@ -277,13 +282,13 @@ typedef struct
 
 /** \struct TReportParamInfo
  * \brief Report Parameter Information
- * 
+ *
  * \par Description
  * Struct which defines all the Databases and other parameters which are needed
- * for reporting messages to user. 
- * The actual Content of the Report Parameter Could be one of the followed (held in union): 
+ * for reporting messages to user.
+ * The actual Content of the Report Parameter Could be one of the followed (held in union):
  * Severety Table | Module Table | Enable/Disable indication of debug module usage
- * 
+ *
  * \sa  EExternalParam, ETwdParam
  */
 typedef struct
@@ -296,14 +301,14 @@ typedef struct
 
     union
     {
-        TI_UINT8    aSeverityTable[REPORT_SEVERITY_MAX];    /**< Table which holds severity flag for every available LOG severity level. 
-                                                            * This flag indicates for each severity - whether it is enabled for Logging or not. 
+        TI_UINT8    aSeverityTable[REPORT_SEVERITY_MAX];    /**< Table which holds severity flag for every available LOG severity level.
+                                                            * This flag indicates for each severity - whether it is enabled for Logging or not.
                                                             * User can Set/Get this Tabel
                                                             */
         TI_UINT8    aFileEnable[REPORT_FILES_NUM];      /**< Table which holds file flag for every available LOG file.
-                                                            * This flag indicates for each file - whether it is enabled for Logging or not.             
+                                                            * This flag indicates for each file - whether it is enabled for Logging or not.
                                                             * User can Set/Get this Tabel
-                                                            */                                                          
+                                                            */
         TI_UINT32   uReportPPMode;                          /**< Used by user for Indicating if Debug Module should be enabled/disabled                                                                 */
         TI_INT32    appId;                                  /* Applicationj id of Logger application */
 
@@ -313,16 +318,16 @@ typedef struct
 
 /** \struct TReportInitParams
  * \brief Report Init Parameters
- * 
+ *
  * \par Description
  * Struct which defines all the Databases needed for init and set the defualts of the Report Module.
- * 
+ *
  */
 typedef struct
 {
     /* Note: The arrays sizes are aligned to 4 byte to avoid padding added by the compiler! */
     TI_UINT8   aSeverityTable[(REPORT_SEVERITY_MAX + 3) & ~3];  /**< Table in the size of all available LOG severity levels which indicates for each severity - whether it is enabled for Logging or not.   */
-    TI_UINT8   aFileEnable   [(REPORT_FILES_NUM    + 3) & ~3];  /**< Table in the size of all available LOG files which indicates for each file - whether it is enabled for Logging or not              */              
+    TI_UINT8   aFileEnable   [(REPORT_FILES_NUM    + 3) & ~3];  /**< Table in the size of all available LOG files which indicates for each file - whether it is enabled for Logging or not              */
 
 } TReportInitParams;
 
@@ -335,7 +340,7 @@ typedef struct
 /* The report mechanism is like that:
     Each file has a report flag. Each severity has a severity flag.
     Only if bits are enabled, the message is printed */
-/* The modules which have their report flag enable are indicated by a bit map in the reportModule 
+/* The modules which have their report flag enable are indicated by a bit map in the reportModule
     variable contained in the report handle*/
 /* The severities which have are enabled are indicated by a bit map in the reportSeverity
     variable contained in the report handle*/
@@ -560,7 +565,7 @@ typedef struct
 /* The report mechanism is like that:
 Each file has a report flag. Each severity has a severity flag.
 Only if bits are enabled, the message is printed */
-/* The modules which have their report flag enable are indicated by a bit map in the reportModule 
+/* The modules which have their report flag enable are indicated by a bit map in the reportModule
 variable contained in the report handle*/
 /* The severities which have are enabled are indicated by a bit map in the reportSeverity
 variable contained in the report handle*/
@@ -587,7 +592,7 @@ variable contained in the report handle*/
 * \brief Macro which writes a message to user via specific Operating System printf.
 * E.g. print is done using the relevant used OS printf method.
 */
-#define WLAN_INIT_REPORT(msg) 
+#define WLAN_INIT_REPORT(msg)
 #endif
 #define TRACE_INFO_HEX(hReport, data, datalen) \
     do { if (hReport && (((TReport *)hReport)->aSeverityTable[REPORT_SEVERITY_INFORMATION]) && (((TReport *)hReport)->aFileEnable[__FILE_ID__])) \
@@ -599,13 +604,13 @@ variable contained in the report handle*/
 /* NOTE: Keep a dummy report function call to treat compilation warnings */
 
 /** \def WLAN_OS_REPORT
-* \brief Dummy macro: Nothing is done 
+* \brief Dummy macro: Nothing is done
 */
 #define WLAN_OS_REPORT(msg)                                           \
     do { } while (0)
 
 /** \def WLAN_INIT_REPORT
-* \brief Dummy macro: Nothing is done 
+* \brief Dummy macro: Nothing is done
 */
 #define WLAN_INIT_REPORT(msg)                                         \
     do { } while (0)
@@ -624,147 +629,147 @@ variable contained in the report handle*/
 /** \brief  Create Report Module Object
  * \param  hOs              - OS module object handle
  * \return Handle to the report module on success, NULL otherwise
- * 
+ *
  * \par Description
  * Report module creation function, called by the config mgr in creation phase  \n
  * performs the following:  \n
  *  -   Allocate the report handle
- */ 
+ */
 TI_HANDLE report_Create (TI_HANDLE hOs);
 /** \brief  Set Report Module Defaults
  * \param  hReport      - Report module object handle
  * \param  pInitParams  - Pointer to Input Init Parameters
  * \return TI_OK on success or TI_NOK on failure
- * 
+ *
  * \par Description
  * Report module configuration function, called by the config mgr in configuration phase    \n
  * performs the following:  \n
  *  -   Reset & init local variables
  *  -   Resets all report modules bits
  *  -   Resets all severities bits
- *  -   Init the description strings * 
- */ 
+ *  -   Init the description strings *
+ */
 TI_STATUS report_SetDefaults            (TI_HANDLE hReport, TReportInitParams *pInitParams);
 /** \brief  Unload Report Module
  * \param  hReport      - Report module object handle
  * \return TI_OK on success or TI_NOK on failure
- * 
+ *
  * \par Description
  * Report Module unload function, called by the config mgr in the unload phase  \n
  * performs the following:  \n
- *  -   Free all memory allocated by the module     
- */ 
+ *  -   Free all memory allocated by the module
+ */
 TI_STATUS report_Unload                 (TI_HANDLE hReport);
 /** \brief  Set Report Module
  * \param  hReport      - Report module object handle
  * \return TI_OK on success or TI_NOK on failure
- * 
+ *
  * \par Description
- * Enables the relevant module for reporting -  according to the received module index 
- */ 
+ * Enables the relevant module for reporting -  according to the received module index
+ */
 TI_STATUS report_SetReportModule        (TI_HANDLE hReport, TI_UINT8 module_index);
 /** \brief  Clear Report Module
  * \param  hReport      - Report module object handle
- * \param  module_index - Index of file to be disable for reporting 
+ * \param  module_index - Index of file to be disable for reporting
  * \return TI_OK on success or TI_NOK on failure
- * 
+ *
  * \par Description
- * Disables the relevant module for reporting -  according to the received module index 
- */ 
+ * Disables the relevant module for reporting -  according to the received module index
+ */
 TI_STATUS report_ClearReportModule      (TI_HANDLE hReport, TI_UINT8 module_index);
 /** \brief  Get Report files Table
  * \param  hReport      - Report module object handle
  * \param  pFiles       - Pointer to output files Table
  * \return TI_OK on success or TI_NOK on failure
- * 
+ *
  * \par Description
  * Returns the Modules Table (the table which holds Modules reporting indication) held in Report Module Object
- */ 
-TI_STATUS report_GetReportFilesTable    (TI_HANDLE hReport, TI_UINT8 *pFiles); 
+ */
+TI_STATUS report_GetReportFilesTable    (TI_HANDLE hReport, TI_UINT8 *pFiles);
 /** \brief  Set Report Files Table
  * \param  hReport      - Report module object handle
  * \param  pFiles       - Pointer to input files Table
  * \return TI_OK on success or TI_NOK on failure
- * 
+ *
  * \par Description
- * Updates the Modules Table: copies the input Modules Table (the table which holds Modules reporting indication) 
+ * Updates the Modules Table: copies the input Modules Table (the table which holds Modules reporting indication)
  * to the Modules Table which is held in Report Module Object
- */ 
-TI_STATUS report_SetReportFilesTable    (TI_HANDLE hReport, TI_UINT8 *pFiles); 
+ */
+TI_STATUS report_SetReportFilesTable    (TI_HANDLE hReport, TI_UINT8 *pFiles);
 /** \brief  Get Report Severity Table
  * \param  hReport      - Report module object handle
  * \param  pSeverities  - Pointer to input Severity Table
  * \return TI_OK on success or TI_NOK on failure
- * 
+ *
  * \par Description
  * Returns the Severities Table (the table which holds Severities reporting indication) held in Report Module Object
- */ 
+ */
 TI_STATUS report_GetReportSeverityTable (TI_HANDLE hReport, TI_UINT8 *pSeverities);
 /** \brief  Set Report Severity Table
  * \param  hReport      - Report module object handle
  * \param  pSeverities  - Pointer to input Severity Table
  * \return TI_OK on success or TI_NOK on failure
- * 
+ *
  * \par Description
- * Updates the Severities Table: copies the input Severities Table (the table which holds Severities reporting indication) 
+ * Updates the Severities Table: copies the input Severities Table (the table which holds Severities reporting indication)
  * to the Severities Table which is held in Report Module Object
- */ 
+ */
 TI_STATUS report_SetReportSeverityTable (TI_HANDLE hReport, TI_UINT8 *pSeverities);
 /** \brief  Set Report Parameters
  * \param  hReport      - Report module object handle
  * \param  pParam       - Pointer to input Report Parameters Information
  * \return TI_OK on success or TI_NOK on failure
- * 
+ *
  * \par Description
- * Report set param function sets parameter/s to Report Module Object. 
+ * Report set param function sets parameter/s to Report Module Object.
  * Called by the following:
  *  -   configuration Manager in order to set a parameter/s from the OS abstraction layer
- *  -   Form inside the driver 
- */ 
-TI_STATUS report_SetParam               (TI_HANDLE hReport, TReportParamInfo *pParam);                   
+ *  -   Form inside the driver
+ */
+TI_STATUS report_SetParam               (TI_HANDLE hReport, TReportParamInfo *pParam);
 /** \brief  Get Report Parameters
  * \param  hReport      - Report module object handle
  * \param  pParam       - Pointer to output Report Parameters Information
  * \return TI_OK on success or TI_NOK on failure
- * 
+ *
  * \par Description
- * Report get param function gets parameter/s from Report Module Object. 
+ * Report get param function gets parameter/s from Report Module Object.
  * Called by the following:
  *  -   configuration Manager in order to get a parameter/s from the OS abstraction layer
- *  -   from inside the driver 
- */ 
-TI_STATUS report_GetParam               (TI_HANDLE hReport, TReportParamInfo *pParam); 
+ *  -   from inside the driver
+ */
+TI_STATUS report_GetParam               (TI_HANDLE hReport, TReportParamInfo *pParam);
 /** \brief Report Dump
  * \param  pBuffer  - Pointer to input HEX buffer
  * \param  pString  - Pointer to output string
  * \param  size     - size of output string
  * \return TI_OK on success or TI_NOK on failure
- * 
+ *
  * \par Description
  * Converts hex buffer to string buffer
  * NOTE:    1. The caller has to make sure that the string size is at lease: ((Size * 2) + 1)
- *          2. A string terminator is inserted into lase char of the string 
- */ 
+ *          2. A string terminator is inserted into lase char of the string
+ */
 TI_STATUS report_Dump                   (TI_UINT8 *pBuffer, char *pString, TI_UINT32 size);
 /** \brief Report Print Dump
  * \param  pData    - Pointer to input data buffer
  * \param  datalen  - size of input data buffer
  * \return TI_OK on success or TI_NOK on failure
- * 
+ *
  * \par Description
- * Performs HEX dump of input Data buffer. Used for debug only! 
- */ 
+ * Performs HEX dump of input Data buffer. Used for debug only!
+ */
 TI_STATUS report_PrintDump              (TI_UINT8 *pData, TI_UINT32 datalen);
 
 /** \brief Sets bRedirectOutputToLogger
 * \param  value         - True if to direct output to remote PC
 * \param  hEvHandler    - Event handler
-*/ 
+*/
 void os_setDebugOutputToLogger(TI_BOOL value);
 
-/** \brief Sets handles a SW running problem 
-* \param  problemType   - used for different problem handling depending on problem type 
-*/ 
+/** \brief Sets handles a SW running problem
+* \param  problemType   - used for different problem handling depending on problem type
+*/
 void handleRunProblem(EProblemType prType);
 
 #endif /* __REPORT_H__ */

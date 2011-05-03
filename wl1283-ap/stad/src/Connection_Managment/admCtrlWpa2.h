@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * admCtrlWpa2.h
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file admCtrlWpa2.h
  *  \brief Admission control header file for WPA2
  *
@@ -64,7 +69,7 @@
 
 
 #define MAX_WPA2_UNICAST_SUITES     (TWD_CIPHER_WEP104+1)
-#define MAX_WPA2_KEY_MNG_SUITES     (RSN_KEY_MNG_CCX+1)
+#define MAX_WPA2_KEY_MNG_SUITES     (RSN_KEY_MNG_XCC+1)
 
 /* Cipher suites for group key sent in RSN IE are: WEP40, WEP104, TKIP, CCCMP */
 #define GRP_CIPHER_MAXNO_IN_RSNIE         4
@@ -88,7 +93,7 @@
 /* received in RSN IE                                                         */
 #define KEY_MGMT_SUITE_MAXNO_IN_RSN_IE  2
 
-/* OUIs for key management  
+/* OUIs for key management
 *
 *   00-0F-AC-00  Reserved
 *   00-0F-AC-01  802.1X
@@ -138,7 +143,7 @@ typedef struct
     TI_UINT16              version;
     TI_UINT8               groupSuite[4];       /* OUI for broadcast suite */
     TI_UINT16              pairwiseSuiteCnt;
-    TI_UINT8               pairwiseSuite[4];    /* OUI for 1 unicast suite */ 
+    TI_UINT8               pairwiseSuite[4];    /* OUI for 1 unicast suite */
     TI_UINT16              authKeyMngSuiteCnt;
     TI_UINT8               authKeyMngSuite[4];  /* OUI for 1 key mgmt suite */
     TI_UINT16              capabilities;

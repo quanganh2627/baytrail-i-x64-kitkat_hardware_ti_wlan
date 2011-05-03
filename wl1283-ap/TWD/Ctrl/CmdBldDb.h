@@ -1,36 +1,41 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * CmdBldDb.h
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
-/** \file  CmdBldDb.h 
+
+/** \file  CmdBldDb.h
  *  \brief Command builder database
  *
- *  \see   CmdBld.h 
+ *  \see   CmdBld.h
  */
 
 #ifndef CMDBLDDB_H
@@ -41,7 +46,7 @@
 #include "public_infoele.h"
 
 
-/* 
+/*
  * Dot11 params
  * ------------
  */
@@ -71,9 +76,9 @@ typedef struct
 
     /* Data interrupts pacing */
     TI_UINT16                  TxCompletePacingThreshold;
-    TI_UINT16                  TxCompletePacingTimeout; 
-    TI_UINT16                  RxIntrPacingThreshold;	 
-    TI_UINT16                  RxIntrPacingTimeout;	 
+    TI_UINT16                  TxCompletePacingTimeout;
+    TI_UINT16                  RxIntrPacingThreshold;
+    TI_UINT16                  RxIntrPacingTimeout;
     TI_UINT8                   GenFwCmd[GEN_FW_CMD_SIZE];
     TI_UINT32                  HostIfCfgBitmap;
     /* ARP IP Addr table */
@@ -113,11 +118,11 @@ typedef struct
     TI_UINT8                   UseDeviceErrorInterrupt;
     TI_BOOL                    RetryPreemption;
     /* This flag indicate if to discards all broadcast frames */
-    TI_BOOL                    RxDisableBroadcast; 
+    TI_BOOL                    RxDisableBroadcast;
     /* Indicate if the station is joined */
-    TI_BOOL                    bJoin;              
+    TI_BOOL                    bJoin;
     /* Indicate if the station is connected */
-    TI_BOOL                    bStaConnected;              
+    TI_BOOL                    bStaConnected;
     TI_UINT8                   AntDiversity;
     /* Parameters for roaming triggers configuration */
     TRroamingTriggerParams     roamTriggers;
@@ -144,7 +149,7 @@ typedef struct
     TTwdHtCapabilities         tTwdHtCapabilities;
 
     /* PM Config params */
-    TI_UINT32                  uHostClkSettlingTime;	 
+    TI_UINT32                  uHostClkSettlingTime;
     TI_UINT8                   uHostFastWakeupSupport;
 
     TI_UINT8                   TxPowerDbm;
@@ -160,14 +165,14 @@ typedef struct
     TI_UINT8                   TcxoRefClk;
     TI_UINT8                   TcxoSettlingTime;
     TI_UINT8                   TcxoValidOnWakeup;
-    TI_UINT8                   TcxoLdoVoltage; 
-    TI_UINT8                   NewPllAlgo; 
+    TI_UINT8                   TcxoLdoVoltage;
+    TI_UINT8                   NewPllAlgo;
 #endif
-    
+
 } TWlanParams;
 
 
-/* 
+/*
  * BssInfo params
  * --------------
  */
@@ -176,26 +181,26 @@ typedef struct
     TI_UINT8                   ReqBssType;
     TI_UINT8                   BssType;
     TI_UINT16                  BeaconInterval;
-    TI_UINT8                   DtimInterval; 
+    TI_UINT8                   DtimInterval;
     TI_UINT8                   RadioChannel;
     TI_UINT8                   BssId[MAC_ADDR_LEN];
     TSsid                      tSsid;
-    /* Policy for recovery */  
-    TTxRatePolicy              TxRateClassParams; 
-    TI_UINT32                  BasicRateSet;   
+    /* Policy for recovery */
+    TTxRatePolicy              TxRateClassParams;
+    TI_UINT32                  BasicRateSet;
     /* The ctrl field in the Join-Command (see StartJoinRequest_t) */
-    TI_UINT8                   Ctrl;                                 
+    TI_UINT8                   Ctrl;
     /* ATIM window of IBSS*/
     /* Note that when ATIM window is zero the*/
     /* initiated IBSS does not support powersave*/
-    TI_UINT16                  ATimWindow;     
+    TI_UINT16                  ATimWindow;
     /* Specifies the PLCP preamble type used*/
     /* 0 for long preamble*/
     /* 1 for short preamble*/
     TI_UINT8                   DefaultPreamble;
 
-    /* 
-     * HT setting 
+    /*
+     * HT setting
      */
     /* capabilities */
     TI_BOOL   bHtCap;
@@ -205,21 +210,21 @@ typedef struct
     TI_UINT8  uAmpduMinSpac;
     /* Information */
     TI_BOOL   bHtInf;
-    TI_UINT8  uRifsMode;     
+    TI_UINT8  uRifsMode;
     TI_UINT8  uHtProtection;
-    TI_UINT8  uGfProtection;     
+    TI_UINT8  uGfProtection;
     TI_UINT8  uHtTxBurstLimit;
     TI_UINT8  uDualCtsProtection;
     /* BA session */
     TI_BOOL                               bBaInitiator[MAX_NUM_OF_802_1d_TAGS];
-    TAxcBaSessionInitiatorResponderPolicy tBaSessionInitiatorPolicy[MAX_NUM_OF_802_1d_TAGS]; 
+    TAxcBaSessionInitiatorResponderPolicy tBaSessionInitiatorPolicy[MAX_NUM_OF_802_1d_TAGS];
     TI_BOOL                               bBaResponder[MAX_NUM_OF_802_1d_TAGS];
-    TAxcBaSessionInitiatorResponderPolicy tBaSessionResponderPolicy[MAX_NUM_OF_802_1d_TAGS]; 
+    TAxcBaSessionInitiatorResponderPolicy tBaSessionResponderPolicy[MAX_NUM_OF_802_1d_TAGS];
 
 } TBssInfoParams;
 
 
-/* 
+/*
  * General counters
  * ----------------
  */
@@ -242,7 +247,7 @@ typedef struct
 } TQueuesParams;
 
 
-typedef struct 
+typedef struct
 {
     TAcQosParams               ac[MAX_NUM_OF_AC];
     TI_BOOL                    isAcConfigured[MAX_NUM_OF_AC];
@@ -250,14 +255,14 @@ typedef struct
 } TAcConfParams;
 
 
-typedef struct 
+typedef struct
 {
     TPsRxStreaming             tid[MAX_NUM_OF_802_1d_TAGS];
 
 } TPsRxStreamingParams;
 
 
-/* 
+/*
  * Templates params
  * ----------------
  */
@@ -288,12 +293,12 @@ typedef struct
 /* Security keys structure for reconfigure phase */
 typedef struct
 {
-    TI_BOOL                    bReconfHwEncEnable;     
-    TI_BOOL                    bHwEncDecrEnableValid; 
-    TI_UINT8                   uReconfDefaultKeyId;   
-    TI_BOOL                    bDefaultKeyIdValid;  
-    TSecurityKeys*             pReconfKeys; 
-                                   
+    TI_BOOL                    bReconfHwEncEnable;
+    TI_BOOL                    bHwEncDecrEnableValid;
+    TI_UINT8                   uReconfDefaultKeyId;
+    TI_BOOL                    bDefaultKeyIdValid;
+    TSecurityKeys*             pReconfKeys;
+
 } TSecurReconf;
 
 
@@ -301,12 +306,12 @@ typedef struct
 typedef struct
 {
     TI_UINT8                   uIndex;
-    TI_UINT8                   uCommand; 
+    TI_UINT8                   uCommand;
     filter_e                   eAction;
     TI_UINT8                   uNumFieldPatterns;
     TI_UINT8                   uLenFieldPatterns;
     TI_UINT8                   aFieldPattern[MAX_DATA_FILTER_SIZE];
-                                   
+
 } TRxDataFilter;
 
 typedef struct
@@ -314,19 +319,19 @@ typedef struct
     TI_BOOL                    bEnabled;
     filter_e                   eDefaultAction;
     TRxDataFilter              aRxDataFilter[MAX_DATA_FILTERS];
-                                   
+
 } TRxDataFiltersTable;
 
 typedef struct
 {
- ACXSmartReflexConfigParams_t     tSmartReflexParams;       
- ACXSmartReflexDebugParams_t      tSmartReflexDebugParams;  
- ACXSmartReflexState_t            tSmartReflexState;        
+ ACXSmartReflexConfigParams_t     tSmartReflexParams;
+ ACXSmartReflexDebugParams_t      tSmartReflexDebugParams;
+ ACXSmartReflexState_t            tSmartReflexState;
 
 }TSmartReflexParams ;
 
 typedef struct
-{  
+{
 	RateMangeParams_t rateMngParams;
 
 } TRateMngParams;
@@ -338,7 +343,7 @@ typedef struct
  *                  MAIN PARAMETERS STRUCTURE
  * ----------------------------------------------------------------
  */
-typedef struct 
+typedef struct
 {
     TDmaParams                 dma;                 /* Rx/Tx queue parameters   */
     TQueuesParams              queues;              /* Queues params for QOS    */
@@ -349,10 +354,10 @@ typedef struct
     TFwInfo                    hw;                  /* HW eeprom & versions info*/
     TGenCounters               counters;            /* General counters         */
     TTemplateListParams        templateList;        /* Templates for recovery   */
-    TKeepAliveList             klvList;             /* Keep-Alive paramters     */  
+    TKeepAliveList             klvList;             /* Keep-Alive paramters     */
     TSecurReconf               keys;                /* Security keys            */
     TRxDataFiltersTable        rxDataFilters;       /* Rx data filters          */
-    IniFileGeneralParam        tPlatformGenParams;  /* platfrom gen params from public_radio.h  */   
+    IniFileGeneralParam        tPlatformGenParams;  /* platfrom gen params from public_radio.h  */
     IniFileRadioParam          tRadioIniParams[NUMBER_OF_FEM_TYPES_E];     /* Radio ini params from public_radio.h     */
     IniFileExtendedRadioParam  tExtRadioIniParams[NUMBER_OF_FEM_TYPES_E];  /* Extended Radio ini params from public_radio.h     */
 	TSmartReflexParams         tSmartReflex;

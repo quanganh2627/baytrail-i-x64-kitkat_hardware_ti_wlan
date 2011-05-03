@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * qosMngr.h
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 /** \file qosMngr.h
  *  \brief QOS manager module internal header file
@@ -71,24 +76,24 @@
 
 
 /*
- *          Enumerations                                                    
+ *          Enumerations
  */
 #define RX_QUEUE_WIN_SIZE       8
 
 typedef enum
-{   
+{
     BA_POLICY_DISABLE                                   =   0,
-    BA_POLICY_INITIATOR                                 =   1, 
+    BA_POLICY_INITIATOR                                 =   1,
     BA_POLICY_RECEIVER                                  =   2,
     BA_POLICY_INITIATOR_AND_RECEIVER                    =   3
 } EqosMngrBaPolicy;
 
 
 /*
- *          Structures                                                      
+ *          Structures
  */
 
-typedef struct 
+typedef struct
 {
     tspecInfo_t     currentTspecInfo[MAX_NUM_OF_AC];
     tspecInfo_t     candidateTspecInfo[MAX_NUM_OF_AC];
@@ -102,20 +107,20 @@ typedef struct
 {
     TQueueTrafficParams   QtrafficParams;    /* AC traffic confogiration params */
     TQueueTrafficParams   QTrafficInitParams;/* for disconnect - defaults traffic params */
-    TAcQosParams          acQosParams;              
+    TAcQosParams          acQosParams;
     TAcQosParams          acQosInitParams;
     AckPolicy_e           wmeAcAckPolicy;     /* ack policy per AC               */
     PSScheme_e            currentWmeAcPsMode; /* current wme per ac power save mode */
     PSScheme_e            desiredWmeAcPsMode; /* desired wme per ac power save mode */
     EAdmissionState       apInitAdmissionState; /* AC admission state              */
-    TI_UINT32             msduLifeTimeParam;    
+    TI_UINT32             msduLifeTimeParam;
 }acParams_t;
 
 
 typedef TI_STATUS (*qosMngrCallb_t) (TI_HANDLE hApConn, trafficAdmRequestStatus_e result);
 
 /*
- *  qosMngr handle 
+ *  qosMngr handle
  */
 
 typedef struct
@@ -129,7 +134,7 @@ typedef struct
     TI_HANDLE           hMeasurementMngr;
     TI_HANDLE           hSmeSm;
     TI_HANDLE           hCtrlData;
-    TI_HANDLE           hCcxMgr;
+    TI_HANDLE           hXCCMgr;
 
     TI_HANDLE           hReport;
     TI_HANDLE           hOs;
@@ -138,9 +143,9 @@ typedef struct
 
     TI_BOOL             WMEEnable;                           /* driver supports WME protocol       */
     TI_BOOL             WMESiteSupport;                      /* site support WME protocol          */
-    EQosProtocol        activeProtocol;                      /* active protocol: CCX,WME or none.  */
+    EQosProtocol        activeProtocol;                      /* active protocol: XCC,WME or none.  */
     TI_BOOL             tagZeroConverHeader;                 /* converting tag zero headers        */
-        
+
     TI_UINT8            qosPacketBurstEnable;                /* Packet Burst is Enable or NOT      */
     TI_UINT32           qosPacketBurstTxOpLimit;             /* TxOp limit in case of NON_QOS */
                                                              /* protocol and Packet Burst is Enable */
@@ -161,7 +166,7 @@ typedef struct
     TI_UINT32           uNumEnabledPsRxStreams;             /* the number of enabled TID-PS-Rx-Streams */
 
     /* traffic admission control parameters */
-    TI_BOOL             trafficAdmCtrlEnable;                /* driver supports Admission control  */   
+    TI_BOOL             trafficAdmCtrlEnable;                /* driver supports Admission control  */
     trafficAdmCtrl_t    *pTrafficAdmCtrl;                    /* adm ctrl object */
     resourceMgmt_t      resourceMgmtTable;
     TI_UINT8            QosNullDataTemplateUserPriority;     /* Holds the last User Priority set into the firmware in the QOS Null data template */

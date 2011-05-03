@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * 802_11Defs.h
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 /****************************************************************************
  *
@@ -39,8 +44,8 @@
 
 #include "tidef.h"
 #include "osDot11.h"
-#ifdef CCX_MODULE_INCLUDED
-#include "osDot11Ccx.h"
+#ifdef XCC_MODULE_INCLUDED
+#include "osDot11XCC.h"
 #endif
 
 #define DOT11_OUI_LEN                       3
@@ -324,12 +329,12 @@ typedef struct
     0           0           DA          SA          BSSID       N/A
     0           1           DA          BSSID       SA          N/A
     1           0           BSSID       SA          DA          N/A
-    1           1           RA          TA          DA          SA         
-    
+    1           1           RA          TA          DA          SA
+
 NOTE: We only support packets coming from within the DS (i.e. From DS = 0)
 *****************************************************************************************/
 /* return the destination address used in *dot11_header_t */
-#define GET_DA_FROM_DOT11_HEADER_T(pDot11Hdr)   ((pDot11Hdr->fc & DOT11_FC_TO_DS) ? (pDot11Hdr->address3) : (pDot11Hdr->address1)) 
+#define GET_DA_FROM_DOT11_HEADER_T(pDot11Hdr)   ((pDot11Hdr->fc & DOT11_FC_TO_DS) ? (pDot11Hdr->address3) : (pDot11Hdr->address1))
 
 
 /*
@@ -372,7 +377,7 @@ typedef struct
 
 
 typedef enum
-{ 
+{
   DOT11_CAPS_ESS             = ( 1 << 0 ),
   DOT11_CAPS_IBSS            = ( 1 << 1 ),
   DOT11_CAPS_CF_POLLABLE     = ( 1 << 2 ),
@@ -392,7 +397,7 @@ typedef enum
 
 } dot11_capabilities_e;
 
-typedef enum 
+typedef enum
 {
     /* ESS */
     CAP_ESS_MASK            = 1,
@@ -405,11 +410,11 @@ typedef enum
     /* CF Pollable */
     CAP_CF_POLL_MASK        = 1,
     CAP_CF_POLL_SHIFT       = 2,
-    
+
     /* CF Poll request */
     CAP_CF_REQ_MASK         = 1,
     CAP_CF_REQ_SHIFT        = 3,
-    
+
     /* Privacy */
     CAP_PRIVACY_MASK        = 1,
     CAP_PRIVACY_SHIFT       = 4,
@@ -417,11 +422,11 @@ typedef enum
     /* Short Preamble*/
     CAP_PREAMBLE_MASK       = 1,
     CAP_PREAMBLE_SHIFT      = 5,
-    
+
     /* PBCC */
     CAP_PBCC_MASK           = 1,
     CAP_PBCC_SHIFT          = 6,
-    
+
     /* Agile */
     CAP_AGILE_MASK          = 1,
     CAP_AGILE_SHIFT         = 7,
@@ -454,7 +459,7 @@ typedef TI_UINT8 dot11_eleHdr_t[2];  /* Byte-0: IE-ID,  Byte-1: IE-Length  */
 /* Max SSID length */
 #define DOT11_SSID_MAX_LEN  32
 
-typedef struct 
+typedef struct
 {
   dot11_eleHdr_t    hdr;
   char              serviceSetId[DOT11_SSID_MAX_LEN];
@@ -464,7 +469,7 @@ typedef struct
 /* Supportted rates Information Element */
 #define DOT11_SUPPORTED_RATES_ELE_ID        1
 #define DOT11_EXT_SUPPORTED_RATES_ELE_ID        50
-typedef struct 
+typedef struct
 {
   dot11_eleHdr_t hdr;
   TI_UINT8 rates[DOT11_MAX_SUPPORTED_RATES];
@@ -483,17 +488,17 @@ typedef struct
 
 /* RSN Information Element */
 #define MAX_RSN_IE                          3
-#define DOT11_RSN_MAX                       255 
-typedef struct 
+#define DOT11_RSN_MAX                       255
+typedef struct
 {
   dot11_eleHdr_t hdr;
   TI_UINT8 rsnIeData[DOT11_RSN_MAX];
 }  dot11_RSN_t;
 
 /* General definitions needed by rsn.c */
-#define IV_FIELD_SIZE   4 
+#define IV_FIELD_SIZE   4
 #define ICV_FIELD_SIZE  4
-#define MIC_FIELD_SIZE  8 
+#define MIC_FIELD_SIZE  8
 #define EIV_FIELD_SIZE  4
 #define WEP_AFTER_HEADER_FIELD_SIZE  IV_FIELD_SIZE
 #define TKIP_AFTER_HEADER_FIELD_SIZE (IV_FIELD_SIZE + EIV_FIELD_SIZE)
@@ -502,7 +507,7 @@ typedef struct
 /* DS params Information Element */
 #define DOT11_DS_PARAMS_ELE_ID      3
 #define DOT11_DS_PARAMS_ELE_LEN     1
-typedef struct 
+typedef struct
 {
   dot11_eleHdr_t hdr;
   TI_UINT8  currChannel;
@@ -512,7 +517,7 @@ typedef struct
 /* DS params Information Element */
 #define DOT11_IBSS_PARAMS_ELE_ID    6
 #define DOT11_IBSS_PARAMS_ELE_LEN   2
-typedef struct 
+typedef struct
 {
     dot11_eleHdr_t  hdr;
     TI_UINT16          atimWindow;
@@ -520,7 +525,7 @@ typedef struct
 
 #define DOT11_FH_PARAMS_ELE_ID      2
 #define DOT11_FH_PARAMS_ELE_LEN     5
-typedef struct 
+typedef struct
 {
     dot11_eleHdr_t  hdr;
     TI_UINT16          dwellTime;
@@ -535,7 +540,7 @@ typedef struct
 
 
 #define DOT11_PARTIAL_VIRTUAL_BITMAP_MAX    251
-typedef struct 
+typedef struct
 {
     dot11_eleHdr_t  hdr;
     TI_UINT8           dtimCount;
@@ -545,7 +550,7 @@ typedef struct
 }  dot11_TIM_t;
 
 
-typedef struct 
+typedef struct
 {
     dot11_eleHdr_t  hdr;
     TI_UINT8           dtimCount;
@@ -557,7 +562,7 @@ typedef struct
 /* tim Information Element */
 #define DOT11_CF_ELE_ID             4
 #define DOT11_CF_PARAMS_ELE_LEN     6
-typedef struct 
+typedef struct
 {
     dot11_eleHdr_t  hdr;
     TI_UINT8           cfpCount;
@@ -569,7 +574,7 @@ typedef struct
 /* Challenge text Information Element */
 #define DOT11_CHALLENGE_TEXT_ELE_ID     16
 #define DOT11_CHALLENGE_TEXT_MAX        253
-typedef struct 
+typedef struct
 {
     dot11_eleHdr_t  hdr;
     TI_UINT8           text[ DOT11_CHALLENGE_TEXT_MAX ];
@@ -595,7 +600,7 @@ typedef struct
 /* Country Inforamtion Element */
 #define DOT11_COUNTRY_ELE_ID        7
 #define DOT11_COUNTRY_ELE_LEN_MAX   ( ((DOT11_NUM_OF_MAX_TRIPLET_CHANNEL+1)*3) + !((DOT11_NUM_OF_MAX_TRIPLET_CHANNEL&0x1)))
-typedef struct 
+typedef struct
 {
     dot11_eleHdr_t    hdr;
     dot11_countryIE_t countryIE;
@@ -605,7 +610,7 @@ typedef struct
 /* Power Constraint Information Element */
 #define DOT11_POWER_CONSTRAINT_ELE_ID       (32)
 #define DOT11_POWER_CONSTRAINT_ELE_LEN      (1)
-typedef struct 
+typedef struct
 {
     dot11_eleHdr_t  hdr;
     TI_UINT8           powerConstraint;
@@ -616,7 +621,7 @@ typedef struct
 /* Power Capability Information Element */
 #define DOT11_CAPABILITY_ELE_ID         (33)
 #define DOT11_CAPABILITY_ELE_LEN        (2)
-typedef struct 
+typedef struct
 {
     dot11_eleHdr_t  hdr;
     TI_UINT8           minTxPower;
@@ -626,7 +631,7 @@ typedef struct
 /* TPC request Information Element */
 #define DOT11_TPC_REQUEST_ELE_ID        (34)
 #define DOT11_TPC_REQUEST_ELE_LEN       (0)
-typedef struct 
+typedef struct
 {
     dot11_eleHdr_t  hdr;
 }  dot11_TPC_REQUEST_t;
@@ -634,7 +639,7 @@ typedef struct
 /* TPC report Information Element */
 #define DOT11_TPC_REPORT_ELE_ID         (35)
 #define DOT11_TPC_REPORT_ELE_LEN        (2)
-typedef struct 
+typedef struct
 {
     dot11_eleHdr_t  hdr;
     TI_UINT8           transmitPower;
@@ -642,13 +647,13 @@ typedef struct
 } dot11_TPC_REPORT_t;
 
 
-#ifdef  CCX_MODULE_INCLUDED
+#ifdef  XCC_MODULE_INCLUDED
 
 /* Cell Transmit Power Information Element */
 #define DOT11_CELL_TP_ELE_ID            (150)
 #define DOT11_CELL_TP_ELE_LEN           (6)
 
-typedef struct 
+typedef struct
 {
     dot11_eleHdr_t  hdr;
     TI_UINT8           oui[4];
@@ -658,18 +663,18 @@ typedef struct
 
 #define   DOT11_CELL_TP \
     dot11_CELL_TP_t         *cellTP;
-    
-#else   /* CCX_MODULE_INCLUDED */
+
+#else   /* XCC_MODULE_INCLUDED */
 
 #define   DOT11_CELL_TP
 
-#endif  /* CCX_MODULE_INCLUDED */
+#endif  /* XCC_MODULE_INCLUDED */
 
 
 /* Channel Supported Information Element */
 #define DOT11_CHANNEL_SUPPORTED_ELE_ID  (36)
 #define DOT11_CHANNEL_SUPPORTED_ELE_LEN (26)
-typedef struct 
+typedef struct
 {
     dot11_eleHdr_t  hdr;
     TI_UINT8           supportedChannel[DOT11_CHANNEL_SUPPORTED_ELE_LEN];
@@ -679,7 +684,7 @@ typedef struct
 /* Channel Switch Announcement Information Element */
 #define DOT11_CHANNEL_SWITCH_ELE_ID     (37)
 #define DOT11_CHANNEL_SWITCH_ELE_LEN    (3)
-typedef struct 
+typedef struct
 {
     dot11_eleHdr_t  hdr;
     TI_UINT8           channelSwitchMode;
@@ -693,7 +698,7 @@ typedef struct
 #define DOT11_MEASUREMENT_REQUEST_ELE_ID        (38)
 #define DOT11_MEASUREMENT_REQUEST_LEN           (2)
 #define DOT11_MEASUREMENT_REQUEST_ELE_LEN       (3 + DOT11_MEASUREMENT_REQUEST_LEN*MAX_NUM_REQ)
-typedef struct 
+typedef struct
 {
     dot11_eleHdr_t  hdr;
     TI_UINT8           measurementToken;
@@ -706,7 +711,7 @@ typedef struct
 /* Quiet Information Element */
 #define DOT11_QUIET_ELE_ID              (40)
 #define DOT11_QUIET_ELE_LEN             (6)
-typedef struct 
+typedef struct
 {
     dot11_eleHdr_t  hdr;
     TI_UINT8           quietCount;
@@ -738,7 +743,7 @@ typedef struct
 #define AP_QOS_INFO_UAPSD_MASK          (1)
 #define AP_QOS_INFO_UAPSD_SHIFT         (7)
 
-typedef struct 
+typedef struct
 {
     dot11_eleHdr_t  hdr;
     TI_UINT8           QosInfoField;
@@ -752,7 +757,7 @@ typedef struct
 /* WME Information Element */
 #define DOT11_WME_ELE_ID                (221)
 #define DOT11_WME_ELE_LEN               (7)
-typedef struct 
+typedef struct
 {
     dot11_eleHdr_t  hdr;
     TI_UINT8           OUI[3];
@@ -766,7 +771,7 @@ typedef struct
 
 typedef struct
 {
-	dot11_eleHdr_t          hdr;		   
+	dot11_eleHdr_t          hdr;
     TI_UINT8  				oui[DOT11_OUI_LEN];
 	TI_UINT8  				ouiType;
     TI_UINT16 				version;
@@ -798,7 +803,7 @@ typedef struct
 /* WME Parameter Information Element */
 #define DOT11_WME_PARAM_ELE_ID          (221)
 #define DOT11_WME_PARAM_ELE_LEN         (24)
-typedef struct 
+typedef struct
 {
     dot11_eleHdr_t         hdr;
     TI_UINT8               OUI[3];
@@ -818,13 +823,13 @@ typedef struct
 #define DOT11_HT_CAPABILITIES_MCS_RATE_OFFSET   (3)
 #define DOT11_HT_INFORMATION_MCS_RATE_OFFSET    (6)
 
-typedef struct 
+typedef struct
 {
     dot11_eleHdr_t  tHdr;
     TI_UINT8        aHtCapabilitiesIe[DOT11_HT_CAPABILITIES_ELE_LEN];   /* HT capabilities IE unparsed */
 }  Tdot11HtCapabilitiesUnparse;
 
-typedef struct 
+typedef struct
 {
     dot11_eleHdr_t  tHdr;
     TI_UINT8        aHtInformationIe[DOT11_HT_INFORMATION_ELE_LEN];     /* HT Information IE unparsed */
@@ -859,7 +864,7 @@ typedef enum
 #define DOT11_WSC_PROBE_REQ_PARAM_ELE_LEN           (22)
 #define DOT11_WSC_BEACON_MAX_LENGTH 160
 
-typedef struct 
+typedef struct
 {
     dot11_eleHdr_t              hdr;
     TI_UINT8                        OUI[3];
@@ -890,7 +895,7 @@ to send ALL the TSPEC structure, but only as far as TsInfo. The TSPEC structure 
 typedef struct
 {
     dot11_eleHdr_t  hdr;
-    
+
     TI_UINT8   OUI[3];
     TI_UINT8   oui_type;
     TI_UINT8   oui_subtype;
@@ -925,7 +930,7 @@ typedef struct
 
 #define WME_TSPEC_IE_ID                         221
 #define WME_TSPEC_IE_LEN                        61
-#define WME_TSPEC_IE_TSINFO_LEN                 9                
+#define WME_TSPEC_IE_TSINFO_LEN                 9
 #define WME_TSPEC_IE_OUI_TYPE                   0x02
 #define WME_TSPEC_IE_OUI_SUB_TYPE               0x02
 #define WME_TSPEC_IE_VERSION                    0x01
@@ -936,7 +941,7 @@ typedef enum
     TS_METRIX_OUI_TYPE = 0x07,
     TS_RATE_SET_OUI_TYPE = 0x08,
     EDCA_LIFETIME_OUI_TYPE = 0x09
-} CCX_IE_OUI_TYPE_t;
+} XCC_IE_OUI_TYPE_t;
 
 #define ADDTS_REQUEST_ACTION                    0x00
 #define ADDTS_RESPONSE_ACTION                   0x01
@@ -944,7 +949,7 @@ typedef enum
 
 #define ADDTS_STATUS_CODE_SUCCESS               0x00
 #define DELTS_CODE_SUCCESS                      0x00
- 
+
 
 #define TS_INFO_0_TRAFFIC_TYPE_MASK             0x01
 #define TS_INFO_0_TSID_MASK                     0x1E
@@ -953,37 +958,37 @@ typedef enum
 
 #define TS_INFO_1_ACCESS_POLICY_MASK            0x01
 #define TS_INFO_1_AGGREGATION_MASK              0x02
-#define TS_INFO_1_APSD_MASK                     0x04    
+#define TS_INFO_1_APSD_MASK                     0x04
 #define TS_INFO_1_USER_PRIORITY_MASK            0x38
 #define TS_INFO_1_TSINFO_ACK_POLICY_MASK        0xC0
 
 #define TS_INFO_2_SCHEDULE_MASK                 0x01
-#define TS_INFO_2_RESERVED_MASK                 0xF7    
+#define TS_INFO_2_RESERVED_MASK                 0xF7
 
 #define TRAFFIC_TYPE_SHIFT                      0
 #define TSID_SHIFT                              1
 #define DIRECTION_SHIFT                         5
 #define ACCESS_POLICY_SHIFT                     7
 #define AGGREGATION_SHIFT                       1
-#define APSD_SHIFT                              2   
+#define APSD_SHIFT                              2
 #define USER_PRIORITY_SHIFT                     3
 #define TSINFO_ACK_POLICY_SHIFT                 6
 #define SCHEDULE_SHIFT                          0
 #define RESERVED_SHIFT                          1
-#define SURPLUS_BANDWIDTH_ALLOW                 13  
+#define SURPLUS_BANDWIDTH_ALLOW                 13
 
-#define TS_INFO_0_ACCESS_POLICY_EDCA            0x1                 
-#define NORMAL_ACKNOWLEDGEMENT                  0x00        
-#define NO_SCHEDULE                             0x00        
+#define TS_INFO_0_ACCESS_POLICY_EDCA            0x1
+#define NORMAL_ACKNOWLEDGEMENT                  0x00
+#define NO_SCHEDULE                             0x00
 #define PS_UPSD                                 0x01
 #define EDCA_MODE                               0x08
 #define FIX_MSDU_SIZE                           0x8000
 
 #define WPA_IE_OUI                              {0x00, 0x50, 0xf2}
-#define CCX_OUI                                 {0x00, 0x40, 0x96}
+#define XCC_OUI                                 {0x00, 0x40, 0x96}
 
 /* Action field structure
-    used for extended management action such as spectrum management */ 
+    used for extended management action such as spectrum management */
 typedef TI_UINT8 dot11_ACTION_FIELD_t[2];
 
 
@@ -1026,9 +1031,9 @@ typedef enum
     RSN_IE_ID                           = 48,
     EXT_SUPPORTED_RATES_IE_ID           = 50,
     HT_INFORMATION_IE_ID                = 61,
-    CCX_EXT_1_IE_ID                     = 133,
-    CCX_EXT_2_IE_ID                     = 149,  
-    CELL_POWER_IE                       = 150, /*CCX*/
+    XCC_EXT_1_IE_ID                     = 133,
+    XCC_EXT_2_IE_ID                     = 149,
+    CELL_POWER_IE                       = 150, /*XCC*/
     WPA_IE_ID                           = 221
 
 } dot11MgmtIeId_e;
@@ -1053,30 +1058,30 @@ typedef enum
 } dot11CategoryTypes_e;
 
 
-/* 
+/*
  * Management templates to set to the HAL:
  */
 
-#ifdef CCX_MODULE_INCLUDED
+#ifdef XCC_MODULE_INCLUDED
 
-    typedef struct  
+    typedef struct
     {
         dot11_mgmtHeader_t  hdr;
-        char                infoElements[sizeof( dot11_SSID_t ) + 
+        char                infoElements[sizeof( dot11_SSID_t ) +
                                          sizeof( dot11_RATES_t ) +
                                          sizeof( dot11_RATES_t ) +
                                          sizeof( Tdot11HtCapabilitiesUnparse ) +
                                          sizeof( DOT11_WSC_PROBE_REQ_MAX_LENGTH ) +
-                                         sizeof( ccx_radioManagmentCapability_IE_t )
+                                         sizeof( XCC_radioManagmentCapability_IE_t )
                                         ];
     } probeReqTemplate_t;
 
-#else /* CCX_MODULE_INCLUDED */
+#else /* XCC_MODULE_INCLUDED */
 
-    typedef struct  
+    typedef struct
     {
         dot11_mgmtHeader_t  hdr;
-        char                infoElements[sizeof( dot11_SSID_t ) + 
+        char                infoElements[sizeof( dot11_SSID_t ) +
                                          sizeof( dot11_RATES_t ) +
                                          sizeof( dot11_RATES_t ) +
                                          sizeof( Tdot11HtCapabilitiesUnparse ) +
@@ -1084,29 +1089,29 @@ typedef enum
                                         ];
     } probeReqTemplate_t;
 
-#endif /* CCX_MODULE_INCLUDED */
+#endif /* XCC_MODULE_INCLUDED */
 
 
-typedef struct 
+typedef struct
 {
     dot11_mgmtHeader_t  hdr;
     TI_UINT8               timeStamp[TIME_STAMP_LEN];
     TI_UINT16              beaconInterval;
     TI_UINT16              capabilities;
-    char                infoElements[ sizeof( dot11_SSID_t ) + 
+    char                infoElements[ sizeof( dot11_SSID_t ) +
                                       sizeof( dot11_RATES_t ) +
                                       sizeof( dot11_RATES_t ) +
                                       sizeof( dot11_DS_PARAMS_t ) +
                                       sizeof( dot11_COUNTRY_t)      ];
 }  probeRspTemplate_t;
 
-typedef struct 
+typedef struct
 {
     dot11_mgmtHeader_t  hdr;
     TI_UINT8               timeStamp[TIME_STAMP_LEN];
     TI_UINT16              beaconInterval;
     TI_UINT16              capabilities;
-    char                infoElements[ sizeof( dot11_SSID_t ) + 
+    char                infoElements[ sizeof( dot11_SSID_t ) +
                                       sizeof( dot11_RATES_t ) +
                                       sizeof( dot11_RATES_t ) +
                                       sizeof( dot11_DS_PARAMS_t ) +
@@ -1115,18 +1120,18 @@ typedef struct
 }  beaconTemplate_t;
 
 
-typedef struct 
+typedef struct
 {
     dot11_mgmtHeader_t  hdr;
 } nullDataTemplate_t;
 
-typedef struct 
+typedef struct
 {
     dot11_mgmtHeader_t  hdr;
     TI_UINT16 disconnReason;
 } disconnTemplate_t; /* Deauth or Disassoc */
 
-typedef struct 
+typedef struct
 {
     dot11_header_t   hdr;
     Wlan_LlcHeader_T LLC;
@@ -1152,7 +1157,7 @@ typedef struct
 }  QosNullDataTemplate_t;
 
 /* Traffic Stream Rate Set (TSRS) info-elements */
-typedef struct 
+typedef struct
 {
     dot11_eleHdr_t  hdr;
     TI_UINT8           OUI[3];
@@ -1161,7 +1166,7 @@ typedef struct
     TI_UINT8           tsNominalRate;
 } dot11_TSRS_STA_IE_t;
 
-typedef struct 
+typedef struct
 {
     dot11_eleHdr_t  hdr;
     TI_UINT8           OUI[3];
@@ -1171,7 +1176,7 @@ typedef struct
 }  dot11_TSRS_IE_t;
 
 /* MSDU lifetime info-element */
-typedef struct 
+typedef struct
 {
     dot11_eleHdr_t  hdr;
     TI_UINT8           OUI[3];
@@ -1180,7 +1185,7 @@ typedef struct
     TI_UINT16          msduLifeTime;
 }  dot11_MSDU_LIFE_TIME_IE_t;
 
-typedef struct 
+typedef struct
 {
     dot11_eleHdr_t  hdr;
     TI_UINT8           OUI[3];
@@ -1190,12 +1195,12 @@ typedef struct
     TI_UINT16          measureInterval;
 }  dot11_TS_METRICS_IE_t;
 
-typedef struct 
+typedef struct
 {
     dot11_TSRS_IE_t             *trafficStreamParameter;
     dot11_MSDU_LIFE_TIME_IE_t   *edcaLifetimeParameter;
     dot11_TS_METRICS_IE_t       *tsMetrixParameter;
-} CCXv4IEs_t;
+} XCCv4IEs_t;
 
 
 /* Measurement Report message frame structure */
@@ -1218,7 +1223,7 @@ typedef struct
 
 
 
-typedef enum 
+typedef enum
 {
     STATUS_SUCCESSFUL = 0,
     STATUS_UNSPECIFIED,

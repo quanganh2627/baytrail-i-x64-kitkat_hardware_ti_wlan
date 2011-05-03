@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * WlanDrvWext.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 /*
  * src/wext.c
@@ -48,8 +53,8 @@
 /* Routine prototypes */
 
 int wlanDrvWext_Handler (struct net_device *dev,
-                         struct iw_request_info *info, 
-                         void  *iw_req, 
+                         struct iw_request_info *info,
+                         void  *iw_req,
                          void  *extra);
 
 static struct iw_statistics *wlanDrvWext_GetWirelessStats (struct net_device *dev);
@@ -160,13 +165,13 @@ static struct iw_statistics *wlanDrvWext_GetWirelessStats(struct net_device *dev
 /* Generic callback for WEXT commands */
 
 int wlanDrvWext_Handler (struct net_device *dev,
-                     struct iw_request_info *info, 
-                     void *iw_req, 
+                     struct iw_request_info *info,
+                     void *iw_req,
                      void *extra)
 {
    int              rc;
    TWlanDrvIfObj   *drv = (TWlanDrvIfObj *)NETDEV_GET_PRIVATE(dev);
-   ti_private_cmd_t my_command; 
+   ti_private_cmd_t my_command;
    struct iw_mlme   mlme;
    void             *copy_to_buf=NULL, *param3=NULL;
    ECmdType         CmdType = CMD_WEXT_CMD_E;
@@ -193,7 +198,7 @@ int wlanDrvWext_Handler (struct net_device *dev,
            {
            case DRIVER_INIT_PARAM:
                return wlanDrvIf_LoadFiles (drv, my_command.in_buffer);
-                
+
            case DRIVER_START_PARAM:
                return wlanDrvIf_Start (dev);
 
@@ -201,7 +206,7 @@ int wlanDrvWext_Handler (struct net_device *dev,
                return wlanDrvIf_Stop (dev);
 
            case DRIVER_STATUS_PARAM:
-               *(TI_UINT32 *)my_command.out_buffer = 
+               *(TI_UINT32 *)my_command.out_buffer =
                    (drv->tCommon.eDriverState == DRV_STATE_RUNNING) ? TI_TRUE : TI_FALSE;
                return TI_OK;
            }
@@ -254,7 +259,7 @@ int wlanDrvWext_Handler (struct net_device *dev,
 
          if ((ie_length == 0) && (ie_content == NULL)) {
                  /* Do nothing, deleting the IE */
-         } else if ((ie_content != NULL) && (ie_length <= RSN_MAX_GENERIC_IE_LENGTH) && (ie_length > 0)) { 
+         } else if ((ie_content != NULL) && (ie_length <= RSN_MAX_GENERIC_IE_LENGTH) && (ie_length > 0)) {
                  /* One IE cannot be larger than RSN_MAX_GENERIC_IE_LENGTH bytes */
                  my_command.in_buffer = os_memoryAlloc(drv, ie_length);
                  os_memoryCopyFromUser(drv, my_command.in_buffer, ie_content, ie_length );
@@ -268,7 +273,7 @@ int wlanDrvWext_Handler (struct net_device *dev,
 	 break;
    }
 
-   
+
    /* If the friver is not running, return NOK */
    if (drv->tCommon.eDriverState != DRV_STATE_RUNNING)
    {
@@ -276,14 +281,14 @@ int wlanDrvWext_Handler (struct net_device *dev,
    }
 
    /* Call the Cmd module with the given user paramters */
-   rc = (cmdHndlr_InsertCommand (drv->tCommon.hCmdHndlr, 
-                                   info->cmd, 
-                                   info->flags, 
-                                   iw_req, 
-                                   0, 
-                                   extra, 
-                                   0, 
-                                   param3, 
+   rc = (cmdHndlr_InsertCommand (drv->tCommon.hCmdHndlr,
+                                   info->cmd,
+                                   info->flags,
+                                   iw_req,
+                                   0,
+                                   extra,
+                                   0,
+                                   param3,
                                    NULL,
                                    CmdType ));
    /* Here we are after the command was completed */

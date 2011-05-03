@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * mlmeApi.h
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file mlmeApi.h
  *  \brief MLME API
  *
@@ -80,7 +85,7 @@ typedef enum
 /* Disassociation frame structure */
 typedef struct
 {
-    TI_UINT16                   reason;    
+    TI_UINT16                   reason;
 }  disAssoc_t;
 
 
@@ -90,15 +95,15 @@ typedef struct
 
 typedef struct
 {
-    TI_UINT16                   capabilities;      
-    TI_UINT16                   status;    
-    TI_UINT16                   aid;       
-    dot11_RATES_t               *pRates;    
+    TI_UINT16                   capabilities;
+    TI_UINT16                   status;
+    TI_UINT16                   aid;
+    dot11_RATES_t               *pRates;
     dot11_RATES_t               *pExtRates;
     TI_UINT8                    useProtection;
     TI_BOOL                     ciscoIEPresent;
     EPreamble                   barkerPreambleMode;
-    TI_UINT8                    NonErpPresent;  
+    TI_UINT8                    NonErpPresent;
     dot11_WME_PARAM_t           *WMEParams;
     dot11_RSN_t                 *pRsnIe;
     TI_UINT8                    rsnIeLen;
@@ -107,19 +112,19 @@ typedef struct
 	Tdot11HtInformationUnparse	*pHtInformation;
     TI_UINT8                    *tspecVoiceParameters;  /* dot11_WME_TSPEC_IE_t is unpacked so need to access as bytes. */
     TI_UINT8                    *tspecSignalParameters; /* dot11_WME_TSPEC_IE_t is unpacked so need to access as bytes. */
-    CCXv4IEs_t                  ccxIEs[MAX_NUM_OF_AC];
+    XCCv4IEs_t                  XCCIEs[MAX_NUM_OF_AC];
 }  assocRsp_t;
 
 
 /* Probe response frame structure */
-/* Please notice, the order of fields in the beacon must be identical to the order of 
+/* Please notice, the order of fields in the beacon must be identical to the order of
     field in the probe response. This is because of the parsing that is done by the site manager. */
 typedef struct
 {
-    char                        timestamp[TIME_STAMP_LEN];     
-    TI_UINT16                   beaconInerval;     
-    TI_UINT16                   capabilities;      
-    dot11_SSID_t                *pSsid;    
+    char                        timestamp[TIME_STAMP_LEN];
+    TI_UINT16                   beaconInerval;
+    TI_UINT16                   capabilities;
+    dot11_SSID_t                *pSsid;
     dot11_RATES_t               *pRates;
     dot11_COUNTRY_t             *country;
     dot11_POWER_CONSTRAINT_t    *powerConstraint;
@@ -127,7 +132,7 @@ typedef struct
     dot11_QUIET_t               *quiet;
     dot11_TPC_REPORT_t          *TPCReport;
 
-#ifdef CCX_MODULE_INCLUDED
+#ifdef XCC_MODULE_INCLUDED
     dot11_CELL_TP_t             *cellTP;
 #endif
 
@@ -136,10 +141,10 @@ typedef struct
     dot11_RATES_t               *pExtRates;
     TI_UINT8                    useProtection;
     EPreamble                   barkerPreambleMode;
-    TI_UINT8                    NonErpPresent;  
-    dot11_FH_PARAMS_t           *pFHParamsSet;     
-    dot11_DS_PARAMS_t           *pDSParamsSet;     
-    dot11_CF_PARAMS_t           *pCFParamsSet;     
+    TI_UINT8                    NonErpPresent;
+    dot11_FH_PARAMS_t           *pFHParamsSet;
+    dot11_DS_PARAMS_t           *pDSParamsSet;
+    dot11_CF_PARAMS_t           *pCFParamsSet;
     dot11_IBSS_PARAMS_t         *pIBSSParamsSet;
     dot11_RSN_t                 *pRsnIe;
     TI_UINT8                    rsnIeLen;
@@ -149,22 +154,22 @@ typedef struct
     dot11_TIM_t                 *pTIM;                  /* for beacons only */
     TI_UINT8                    *pUnknownIe;
     TI_UINT16                   unknownIeLen;
-} beacon_probeRsp_t; 
+} beacon_probeRsp_t;
 
 
 /* Authentication message frame structure */
 typedef struct
 {
-    TI_UINT16                   authAlgo;      
-    TI_UINT16                   seqNum;    
-    TI_UINT16                   status;    
-    dot11_CHALLENGE_t           *pChallenge;       
+    TI_UINT16                   authAlgo;
+    TI_UINT16                   seqNum;
+    TI_UINT16                   status;
+    dot11_CHALLENGE_t           *pChallenge;
 }  authMsg_t;
 
 /* DeAuthentication message frame structure */
 typedef struct
 {
-    TI_UINT16                   reason;    
+    TI_UINT16                   reason;
 }  deAuth_t;
 
 /* Action message frame structure */
@@ -176,11 +181,11 @@ typedef struct
 } action_t;
 
 
-typedef struct 
+typedef struct
 {
     dot11MgmtSubType_e subType;
 
-    union 
+    union
     {
         beacon_probeRsp_t iePacket;
         disAssoc_t  disAssoc;
@@ -197,7 +202,7 @@ typedef struct
 
 } mlmeFrameInfo_t;
 
-typedef struct 
+typedef struct
 {
     dot11_SSID_t            ssid;
     TMacAddr                bssid;
@@ -215,7 +220,7 @@ typedef struct
     dot11_CHANNEL_SWITCH_t  channelSwitch;
     dot11_QUIET_t           quiet;
     dot11_TPC_REPORT_t      TPCReport;
-#ifdef CCX_MODULE_INCLUDED
+#ifdef XCC_MODULE_INCLUDED
     dot11_CELL_TP_t         cellTP;
 #endif
     dot11_RSN_t             rsnIe[3];
@@ -231,7 +236,7 @@ typedef struct
 
     TI_BOOL                 recvChannelSwitchAnnoncIE;
 
-	TI_UINT8                unknownIe[MAX_BEACON_BODY_LENGTH]; 
+	TI_UINT8                unknownIe[MAX_BEACON_BODY_LENGTH];
 
     mlmeFrameInfo_t         frame;
 }mlmeIEParsingParams_t;
@@ -258,7 +263,7 @@ void      mlme_SetDefaults (TI_HANDLE hMlmeSm, TMlmeInitParams *pMlmeInitParams)
 TI_STATUS mlme_setParam(TI_HANDLE           hMlmeSm,
                         paramInfo_t         *pParam);
 
-TI_STATUS mlme_getParam(TI_HANDLE           hMlmeSm, 
+TI_STATUS mlme_getParam(TI_HANDLE           hMlmeSm,
                         paramInfo_t         *pParam);
 
 TI_STATUS mlme_start(TI_HANDLE hMlme);
@@ -273,17 +278,17 @@ TI_STATUS mlme_reportAssocStatus(TI_HANDLE hMlme, TI_UINT16 status);
 
 TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr);
 
-TI_STATUS mlmeParser_parseIEs(TI_HANDLE hMlme, 
+TI_STATUS mlmeParser_parseIEs(TI_HANDLE hMlme,
                               TI_UINT8 *pData,
                               TI_INT32 bodyDataLen,
                               mlmeIEParsingParams_t *params);
 TI_BOOL mlmeParser_ParseIeBuffer (TI_HANDLE hMlme, TI_UINT8 *pIeBuffer, TI_UINT32 length, TI_UINT8 desiredIeId, TI_UINT8 **pDesiredIe, TI_UINT8 *pMatchBuffer, TI_UINT32 matchBufferLen);
 
-#ifdef CCX_MODULE_INCLUDED
-void mlmeParser_readCcxOui (TI_UINT8 *pData, 
-                            TI_UINT32 dataLen, 
-                            TI_UINT32 *pReadLen, 
-                            CCXv4IEs_t *ccxIEs);
+#ifdef XCC_MODULE_INCLUDED
+void mlmeParser_readXCCOui (TI_UINT8 *pData,
+                            TI_UINT32 dataLen,
+                            TI_UINT32 *pReadLen,
+                            XCCv4IEs_t *XCCIEs);
 #endif
 
 mlmeIEParsingParams_t *mlmeParser_getParseIEsBuffer(TI_HANDLE *hMlme);

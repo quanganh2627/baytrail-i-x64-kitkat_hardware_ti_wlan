@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * rx.h
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 /***************************************************************************/
 /*																		   */
@@ -44,16 +49,16 @@
 #define DEF_EAPOL_DESTINATION				OS_ABS_LAYER
 #define DEF_RX_PORT_STATUS					CLOSE
 
-typedef struct 
+typedef struct
 {
-	TI_UINT32		excludedFrameCounter;	
-	TI_UINT32		rxDroppedDueToVLANIncludedCnt;    
+	TI_UINT32		excludedFrameCounter;
+	TI_UINT32		rxDroppedDueToVLANIncludedCnt;
     TI_UINT32		rxWrongBssTypeCounter;
 	TI_UINT32		rxWrongBssIdCounter;
     TI_UINT32      rcvUnicastFrameInOpenNotify;
 }rxDataDbgCounters_t;
 
-typedef struct 
+typedef struct
 {
     TI_UINT32      recvFromWlan;
 	TI_UINT32      recvBytesFromWlan;
@@ -69,7 +74,7 @@ typedef struct
 /*                         |                           |                         |
  31 30 29 28 | 27 26 25 24 | 23 22 21 20 | 19 18 17 16 | 15 14 13 12 | 11 10 9 8 | 7 6 5 4 | 3 2 1 0
                            |                           |                         |
-*/                                           
+*/
 
 
 typedef enum
@@ -90,7 +95,7 @@ typedef enum
 	RX_CONN_STATE_OPEN
 } ERxConnState;
 
-typedef struct 
+typedef struct
 {
     EWlanLinkType eType;        /* Link type */
     ERxConnState  eState;       /* Link state */
@@ -100,7 +105,7 @@ typedef struct
 typedef void (*rxData_pBufferDispatchert) (TI_HANDLE hRxData , void *pBuffer, TRxAttr *pRxAttr);
 
 
-typedef struct 
+typedef struct
 {
 	/* Handles */
 	TI_HANDLE	 		hCtrlData;
@@ -110,7 +115,7 @@ typedef struct
 	TI_HANDLE			hRsn;
 	TI_HANDLE			hReport;
 	TI_HANDLE			hSiteMgr;
-	TI_HANDLE			hCcxMgr;
+	TI_HANDLE			hXCCMgr;
     TI_HANDLE           hEvHandler;
     TI_HANDLE           hTimer;
     TI_HANDLE           RxEventDistributor;
@@ -125,7 +130,7 @@ typedef struct
 	eapolDestination_e 	rxDataEapolDestination;
 
 	portStatus_e  		rxDataPortStatus;
-	
+
     /* Rx Data Filters */
     filter_e            filteringDefaultAction;
     TI_BOOL             filteringEnabled;
@@ -159,19 +164,19 @@ typedef struct
 }rxData_t;
 
 /* Public function definition */
-/** 
- * \fn     rxData_IntraBssBridge_Enable 
+/**
+ * \fn     rxData_IntraBssBridge_Enable
  * \brief  Enable Intra BSS Bridge in Rx path
- * 
- * 
+ *
+ *
  * \return N/A
  */
 extern void rxData_IntraBssBridge_Enable(TI_HANDLE hRxData);
-/** 
- * \fn     rxData_IntraBssBridge_Disable 
+/**
+ * \fn     rxData_IntraBssBridge_Disable
  * \brief  Disable (Isolate) Intra BSS Bridge in Rx path
- * 
- * 
+ *
+ *
  * \return N/A
  */
 extern void rxData_IntraBssBridge_Disable(TI_HANDLE hRxData);

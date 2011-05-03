@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * siteHash.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file siteHash.c
  *  \brief Site Hash implementation
  *
@@ -49,13 +54,13 @@
 
 
 /****************************************************************************************************************
-	
+
 	This file implements the site hash mechanism. This mechanism is used for faster access to the sites information.
 	It is compound of the following:
 		1.	hash function	-	which maps the 4 last bits of the BSSID to an entry in the hash table.
 		2.	hash table		-	each entry in the table points to a linked list of site entries
 		3.	site table		-	each entry holds a site information
-															
+
 	In order to find a site in the site table, we operate the hash function on the site's BSSID.
 	We receive a hash entry. We go over the linked list pointed by this hash entry until we find the site entry.
 *****************************************************************************************************************/
@@ -69,17 +74,17 @@
 /************************************************************************
  *                        siteMgr_resetSiteTable						*
  ************************************************************************
-DESCRIPTION: reset the following things: 
+DESCRIPTION: reset the following things:
 				-	Mgmt parameters structure
 				-	Site table
 				-	Hash table
 				-	Primary site pointer
 				-	Number of sites
-                                                                                                   
-INPUT:      hSiteMgr				-	Handle to site mgr	
+
+INPUT:      hSiteMgr				-	Handle to site mgr
 
 
-OUTPUT:		
+OUTPUT:
 
 RETURN:     TI_OK
 
@@ -98,7 +103,7 @@ TI_STATUS siteMgr_resetSiteTable(TI_HANDLE	hSiteMgr, siteTablesParams_t	*pSiteTa
         handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
         return TI_NOK;
     }
-	os_memoryZero(pSiteMgr->hOs, &pSiteTableParams->siteTable[0], sizeof(siteEntry_t)*pSiteTableParams->maxNumOfSites); 
+	os_memoryZero(pSiteMgr->hOs, &pSiteTableParams->siteTable[0], sizeof(siteEntry_t)*pSiteTableParams->maxNumOfSites);
 
 	for (i = 0; i < pSiteTableParams->maxNumOfSites; i++)
 	{
@@ -118,26 +123,26 @@ TI_STATUS siteMgr_resetSiteTable(TI_HANDLE	hSiteMgr, siteTablesParams_t	*pSiteTa
 /************************************************************************
  *                        findSiteEntry									*
  ************************************************************************
-DESCRIPTION: Perform the following things: 
+DESCRIPTION: Perform the following things:
 			-	Compute the site's hash entry based on the site BSSID and hash function
 			-	Look fotr the site entry in the linked list pointed by the hash entry
 			-	If the site is found in the site table, returns a pointer to the site entry
 			-	If the site is not found, return NULL.
-                                                                                                   
-INPUT:      pSiteMgr	-	Handle to site mgr	
-			mac			-	The site BSSID		
+
+INPUT:      pSiteMgr	-	Handle to site mgr
+			mac			-	The site BSSID
 
 
-OUTPUT:		
+OUTPUT:
 
 RETURN:     Pointer to the site entry if site found, NULL otherwise
 
 ************************************************************************/
-siteEntry_t	*findSiteEntry(siteMgr_t		*pSiteMgr, 
+siteEntry_t	*findSiteEntry(siteMgr_t		*pSiteMgr,
 				           TMacAddr 		*mac)
 {
     siteTablesParams_t      *pCurrentSiteTable = pSiteMgr->pSitesMgmtParams->pCurrentSiteTable;
-	siteEntry_t             *pSiteEntry;	
+	siteEntry_t             *pSiteEntry;
     TI_UINT8                 tableIndex=2, i;
 
    /* It looks like it never happens. Anyway decided to check */
@@ -156,7 +161,7 @@ siteEntry_t	*findSiteEntry(siteMgr_t		*pSiteMgr,
 		for (i = 0; i < pCurrentSiteTable->maxNumOfSites; i++)
 	    {
 			pSiteEntry = &(pCurrentSiteTable->siteTable[i]);
-        
+
 	    	if (MAC_EQUAL (pSiteEntry->bssid, *mac))
 	    	{
                 TRACE6(pSiteMgr->hReport, REPORT_SEVERITY_INFORMATION,
@@ -191,25 +196,25 @@ TRACE6(pSiteMgr->hReport, REPORT_SEVERITY_INFORMATION, "FIND failure, bssid: %X-
 /************************************************************************
  *                        findAndInsertSiteEntry									*
  ************************************************************************
-DESCRIPTION: Perform the following things: 
+DESCRIPTION: Perform the following things:
 			-	Compute the site's hash entry based on the site BSSID and hash function
 			-	Look for the site entry in the linked list pointed by the hash entry
 			-	If the site is found in the site table, returns a pointer to the site entry
-			-	If the site is not found in the site table, tries to add the site 
+			-	If the site is not found in the site table, tries to add the site
 				-	If succeeds, returns a pointer to the site entry
 				-	Otherwise, returns NULL
-                                                                                                   
-INPUT:      pSiteMgr	-	Handle to site mgr	
-			mac			-	The site BSSID		
+
+INPUT:      pSiteMgr	-	Handle to site mgr
+			mac			-	The site BSSID
             band        -   The site band
 
 
-OUTPUT:		
+OUTPUT:
 
 RETURN:     Pointer to the site entry if site found/inserted, NULL otherwise
 
 ************************************************************************/
-siteEntry_t	*findAndInsertSiteEntry(siteMgr_t		*pSiteMgr, 
+siteEntry_t	*findAndInsertSiteEntry(siteMgr_t		*pSiteMgr,
 									TMacAddr    	*mac,
                                     ERadioBand      band)
 {
@@ -235,7 +240,7 @@ siteEntry_t	*findAndInsertSiteEntry(siteMgr_t		*pSiteMgr,
         TRACE1(pSiteMgr->hReport, REPORT_SEVERITY_ERROR, "Bad band: %d\n\n", band);
         pCurrentSiteTable = &(pSitesMgmtParams->dot11BG_sitesTables);
     }
-        
+
     /* Set the first TS to a site which is not the Primary site */
     if (pPrimarySite != &(pCurrentSiteTable->siteTable[0]))
 	{
@@ -258,7 +263,7 @@ siteEntry_t	*findAndInsertSiteEntry(siteMgr_t		*pSiteMgr,
     for (i = 0; i < pCurrentSiteTable->maxNumOfSites; i++)
     {
         pSiteEntry = &(pCurrentSiteTable->siteTable[i]);
-		
+
         if (MAC_EQUAL (pSiteEntry->bssid, *mac))
 		{
 
@@ -274,7 +279,7 @@ siteEntry_t	*findAndInsertSiteEntry(siteMgr_t		*pSiteMgr,
                 emptySiteIndex = i;
                 firstEmptySiteFound=TI_TRUE;
             }
-		
+
         }
         else if (oldestTS == pSiteEntry->localTimeStamp)
         {   /* Save the oldest site's index, according to TS */
@@ -283,8 +288,8 @@ siteEntry_t	*findAndInsertSiteEntry(siteMgr_t		*pSiteMgr,
 	}
 
     TRACE4(pSiteMgr->hReport, REPORT_SEVERITY_INFORMATION, "INSERT failure, no free entry!, oldestTS=%d, nextSite2Remove=%d, "
-           "[0].localTimeStamp=%d, [1]localTimeStamp%d \n", 
-           oldestTS, nextSite2Remove, 
+           "[0].localTimeStamp=%d, [1]localTimeStamp%d \n",
+           oldestTS, nextSite2Remove,
            pCurrentSiteTable->siteTable[0].localTimeStamp,
            pCurrentSiteTable->siteTable[1].localTimeStamp);
 
@@ -299,7 +304,7 @@ siteEntry_t	*findAndInsertSiteEntry(siteMgr_t		*pSiteMgr,
 	}
 
 
-	pCurrentSiteTable->numOfSites++; 
+	pCurrentSiteTable->numOfSites++;
 
 	pSiteEntry = &(pCurrentSiteTable->siteTable[emptySiteIndex]);
 
@@ -321,22 +326,22 @@ siteEntry_t	*findAndInsertSiteEntry(siteMgr_t		*pSiteMgr,
  *                        removeSiteEntry								*
  ************************************************************************
 DESCRIPTION: Removes the site entry from the site table
-                                                                                                   
+
 INPUT:      pSiteMgr		   - Handle to site mgr
-            pCurrSiteTblParams - Pointer to current site table parameters   
-            hashPtr			   - Pointer to the site entry      
+            pCurrSiteTblParams - Pointer to current site table parameters
+            hashPtr			   - Pointer to the site entry
 
 
-OUTPUT:		
+OUTPUT:
 
-RETURN:     
+RETURN:
 
 ************************************************************************/
-void removeSiteEntry(siteMgr_t  *pSiteMgr, 
+void removeSiteEntry(siteMgr_t  *pSiteMgr,
                      siteTablesParams_t  *pCurrSiteTblParams,
                      siteEntry_t         *pSiteEntry)
 {
-	TI_UINT8			index; 
+	TI_UINT8			index;
 
 	if (pSiteEntry == NULL)
 	{
@@ -353,12 +358,12 @@ TRACE0(pSiteMgr->hReport, REPORT_SEVERITY_ERROR, "REMOVAL failure, site table is
 TRACE6(pSiteMgr->hReport, REPORT_SEVERITY_INFORMATION, "removeSiteEntry REMOVE ssid=, bssid= 0x%x-0x%x-0x%x-0x%x-0x%x-0x%x\n\n",			   pSiteEntry->bssid[0], pSiteEntry->bssid[1], pSiteEntry->bssid[2],			   pSiteEntry->bssid[3], pSiteEntry->bssid[4], pSiteEntry->bssid[5] );
 
 	pCurrSiteTblParams->numOfSites--;
-		
+
 	/* Now remove (exclude) hashPtr entry from the linked list */
 
 TRACE6(pSiteMgr->hReport, REPORT_SEVERITY_INFORMATION, "REMOVAL success, bssid: %X-%X-%X-%X-%X-%X\n\n", pSiteEntry->bssid[0], pSiteEntry->bssid[1], pSiteEntry->bssid[2], pSiteEntry->bssid[3], pSiteEntry->bssid[4], pSiteEntry->bssid[5]);
 TRACE1(pSiteMgr->hReport, REPORT_SEVERITY_INFORMATION, " SITE TABLE remaining entries number  %d \n", pCurrSiteTblParams->numOfSites);
-	
+
 	/* Clean the rest of the entry structure */
 	index = pSiteEntry->index;     /* keep the index of the siteTable entry */
 	os_memoryZero(pSiteMgr->hOs, pSiteEntry, sizeof(siteEntry_t));

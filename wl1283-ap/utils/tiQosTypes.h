@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * tiQosTypes.h
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 /*--------------------------------------------------------------------------*/
 /* Module:      tiQosTypes.h*/
@@ -96,7 +101,7 @@ typedef enum
 } ETrafficAdmState;
 
 
-/* 
+/*
  * This enum defines the admission state configured to dataCtrl object.
  */
 typedef enum
@@ -110,7 +115,7 @@ typedef enum
 typedef struct
 {
     /* Power save mode */
-    TI_UINT8                PsMode;             
+    TI_UINT8                PsMode;
     TI_UINT16               TxQueueSize;
     TI_UINT8                QueueIndex;
     EQOverflowPolicy        QueueOvFlowPolicy;
@@ -122,15 +127,15 @@ typedef struct
 typedef struct
 {
     /* header converting mode */
-    EHeaderConvertMode      headerConverMode;                           
+    EHeaderConvertMode      headerConverMode;
     /* flag for converting zero tags */
-    TI_BOOL                 convertTagZeroFrames;                       
+    TI_BOOL                 convertTagZeroFrames;
     /* AC admission state */
-    ETrafficAdmState        admissionState;                             
+    ETrafficAdmState        admissionState;
     /* AC admission is mandatory */
-    EAdmissionState         admissionRequired;                          
+    EAdmissionState         admissionRequired;
     /* Tag to AC classification */
-    EAcTrfcType             tag_ToAcClsfrTable[MAX_NUM_OF_802_1d_TAGS]; 
+    EAcTrfcType             tag_ToAcClsfrTable[MAX_NUM_OF_802_1d_TAGS];
 
 } TQosParams;
 
@@ -156,7 +161,7 @@ typedef struct _OS_802_11_QOS_PARAMS
 } OS_802_11_QOS_PARAMS;
 
 
-typedef struct  
+typedef struct
 {
     TI_UINT32               psPoll;
     TI_UINT32               UPSD;
@@ -217,7 +222,7 @@ typedef struct _OS_802_11_QOS_DESIRED_PS_MODE
 
 /* When this value is added to reason code in TSPEC events, it indicates a TSPEC response which was unexpected at the time */
 /* For example, a TSPEC response arrives after a TSPEC timeout */
-#define TSPEC_RESPONSE_UNEXPECTED      0x1000   
+#define TSPEC_RESPONSE_UNEXPECTED      0x1000
 
 
 typedef enum
@@ -294,10 +299,10 @@ typedef enum
 } EStreamDirection;
 
 
-/* classification algorithms: 
+/* classification algorithms:
   0) D-tag to D-tag
   1) DSCP to D-tag
-  2) Destination port number to D-tag 
+  2) Destination port number to D-tag
   3) Destination IP&Port to D-tag
 */
 typedef enum
@@ -317,7 +322,7 @@ typedef enum
 /*************************/
 
 /* Destination IP address and port number */
-typedef struct 
+typedef struct
 {
     TI_UINT32               DstIPAddress;
     TI_UINT16               DstPortNum;
@@ -325,9 +330,9 @@ typedef struct
 } TIpPort;
 
 /* Classification mapping table */
-typedef struct 
+typedef struct
 {
-    union   
+    union
     {
         TIpPort             DstIPPort;  /* for destination IP&Port classifier*/
         TI_UINT16           DstPortNum; /* for destination Port classifier*/

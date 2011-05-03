@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * scanMngr.h
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file  scanMngr.h
  *  \brief This file include private definitions for the scan manager module.
  *
@@ -77,7 +82,7 @@
  ***********************************************************************
  */
 
- /** \enum scan_immedScanState_e 
+ /** \enum scan_immedScanState_e
  * \brief enumerates immediate scan internal status
  */
 typedef enum
@@ -89,7 +94,7 @@ typedef enum
     SCAN_ISS_NUM_OF_STATES              /**< number of available immediate scan states states */
 } scan_immedScanState_e;
 
-/** \enum scan_contScanState_e 
+/** \enum scan_contScanState_e
  * \brief enumerates continuous scan internal status
  */
 typedef enum
@@ -102,7 +107,7 @@ typedef enum
     SCAN_CSS_NUM_OF_STATES              /**< number of available continuous scan states */
 } scan_contScanState_e;
 
-/** \enum scan_discoveryPart_e 
+/** \enum scan_discoveryPart_e
  * \brief enumerates the different parts in the discovery process
  */
 typedef enum
@@ -122,8 +127,8 @@ typedef enum
 {
     SCAN_NDS_DISCOVERED = 0,            /**< Neighbor AP was discovered and is now being tracked */
     SCAN_NDS_NOT_DISCOVERED,            /**< Neighbor AP was not yet discovered, and should be */
-    SCAN_NDS_CURRENT_AP,                /**< 
-                                         * Neighbor AP is the AP STA is currently connected to, 
+    SCAN_NDS_CURRENT_AP,                /**<
+                                         * Neighbor AP is the AP STA is currently connected to,
                                          * and shouldn't be discovered
                                          */
     SCAN_NDS_NUMBER_OF_NEIGHBOR_DISCOVERY_STATES
@@ -167,11 +172,11 @@ typedef struct
                                                              */
 #ifdef SCAN_SPS_USE_DRIFT_COMPENSATION
     TI_INT64               prevTSFDelta;                                               /**< Previous TSF delta */
-    TI_INT32               deltaChangeArray[ SCAN_SPS_NUM_OF_TSF_DELTA_ENTRIES ];      /**< 
-                                                                                     * Array holding deltas 
+    TI_INT32               deltaChangeArray[ SCAN_SPS_NUM_OF_TSF_DELTA_ENTRIES ];      /**<
+                                                                                     * Array holding deltas
                                                                                      * between prev. TSF delta
                                                                                      */
-    int                 deltaChangeArrayIndex;                                      /**< 
+    int                 deltaChangeArrayIndex;                                      /**<
                                                                                      * index to where next entry
                                                                                      * in the delta array should
                                                                                      * be stored
@@ -186,8 +191,8 @@ typedef struct
 {
     TI_UINT8               numOfEntries;                                               /**< Number of entries in the list */
     bssEntry_t          BSSList[ MAX_SIZE_OF_BSS_TRACK_LIST ];                      /**< BSS public information */
-    scan_BSSEntry_t     scanBSSList[ MAX_SIZE_OF_BSS_TRACK_LIST ];                  /**< 
-                                                                                     * BSS scan manager private 
+    scan_BSSEntry_t     scanBSSList[ MAX_SIZE_OF_BSS_TRACK_LIST ];                  /**<
+                                                                                     * BSS scan manager private
                                                                                      * information
                                                                                      */
 } scan_BSSList_t;
@@ -197,8 +202,8 @@ typedef struct
  */
 typedef struct
 {
-    TI_UINT64                          nextEventTSF;                                   /**< 
-                                                                                     * local TSF value of AP next frame 
+    TI_UINT64                          nextEventTSF;                                   /**<
+                                                                                     * local TSF value of AP next frame
                                                                                      * transmission
                                                                                      */
     int                             trackListIndex;                                 /**< index to BSS info in the track list */
@@ -212,20 +217,20 @@ typedef struct
 typedef struct
 {
     TI_UINT32      receivedFrames;                                     /**< Number of scan results received */
-    TI_UINT32      discardedFramesLowRSSI;                             /**< 
-                                                                     * Number of frames discarded due 
+    TI_UINT32      discardedFramesLowRSSI;                             /**<
+                                                                     * Number of frames discarded due
                                                                      * to RSSI lower than threshold
                                                                      */
-    TI_UINT32      discardedFramesOther;                               /**< 
-                                                                     * Number of frames discarded due to 
-                                                                     * other reasons (invalid band, 
+    TI_UINT32      discardedFramesOther;                               /**<
+                                                                     * Number of frames discarded due to
+                                                                     * other reasons (invalid band,
                                                                      * list full)
                                                                      */
     TI_UINT32      SPSSavedByDTIMCheck;                                /**<
                                                                      * Number of SPS scans that were moved
                                                                      * due to the DTIM collision detection mechanism
                                                                      */
-    TI_UINT32      APsRemovedDTIMOverlap;                              /**< 
+    TI_UINT32      APsRemovedDTIMOverlap;                              /**<
                                                                      * Number of times APs were removed from
                                                                      * tracking list because all their beacons
                                                                      * collide with current AP DTIMs
@@ -235,32 +240,32 @@ typedef struct
                                                                      * tracking list because their channel was
                                                                      * not valid for tracking scan type
                                                                      */
-    TI_UINT32      TrackingGByStatus[ SCAN_CRS_NUM_OF_RES_STATUS ];    /**< 
+    TI_UINT32      TrackingGByStatus[ SCAN_CRS_NUM_OF_RES_STATUS ];    /**<
                                                                      * Number of track scans on G,
                                                                      * according to completion status
                                                                      */
-    TI_UINT32      TrackingAByStatus[ SCAN_CRS_NUM_OF_RES_STATUS ];    /**< 
+    TI_UINT32      TrackingAByStatus[ SCAN_CRS_NUM_OF_RES_STATUS ];    /**<
                                                                      * Number of track scans on A,
                                                                      * according to completion status
                                                                      */
-    TI_UINT32      DiscoveryGByStatus[ SCAN_CRS_NUM_OF_RES_STATUS ];   /**< 
+    TI_UINT32      DiscoveryGByStatus[ SCAN_CRS_NUM_OF_RES_STATUS ];   /**<
                                                                      * Number of discovery scans on G,
                                                                      * according to completion status
                                                                      */
-    TI_UINT32      DiscoveryAByStatus[ SCAN_CRS_NUM_OF_RES_STATUS ];   /**< 
+    TI_UINT32      DiscoveryAByStatus[ SCAN_CRS_NUM_OF_RES_STATUS ];   /**<
                                                                      * Number of discovery scans on A,
                                                                      * according to completion status
                                                                      */
-    TI_UINT32      ImmediateGByStatus[ SCAN_CRS_NUM_OF_RES_STATUS ];   /**< 
+    TI_UINT32      ImmediateGByStatus[ SCAN_CRS_NUM_OF_RES_STATUS ];   /**<
                                                                      * Number of immediate scans on G,
                                                                      * according to completion status
                                                                      */
-    TI_UINT32      ImmediateAByStatus[ SCAN_CRS_NUM_OF_RES_STATUS ];   /**< 
+    TI_UINT32      ImmediateAByStatus[ SCAN_CRS_NUM_OF_RES_STATUS ];   /**<
                                                                      * Number of immediate scans on A,
                                                                      * according to completion status
                                                                      */
     TI_UINT32      ConsecutiveTrackFailCountHistogram[ SCAN_MNGR_STAT_MAX_TRACK_FAILURE ];
-                                                                    /**< 
+                                                                    /**<
                                                                      * Number of consecutive track
                                                                      * fail counts */
     TI_UINT32      SPSChannelsNotAttended[ SCAN_MAX_NUM_OF_SPS_CHANNELS_PER_COMMAND ];
@@ -281,21 +286,21 @@ typedef struct
     /* handles to other modules */
     TI_HANDLE                       hOS;                                            /**< handle to the OS object */
     TI_HANDLE                       hReport;                                        /**< handle to the report object */
-    TI_HANDLE                       hRegulatoryDomain;                              /**< 
+    TI_HANDLE                       hRegulatoryDomain;                              /**<
                                                                                      * handle to the regulatory domain
                                                                                      * object
                                                                                      */
-    TI_HANDLE                       hScanCncn;                                      /**< 
+    TI_HANDLE                       hScanCncn;                                      /**<
                                                                                      * handle to the scan concentrator
                                                                                      * object
                                                                                      */
-    TI_HANDLE                       hRoamingMngr;                                   /**< 
-                                                                                     * handle to the roaming manager 
+    TI_HANDLE                       hRoamingMngr;                                   /**<
+                                                                                     * handle to the roaming manager
                                                                                      * object
                                                                                      */
-    TI_HANDLE                       hSiteMngr;                                      /**< 
+    TI_HANDLE                       hSiteMngr;                                      /**<
                                                                                      * handle to the site manager object*/
-    TI_HANDLE                       hTWD; 
+    TI_HANDLE                       hTWD;
 
     TI_HANDLE                       hTimer;                                         /* handle to the timer module */
 
@@ -308,8 +313,8 @@ typedef struct
                                                                                      */
     /* Timer */
     TI_HANDLE                       hContinuousScanTimer;                           /**< continuous scan timer object */
-    TI_BOOL                         bTimerRunning;                                  /**< 
-                                                                                     * indicates whether the timer was 
+    TI_BOOL                         bTimerRunning;                                  /**<
+                                                                                     * indicates whether the timer was
                                                                                      * started
                                                                                      */
 
@@ -324,52 +329,52 @@ typedef struct
     /* tracking and discovery information */
     scan_contScanState_e            contScanState;                                  /**< current continuous scan state */
     scan_immedScanState_e           immedScanState;                                 /**< current immediate scan state */
-    TI_BOOL                         bImmedNeighborAPsOnly;                          /**< 
+    TI_BOOL                         bImmedNeighborAPsOnly;                          /**<
                                                                                      * whether immediate scan is to search
                                                                                      * for neighbor AP's only
                                                                                      */
     scan_neighborAPListDiscovery_t  neighborAPsDiscoveryList[ RADIO_BAND_NUM_OF_BANDS ];
-                                                                                    /**< 
+                                                                                    /**<
                                                                                      * List of neighbor APs and their
                                                                                      * discovery status
                                                                                      */
     TI_UINT8                        neighborAPsDiscoveryIndex[ RADIO_BAND_NUM_OF_BANDS ];
-                                                                                    /**< 
+                                                                                    /**<
                                                                                      * Indexes for the neighbor APs
                                                                                      * discovery lists
                                                                                      */
     TI_UINT8                        channelDiscoveryIndex[ RADIO_BAND_NUM_OF_BANDS ];  /**< Indexes for the channels lists */
     scan_discoveryPart_e            currentDiscoveryPart;                           /**< current discovery part */
-    TI_BOOL                         bSynchronized;                                  /**< 
+    TI_BOOL                         bSynchronized;                                  /**<
                                                                                      * TI_TRUE if SPS data is synchronized
                                                                                      * (no TSF error event occurred)
                                                                                      */
-    TI_UINT64                       currentTSF;                                     /**< 
-                                                                                     * the local current TSF value 
+    TI_UINT64                       currentTSF;                                     /**<
+                                                                                     * the local current TSF value
                                                                                      */
     TI_UINT32                       currentHostTimeStamp;                           /**<
                                                                                      * The current local host time stamp
                                                                                      * (at the time of the above TSF value)
                                                                                      */
     TI_UINT8                        lastLocalBcnDTIMCount;                          /**<
-                                                                                     * the DTIM count at the last 
+                                                                                     * the DTIM count at the last
                                                                                      * local beacon reception in the FW
                                                                                      */
     TI_UINT64                       lastLocalBcnTSF;                                /**<
-                                                                                     * The local TSF value at the last 
+                                                                                     * The local TSF value at the last
                                                                                      * local beacon reception
-                                                                                     */ 
+                                                                                     */
     TMacAddr                        currentBSS;                                     /**< MAC address of current BSS */
     ERadioBand                      currentBSSBand;                                 /**< band of current BSS */
     TI_UINT32                       currentBSSBeaconInterval;                       /**< Beacon interval of current BSS */
     TI_UINT32                       currentBSSDtimPeriod;                           /**< DTIM period of current BSS */
-    TI_BOOL                         bNewBSSFound;                                   /**< 
+    TI_BOOL                         bNewBSSFound;                                   /**<
                                                                                      * Indicates whether a new BSS was
                                                                                      * found during the last discovery
                                                                                      * stage
                                                                                      */
     TI_UINT16                       consecNotFound;                                 /**<
-                                                                                     * consecutive number of scan 
+                                                                                     * consecutive number of scan
                                                                                      * cycles in which no new AP was found
                                                                                      * (used to re-pre-auth current APs)
                                                                                      */
@@ -377,19 +382,19 @@ typedef struct
     scan_BSSList_t                  BSSList;                                        /**< BSS list (also used for tracking) */
 
     scanMngr_connStatus_e           connStatus;                                /* save the connection status during manual roaming */
-	TI_UINT8                        scanningOperationalMode;                   /* 0 - manual ,  1 - auto */ 
+	TI_UINT8                        scanningOperationalMode;                   /* 0 - manual ,  1 - auto */
     TScanParams                     manualScanParams;                          /* temporary storage for manual scan command */
 
 
 
 #ifdef TI_DBG
     scan_mngrStat_t                 stats;                                          /**< statistics */
-    ERadioBand                      statsLastDiscoveryBand;                         /**< 
+    ERadioBand                      statsLastDiscoveryBand;                         /**<
                                                                                      * For statistics: the band on which
                                                                                      * discovery was last performed.
                                                                                      */
 #endif
-   
+
 } scanMngr_t;
 
 /*
@@ -647,7 +652,7 @@ TI_BOOL scanMngrDTIMInRange( TI_HANDLE hScanMngr, TI_UINT64 eventStart, TI_UINT6
  * \param BSSID - pointer to the BSSID to use (may be broadcast.\n
  * \param txPowerDbm - Tx power to transmit probe requests.\n
  */
-void scanMngrAddNormalChannel( TI_HANDLE hScanMngr, TScanMethod* scanMethod, TI_UINT8 channel, 
+void scanMngrAddNormalChannel( TI_HANDLE hScanMngr, TScanMethod* scanMethod, TI_UINT8 channel,
                                TMacAddr* BSSID, TI_UINT8 txPowerDbm );
 /**
  * \\n

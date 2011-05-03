@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * connIbss.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file connIbss.c
  *  \brief IBSS connection implementation
  *
@@ -50,7 +55,7 @@
 #include "siteMgrApi.h"
 #include "sme.h"
 #include "rsnApi.h"
-#include "DataCtrl_Api.h"  
+#include "DataCtrl_Api.h"
 #include "paramOut.h"
 #include "connApi.h"
 #include "EvHandler.h"
@@ -66,7 +71,7 @@ static TI_STATUS waitDisconnToCmplt_to_idle (void *pData);
 static TI_STATUS idle_to_selfWait(void *pData);
 
 static TI_STATUS idle_to_rsnWait(void *pData);
-    
+
 static TI_STATUS selfWait_to_waitToDisconnCmplt(void *pData);
 static TI_STATUS rsnWait_to_waitToDisconnCmplt(void *pData);
 static TI_STATUS connected_to_waitToDisconnCmplt(void *pData);
@@ -83,14 +88,14 @@ static TI_STATUS conn_merge_conn(void *pData);
 /********************************************/
 
 /***********************************************************************
- *                        conn_ibssConfig                                   
+ *                        conn_ibssConfig
  ***********************************************************************
 DESCRIPTION: IBSS Connection configuration function, called by the conection set param function
                 in the selection phase. Configures the connection state machine to IBSS connection mode
-                                                                                                   
+
 INPUT:      hConn   -   Connection handle.
 
-OUTPUT:     
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
@@ -130,7 +135,7 @@ TI_STATUS conn_ibssConfig(conn_t *pConn)
 			{STATE_CONN_IBSS_RSN_WAIT,  rsnw_merge_rsnw     							},  /* CONN_IBSS_MERGE */
 			{STATE_CONN_IBSS_RSN_WAIT, actionUnexpected    								}   /* CONN_IBSS_DISCONN_COMPLETE */
         },
-		
+
         /* next state and actions for CONNECTED state */
         {   {STATE_CONN_IBSS_CONNECTED, actionUnexpected    							},  /* CONN_IBSS_CREATE */
             {STATE_CONN_IBSS_CONNECTED, actionUnexpected    							},  /* CONN_IBSS_CONNECT    */
@@ -150,7 +155,7 @@ TI_STATUS conn_ibssConfig(conn_t *pConn)
 			{STATE_CONN_IBSS_WAIT_DISCONN_CMPLT, actionUnexpected     		},  		/* CONN_IBSS_MERGE */
 			{STATE_CONN_IBSS_IDLE, 				 waitDisconnToCmplt_to_idle } 			/* CONN_IBSS_DISCONN_COMPLETE */
         }
-        
+
     };
 
     return fsm_Config(pConn->ibss_pFsm, (fsm_Matrix_t)smMatrix, CONN_IBSS_NUM_STATES, CONN_IBSS_NUM_EVENTS, conn_ibssSMEvent, pConn->hOs);
@@ -158,7 +163,7 @@ TI_STATUS conn_ibssConfig(conn_t *pConn)
 
 
 /***********************************************************************
- *                        conn_ibssSMEvent                                  
+ *                        conn_ibssSMEvent
  ***********************************************************************
 DESCRIPTION: IBSS Connection SM event processing function, called by the connection API
                 Perform the following:
@@ -166,12 +171,12 @@ DESCRIPTION: IBSS Connection SM event processing function, called by the connect
                 -   Calls the generic state machine event processing function which preform the following:
                     -   Calls the correspoding callback function
                     -   Move to next state
-                
+
 INPUT:      currentState    -   Pointer to the connection current state.
             event   -   Received event
             pConn   -   Connection handle
 
-OUTPUT:     
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
@@ -209,10 +214,10 @@ void connIbss_DisconnectComplete (conn_t *pConn, TI_UINT8  *data, TI_UINT8   dat
 /***********************************************************************
  *                        selfWait_to_rsnWait
  ***********************************************************************
-DESCRIPTION: 
+DESCRIPTION:
 
 
-INPUT:   
+INPUT:
 
 OUTPUT:
 
@@ -234,7 +239,7 @@ static TI_STATUS selfWait_to_rsnWait (void *pData)
 	txMgmtQ_SetConnState (pConn->hTxMgmtQ, TX_CONN_STATE_EAPOL);
 
     /*
-     *  Notify that the driver is associated to the supplicant\IP stack. 
+     *  Notify that the driver is associated to the supplicant\IP stack.
      */
     EvHandlerSendEvent (pConn->hEvHandler, IPC_EVENT_ASSOCIATED, NULL, 0);
 
@@ -245,10 +250,10 @@ static TI_STATUS selfWait_to_rsnWait (void *pData)
 /***********************************************************************
  *                        rsnWait_to_connected
  ***********************************************************************
-DESCRIPTION: 
+DESCRIPTION:
 
 
-INPUT:   
+INPUT:
 
 OUTPUT:
 
@@ -273,7 +278,7 @@ static TI_STATUS rsnWait_to_connected(void *pData)
 
 	/* Update TxMgmtQueue SM to open Tx path to all packets. */
 	txMgmtQ_SetConnState (((conn_t *)pData)->hTxMgmtQ, TX_CONN_STATE_OPEN);
-    
+
     /* Update current BSS connection type and mode */
     currBSS_updateConnectedState(pConn->hCurrBss, TI_TRUE, BSS_INDEPENDENT);
 
@@ -300,7 +305,7 @@ static TI_STATUS selfw_merge_rsnw(void *pData)
 	txMgmtQ_SetConnState (pConn->hTxMgmtQ, TX_CONN_STATE_EAPOL);
 
     /*
-     *  Notify that the driver is associated to the supplicant\IP stack. 
+     *  Notify that the driver is associated to the supplicant\IP stack.
      */
     EvHandlerSendEvent (pConn->hEvHandler, IPC_EVENT_ASSOCIATED, NULL, 0);
 
@@ -347,41 +352,41 @@ static TI_STATUS waitDisconnToCmplt_to_idle (void *pData)
 /***********************************************************************
  *                        actionUnexpected
  ***********************************************************************
-DESCRIPTION: 
+DESCRIPTION:
 
 
-INPUT:   
+INPUT:
 
 OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
 ************************************************************************/
-static TI_STATUS actionUnexpected(void *pData) 
+static TI_STATUS actionUnexpected(void *pData)
 {
 #ifdef TI_DBG
-    conn_t *pConn = (conn_t *)pData; 
-    
+    conn_t *pConn = (conn_t *)pData;
+
     TRACE0(pConn->hReport, REPORT_SEVERITY_SM, "State machine error, unexpected Event\n\n");
 #endif /*TI_DBG*/
-    
+
     return TI_OK;
 }
 
 /***********************************************************************
  *                        actionNop
  ***********************************************************************
-DESCRIPTION: 
+DESCRIPTION:
 
 
-INPUT:   
+INPUT:
 
 OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
 ************************************************************************/
-static TI_STATUS actionNop(void *pData) 
+static TI_STATUS actionNop(void *pData)
 {
     return TI_OK;
 }
@@ -390,10 +395,10 @@ static TI_STATUS actionNop(void *pData)
 /***********************************************************************
  *                        selfWait_to_waitToDisconnCmplt
  ***********************************************************************
-DESCRIPTION: 
+DESCRIPTION:
 
 
-INPUT:   
+INPUT:
 
 OUTPUT:
 
@@ -403,15 +408,15 @@ RETURN:     TI_OK on success, TI_NOK otherwise
 static TI_STATUS selfWait_to_waitToDisconnCmplt (void *pData)
 {
 	conn_t      *pConn = (conn_t *)pData;
-    paramInfo_t  param;  
+    paramInfo_t  param;
 
     tmr_StopTimer (pConn->hConnTimer);
-    
+
     siteMgr_removeSelfSite(pConn->hSiteMgr);
 
     /* Update current BSS connection type and mode */
     currBSS_updateConnectedState(pConn->hCurrBss, TI_FALSE, BSS_INDEPENDENT);
-    
+
     /* stop beacon generation  */
     param.paramType = RX_DATA_PORT_STATUS_PARAM;
     param.content.rxDataPortStatus = CLOSE;
@@ -419,7 +424,7 @@ static TI_STATUS selfWait_to_waitToDisconnCmplt (void *pData)
 
 	/* Update TxMgmtQueue SM to close Tx path. */
 	txMgmtQ_SetConnState (pConn->hTxMgmtQ, TX_CONN_STATE_CLOSE);
-    
+
     TWD_CmdFwDisconnect (pConn->hTWD, DISCONNECT_IMMEDIATE, STATUS_UNSPECIFIED);
 
     return TI_OK;
@@ -430,10 +435,10 @@ static TI_STATUS selfWait_to_waitToDisconnCmplt (void *pData)
 /***********************************************************************
  *                        rsnWait_to_waitToDisconnCmplt
  ***********************************************************************
-DESCRIPTION: 
+DESCRIPTION:
 
 
-INPUT:   
+INPUT:
 
 OUTPUT:
 
@@ -458,7 +463,7 @@ static TI_STATUS rsnWait_to_waitToDisconnCmplt(void *pData)
     currBSS_updateConnectedState(((conn_t *)pData)->hCurrBss, TI_FALSE, BSS_INDEPENDENT);
 
     /* Stop beacon generation */
-    TWD_CmdFwDisconnect (((conn_t *)pData)->hTWD, DISCONNECT_IMMEDIATE, STATUS_UNSPECIFIED); 
+    TWD_CmdFwDisconnect (((conn_t *)pData)->hTWD, DISCONNECT_IMMEDIATE, STATUS_UNSPECIFIED);
 
     return tStatus;
 }
@@ -467,10 +472,10 @@ static TI_STATUS rsnWait_to_waitToDisconnCmplt(void *pData)
 /***********************************************************************
  *                        connected_to_waitToDisconnCmplt
  ***********************************************************************
-DESCRIPTION: 
+DESCRIPTION:
 
 
-INPUT:   
+INPUT:
 
 OUTPUT:
 
@@ -496,10 +501,10 @@ static TI_STATUS connected_to_waitToDisconnCmplt(void *pData)
 /***********************************************************************
  *                        idle_to_selfWait
  ***********************************************************************
-DESCRIPTION: 
+DESCRIPTION:
 
 
-INPUT:   
+INPUT:
 
 OUTPUT:
 
@@ -513,7 +518,7 @@ static TI_STATUS idle_to_selfWait (void *pData)
 
     siteMgr_join (pConn->hSiteMgr);
 
-    /* get a randomTime that is constructed of the lower 13 bits ot the system time to 
+    /* get a randomTime that is constructed of the lower 13 bits ot the system time to
        get a MS random time of ~8000 ms */
     randomTime = os_timeStampMs (pConn->hOs) & 0x1FFF;
 
@@ -534,10 +539,10 @@ static TI_STATUS idle_to_selfWait (void *pData)
 /***********************************************************************
  *                        idle_to_rsnWait
  ***********************************************************************
-DESCRIPTION: 
+DESCRIPTION:
 
 
-INPUT:   
+INPUT:
 
 OUTPUT:
 
@@ -556,15 +561,15 @@ static TI_STATUS idle_to_rsnWait(void *pData)
 
 	/* Update TxMgmtQueue SM to enable EAPOL packets. */
 	txMgmtQ_SetConnState (((conn_t *)pData)->hTxMgmtQ, TX_CONN_STATE_EAPOL);
-    
+
     /*
-     *  Notify that the driver is associated to the supplicant\IP stack. 
+     *  Notify that the driver is associated to the supplicant\IP stack.
      */
     EvHandlerSendEvent(((conn_t *)pData)->hEvHandler, IPC_EVENT_ASSOCIATED, NULL,0);
 
     /* Update current BSS connection type and mode */
     currBSS_updateConnectedState(((conn_t *)pData)->hCurrBss, TI_TRUE, BSS_INDEPENDENT);
-    
+
     return rsn_start(((conn_t *)pData)->hRsn);
 }
 

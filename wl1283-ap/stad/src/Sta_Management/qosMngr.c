@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * qosMngr.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file qosMngr.c
  *  \brief QOS module interface
  *
@@ -48,9 +53,9 @@
 #include "qosMngr_API.h"
 #include "sme.h"
 #include "EvHandler.h"
-#ifdef CCX_MODULE_INCLUDED
-#include "ccxMngr.h"
-#include "ccxTSMngr.h"
+#ifdef XCC_MODULE_INCLUDED
+#include "XCCMngr.h"
+#include "XCCTSMngr.h"
 #endif
 #include "TWDriver.h"
 #include "DrvMainModules.h"
@@ -59,7 +64,7 @@
 
 extern int WMEQosTagToACTable[MAX_NUM_OF_802_1d_TAGS];
 
-/* Translate input AC to TID */            
+/* Translate input AC to TID */
 const TI_UINT8 WMEQosAcToTid[MAX_NUM_OF_AC] = { 0, 2, 4, 6 };
 
 /* Translate input TID to the other TID of the same AC */
@@ -89,13 +94,13 @@ static TI_STATUS qosMngr_SetPsRxStreaming (qosMngr_t *pQosMngr, TPsRxStreaming *
 /********************************************************************************
  *							qosMngr_create										*
  ********************************************************************************
-DESCRIPTION: QOS module creation function, called by the config mgr in creation phase. 
+DESCRIPTION: QOS module creation function, called by the config mgr in creation phase.
 				performs the following:
-				- Allocate the QOS MNGR handle.				                                                                                                   
-INPUT:      hOs -			Handle to OS		
+				- Allocate the QOS MNGR handle.
+INPUT:      hOs -			Handle to OS
 
 
-OUTPUT:		
+OUTPUT:
 
 RETURN:     Handle to the QOS MNGR module on success, NULL otherwise
 
@@ -107,7 +112,7 @@ TI_HANDLE qosMngr_create(TI_HANDLE hOs)
 
 	if(!hOs)
 		return NULL;
-	
+
 	/* allocating the WME object */
 	pQosMngr = os_memoryAlloc(hOs,sizeof(qosMngr_t));
 
@@ -119,7 +124,7 @@ TI_HANDLE qosMngr_create(TI_HANDLE hOs)
     os_memoryZero (hOs, pQosMngr, sizeof(qosMngr_t));
 
 	initVec |= (1 << QOS_MNGR_INIT_BIT_LOCAL_VECTOR);
-    
+
 	/* create admission control object */
 	pQosMngr->pTrafficAdmCtrl = trafficAdmCtrl_create(hOs);
 
@@ -138,13 +143,13 @@ TI_HANDLE qosMngr_create(TI_HANDLE hOs)
  *                        qosMngr_destroy							    *
  ************************************************************************
 DESCRIPTION: QOS MNGR module destroy function, called by the config mgr in
-				 the destroy phase 
+				 the destroy phase
 				 performs the following:
 				-	Free all memory alocated by the module
-				
-INPUT:      hQosMngr	-	QOS Manager handle.		
 
-OUTPUT:		
+INPUT:      hQosMngr	-	QOS Manager handle.
+
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
@@ -157,50 +162,50 @@ TI_STATUS qosMngr_destroy(TI_HANDLE hQosMngr)
 	if (pQosMngr == NULL)
 		return TI_OK;
 
-	initVec = 0xFFFF; 
+	initVec = 0xFFFF;
     release_module(pQosMngr, initVec);
 
 	return TI_OK;
 }
 
 /***********************************************************************
- *                        release_module									
+ *                        release_module
  ***********************************************************************
 DESCRIPTION:	Called by the destroy function or by the create function (on failure)
 				Go over the vector, for each bit that is set, release the corresponding module.
-                                                                                                   
+
 INPUT:      pQosMngr  -  QOS Mngr pointer.
 			initVec	  -	 Vector that contains a bit set for each module thah had been initiualized
 
-OUTPUT:		
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 ************************************************************************/
 static void release_module(qosMngr_t *pQosMngr, TI_UINT32 initVec)
 {
-	
+
 	if (initVec & (1 << QOS_MNGR_INIT_BIT_ADM_CTRL))
 		trafficAdmCtrl_unload(pQosMngr->pTrafficAdmCtrl);
 
 	if (initVec & (1 << QOS_MNGR_INIT_BIT_LOCAL_VECTOR))
 		os_memoryFree(pQosMngr->hOs, pQosMngr, sizeof(qosMngr_t));
-		
+
 	initVec = 0;
 }
 
 /************************************************************************
  *                        qosMngr_init		     						*
  ************************************************************************
-DESCRIPTION: QOS Manager module configuration function, called by the config 
+DESCRIPTION: QOS Manager module configuration function, called by the config
 				mgr in configuration phase
 				performs the following:
 				-	Reset & initiailzes local variables
 				-	Init the handles to be used by the module
-                                                                                                   
-INPUT:      pStadHandles  - The driver modules handles		
+
+INPUT:      pStadHandles  - The driver modules handles
 
 
-OUTPUT:		
+OUTPUT:
 
 RETURN:     void
 ************************************************************************/
@@ -219,7 +224,7 @@ void qosMngr_init (TStadHandlesList *pStadHandles)
     pQosMngr->hSmeSm           = pStadHandles->hSme;
     pQosMngr->hCtrlData        = pStadHandles->hCtrlData;
 	pQosMngr->hEvHandler       = pStadHandles->hEvHandler;
-	pQosMngr->hCcxMgr          = pStadHandles->hCcxMngr;
+	pQosMngr->hXCCMgr          = pStadHandles->hXCCMngr;
 	pQosMngr->hTimer           = pStadHandles->hTimer;
     pQosMngr->hStaCap          = pStadHandles->hStaCap;
 
@@ -259,7 +264,7 @@ TI_STATUS qosMngr_SetDefaults (TI_HANDLE hQosMngr, QosMngrInitParams_t *pQosMngr
 
     /* No template has been set for UPSD */
     pQosMngr->QosNullDataTemplateUserPriority = 0xFF;
-	
+
 	TWD_CfgBurstMode(pQosMngr->hTWD, pQosMngr->bEnableBurstMode);
 
 	/* configure admission control parameters */
@@ -271,7 +276,7 @@ TI_STATUS qosMngr_SetDefaults (TI_HANDLE hQosMngr, QosMngrInitParams_t *pQosMngr
                                     pQosMngr->hOs,
                                     pQosMngr,
                                     pQosMngr->hCtrlData,
-                                    pQosMngr->hCcxMgr,
+                                    pQosMngr->hXCCMgr,
                                     pQosMngr->hTimer,
                                     pQosMngr->hTWD,
                                     pQosMngr->hTxCtrl,
@@ -279,13 +284,13 @@ TI_STATUS qosMngr_SetDefaults (TI_HANDLE hQosMngr, QosMngrInitParams_t *pQosMngr
 	if(status != TI_OK)
 		return TI_NOK;
 
-	/* 
+	/*
 	 * configure per AC traffic parameters
 	 */
     for(acID = FIRST_AC_INDEX;acID < MAX_NUM_OF_AC; acID++)
 	{
 		/*
-		 * setting ac traffic params for TrafficCategoryCfg (TNET configuration 
+		 * setting ac traffic params for TrafficCategoryCfg (TNET configuration
 		 * The parameters can be changed in run-time, so they are saved in "init params"
 		 * for 'disconnecting' .
 		 * the parameters being set in setSite; "select" phase.
@@ -300,8 +305,8 @@ TI_STATUS qosMngr_SetDefaults (TI_HANDLE hQosMngr, QosMngrInitParams_t *pQosMngr
 		pQosMngr->acParams[acID].QtrafficParams.APSDConf[1]   = 0;
 
 
-		/* 
-		 * Update the qTrafficInitParams as well 
+		/*
+		 * Update the qTrafficInitParams as well
 		 */
 		os_memoryCopy(pQosMngr->hOs,
                       &pQosMngr->acParams[acID].QTrafficInitParams,
@@ -310,9 +315,9 @@ TI_STATUS qosMngr_SetDefaults (TI_HANDLE hQosMngr, QosMngrInitParams_t *pQosMngr
 
 		/* will be config only after select */
 		verifyAndConfigTrafficParams(pQosMngr,&(pQosMngr->acParams[acID].QtrafficParams));
-		
+
 		/*
-		 * setting ac QoS params for acQosParams (TNET configuration) 
+		 * setting ac QoS params for acQosParams (TNET configuration)
 		 * The parameters can be changed in run-time, so they are saved in "init params"
 		 * for 'disconnecting'.
 		 * the parameters being set in setSite; "select" phase.
@@ -331,20 +336,20 @@ TI_STATUS qosMngr_SetDefaults (TI_HANDLE hQosMngr, QosMngrInitParams_t *pQosMngr
 		/* then, the BE queue is configured to the TxOP Limit of Packet burst */
 		/* (that is, 3 ms) and the txopContinuation is set to  qosPacketBurstEnable  */
 
-		if (acID == QOS_AC_BE)	
+		if (acID == QOS_AC_BE)
 		{
 			if (pQosMngr->qosPacketBurstEnable==TI_TRUE)
 			{
 				pQosMngr->acParams[QOS_AC_BE].acQosParams.txopLimit = pQosMngr->qosPacketBurstTxOpLimit;
 			}
-			else 
+			else
 			{
 				pQosMngr->acParams[QOS_AC_BE].acQosParams.txopLimit = QOS_TX_OP_LIMIT_DEF;
 			}
 		}
 
-		/* 
-		 * Update the acQosInitParams as well 
+		/*
+		 * Update the acQosInitParams as well
 		 */
 		os_memoryCopy(pQosMngr->hOs,
                       &pQosMngr->acParams[acID].acQosInitParams,
@@ -385,7 +390,7 @@ TI_STATUS qosMngr_SetDefaults (TI_HANDLE hQosMngr, QosMngrInitParams_t *pQosMngr
 	}
 
     /* Reset all PS-Rx-Streaming configurations */
-    for (uTid = 0; uTid < MAX_NUM_OF_802_1d_TAGS; uTid++) 
+    for (uTid = 0; uTid < MAX_NUM_OF_802_1d_TAGS; uTid++)
     {
         pQosMngr->aTidPsRxStreaming[uTid].uTid     = uTid;
         pQosMngr->aTidPsRxStreaming[uTid].bEnabled = TI_FALSE;
@@ -403,7 +408,7 @@ TI_STATUS qosMngr_SetDefaults (TI_HANDLE hQosMngr, QosMngrInitParams_t *pQosMngr
         pQosMngr->aBaInactivityTimeout[uTid] = pQosMngrInitParams->aBaInactivityTimeout[uTid];
     }
 
-    
+
 
     TRACE0(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, "qosMngr_config : QoS configuration complete!");
 
@@ -414,12 +419,12 @@ TI_STATUS qosMngr_SetDefaults (TI_HANDLE hQosMngr, QosMngrInitParams_t *pQosMngr
  *                    qosMngr_resetAdmCtrlParameters	                *
  ************************************************************************
 DESCRIPTION: reset the admCtrl parameters
-                                                                                                   
+
 INPUT:      hQosMngr	         -	Qos Manager handle.
 
-OUTPUT:		
+OUTPUT:
 
-RETURN:     
+RETURN:
 
 ************************************************************************/
 
@@ -467,11 +472,11 @@ void qosMngr_resetAdmCtrlParameters(TI_HANDLE hQosMngr)
  ************************************************************************
 DESCRIPTION: the function is called upon driver disconnecting to reset all
              QOS parameters to init values.
-                                                                                                   
+
 INPUT:      hQosMngr	-	Qos Manager handle.
             bDisconnect - True if full AP disconnection, False if roaming to another AP
 
-OUTPUT:		
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
@@ -490,7 +495,7 @@ TI_STATUS qosMngr_disconnect (TI_HANDLE hQosMngr, TI_BOOL bDisconnect)
 
 	/* clear admission control params */
 	qosMngr_resetAdmCtrlParameters(pQosMngr);
-	
+
 	trafficAdmCtrl_stop(pQosMngr->pTrafficAdmCtrl);
 
 	for(acID = FIRST_AC_INDEX;acID < MAX_NUM_OF_AC; acID++)
@@ -498,27 +503,27 @@ TI_STATUS qosMngr_disconnect (TI_HANDLE hQosMngr, TI_BOOL bDisconnect)
         /* Disable medium time events in TX */
 		txCtrlParams_setAdmissionCtrlParams(pQosMngr->hTxCtrl, acID, 0 , 0, TI_FALSE);
 
-		/* The protocol after disconnect is QOS_NONE. If Packet Burst is Enabled, the BE queue InitParams 
-		    is configured to the TxOP Limit of Packet burst  (that is, 3 ms) and the 
+		/* The protocol after disconnect is QOS_NONE. If Packet Burst is Enabled, the BE queue InitParams
+		    is configured to the TxOP Limit of Packet burst  (that is, 3 ms) and the
 		    txopContinuation is set to qosPacketBurstEnable. */
-		
+
 		if (acID == QOS_AC_BE)
 		{
 			if (pQosMngr->qosPacketBurstEnable==TI_TRUE)
 			{
 				pQosMngr->acParams[QOS_AC_BE].acQosInitParams.txopLimit = pQosMngr->qosPacketBurstTxOpLimit;
 			}
-			else 
+			else
 			{
 				pQosMngr->acParams[QOS_AC_BE].acQosInitParams.txopLimit = QOS_TX_OP_LIMIT_DEF;
 			}
 		}
-		
-		/* Copy init traffic params (non-QoS defaults) to current traffic params, and config to HAL and TNET. */
-       os_memoryCopy(pQosMngr->hOs,&(pQosMngr->acParams[acID].acQosParams),&(pQosMngr->acParams[acID].acQosInitParams),sizeof(TAcQosParams));		
 
-		/* 
-		 * Update the qTrafficInitParams as well 
+		/* Copy init traffic params (non-QoS defaults) to current traffic params, and config to HAL and TNET. */
+       os_memoryCopy(pQosMngr->hOs,&(pQosMngr->acParams[acID].acQosParams),&(pQosMngr->acParams[acID].acQosInitParams),sizeof(TAcQosParams));
+
+		/*
+		 * Update the qTrafficInitParams as well
 		 */
 	   os_memoryCopy(pQosMngr->hOs,&(pQosMngr->acParams[acID].QtrafficParams),&(pQosMngr->acParams[acID].QTrafficInitParams),sizeof(TQueueTrafficParams));
 
@@ -532,9 +537,9 @@ TI_STATUS qosMngr_disconnect (TI_HANDLE hQosMngr, TI_BOOL bDisconnect)
 	   setNonQosAdmissionState(pQosMngr, acID);
 	}
 
-	/* 
-	 * configure only BE AC 
-	 * NOTE : this is done after "disconnect" or Init phase so those are defaults BE params 
+	/*
+	 * configure only BE AC
+	 * NOTE : this is done after "disconnect" or Init phase so those are defaults BE params
 	 */
 
 	/*
@@ -562,14 +567,14 @@ TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_setSite:failed to init
 	txCtrlParams_setQosHeaderConverMode(pQosMngr->hTxCtrl, HDR_CONVERT_LEGACY);
 
     /* If disconnect (not roaming), reset all PS-Rx-Streaming configurations. */
-    if (bDisconnect) 
+    if (bDisconnect)
     {
         TI_UINT32  uTid;
-        for (uTid = 0; uTid < MAX_NUM_OF_802_1d_TAGS; uTid++) 
+        for (uTid = 0; uTid < MAX_NUM_OF_802_1d_TAGS; uTid++)
         {
             TPsRxStreaming *pCurrTidParams = &pQosMngr->aTidPsRxStreaming[uTid];
 
-            if (pCurrTidParams->bEnabled) 
+            if (pCurrTidParams->bEnabled)
             {
                 pCurrTidParams->bEnabled = TI_FALSE;
                 TWD_CfgPsRxStreaming (pQosMngr->hTWD, pCurrTidParams, NULL, NULL);
@@ -592,7 +597,7 @@ TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_setSite:failed to init
 
 TRACE0(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, "qosMngr_disconnect : QoS disconnect complete!");
 
-#ifdef CCX_MODULE_INCLUDED
+#ifdef XCC_MODULE_INCLUDED
 	measurementMgr_stopTsMetrics(pQosMngr->hMeasurementMngr);
 #endif
 
@@ -603,12 +608,12 @@ TRACE0(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, "qosMngr_disconnect : QoS
 /************************************************************************
  *                        qosMngr_connect   			                *
  ************************************************************************
-DESCRIPTION: the function is called upon driver connection to inform all 
+DESCRIPTION: the function is called upon driver connection to inform all
              the other modules about the voice mode
-                                                                                                   
+
 INPUT:      hQosMngr	         -	Qos Manager handle.
 
-OUTPUT:		
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
@@ -629,13 +634,13 @@ TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_connect : Already conn
    }
 
     /* Send PsPoll template to HAL */
-    
+
     templateStruct.ptr = (TI_UINT8 *)&psPollTemplate;
     templateStruct.type = PS_POLL_TEMPLATE;
     templateStruct.uRateMask = RATE_MASK_UNSPECIFIED;
     buildPsPollTemplate(pQosMngr->hSiteMgr, &templateStruct);
     TWD_CmdTemplate (pQosMngr->hTWD, &templateStruct, NULL, NULL);
-    	
+
     /* Update our internal state */
     pQosMngr->isConnected = TI_TRUE;
 
@@ -673,15 +678,15 @@ TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_connect : Already conn
     return TI_OK;
 }
 
-/** 
+/**
  * \fn     qosMngr_SetBaPolicies
- * \brief  Set the BA session policies to the FW. 
- * 
- * \note   
+ * \brief  Set the BA session policies to the FW.
+ *
+ * \note
  * \param  hQosMngr	- Qos Manager handle.
- * \return None 
- * \sa     
- */ 
+ * \return None
+ * \sa
+ */
 void qosMngr_SetBaPolicies(TI_HANDLE hQosMngr)
 {
     qosMngr_t *pQosMngr = (qosMngr_t *)hQosMngr;
@@ -696,11 +701,11 @@ void qosMngr_SetBaPolicies(TI_HANDLE hQosMngr)
 
         param.paramType = CTRL_DATA_CURRENT_BSSID_PARAM;
         ctrlData_getParam(pQosMngr->hCtrlData, &param);
- 
+
         /* 802.11n BA session setting */
         for (uTidIndex = 0; uTidIndex < MAX_NUM_OF_802_1d_TAGS; ++uTidIndex)
         {
-            if ((pQosMngr->aBaPolicy[uTidIndex] == BA_POLICY_INITIATOR) || 
+            if ((pQosMngr->aBaPolicy[uTidIndex] == BA_POLICY_INITIATOR) ||
                 (pQosMngr->aBaPolicy[uTidIndex] == BA_POLICY_INITIATOR_AND_RECEIVER))
             {
                 TWD_CfgSetBaInitiator (pQosMngr->hTWD,
@@ -732,10 +737,10 @@ DESCRIPTION: Evaluate the site for the selction algorithm
 			 In case the station is configure to work in UPSD mode
 			 prefer a site that support UPSD and return 1.
 			 All other case return 0.
-                                                                                                   
+
 INPUT:      siteAPSDSupport - the UPSD capabilit of the site
 
-OUTPUT:		 
+OUTPUT:
 
 RETURN:     1 - evaluation is good...
 			0 - evaluation can be better....
@@ -768,12 +773,12 @@ TI_STATUS qosMngr_getParamsActiveProtocol(TI_HANDLE hQosMngr, EQosProtocol *actP
  *                        qosMngr_getACparams           			    *
  ************************************************************************
 DESCRIPTION: The function is an API for external modules to qet qos parameters
-                                                                                                   
+
 INPUT:      hQosMngr	         -	Qos Manager handle.
             pParamInfo           -  qos parameters information.
 
 
-OUTPUT:		
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
@@ -807,7 +812,7 @@ TI_STATUS qosMngr_getParams(TI_HANDLE  hQosMngr,paramInfo_t *pParamInfo)
 		for(acID = FIRST_AC_INDEX; acID < MAX_NUM_OF_AC ; acID++ )
 			pParamInfo->content.qosDesiredPsMode.uDesiredWmeAcPsMode[acID] = pQosMngr->acParams[acID].desiredWmeAcPsMode;
         break;
-	   
+
 	case QOS_MNGR_VOICE_RE_NEGOTIATE_TSPEC:
 	/* Check if voice call present. If so, store current TSPEC configuration */
 		pParamInfo->content.TspecConfigure.voiceTspecConfigure = (TI_UINT8)pQosMngr->voiceTspecConfigured;
@@ -816,7 +821,7 @@ TI_STATUS qosMngr_getParams(TI_HANDLE  hQosMngr,paramInfo_t *pParamInfo)
 
         TRACE1(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, "qosMngr_getParams: QOS_MNGR_VOICE_RE_NEGOTIATE_TSPEC=%d\n", pQosMngr->voiceTspecConfigured);
 
-		if (pQosMngr->voiceTspecConfigured == TI_TRUE) 
+		if (pQosMngr->voiceTspecConfigured == TI_TRUE)
 		{
 			OS_802_11_QOS_TSPEC_PARAMS *pTspecParams;
 			tspecInfo_t *pConfiguredParams;
@@ -840,7 +845,7 @@ TI_STATUS qosMngr_getParams(TI_HANDLE  hQosMngr,paramInfo_t *pParamInfo)
 			pQosMngr->tspecRenegotiationParams[USER_PRIORITY_6].uUserPriority = MAX_USER_PRIORITY;
 		}
 
-		if (pQosMngr->videoTspecConfigured == TI_TRUE) 
+		if (pQosMngr->videoTspecConfigured == TI_TRUE)
 		{
 			OS_802_11_QOS_TSPEC_PARAMS *pTspecParams;
 			tspecInfo_t *pConfiguredParams;
@@ -864,7 +869,7 @@ TI_STATUS qosMngr_getParams(TI_HANDLE  hQosMngr,paramInfo_t *pParamInfo)
 				pQosMngr->tspecRenegotiationParams[USER_PRIORITY_4].uUserPriority = MAX_USER_PRIORITY;
 		}
 		break;
-		
+
 	case QOS_MNGR_AC_STATUS:
 		switch (qosMngr_getCurrAcStatus (hQosMngr,&pParamInfo->content.qosCurrentAcStatus))
 		{
@@ -881,30 +886,30 @@ TI_STATUS qosMngr_getParams(TI_HANDLE  hQosMngr,paramInfo_t *pParamInfo)
       			break;
    			default:
                 TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "Unknown return value...\n");
-      			break;			
+      			break;
    		}
 		return TI_NOK;
-		
-	case QOS_MNGR_OS_TSPEC_PARAMS: 
+
+	case QOS_MNGR_OS_TSPEC_PARAMS:
 
 		if( pParamInfo->content.qosTspecParameters.uUserPriority > MAX_USER_PRIORITY )
-		{	
+		{
 TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_getTspecParams: userPriority > 7 -> Ignore !!!\n");
 			return TI_NOK;
 		}
 
 		if(pQosMngr->isConnected == TI_FALSE)
-		{	
+		{
 TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_getTspecParams: Not connected - Ignoring request !!!\n");
 			return NOT_CONNECTED;
 		}
 
 		if(pQosMngr->activeProtocol == QOS_NONE)
-		{	
+		{
 TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_getTspecParams: Not connected to QOS AP - Ignoring reqeust !!!\n");
 			return NO_QOS_AP;
 		}
-		
+
 		acID = (EAcTrfcType)WMEQosTagToACTable[pParamInfo->content.qosTspecParameters.uUserPriority];
 
 		/* check if signaling is already in process*/
@@ -916,7 +921,7 @@ TRACE1(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_requestAdmission: AC =
 
 	   /* check if UP is admitted or not */
 	   if(pQosMngr->resourceMgmtTable.currentTspecInfo[acID].userPriority != pParamInfo->content.qosTspecParameters.uUserPriority)
-       {	
+       {
 TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_getTspecParams: user priority is not admitted. -> Ignore !!!\n");
 		 return USER_PRIORITY_NOT_ADMITTED;
 		}
@@ -949,7 +954,7 @@ TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_getTspecParams: user p
             TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "AP does not support QOS...\n");
 			return NO_QOS_AP;
 		}
-		
+
 		pParamInfo->content.qosApQosParams.uAssocAdmissionCtrlFlag = pQosMngr->acParams[acID].apInitAdmissionState; /* admission flag */
 		pParamInfo->content.qosApQosParams.uAIFS = pQosMngr->acParams[acID].acQosParams.aifsn;
 		pParamInfo->content.qosApQosParams.uCwMin = (1 << pQosMngr->acParams[acID].acQosParams.cwMin)-1;
@@ -981,12 +986,12 @@ TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_getTspecParams: user p
  *                        qosMngr_setParams              			    *
  ************************************************************************
 DESCRIPTION: The function is an API for external modules to set qos parameters
-                                                                                                   
+
 INPUT:      hQosMngr	         -	Qos Manager handle.
             pParamInfo           -  qos parameters information.
 
 
-OUTPUT:		
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
@@ -995,7 +1000,7 @@ RETURN:     TI_OK on success, TI_NOK otherwise
 TI_STATUS qosMngr_setParams(TI_HANDLE  hQosMngr,paramInfo_t *pParamInfo)
 {
     qosMngr_t *pQosMngr = (qosMngr_t *)hQosMngr;
-	TTwdParamInfo		   param;		
+	TTwdParamInfo		   param;
 	EAcTrfcType           acID;
 	TI_STATUS              status;
 
@@ -1017,7 +1022,7 @@ TRACE1(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, "qosMngr_setParams: %x\n"
 
 			if (pParamInfo->content.qosPacketBurstEnb > QOS_PACKET_BURST_ENABLE_MAX)
 				return (PARAM_VALUE_NOT_VALID);
-			
+
 			/* No change */
 			if (pParamInfo->content.qosPacketBurstEnb == pQosMngr->qosPacketBurstEnable)
 				return TI_OK;
@@ -1025,12 +1030,12 @@ TRACE1(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, "qosMngr_setParams: %x\n"
 			/* Update the qosPacketBurstEnable parameter */
 			pQosMngr->qosPacketBurstEnable = pParamInfo->content.qosPacketBurstEnb;
 
-			/* Packet burst enable changed from F to T */ 
+			/* Packet burst enable changed from F to T */
 			if (pParamInfo->content.qosPacketBurstEnb == TI_TRUE)
 			{
 				/* Update the acTrafficInitParams of BE to the packet burst def*/
 				pQosMngr->acParams[QOS_AC_BE].acQosInitParams.txopLimit = pQosMngr->qosPacketBurstTxOpLimit;
-			
+
 				/* Update the acTrafficParams of BE and the hal to the packet burst def*/
 				if (pQosMngr->activeProtocol == QOS_NONE)
 				{
@@ -1041,13 +1046,13 @@ TRACE1(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, "qosMngr_setParams: %x\n"
 						return status;
 				}
 			}
-				
-			/* Packet burst enable changed from T to F*/ 
-			else 
+
+			/* Packet burst enable changed from T to F*/
+			else
 			{
 				/* Update the acTrafficInitParams of BE to the AC def*/
 				pQosMngr->acParams[QOS_AC_BE].acQosInitParams.txopLimit = QOS_TX_OP_LIMIT_DEF;
-			
+
 				/* Update the acTrafficParams of BE  and the hal to the AC def*/
 				if (pQosMngr->activeProtocol == QOS_NONE)
 				{
@@ -1090,17 +1095,17 @@ TRACE1(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_setParams :Error tryin
 		/* config tidConf */
 		acID = (EAcTrfcType)pParamInfo->content.qosOsParams.acID;
 
-		if( (pParamInfo->content.qosOsParams.PSDeliveryProtocol != pQosMngr->acParams[acID].desiredWmeAcPsMode) && 
+		if( (pParamInfo->content.qosOsParams.PSDeliveryProtocol != pQosMngr->acParams[acID].desiredWmeAcPsMode) &&
 			(pQosMngr->isConnected == TI_TRUE) )
 		{
 TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_setParams :Error  trying to set new PS protocol while connected");
-			
+
 			return (PARAM_VALUE_NOT_VALID);
 		}
 
 
 		/* UPSD_FW open in upsd integration */
-		/* set the current PS mode. In not connected state it is always Legacy since the currentPsMode only 
+		/* set the current PS mode. In not connected state it is always Legacy since the currentPsMode only
 		 update after connection */
 		pQosMngr->acParams[acID].QtrafficParams.psScheme = pQosMngr->acParams[acID].currentWmeAcPsMode;
 		pQosMngr->acParams[acID].msduLifeTimeParam = pParamInfo->content.qosOsParams.MaxLifeTime;
@@ -1108,7 +1113,7 @@ TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_setParams :Error  tryi
 		status = verifyAndConfigTrafficParams(pQosMngr,&(pQosMngr->acParams[acID].QtrafficParams));
 		if(status != TI_OK)
 			return status;
-		
+
 		/* configure MSDU-Lifetime to TxCtrl. */
 		txCtrlParams_setAcMsduLifeTime(pQosMngr->hTxCtrl, acID, pParamInfo->content.qosOsParams.MaxLifeTime);
 
@@ -1123,7 +1128,7 @@ TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_setParams :Error  tryi
 		else
 			pQosMngr->currentPsMode = PS_SCHEME_LEGACY;
 		break;
-		
+
     case QOS_MNGR_ADD_TSPEC_REQUEST:
 		pQosMngr->TSPECNegotiationResultCallb = NULL;
 		pQosMngr->TSPECNegotiationResultModule = NULL;
@@ -1132,7 +1137,7 @@ TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_setParams :Error  tryi
    		{
    			case TI_OK:
       			return TI_OK;
-      			
+
    			case TRAFIC_ADM_PENDING:
       TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "Driver is still waiting for a response of previous request...\n");
       			break;
@@ -1153,11 +1158,11 @@ TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_setParams :Error  tryi
       			break;
    		}
 		return TI_NOK;
-		
+
 	case QOS_MNGR_RESEND_TSPEC_REQUEST:
 TRACE0(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, "qosMngr_setParams: QOS_MNGR_RESEND_TSPEC_REQUEST\n");
 		pQosMngr->TSPECNegotiationResultCallb = (qosMngrCallb_t)pParamInfo->content.qosRenegotiateTspecRequest.callback;
-		pQosMngr->TSPECNegotiationResultModule = pParamInfo->content.qosRenegotiateTspecRequest.handler; 
+		pQosMngr->TSPECNegotiationResultModule = pParamInfo->content.qosRenegotiateTspecRequest.handler;
 		status = qosMngr_requestAdmission(hQosMngr,  &pQosMngr->tspecRenegotiationParams[USER_PRIORITY_6]);
 
 		if ((status == TI_OK) && (pQosMngr->tspecRenegotiationParams[USER_PRIORITY_4].uUserPriority != MAX_USER_PRIORITY))
@@ -1165,7 +1170,7 @@ TRACE0(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, "qosMngr_setParams: QOS_M
 			status = qosMngr_requestAdmission(hQosMngr,  &pQosMngr->tspecRenegotiationParams[USER_PRIORITY_4]);
 		}
 		return (status);
-		
+
     case QOS_MNGR_DEL_TSPEC_REQUEST:
 		status = qosMngr_deleteAdmission(hQosMngr, &pParamInfo->content.qosDelTspecRequest);
 		switch (status)
@@ -1183,7 +1188,7 @@ TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "Not connected to an AP...\n");
       			break;
    			default:
       TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "Unknown return value...\n");
-      			break;			
+      			break;
    		}
 		return TI_NOK;
 
@@ -1192,7 +1197,7 @@ TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "Not connected to an AP...\n");
 		{
 TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, " :Error trying to set invalid zero timeout for UPSD \n");
 				return PARAM_VALUE_NOT_VALID;
-				
+
 		}
 		pQosMngr->rxTimeOut.psPoll = (TI_UINT16)pParamInfo->content.rxTimeOut.psPoll;
 		pQosMngr->rxTimeOut.UPSD = (TI_UINT16)pParamInfo->content.rxTimeOut.UPSD;
@@ -1201,7 +1206,7 @@ TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, " :Error trying to set invalid 
 		/* set RxTimeOut to FW */
 		param.paramType	= TWD_RX_TIME_OUT_PARAM_ID;
 		param.content.halCtrlRxTimeOut = pQosMngr->rxTimeOut;
-		TWD_SetParam (pQosMngr->hTWD, &param); 
+		TWD_SetParam (pQosMngr->hTWD, &param);
 		break;
 
 	case QOS_MNGR_VOICE_RE_NEGOTIATE_TSPEC:
@@ -1227,13 +1232,13 @@ TRACE1(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, "qosMngr_setParams: QOS_M
 /************************************************************************
  *                        verifyAndConfigTrafficParams  			    *
  ************************************************************************
-DESCRIPTION: The function verifies the parameters set by qosMngr to 
-             the queue traffic params in whalCtrl to be configured to TNET. 
-                                                                                                   
+DESCRIPTION: The function verifies the parameters set by qosMngr to
+             the queue traffic params in whalCtrl to be configured to TNET.
+
 INPUT:      hQosMngr	         -	Qos Manager handle.
             pAcTrafficParams     -  pointer to ac parameters.
 
-OUTPUT:		
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
@@ -1241,7 +1246,7 @@ RETURN:     TI_OK on success, TI_NOK otherwise
 
 static TI_STATUS verifyAndConfigTrafficParams(qosMngr_t *pQosMngr, TQueueTrafficParams *pQtrafficParams)
 {
-    TTwdParamInfo		   param;    
+    TTwdParamInfo		   param;
     TQueueTrafficParams   queueTrafficParams;
 
 	if(pQtrafficParams->queueID > MAX_NUM_OF_AC - 1)
@@ -1295,13 +1300,13 @@ TRACE1(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "verifyAndConfigTrafficParams :
 /************************************************************************
  *                        verifyAndConfigQosParams          		    *
  ************************************************************************
-DESCRIPTION: The function verifies the parameters set by qosMngr to 
-             the AC Qos params in whalCtrl to be configured to TNET. 
-                                                                                                   
+DESCRIPTION: The function verifies the parameters set by qosMngr to
+             the AC Qos params in whalCtrl to be configured to TNET.
+
 INPUT:      hQosMngr	         -	Qos Manager handle.
             pAcTrafficParams     -  pointer to ac parameters.
 
-OUTPUT:		
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
@@ -1320,7 +1325,8 @@ static TI_STATUS  verifyAndConfigQosParams(qosMngr_t *pQosMngr,TAcQosParams *pAc
 	if(pAcQosParams->aifsn >  QOS_AIFS_MAX )
     {
         TRACE1(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "verifyAndConfigQosParams :Error  trying to set invalid aifsn : %d param",pAcQosParams->aifsn);
-       return (PARAM_VALUE_NOT_VALID);
+
+       return (PARAM_VALUE_NOT_VALID);
 	}
     */
 	if(pAcQosParams->cwMax >  QOS_CWMAX_MAX )
@@ -1355,14 +1361,14 @@ static TI_STATUS  verifyAndConfigQosParams(qosMngr_t *pQosMngr,TAcQosParams *pAc
 /************************************************************************
  *                        qosMngr_GetWmeEnableFlag    			            *
  ************************************************************************
-DESCRIPTION: The function is called in order to get the WME enable flag 
+DESCRIPTION: The function is called in order to get the WME enable flag
              of qosMngr according to init file desired mode.
              called from StaCap_GetHtCapabilitiesIe.
-                                                                                                   
-INPUT:      hQosMngr	         -	Qos Manager handle.
-            bWmeEnable           -  return flag.   
 
-OUTPUT:		
+INPUT:      hQosMngr	         -	Qos Manager handle.
+            bWmeEnable           -  return flag.
+
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
@@ -1382,10 +1388,10 @@ TI_STATUS qosMngr_GetWmeEnableFlag(TI_HANDLE hQosMngr, TI_BOOL *bWmeEnable)
 DESCRIPTION: The function is called in order to set the active protocol in
              the qosMngr according to site capabilities and desired mode.
              called from SystemConfig.
-                                                                                                   
-INPUT:      
 
-OUTPUT:		
+INPUT:
+
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
@@ -1395,7 +1401,7 @@ TI_STATUS qosMngr_selectActiveProtocol(TI_HANDLE  hQosMngr)
    	qosMngr_t *pQosMngr = (qosMngr_t *)hQosMngr;
 
 	/* decide qos protocol */
-	/* NOTE: if both ccx qnd wme supported wme is chosen */
+	/* NOTE: if both XCC qnd wme supported wme is chosen */
 	if(pQosMngr->WMESiteSupport && pQosMngr->WMEEnable)
 	{
 		pQosMngr->activeProtocol = QOS_WME;
@@ -1412,13 +1418,13 @@ TRACE1(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, " qosMngr_selectActivePro
 /************************************************************************
  *                        qosMngr_setAcPsDeliveryMode    			            *
  ************************************************************************
-DESCRIPTION: The function is called in order to set the upsd/ps_poll according 
+DESCRIPTION: The function is called in order to set the upsd/ps_poll according
              to the desired and current upsd mode (per AC as well).
              called from systemConfig.
-                                                                                                   
-INPUT:      
 
-OUTPUT:		
+INPUT:
+
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
@@ -1439,7 +1445,7 @@ TI_STATUS qosMngr_setAcPsDeliveryMode(TI_HANDLE  hQosMngr)
 			}
 		}
     }
-	
+
 	return TI_OK;
 
 }
@@ -1450,29 +1456,29 @@ TI_STATUS qosMngr_setAcPsDeliveryMode(TI_HANDLE  hQosMngr)
  ************************************************************************
 DESCRIPTION: The function is called in order to build the Qos Capability
 			 IE for the associatiomn request.
-                                                                                                   
-INPUT:      
 
-OUTPUT:		
+INPUT:
+
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
 ************************************************************************/
 TI_STATUS qosMngr_getQosCapabiltyInfeElement(TI_HANDLE  hQosMngr, TI_UINT8 *pQosIe, TI_UINT32 *pLen)
-{    
+{
 	qosMngr_t *pQosMngr = (qosMngr_t *)hQosMngr;
 	dot11_QOS_CAPABILITY_IE_t *dot11_QOS_CAPABILITY_IE = (dot11_QOS_CAPABILITY_IE_t *)pQosIe;
 	TI_STATUS status = TI_OK;
 	TI_UINT8	extraIeLen = 0;
-	
+
 	if(pQosMngr->activeProtocol == QOS_WME)
 	{
 		dot11_QOS_CAPABILITY_IE->hdr[0]    = DOT11_QOS_CAPABILITY_ELE_ID;
 		dot11_QOS_CAPABILITY_IE->hdr[1]   = DOT11_QOS_CAPABILITY_ELE_LEN;
-		
+
 		/* The default configuration of QoS info Field is legacy PS for all ACs */
 		dot11_QOS_CAPABILITY_IE->QosInfoField = 0;
-		
+
 		/* in case the current PS mode is not UPSD  - the IE is empty */
 		if(pQosMngr->currentPsMode == PS_SCHEME_UPSD_TRIGGER)
 		{
@@ -1501,14 +1507,14 @@ TI_STATUS qosMngr_getQosCapabiltyInfeElement(TI_HANDLE  hQosMngr, TI_UINT8 *pQos
 		}
 
 		*pLen = dot11_QOS_CAPABILITY_IE->hdr[1] + sizeof(dot11_eleHdr_t);
-		
-#ifdef CCX_MODULE_INCLUDED
-		/* If required, add ccx info-elements to the association request packets */
+
+#ifdef XCC_MODULE_INCLUDED
+		/* If required, add XCC info-elements to the association request packets */
 		if (pQosMngr->performTSPECRenegotiation == TI_TRUE)
 		{
             TRACE0(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, "qosMngr_getQosCapabiltyInfeElement: performing TSPEC renegotiation\n");
 
-			status = ccxMngr_getCCXQosIElements(pQosMngr->hCcxMgr, (pQosIe+(*pLen)), &extraIeLen);
+			status = XCCMngr_getXCCQosIElements(pQosMngr->hXCCMgr, (pQosIe+(*pLen)), &extraIeLen);
 		}
 #endif
 		*pLen += extraIeLen;
@@ -1526,10 +1532,10 @@ TI_STATUS qosMngr_getQosCapabiltyInfeElement(TI_HANDLE  hQosMngr, TI_UINT8 *pQos
  ************************************************************************
 DESCRIPTION: The function is called in order to build the assocReq IE for
              the current site QOS protocol.
-                                                                                                   
+
 INPUT:      hQosMngr	         -	Qos Manager handle.
 
-OUTPUT:		
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
@@ -1541,19 +1547,19 @@ TI_STATUS qosMngr_assocReqBuild(TI_HANDLE  hQosMngr, TI_UINT8 *pQosIe, TI_UINT32
 	TI_STATUS		status;
 	TI_UINT8 temp;
 
-	
+
 	if(pQosMngr == NULL)
 	{
 		*pLen = 0;
 		return TI_OK;
-	}	
+	}
 
 	/* building assocReq frame */
 	switch(pQosMngr->activeProtocol)
 	{
 	case QOS_WME:
 		status = getWMEInfoElement(pQosMngr,pQosIe,&temp);
-		if (status !=TI_OK) 
+		if (status !=TI_OK)
 		{
 			*pLen = 0;
 		}
@@ -1568,7 +1574,7 @@ TI_STATUS qosMngr_assocReqBuild(TI_HANDLE  hQosMngr, TI_UINT8 *pQosIe, TI_UINT32
 			*pLen = 0;
 		break;
 	}
-	
+
 	return TI_OK;
 }
 
@@ -1576,10 +1582,10 @@ TI_STATUS qosMngr_assocReqBuild(TI_HANDLE  hQosMngr, TI_UINT8 *pQosIe, TI_UINT32
  *                        getWMEInfoElement     			            *
  ************************************************************************
 DESCRIPTION: building QOS_WME IE.
-                                                                                                   
+
 INPUT:      hQosMngr	         -	Qos Manager handle.
 
-OUTPUT:		
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
@@ -1632,13 +1638,13 @@ static TI_STATUS getWMEInfoElement(qosMngr_t *pQosMngr,TI_UINT8 *pWMEie,TI_UINT8
 /************************************************************************
  *                        qosMngr_checkTspecRenegResults		        *
  ************************************************************************
-DESCRIPTION: The function is called upon association response to check 
+DESCRIPTION: The function is called upon association response to check
             Tspec renegotiation results
-                                                                                                   
+
 INPUT:      hQosMngr	  -	Qos Manager handle.
-            assocRsp      -  pointer to received IE parameters received 
-			                 in association response. 
-OUTPUT:		
+            assocRsp      -  pointer to received IE parameters received
+			                 in association response.
+OUTPUT:
 
 RETURN:     -
 
@@ -1647,7 +1653,7 @@ void qosMngr_checkTspecRenegResults(TI_HANDLE hQosMngr, assocRsp_t *assocRsp)
 {
 	tspecInfo_t	tspecInfo;
 	qosMngr_t *pQosMngr = (qosMngr_t *)hQosMngr;
-#ifdef CCX_MODULE_INCLUDED
+#ifdef XCC_MODULE_INCLUDED
 	TI_UINT32 acCount;
 #endif
 
@@ -1656,7 +1662,7 @@ TRACE2(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, "qosMngr_checkTspecRenegR
 	if (pQosMngr->performTSPECRenegotiation != TI_TRUE)
 	{
 		/* If no re-negotiation was requested, no parsing shall be done */
-#ifdef CCX_MODULE_INCLUDED
+#ifdef XCC_MODULE_INCLUDED
 		measurementMgr_disableTsMetrics(pQosMngr->hMeasurementMngr, MAX_NUM_OF_AC);
 #endif
 		return;
@@ -1665,17 +1671,17 @@ TRACE2(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, "qosMngr_checkTspecRenegR
 	if ( (assocRsp->tspecVoiceParameters == NULL) && (assocRsp->tspecSignalParameters == NULL) )
 	{
 		/* The renegotiation request was ignored - update QoS Manager database */
-		qosMngr_setAdmissionInfo(pQosMngr, USER_PRIORITY_6, 
-								 &pQosMngr->resourceMgmtTable.candidateTspecInfo[USER_PRIORITY_6], 
+		qosMngr_setAdmissionInfo(pQosMngr, USER_PRIORITY_6,
+								 &pQosMngr->resourceMgmtTable.candidateTspecInfo[USER_PRIORITY_6],
 								 STATUS_TRAFFIC_ADM_REQUEST_REJECT);
 
 		if (pQosMngr->tspecRenegotiationParams[USER_PRIORITY_4].uUserPriority != MAX_USER_PRIORITY)
 		{
-			qosMngr_setAdmissionInfo(pQosMngr, USER_PRIORITY_4, 
-									 &pQosMngr->resourceMgmtTable.candidateTspecInfo[USER_PRIORITY_4], 
+			qosMngr_setAdmissionInfo(pQosMngr, USER_PRIORITY_4,
+									 &pQosMngr->resourceMgmtTable.candidateTspecInfo[USER_PRIORITY_4],
 									 STATUS_TRAFFIC_ADM_REQUEST_REJECT);
 		}
-#ifdef CCX_MODULE_INCLUDED
+#ifdef XCC_MODULE_INCLUDED
         measurementMgr_disableTsMetrics(pQosMngr->hMeasurementMngr, MAX_NUM_OF_AC);
 #endif
 		return;
@@ -1698,20 +1704,20 @@ TRACE2(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, "qosMngr_checkTspecRenegR
 		trafficAdmCtrl_parseTspecIE(&tspecInfo, assocRsp->tspecSignalParameters);
 		qosMngr_setAdmissionInfo(pQosMngr, tspecInfo.AC, &tspecInfo, STATUS_TRAFFIC_ADM_REQUEST_ACCEPT);
 	}
-	else if (pQosMngr->tspecRenegotiationParams[USER_PRIORITY_4].uUserPriority != MAX_USER_PRIORITY) 
+	else if (pQosMngr->tspecRenegotiationParams[USER_PRIORITY_4].uUserPriority != MAX_USER_PRIORITY)
 	{
 		/* Signal TSPEC was not re-negotiated although requested to - ERROR */
 TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_setSite: Signal TSPEC was not re-negotiated while voice was \n");
-		qosMngr_setAdmissionInfo(pQosMngr, USER_PRIORITY_4, 
-								 &pQosMngr->resourceMgmtTable.candidateTspecInfo[USER_PRIORITY_4], 
+		qosMngr_setAdmissionInfo(pQosMngr, USER_PRIORITY_4,
+								 &pQosMngr->resourceMgmtTable.candidateTspecInfo[USER_PRIORITY_4],
 								 STATUS_TRAFFIC_ADM_REQUEST_REJECT);
 	}
 
-#ifdef CCX_MODULE_INCLUDED
-	/* If CCX IEs are present for one or more ACs, update other modules with received parameters */
+#ifdef XCC_MODULE_INCLUDED
+	/* If XCC IEs are present for one or more ACs, update other modules with received parameters */
 	for (acCount = 0; acCount < MAX_NUM_OF_AC; acCount++)
 	{
-		ccxMngr_setCCXQoSParams(pQosMngr->hCcxMgr, &assocRsp->ccxIEs[acCount], acCount);
+		XCCMngr_setXCCQoSParams(pQosMngr->hXCCMgr, &assocRsp->XCCIEs[acCount], acCount);
 	}
 #endif
 }
@@ -1720,13 +1726,13 @@ TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_setSite: Signal TSPEC 
 /************************************************************************
  *                        qosMngr_setSite        			            *
  ************************************************************************
-DESCRIPTION: The function is called upon association response to set site 
+DESCRIPTION: The function is called upon association response to set site
              parameters.
-                                                                                                   
+
 INPUT:      hQosMngr	  -	Qos Manager handle.
-            assocRsp      -  pointer to received IE parameters received 
-			                 in association response. 
-OUTPUT:		
+            assocRsp      -  pointer to received IE parameters received
+			                 in association response.
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
@@ -1772,7 +1778,7 @@ TI_STATUS qosMngr_setSite(TI_HANDLE hQosMngr, assocRsp_t *assocRsp)
 
 	case QOS_NONE:
 
-			/* Check if the packet burst is enable, if it is, 
+			/* Check if the packet burst is enable, if it is,
 			should update the BE parames and the hal to the packet burst def */
 			if (pQosMngr->qosPacketBurstEnable == TI_TRUE)
 			{
@@ -1798,7 +1804,7 @@ TRACE0(pQosMngr->hReport, REPORT_SEVERITY_WARNING, "Warning: qosMngr_setSite NO 
 
 	/* Check if TSPEC re-negotiation was performed, if so - look for results */
 	qosMngr_checkTspecRenegResults(pQosMngr, assocRsp);
- 
+
     return TI_OK;
 
 }
@@ -1807,11 +1813,11 @@ TRACE0(pQosMngr->hReport, REPORT_SEVERITY_WARNING, "Warning: qosMngr_setSite NO 
  *                        qosMngr_updateIEinfo     			            *
  ************************************************************************
 DESCRIPTION: The function is called upon run-time update of AC parameters
-                                                                                                   
+
 INPUT:      hQosMngr	         -	Qos Manager handle.
-            pQosIeParams         -  pointer to received IE parameters received 
-			                        in beacon or probe response. 
-OUTPUT:		
+            pQosIeParams         -  pointer to received IE parameters received
+			                        in beacon or probe response.
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
@@ -1896,13 +1902,13 @@ TI_UINT32 qosMngr_buildTSPec(TI_HANDLE hQosMngr, TI_UINT32 user_priority, TI_UIN
 /************************************************************************
  *                        setWmeSiteParams        			            *
  ************************************************************************
-DESCRIPTION: The function is called upon association response to set QOS_WME site 
+DESCRIPTION: The function is called upon association response to set QOS_WME site
              parameters.
-                                                                                                   
+
 INPUT:      hQosMngr	         -	Qos Manager handle.
-            pQosIeParams         -  pointer to received IE parameters received 
-			                        in association response. 
-OUTPUT:		
+            pQosIeParams         -  pointer to received IE parameters received
+			                        in association response.
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
@@ -1911,7 +1917,7 @@ RETURN:     TI_OK on success, TI_NOK otherwise
 static TI_STATUS setWmeSiteParams(qosMngr_t *pQosMngr, TI_UINT8 *pQosIeParams)
 {
 	dot11_WME_PARAM_t  *pWMEparams = (dot11_WME_PARAM_t *)pQosIeParams;
-	TI_STATUS           status;         
+	TI_STATUS           status;
 	TI_UINT8               acID;
 
 	if (pQosIeParams == NULL)
@@ -1919,7 +1925,7 @@ static TI_STATUS setWmeSiteParams(qosMngr_t *pQosMngr, TI_UINT8 *pQosIeParams)
 TRACE0(pQosMngr->hReport, REPORT_SEVERITY_WARNING, "setWmeSiteParams: pQosIeParams is NULL !");
 		return TI_NOK;
 	}
-	
+
 	for(acID = FIRST_AC_INDEX;acID < MAX_NUM_OF_AC; acID++)
 	{
 	   /* configure Ack-Policy to TxCtrl. */
@@ -1927,13 +1933,13 @@ TRACE0(pQosMngr->hReport, REPORT_SEVERITY_WARNING, "setWmeSiteParams: pQosIePara
 	}
 
 	/* update AC params */
-	pWMEparams->WME_ACParameteres.ACBEParametersRecord.TXOPLimit = 
+	pWMEparams->WME_ACParameteres.ACBEParametersRecord.TXOPLimit =
 		ENDIAN_HANDLE_WORD(pWMEparams->WME_ACParameteres.ACBEParametersRecord.TXOPLimit);
-	pWMEparams->WME_ACParameteres.ACBKParametersRecord.TXOPLimit = 
+	pWMEparams->WME_ACParameteres.ACBKParametersRecord.TXOPLimit =
 		ENDIAN_HANDLE_WORD(pWMEparams->WME_ACParameteres.ACBKParametersRecord.TXOPLimit);
-	pWMEparams->WME_ACParameteres.ACVIParametersRecord.TXOPLimit = 
+	pWMEparams->WME_ACParameteres.ACVIParametersRecord.TXOPLimit =
 		ENDIAN_HANDLE_WORD(pWMEparams->WME_ACParameteres.ACVIParametersRecord.TXOPLimit);
-	pWMEparams->WME_ACParameteres.ACVOParametersRecord.TXOPLimit = 
+	pWMEparams->WME_ACParameteres.ACVOParametersRecord.TXOPLimit =
 		ENDIAN_HANDLE_WORD(pWMEparams->WME_ACParameteres.ACVOParametersRecord.TXOPLimit);
 
 	status = updateACParams(pQosMngr,&(pWMEparams->WME_ACParameteres));
@@ -1950,12 +1956,12 @@ TRACE0(pQosMngr->hReport, REPORT_SEVERITY_WARNING, "setWmeSiteParams: pQosIePara
 /************************************************************************
  *                        updateACParams     			                *
  ************************************************************************
-DESCRIPTION: the function is called upon QOS protocol updates paramters 
-             to TNET and TxCtrl object 
-                                                                                                   
+DESCRIPTION: the function is called upon QOS protocol updates paramters
+             to TNET and TxCtrl object
+
 INPUT:      hQosMngr	         -	Qos Manager handle.
 
-OUTPUT:		
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
@@ -1970,7 +1976,7 @@ static TI_STATUS updateACParams(qosMngr_t *pQosMngr,dot11_ACParameters_t *pAcPar
 
 
 	/*
-	 * For QOS_WME: setting ac traffic params (edcf etc')  
+	 * For QOS_WME: setting ac traffic params (edcf etc')
 	 * in this order BE, BK , VI, VO .
 	 */
 
@@ -1980,7 +1986,7 @@ static TI_STATUS updateACParams(qosMngr_t *pQosMngr,dot11_ACParameters_t *pAcPar
 	{
         acID = (pACParameteresRecord->ACI_AIFSN & AC_PARAMS_ACI_MASK) >> 5;
 
-        pAcTrafficAdmState = &(pQosMngr->resourceMgmtTable.currentTspecInfo[acID].trafficAdmState);		
+        pAcTrafficAdmState = &(pQosMngr->resourceMgmtTable.currentTspecInfo[acID].trafficAdmState);
 
 		/* edcf params */
 
@@ -2030,18 +2036,18 @@ static TI_STATUS updateACParams(qosMngr_t *pQosMngr,dot11_ACParameters_t *pAcPar
 
         /* If AC is admidtted and has enabled PS-Rx-Streamings, configure it to FW */
         /* Note: this may occur after roaming */
-        if (*pAcTrafficAdmState == AC_ADMITTED) 
+        if (*pAcTrafficAdmState == AC_ADMITTED)
         {
             TI_UINT32       uTid1       = WMEQosAcToTid[acID];
             TI_UINT32       uTid2       = WMEQosMateTid[uTid1];
             TPsRxStreaming *pTid1Params = &pQosMngr->aTidPsRxStreaming[uTid1];
             TPsRxStreaming *pTid2Params = &pQosMngr->aTidPsRxStreaming[uTid2];
 
-            if (pTid1Params->bEnabled) 
+            if (pTid1Params->bEnabled)
             {
                 TWD_CfgPsRxStreaming (pQosMngr->hTWD, pTid1Params, NULL, NULL);
             }
-            if (pTid2Params->bEnabled) 
+            if (pTid2Params->bEnabled)
             {
                 TWD_CfgPsRxStreaming (pQosMngr->hTWD, pTid2Params, NULL, NULL);
             }
@@ -2057,10 +2063,10 @@ static TI_STATUS updateACParams(qosMngr_t *pQosMngr,dot11_ACParameters_t *pAcPar
  *                        verifyWmeIeParams     			            *
  ************************************************************************
 DESCRIPTION: verify QOS_WME IE.
-                                                                                                   
+
 INPUT:      hQosMngr	         -	Qos Manager handle.
 
-OUTPUT:		
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
@@ -2103,11 +2109,11 @@ TRACE2(pQosMngr->hReport, REPORT_SEVERITY_WARNING, ": Driver QOS_WME version: %d
  *                        qosMngr_SetPsRxStreaming                      *
  ************************************************************************
 DESCRIPTION: Verify and configure a TID PS-Rx-Streaming setting
-                                                                                                   
+
 INPUT:      pQosMngr	- Qos Manager handle.
             pNewParams  - The new TID streaming parameters to configure
 
-OUTPUT:		
+OUTPUT:
 
 RETURN:     TI_OK on success, relevant failures otherwise
 
@@ -2155,7 +2161,7 @@ TRACE1(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_SetPsRxStreaming: TID 
 	}
 
 	/* Verify that the max number of enabled TIDs is not exeeded */
-	if (pNewParams->bEnabled  &&  
+	if (pNewParams->bEnabled  &&
         !pCurrTidParams->bEnabled  &&
         pQosMngr->uNumEnabledPsRxStreams == MAX_ENABLED_PS_RX_STREAMS)
 	{
@@ -2169,12 +2175,12 @@ TRACE1(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_SetPsRxStreaming: Can'
     /* Update the relevant AC which of its TIDs parameters to use (save pointer of desired TID) */
 	if (pCurrTidParams->bEnabled)
     {
-        if (!bTidPrevEnabled) 
+        if (!bTidPrevEnabled)
         {
             pQosMngr->uNumEnabledPsRxStreams++;
         }
     }
-	else 
+	else
     {
         pQosMngr->uNumEnabledPsRxStreams--;
     }
@@ -2194,20 +2200,20 @@ DESCRIPTION: This function is API function for TSPEC request.
 
 INPUT:      hQosMngr	         -	Qos Manager handle.
 			addTspecParams		 -  The Tspec Parameters
-OUTPUT:		
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
 ************************************************************************/
 
-TI_STATUS qosMngr_requestAdmission(TI_HANDLE			hQosMngr, 
+TI_STATUS qosMngr_requestAdmission(TI_HANDLE			hQosMngr,
                                    OS_802_11_QOS_TSPEC_PARAMS *addTspecParams)
 {
 
     qosMngr_t *pQosMngr = (qosMngr_t *)hQosMngr;
 	TI_STATUS	status;
 	TI_UINT8		acID;
-		
+
 
 	/* check if STA is already connected to AP */
 	if(pQosMngr->isConnected == TI_FALSE)
@@ -2246,7 +2252,7 @@ TRACE1(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "uUserPriority = %d > 7 !!!\n",
 TRACE1(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_requestAdmission: AC = %d , signaling is in process -> Ignore Request !!!\n",acID);
 		return TRAFIC_ADM_PENDING;
 	}
-	
+
 	/* check if AC is already admitted with other UP */
 	if( (pQosMngr->resourceMgmtTable.currentTspecInfo[acID].trafficAdmState == AC_ADMITTED) &&
 		(pQosMngr->resourceMgmtTable.currentTspecInfo[acID].userPriority <= MAX_USER_PRIORITY) &&
@@ -2262,7 +2268,7 @@ TRACE2(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_requestAdmission: AC =
 TRACE1(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "uNominalMSDUsize = %d > 2312, !!!\n",addTspecParams->uNominalMSDUsize);
 		return TI_NOK;
 	}
-	
+
 	/* check PS mode validity */
 	if( (addTspecParams->uAPSDFlag == PS_SCHEME_UPSD_TRIGGER) && (pQosMngr->currentPsMode != PS_SCHEME_UPSD_TRIGGER) )
 	{
@@ -2273,20 +2279,20 @@ TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "The STA's current status does 
 TRACE2(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, "qosMngr_requestAdmission: UP = %d , acID = %d\n",addTspecParams->uUserPriority, acID);
 
 	/* set tspec parameters in candidateTspecInfo table */
-	qosMngr_storeTspecCandidateParams (&(pQosMngr->resourceMgmtTable.candidateTspecInfo[acID]), 
+	qosMngr_storeTspecCandidateParams (&(pQosMngr->resourceMgmtTable.candidateTspecInfo[acID]),
 										addTspecParams, (TI_UINT8)acID);
 
 	/* Perhaps this should be done only if the request was successfully sent */
-	if (acID == QOS_AC_VO) 
+	if (acID == QOS_AC_VO)
 	{
 		pQosMngr->voiceTspecConfigured = TI_TRUE;
 	}
-	
-	if (acID == QOS_AC_VI) 
+
+	if (acID == QOS_AC_VI)
 	{
 		pQosMngr->videoTspecConfigured = TI_TRUE;
 	}
-	
+
 	/* call TrafficAdmCtrl API function for the signaling proccess */
 	status = trafficAdmCtrl_startAdmRequest(pQosMngr->pTrafficAdmCtrl, &(pQosMngr->resourceMgmtTable.candidateTspecInfo[acID]));
 
@@ -2313,8 +2319,8 @@ TRACE2(pQosMngr->hReport, REPORT_SEVERITY_WARNING, "qosMngr_requestAdmission: UP
 DESCRIPTION: This function is API fuunction for tspec delete.
 
 INPUT:      hQosMngr	         -	Qos Manager handle.
-			delAdmissionParams	 -  
-OUTPUT:		
+			delAdmissionParams	 -
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
@@ -2325,24 +2331,24 @@ TI_STATUS qosMngr_deleteAdmission(TI_HANDLE hQosMngr, OS_802_11_QOS_DELETE_TSPEC
 
     qosMngr_t *pQosMngr = (qosMngr_t *)hQosMngr;
 	TI_UINT8		acID;
-	
+
 	/* check UP validity */
 	if( delAdmissionParams->uUserPriority > MAX_USER_PRIORITY )
-	{	
+	{
 TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_deleteAdmission: userPriority > 7 -> Ignore !!!");
 		return TI_NOK;
 	}
 
 	/* check if STA is already connected to AP */
 	if(pQosMngr->isConnected == TI_FALSE)
-	{	
+	{
 TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_deleteAdmission: pQosMngr->connected == TI_FALSE -> Ignore !!!");
 		return NOT_CONNECTED;
 	}
 
 	/* check if AP support QOS_WME */
 	if(pQosMngr->activeProtocol != QOS_WME)
-	{	
+	{
 TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_deleteAdmission: activeProtocol != QOS_WME -> Ignore !!!");
 		return NO_QOS_AP;
 	}
@@ -2352,34 +2358,34 @@ TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_deleteAdmission: activ
 
 	/* check if tspec is already addmited for this AC */
 	if(pQosMngr->resourceMgmtTable.currentTspecInfo[acID].trafficAdmState != AC_ADMITTED)
-	{	
+	{
 TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_deleteAdmission: AC is not ADMITED -> Ignore !!!");
 		return TI_NOK;
 	}
 
 	/* check if AC is already admited with the same UP */
 	if(pQosMngr->resourceMgmtTable.currentTspecInfo[acID].userPriority != delAdmissionParams->uUserPriority)
-	{	
+	{
 TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_deleteAdmission: user priority is invalid. -> Ignore !!!\n");
 		return USER_PRIORITY_NOT_ADMITTED;
 	}
 
 	/* check if signaling is already in procces for this AC */
 	if(pQosMngr->resourceMgmtTable.candidateTspecInfo[acID].trafficAdmState == AC_WAIT_ADMISSION)
-	{	
+	{
 TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_deleteAdmission: AC is under negotiation -> Ignore !!!");
 		return TRAFIC_ADM_PENDING;
 	}
 
 
-	
+
 	/* call TrafficAdmCtrl API function for the delete tspec */
-	trafficAdmCtrl_sendDeltsFrame(pQosMngr->pTrafficAdmCtrl, &(pQosMngr->resourceMgmtTable.currentTspecInfo[acID]), 
+	trafficAdmCtrl_sendDeltsFrame(pQosMngr->pTrafficAdmCtrl, &(pQosMngr->resourceMgmtTable.currentTspecInfo[acID]),
 										(TI_UINT8)delAdmissionParams->uReasonCode );
 
-	
+
 	deleteTspecConfiguration(pQosMngr, acID);
-	
+
 	return TI_OK;
 
 }
@@ -2391,7 +2397,7 @@ DESCRIPTION: configure the driver and FW to default configuration after
 
 INPUT:      hQosMngr	             - Qos Manager handle.
 			acID					 - the AC of the Tspec to delete
-OUTPUT:		
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
@@ -2411,10 +2417,10 @@ static void deleteTspecConfiguration(qosMngr_t *pQosMngr, TI_UINT8 acID)
     pQosMngr->resourceMgmtTable.currentTspecInfo[acID].uMinimumServiceInterval = 0;
     pQosMngr->resourceMgmtTable.currentTspecInfo[acID].uMaximumServiceInterval = 0;
     pQosMngr->resourceMgmtTable.currentTspecInfo[acID].streamDirection = BI_DIRECTIONAL;
-	
+
 	/* update total medium time */
 	pQosMngr->resourceMgmtTable.totalAllocatedMediumTime -= pQosMngr->resourceMgmtTable.currentTspecInfo[acID].mediumTime;
-	
+
 	/* disable TSRS for this ac */
 	param.content.txDataQosParams.acID = acID;
 	param.content.txDataQosParams.tsrsArrLen = 0;
@@ -2422,7 +2428,7 @@ static void deleteTspecConfiguration(qosMngr_t *pQosMngr, TI_UINT8 acID)
 	ctrlData_setParam(pQosMngr->hCtrlData, &param);
 
 	/* stop TS metrix for this ac */
-#ifdef CCX_MODULE_INCLUDED
+#ifdef XCC_MODULE_INCLUDED
 	measurementMgr_disableTsMetrics(pQosMngr->hMeasurementMngr, acID);
 #endif
 
@@ -2431,11 +2437,11 @@ static void deleteTspecConfiguration(qosMngr_t *pQosMngr, TI_UINT8 acID)
 	{
 		/* update currentTspecInfo parameters */
 		pQosMngr->resourceMgmtTable.currentTspecInfo[acID].trafficAdmState = AC_NOT_ADMITTED;
-		
+
 		/* set params to TX */
 		txCtrlParams_setAdmissionCtrlParams(pQosMngr->hTxCtrl,
 									acID,
-									pQosMngr->resourceMgmtTable.currentTspecInfo[acID].mediumTime , 
+									pQosMngr->resourceMgmtTable.currentTspecInfo[acID].mediumTime ,
 									pQosMngr->resourceMgmtTable.currentTspecInfo[acID].minimumPHYRate, TI_FALSE);
 	}
 	else
@@ -2461,14 +2467,14 @@ static void deleteTspecConfiguration(qosMngr_t *pQosMngr, TI_UINT8 acID)
 	{
 		pQosMngr->voiceTspecConfigured = TI_FALSE;
 	}
-	
-	if (acID == QOS_AC_VI) 
+
+	if (acID == QOS_AC_VI)
 	{
 		pQosMngr->videoTspecConfigured = TI_FALSE;
     }
 
 	/* UPSD_FW - open comment in UPSD FW integration */
-	 
+
 	/* UPSD configuration */
 	pQosMngr->acParams[acID].QtrafficParams.psScheme = pQosMngr->acParams[acID].currentWmeAcPsMode;
 	verifyAndConfigTrafficParams(pQosMngr,&(pQosMngr->acParams[acID].QtrafficParams));
@@ -2481,13 +2487,13 @@ static void deleteTspecConfiguration(qosMngr_t *pQosMngr, TI_UINT8 acID)
         TPsRxStreaming *pTid1Params = &pQosMngr->aTidPsRxStreaming[uTid1];
         TPsRxStreaming *pTid2Params = &pQosMngr->aTidPsRxStreaming[uTid2];
 
-        if (pTid1Params->bEnabled) 
+        if (pTid1Params->bEnabled)
         {
             pTid1Params->bEnabled = TI_FALSE;
             TWD_CfgPsRxStreaming (pQosMngr->hTWD, pTid1Params, NULL, NULL);
             pQosMngr->uNumEnabledPsRxStreams--;
         }
-        if (pTid2Params->bEnabled) 
+        if (pTid2Params->bEnabled)
         {
             pTid2Params->bEnabled = TI_FALSE;
             TWD_CfgPsRxStreaming (pQosMngr->hTWD, pTid2Params, NULL, NULL);
@@ -2500,7 +2506,7 @@ static void deleteTspecConfiguration(qosMngr_t *pQosMngr, TI_UINT8 acID)
 Routine Name: qosMngr_sendUnexpectedTSPECResponse
 Routine Description: send event to user application, informing of unexpected TSPEC response
 					 which might imply loss of UPSD mode synch between AP and STA
-Arguments: pTspecInfo - contains unexpected TSPEC response information 
+Arguments: pTspecInfo - contains unexpected TSPEC response information
 Return Value:
 -----------------------------------------------------------------------------*/
 TI_STATUS qosMngr_sendUnexpectedTSPECResponseEvent(TI_HANDLE	hQosMngr,
@@ -2515,13 +2521,13 @@ TI_STATUS qosMngr_sendUnexpectedTSPECResponseEvent(TI_HANDLE	hQosMngr,
 	addtsReasonCode.uMaximumServiceInterval = pTspecInfo->uMaximumServiceInterval;
 	addtsReasonCode.uUserPriority = pTspecInfo->userPriority;
 	addtsReasonCode.uNominalMSDUsize = pTspecInfo->nominalMsduSize;
-	addtsReasonCode.uMeanDataRate = pTspecInfo->meanDataRate;	
+	addtsReasonCode.uMeanDataRate = pTspecInfo->meanDataRate;
 	addtsReasonCode.uMinimumPHYRate = pTspecInfo->minimumPHYRate;
 	addtsReasonCode.uSurplusBandwidthAllowance = pTspecInfo->surplausBwAllowance;
 	addtsReasonCode.uMediumTime = pTspecInfo->mediumTime;
 
     addtsReasonCode.uReasonCode = pTspecInfo->statusCode + TSPEC_RESPONSE_UNEXPECTED;
-		
+
 	/* send event */
 	EvHandlerSendEvent(pQosMngr->hEvHandler, IPC_EVENT_TSPEC_STATUS, (TI_UINT8*)(&addtsReasonCode), sizeof(OS_802_11_QOS_TSPEC_PARAMS));
 
@@ -2538,12 +2544,12 @@ DESCRIPTION: This function is API function.
 INPUT:      hQosMngr                 - Qos Manager handle.
             pTspecInfo               - The TSPEC Parameters
             trafficAdmRequestStatus  - the status of the request
-OUTPUT:     
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
 ************************************************************************/
-TI_STATUS qosMngr_setAdmissionInfo(TI_HANDLE    hQosMngr, 
+TI_STATUS qosMngr_setAdmissionInfo(TI_HANDLE    hQosMngr,
                                    TI_UINT8        acID,
                                    tspecInfo_t  *pTspecInfo,
                                    trafficAdmRequestStatus_e trafficAdmRequestStatus)
@@ -2558,7 +2564,7 @@ TI_STATUS qosMngr_setAdmissionInfo(TI_HANDLE    hQosMngr,
     if(pQosMngr->resourceMgmtTable.candidateTspecInfo[acID].trafficAdmState != AC_WAIT_ADMISSION)
     {
         TRACE1(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_setAdmissionInfo: acID = %d, trafficAdmState != WAIT. IGNORE !!!\n", acID);
-        
+
         return TI_NOK;
     }
 
@@ -2575,14 +2581,14 @@ TI_STATUS qosMngr_setAdmissionInfo(TI_HANDLE    hQosMngr,
         /* Received admission response with status accept */
 
         TRACE3(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, "qosMngr_setAdmissionInfo: admCtrl status =  REQUEST_ACCEPT [ acID = %d, mediumTime = %d, minimumPHYRate = %d ]\n", acID, pTspecInfo->mediumTime, pTspecInfo->minimumPHYRate);
-        
+
         /* Set the event params */
         addtsReasonCode.uAPSDFlag = pTspecInfo->UPSDFlag;
         addtsReasonCode.uMinimumServiceInterval = pTspecInfo->uMinimumServiceInterval;
         addtsReasonCode.uMaximumServiceInterval = pTspecInfo->uMaximumServiceInterval;
         addtsReasonCode.uUserPriority = pTspecInfo->userPriority;
         addtsReasonCode.uNominalMSDUsize = pTspecInfo->nominalMsduSize;
-        addtsReasonCode.uMeanDataRate = pTspecInfo->meanDataRate;   
+        addtsReasonCode.uMeanDataRate = pTspecInfo->meanDataRate;
         addtsReasonCode.uMinimumPHYRate = pTspecInfo->minimumPHYRate;
         addtsReasonCode.uSurplusBandwidthAllowance = pTspecInfo->surplausBwAllowance;
         addtsReasonCode.uMediumTime = pTspecInfo->mediumTime;
@@ -2594,45 +2600,45 @@ TI_STATUS qosMngr_setAdmissionInfo(TI_HANDLE    hQosMngr,
         if (pTspecInfo->tid == pQosMngr->resourceMgmtTable.candidateTspecInfo[acID].tid)
         {
             addtsReasonCode.uReasonCode = ADDTS_RESPONSE_ACCEPT;
-            
+
             /* Send event */
-            EvHandlerSendEvent (pQosMngr->hEvHandler, 
-                                IPC_EVENT_TSPEC_STATUS, 
-                                (TI_UINT8*)&addtsReasonCode, 
+            EvHandlerSendEvent (pQosMngr->hEvHandler,
+                                IPC_EVENT_TSPEC_STATUS,
+                                (TI_UINT8*)&addtsReasonCode,
                                 sizeof(OS_802_11_QOS_TSPEC_PARAMS));
         }
         else
         {
             addtsReasonCode.uReasonCode = ADDTS_RESPONSE_AP_PARAM_INVALID;
-            
+
             /* Send event */
-            EvHandlerSendEvent (pQosMngr->hEvHandler, 
-                                IPC_EVENT_TSPEC_STATUS, 
-                                (TI_UINT8*)&addtsReasonCode, 
+            EvHandlerSendEvent (pQosMngr->hEvHandler,
+                                IPC_EVENT_TSPEC_STATUS,
+                                (TI_UINT8*)&addtsReasonCode,
                                 sizeof(OS_802_11_QOS_TSPEC_PARAMS));
             return TI_OK;
         }
 
         /* Update the current TSPEC parameters from the received TSPEC */
-        os_memoryCopy (pQosMngr->hOs, 
-                       &pQosMngr->resourceMgmtTable.currentTspecInfo[acID], 
-                       pTspecInfo, 
+        os_memoryCopy (pQosMngr->hOs,
+                       &pQosMngr->resourceMgmtTable.currentTspecInfo[acID],
+                       pTspecInfo,
                        sizeof(tspecInfo_t));
 
         /* Set the TSPEC to admitted */
         pQosMngr->resourceMgmtTable.currentTspecInfo[acID].trafficAdmState = AC_ADMITTED;
-        
+
         /* Update total medium time */
         pQosMngr->resourceMgmtTable.totalAllocatedMediumTime += pTspecInfo->mediumTime;
 
         /*
-         * Set QOS Null-data template into the firmware. 
-         * When a new TSPEC with UPSD is "accepted" by the AP, 
-         * we set the user priority of it into the firmware. 
-         * Since this AC is already ADMITTED (we are processing the successful response), 
-         * it is TI_OK to set the qos null data template with this UP 
+         * Set QOS Null-data template into the firmware.
+         * When a new TSPEC with UPSD is "accepted" by the AP,
+         * we set the user priority of it into the firmware.
+         * Since this AC is already ADMITTED (we are processing the successful response),
+         * it is TI_OK to set the qos null data template with this UP
          */
-        if (addtsReasonCode.uAPSDFlag == PS_SCHEME_UPSD_TRIGGER && 
+        if (addtsReasonCode.uAPSDFlag == PS_SCHEME_UPSD_TRIGGER &&
             pQosMngr->QosNullDataTemplateUserPriority == 0xFF)
         {
             /* Remember the user priority which we have set */
@@ -2659,15 +2665,15 @@ TI_STATUS qosMngr_setAdmissionInfo(TI_HANDLE    hQosMngr,
             /* Set TX params */
 			txCtrlParams_setAdmissionCtrlParams(pQosMngr->hTxCtrl,
                                           acID,
-                                          actualMediumTime, 
-                                          pTspecInfo->minimumPHYRate, 
+                                          actualMediumTime,
+                                          pTspecInfo->minimumPHYRate,
                                           TI_TRUE);
         }
-        
+
         {
-            PSScheme_e psMode = pTspecInfo->UPSDFlag ? PS_SCHEME_UPSD_TRIGGER 
-                                                     : PS_SCHEME_LEGACY; 
-       
+            PSScheme_e psMode = pTspecInfo->UPSDFlag ? PS_SCHEME_UPSD_TRIGGER
+                                                     : PS_SCHEME_LEGACY;
+
             if (pQosMngr->acParams[acID].currentWmeAcPsMode != psMode)
             {
                 TI_STATUS status;
@@ -2680,14 +2686,14 @@ TI_STATUS qosMngr_setAdmissionInfo(TI_HANDLE    hQosMngr,
                 if (status != TI_OK)
                     return status;
             }
-        }   
+        }
         break;
 
     case STATUS_TRAFFIC_ADM_REQUEST_REJECT:
         /* Received admission response with status reject */
 
         TRACE1(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, "qosMngr_setAdmissionInfo: admCtrl status = REQUEST_REJECT [ acID = %d ]\n", acID);
-        
+
         /* Validate tid matching */
         if (pTspecInfo->tid == pQosMngr->resourceMgmtTable.candidateTspecInfo[acID].tid)
         {
@@ -2707,20 +2713,20 @@ TI_STATUS qosMngr_setAdmissionInfo(TI_HANDLE    hQosMngr,
         addtsReasonCode.uMaximumServiceInterval = pTspecInfo->uMaximumServiceInterval;
         addtsReasonCode.uUserPriority = pQosMngr->resourceMgmtTable.candidateTspecInfo[acID].userPriority;
         addtsReasonCode.uNominalMSDUsize = pTspecInfo->nominalMsduSize;
-        addtsReasonCode.uMeanDataRate = pTspecInfo->meanDataRate;   
+        addtsReasonCode.uMeanDataRate = pTspecInfo->meanDataRate;
         addtsReasonCode.uMinimumPHYRate = pTspecInfo->minimumPHYRate;
         addtsReasonCode.uSurplusBandwidthAllowance = pTspecInfo->surplausBwAllowance;
         addtsReasonCode.uMediumTime = pTspecInfo->mediumTime;
-    
-        EvHandlerSendEvent (pQosMngr->hEvHandler, 
-                            IPC_EVENT_TSPEC_STATUS, 
-                            (TI_UINT8*)&addtsReasonCode, 
-                            sizeof(OS_802_11_QOS_TSPEC_PARAMS));       
+
+        EvHandlerSendEvent (pQosMngr->hEvHandler,
+                            IPC_EVENT_TSPEC_STATUS,
+                            (TI_UINT8*)&addtsReasonCode,
+                            sizeof(OS_802_11_QOS_TSPEC_PARAMS));
         break;
 
     case STATUS_TRAFFIC_ADM_REQUEST_TIMEOUT:
         TRACE1(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, "qosMngr_setAdmissionInfo: admCtrl status = REQUEST_TIMEOUT [ acID = %d ]\n", acID);
-        
+
         /* Free the candidate parameters */
         pQosMngr->resourceMgmtTable.candidateTspecInfo[acID].trafficAdmState = AC_NOT_ADMITTED;
 
@@ -2731,30 +2737,30 @@ TI_STATUS qosMngr_setAdmissionInfo(TI_HANDLE    hQosMngr,
         addtsReasonCode.uMinimumServiceInterval = 0;
         addtsReasonCode.uMaximumServiceInterval = 0;
         addtsReasonCode.uNominalMSDUsize = 0;
-        addtsReasonCode.uMeanDataRate = 0;  
+        addtsReasonCode.uMeanDataRate = 0;
         addtsReasonCode.uMinimumPHYRate = 0;
         addtsReasonCode.uSurplusBandwidthAllowance = 0;
         addtsReasonCode.uMediumTime = 0;
 
-        EvHandlerSendEvent (pQosMngr->hEvHandler, 
-                            IPC_EVENT_TSPEC_STATUS, 
-                            (TI_UINT8*)&addtsReasonCode, 
-                            sizeof(OS_802_11_QOS_TSPEC_PARAMS));       
+        EvHandlerSendEvent (pQosMngr->hEvHandler,
+                            IPC_EVENT_TSPEC_STATUS,
+                            (TI_UINT8*)&addtsReasonCode,
+                            sizeof(OS_802_11_QOS_TSPEC_PARAMS));
         break;
-       
+
     default:
         TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_setAdmissionInfo: receive state from admCtrl = unknown !!! \n");
         break;
     }
 
-    return TI_OK;  
+    return TI_OK;
 }
 
 /************************************************************************
  *                    QosMngr_receiveActionFrames                       *
  ************************************************************************
-DESCRIPTION: 
-                                                                                                 
+DESCRIPTION:
+
 RETURN:     TI_OK on success, TI_NOK otherwise
 
 ************************************************************************/
@@ -2769,8 +2775,8 @@ TI_STATUS QosMngr_receiveActionFrames(TI_HANDLE hQosMngr, TI_UINT8* pData, TI_UI
     qosMngr_t *pQosMngr = (qosMngr_t *)hQosMngr;
 
 	/* check if STA is already connected to AP */
-	if( (pQosMngr->isConnected == TI_FALSE) || 
-		(pQosMngr->activeProtocol != QOS_WME) || 
+	if( (pQosMngr->isConnected == TI_FALSE) ||
+		(pQosMngr->activeProtocol != QOS_WME) ||
 		(pQosMngr->trafficAdmCtrlEnable == TI_FALSE) )
 	{
 TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "QosMngr_receiveActionFrames:  Ignore  !!!");
@@ -2778,14 +2784,14 @@ TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "QosMngr_receiveActionFrames:  
 	}
 
 	/* check DELTS action code */
-	if (action == DELTS_ACTION) 
+	if (action == DELTS_ACTION)
 	{
-		/* 
-		 *  parse the frame 
+		/*
+		 *  parse the frame
 		 */
 
 		/* skip dialog-token (1 byte), status-code (1 byte) and dot11_WME_TSPEC_IE header (8 bytes). */
-		pData += 10;	  
+		pData += 10;
 
 		/*  Get TS-Info from TSpec IE in DELTS, and get from it the user-priority. */
 		tsInfo.tsInfoArr[0] = *pData;
@@ -2793,11 +2799,11 @@ TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "QosMngr_receiveActionFrames:  
 		tsInfo.tsInfoArr[1] = *pData;
 		pData++;
 		tsInfo.tsInfoArr[2] = *pData;
-		
+
         userPriority = (((tsInfo.tsInfoArr[1]) & TS_INFO_1_USER_PRIORITY_MASK) >> USER_PRIORITY_SHIFT);
-		
+
 		acID = WMEQosTagToACTable[userPriority];
-		
+
 
 TRACE1(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, "QosMngr_receiveActionFrames: DELTS [ acID = %d ] \n", acID);
 
@@ -2815,7 +2821,7 @@ TRACE1(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, "QosMngr_receiveActionFra
 		    addtsReasonCode.uUserPriority = userPriority;
             addtsReasonCode.uReasonCode = TSPEC_DELETED_BY_AP;
 		    addtsReasonCode.uNominalMSDUsize = 0;
-		    addtsReasonCode.uMeanDataRate = 0;	
+		    addtsReasonCode.uMeanDataRate = 0;
 		    addtsReasonCode.uMinimumPHYRate = 0;
 		    addtsReasonCode.uSurplusBandwidthAllowance = 0;
 		    addtsReasonCode.uMediumTime = 0;
@@ -2825,43 +2831,43 @@ TRACE1(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, "QosMngr_receiveActionFra
 		else
 		{
 TRACE3(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "QosMngr_receiveActionFrames: DELTS [ acID = %d userPriority = %d  currentUserPriority = %d] Current State in not ADMITED !! \n", acID, userPriority,pQosMngr->resourceMgmtTable.currentTspecInfo[acID].userPriority);
-			
+
 		}
 	}
 	/* if action code is ADDTS call trafficAdmCtrl object API function */
-	else if (action == ADDTS_RESPONSE_ACTION) 
+	else if (action == ADDTS_RESPONSE_ACTION)
 	{
 		if (trafficAdmCtrl_recv(pQosMngr->pTrafficAdmCtrl, pData, action) == TI_OK)
 		{
-#ifdef CCX_MODULE_INCLUDED
-			/* Check if CCX IEs present, if so, parse them and update relevant modules; 
+#ifdef XCC_MODULE_INCLUDED
+			/* Check if XCC IEs present, if so, parse them and update relevant modules;
                skip the TSPEC IE;
                do not forget 2 bytes of status and dialog code that must be skipped as well */
-			CCXv4IEs_t			ccxIE;
+			XCCv4IEs_t			XCCIE;
 			TI_UINT32 				readLen;
 
-			ccxIE.edcaLifetimeParameter = NULL;
-			ccxIE.trafficStreamParameter = NULL;
-			ccxIE.tsMetrixParameter = NULL;
+			XCCIE.edcaLifetimeParameter = NULL;
+			XCCIE.trafficStreamParameter = NULL;
+			XCCIE.tsMetrixParameter = NULL;
 
 			userPriority = GET_USER_PRIORITY_FROM_WME_TSPEC_IE(pData+2);
 			acID = WMEQosTagToACTable[userPriority];
 
 			/* The length is in the second byte of the IE header, after the token and status. */
-			readLen = (TI_UINT32)(*(pData + 3)); 
+			readLen = (TI_UINT32)(*(pData + 3));
 
 			/* 4 stands for 1 byte of token + 1 byte of status + 1 byte of EID + 1 byte of len */
-			bodyLen = bodyLen - 4 - readLen; 
+			bodyLen = bodyLen - 4 - readLen;
 			pData = pData + 4 + readLen;
 
-			while (bodyLen) 
+			while (bodyLen)
 			{
-				mlmeParser_readCcxOui(pData, bodyLen, &readLen, &ccxIE);
+				mlmeParser_readXCCOui(pData, bodyLen, &readLen, &XCCIE);
 				bodyLen -= readLen;
 				pData += readLen;
 			}
 
-			ccxMngr_setCCXQoSParams(pQosMngr->hCcxMgr, &ccxIE, acID);
+			XCCMngr_setXCCQoSParams(pQosMngr->hXCCMgr, &XCCIE, acID);
 #endif
 		}
 	}
@@ -2869,7 +2875,7 @@ TRACE3(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "QosMngr_receiveActionFrames: D
 	{
 TRACE1(pQosMngr->hReport, REPORT_SEVERITY_WARNING, "QosMngr_receiveActionFrames: Receive unknown action code = %d  -> Ignore !! \n",action);
 	}
-	
+
 	return TI_OK;
 }
 
@@ -2881,7 +2887,7 @@ DESCRIPTION: This function is API fuunction for getting tha AC status .
 INPUT:      hQosMngr	             - Qos Manager handle.
 			pAcStatusParams
 
-OUTPUT:		
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
@@ -2892,21 +2898,21 @@ static TI_STATUS qosMngr_getCurrAcStatus(TI_HANDLE hQosMngr, OS_802_11_AC_UPSD_S
 
 	/* check AC validity */
 	if( pAcStatusParams->uAC > MAX_NUM_OF_AC - 1 )
-	{	
+	{
 		TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_getCurrAcStatus: acID > 3 -> Ignore !!!");
 		return TI_NOK;
 	}
 
 	/* check if sta is connected to AP */
 	if(pQosMngr->isConnected == TI_FALSE)
-	{	
+	{
 		TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_getCurrAcStatus: pQosMngr->connected == TI_FALSE -> Ignore !!!");
 		return NOT_CONNECTED;
 	}
-	
+
 	 /* check if AP support QOS_WME */
 	if(pQosMngr->activeProtocol != QOS_WME)
-	{	
+	{
 		TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_getCurrAcStatus: activeProtocol != QOS_WME -> Ignore !!!");
 		return NO_QOS_AP;
 	}
@@ -2928,9 +2934,9 @@ DESCRIPTION: This function resets the admission state variables as required
 INPUT:      pQosMngr	- Qos Manager pointer.
 			acId		- the AC to update.
 
-OUTPUT:		
+OUTPUT:
 
-RETURN:     
+RETURN:
 
 ************************************************************************/
 
@@ -2940,7 +2946,7 @@ static void setNonQosAdmissionState(qosMngr_t *pQosMngr, TI_UINT8 acID)
 	{
 		pQosMngr->acParams[acID].apInitAdmissionState = ADMISSION_NOT_REQUIRED;
 		pQosMngr->resourceMgmtTable.currentTspecInfo[acID].trafficAdmState = AC_ADMITTED;
-		
+
 		txCtrlParams_setAcAdmissionStatus(pQosMngr->hTxCtrl, acID, ADMISSION_NOT_REQUIRED, AC_ADMITTED);
 	}
 	else

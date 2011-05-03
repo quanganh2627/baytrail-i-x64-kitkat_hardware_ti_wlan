@@ -1,36 +1,41 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * eventMbox.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
-/** \file  eventMbox.c 
+
+/** \file  eventMbox.c
  *  \brief Handle any event interrupt from the FW
  *
- *  \see   
+ *  \see
  */
 
 #define __FILE_ID__  FILE_ID_102
@@ -64,11 +69,11 @@ typedef struct {
 
 }TRegisteredEventCb;
 
-typedef struct 
+typedef struct
 {
     TI_UINT32           bitMask;/* Event bit mask */
     char*               str;    /* Event trace string */
-    TI_UINT8            dataLen;/* Event data length */  
+    TI_UINT8            dataLen;/* Event data length */
 
 } TEventEntry;
 
@@ -90,7 +95,7 @@ typedef struct
 
 
 
-typedef struct 
+typedef struct
 {
 	TI_UINT32		   	EventMboxAddr[EVENT_MBOX_BUFFERS];  /* the Event Mbox addresses in the device */
 	TI_UINT8		   	ActiveMbox;                         /* The current active Mbox */
@@ -113,7 +118,7 @@ typedef struct
 	TI_UINT32           uCompounEvCount;    /* Count the compound event */
 	TI_UINT32           uTotalEvCount;      /* Count total number of event sending in the compound */
 	#endif /* TI_DBG */
-	
+
 	fnotify_t			fCb;
 	TI_HANDLE		   	hCb;
 
@@ -131,11 +136,11 @@ static void eventMbox_ReadCompleteCB(TI_HANDLE hEventMbox, TTxnStruct *pTxnStruc
 
 
 static const TEventEntry eventTable [TWD_OWN_EVENT_MAX] =
-{   
+{
 /*==================================================================================
- *                                                                                     
- *                                    EVENT TABLE    
- *                                 
+ *
+ *                                    EVENT TABLE
+ *
  *  Note that changes here should be reflected also in ETwdOwnEventId in TWDriver.h !!!
  *
  ===================================================================================
@@ -150,9 +155,9 @@ static const TEventEntry eventTable [TWD_OWN_EVENT_MAX] =
 /* 5*/{ RSSI_SNR_TRIGGER_5_EVENT_ID,            "RSSI SNR TRIGGER 5 "     		, 1},
 /* 6*/{ RSSI_SNR_TRIGGER_6_EVENT_ID,            "RSSI SNR TRIGGER 6 "     		, 1},
 /* 7*/{ RSSI_SNR_TRIGGER_7_EVENT_ID,            "RSSI SNR TRIGGER 7 "     		, 1},
-/* 8*/{ MEASUREMENT_START_EVENT_ID,             "MEASUREMENT START "      		, 0},    
+/* 8*/{ MEASUREMENT_START_EVENT_ID,             "MEASUREMENT START "      		, 0},
 /* 9*/{ MEASUREMENT_COMPLETE_EVENT_ID,          "BSS LOSE "               		, 0},
-/*10*/{ SCAN_COMPLETE_EVENT_ID ,                "SCAN CMPLT "             		, 8},    
+/*10*/{ SCAN_COMPLETE_EVENT_ID ,                "SCAN CMPLT "             		, 8},
 /*11*/{ SCHEDULED_SCAN_COMPLETE_EVENT_ID,       "SPS SCAN CMPLT "         		, 3},
 /*12*/{ AP_DISCOVERY_COMPLETE_EVENT_ID,         "MAX TX RETRY "           		, 0},
 /*13*/{ PS_REPORT_EVENT_ID,                     "PS_REPORT "              		, 1},
@@ -187,11 +192,11 @@ static const TEventEntry eventTable [TWD_OWN_EVENT_MAX] =
 
 /*
  * \brief	Create the Bus Access mailbox object
- * 
+ *
  * \param  hOs - OS Handle
  * \returnThe Created object
  *
- * \sa 
+ * \sa
  */
 
 TI_HANDLE eventMbox_Create(TI_HANDLE hOs)
@@ -212,14 +217,14 @@ TI_HANDLE eventMbox_Create(TI_HANDLE hOs)
 
 /*
  * \brief	Release all memory resource of EventMbox
- * 
+ *
  * \param  hEventMbox  - Handle to EventMbox
  * \return none
- * 
+ *
  * \par Description
  * This function should called after all interrupts was disabled.
  *
- * \sa 
+ * \sa
  */
 void eventMbox_Destroy(TI_HANDLE hEventMbox)
 {
@@ -235,14 +240,14 @@ void eventMbox_Destroy(TI_HANDLE hEventMbox)
 
 /*
  * \brief	Stop the EventMbox clear state and event vector
- * 
+ *
  * \param  hEventMbox  - Handle to EventMbox
  * \return none
- * 
+ *
  * \par Description
  * This function should called to stop the EventMb.
  * Do Not clear the mask Event could use us again when restart/recovery!!!!
- * \sa 
+ * \sa
  */
 void eventMbox_Stop(TI_HANDLE hEventMbox)
 {
@@ -256,7 +261,7 @@ void eventMbox_Stop(TI_HANDLE hEventMbox)
 
 /*
  * \brief	Configure the object
- * 
+ *
  * \param  hEventMbox  - Handle to EventMbox
  * \param  hTwif	   - Handle to TWIF
  * \param  hReport	   - Handle to Report module
@@ -266,13 +271,13 @@ void eventMbox_Stop(TI_HANDLE hEventMbox)
  *
  * \par Description
  * This function should called to configure the module.
- * \sa 
+ * \sa
  */
 
-void eventMbox_Config(TI_HANDLE hEventMbox, 
-                            TI_HANDLE hTwif, 
-                            TI_HANDLE hReport,    
-                            TI_HANDLE hFwEvent, 
+void eventMbox_Config(TI_HANDLE hEventMbox,
+                            TI_HANDLE hTwif,
+                            TI_HANDLE hReport,
+                            TI_HANDLE hFwEvent,
                             TI_HANDLE hCmdBld)
 {
     TEventMbox *pEventMbox = (TEventMbox *)hEventMbox;
@@ -290,23 +295,23 @@ void eventMbox_Config(TI_HANDLE hEventMbox,
 
 
 
-/* 
+/*
  * \brief	Initialization of callback table
- * 
+ *
  * \param  hEventMbox  - Handle to EventMbox
  * \return none
- * 
+ *
  * \par Description
  * This function is called to configure the CB table initialize the
  * CB functions and handle and set the Data offset.
- * 
- * \sa 
+ *
+ * \sa
  */
 static void eventMbox_ConfigCbTable(TI_HANDLE hEventMbox)
 {
 	TEventMbox* pEventMbox;
 	TI_UINT8	EvID;
-	
+
 	pEventMbox = (TEventMbox*)hEventMbox;
 
 	/* for all events set a dummy func and data offset */
@@ -348,17 +353,17 @@ TRACE0(pEventMbox->hReport, REPORT_SEVERITY_ERROR, "eventMbox_DummyCb : Called f
 
 /*
  * \brief	Read mailbox address
- * 
+ *
  * \param  hEventMbox  - Handle to EventMbox
  * \param  fCb		   - CB function to return in Async mode
- * \param  hCb		   - CB Habdle 
+ * \param  hCb		   - CB Habdle
  * \return TXN_STATUS_COMPLETE, TXN_STATUS_PENDING, TXN_STATUS_ERROR
- * 
+ *
  * \par Description
  * This function is called for initialize the Event MBOX addresses.
  * It issues a read transaction from the Twif with a CB.
- * 
- * \sa 
+ *
+ * \sa
  */
 TI_STATUS eventMbox_InitMboxAddr(TI_HANDLE hEventMbox, fnotify_t fCb, TI_HANDLE hCb)
 {
@@ -390,26 +395,26 @@ TRACE3(pEventMbox->hReport, REPORT_SEVERITY_INIT , "eventMbox_ConfigHw: event A 
 
 /*
  * \brief	Save the Event MBOX addresses
- * 
+ *
  * \param  hEventMbox  - Handle to EventMbox
  * \param  hTxn		   - Handle to TTxnStruct
  * \return none
- * 
+ *
  * \par Description
  * This function is called upon completion of thr read Event MBOX address register.
  * It save the addresses in EventMbox.
- * 
- * \sa 
+ *
+ * \sa
  */
 static void eventMbox_ReadAddrCb(TI_HANDLE hEventMbox, TI_HANDLE hTxn)
 {
     TEventMbox* pEventMbox;
-	
+
 	pEventMbox = (TEventMbox*)hEventMbox;
 
 	pEventMbox->EventMboxAddr[0] = pEventMbox->iTxnGenRegSize.iRegBuffer;
 	pEventMbox->EventMboxAddr[1] = pEventMbox->EventMboxAddr[0] + sizeof(EventMailBox_t);
- 
+
     TRACE3(pEventMbox->hReport, REPORT_SEVERITY_INIT , "eventMbox_ConfigHw: event A Address=0x%x, event B Address=0x%x, sizeof=%d\n", pEventMbox->EventMboxAddr[0], pEventMbox->EventMboxAddr[1], sizeof(EventMailBox_t));
 
 	/* call back the module that called us before to read our self-address */
@@ -418,35 +423,35 @@ static void eventMbox_ReadAddrCb(TI_HANDLE hEventMbox, TI_HANDLE hTxn)
 
 
 /*
- * \brief	confige the Mask vector in FW 
- * 
+ * \brief	confige the Mask vector in FW
+ *
  * \param  hEventMbox  - Handle to EventMbox
  * \return none
- * 
+ *
  * \par Description
  * This function is called upon exit from init it will set the mask vector.
  * this function is mostly use for recovery
- * Note that at Init stage the FW is already configured to have all events masked but at Recovery stage 
+ * Note that at Init stage the FW is already configured to have all events masked but at Recovery stage
  * The driver whishes to just set back previous event mask configuration
- * 
- * \sa 
+ *
+ * \sa
  */
 void eventMbox_InitComplete(TI_HANDLE hEventMbox)
 {
 
     TEventMbox* pEventMbox;
 	pEventMbox = (TEventMbox*)hEventMbox;
-	
+
     TRACE1(pEventMbox->hReport, REPORT_SEVERITY_INFORMATION, "eventMbox_InitComplete: mask = 0x%x\n", pEventMbox->iTxnEventMbox.iEventMboxBuf.eventsMask);
 
 	cmdBld_CfgEventMask(pEventMbox->hCmdBld,pEventMbox->iTxnEventMbox.iEventMboxBuf.eventsMask,NULL,NULL);
 }
-    
+
 
 
 /*
- * \brief	Register an event 
- * 
+ * \brief	Register an event
+ *
  * \param  hEventMbox  - Handle to EventMbox
  * \param  EvID - the event ID to register
  * \param  fCb - CB function of the registered event
@@ -457,14 +462,14 @@ void eventMbox_InitComplete(TI_HANDLE hEventMbox)
  * This function is called from the user upon request to register for event.
  * an Event can only be register to one user.
  * This function doesn't change the mask vector in FW!!!
- * 
- * \sa 
+ *
+ * \sa
  */
 TI_STATUS eventMbox_RegisterEvent(TI_HANDLE hEventMbox,TI_UINT32 EvID,void* fCb,TI_HANDLE hCb)
 {
     TEventMbox *pEventMbox = (TEventMbox *)hEventMbox;
     if (fCb == NULL || hCb == NULL)
-    { 
+    {
 TRACE0(pEventMbox->hReport, REPORT_SEVERITY_ERROR, "eventMbox_RegisterEvent : NULL parameters\n");
         return TI_NOK;
     }
@@ -482,8 +487,8 @@ TRACE0(pEventMbox->hReport, REPORT_SEVERITY_ERROR, "eventMbox_RegisterEvent : Ev
 
 
 /*
- * \brief	Replace event callback 
- * 
+ * \brief	Replace event callback
+ *
  * \param  hEventMbox  - Handle to EventMbox
  * \param  EvID - the event ID to register
  * \param  fNewCb - the new CB function of the registered event
@@ -491,23 +496,23 @@ TRACE0(pEventMbox->hReport, REPORT_SEVERITY_ERROR, "eventMbox_RegisterEvent : Ev
  * \param  pPrevCb - the old CB to save
  * \param  pPrevHndl - the old handle to save
  * \return TI_OK,TI_NOK
- * 
+ *
  * \par Description
  * Replace event callback function by another one.
  *              Provide the previous CB to the caller.
  *
- * \sa 
+ * \sa
  */
 TI_STATUS eventMbox_ReplaceEvent (TI_HANDLE hEventMbox,
-                                    TI_UINT32   EvID, 
-                                    void       *fNewCb, 
-                                    TI_HANDLE   hNewCb,                                   
-                                    void      **pPrevCb, 
-                                    TI_HANDLE  *pPrevHndl)                                    
+                                    TI_UINT32   EvID,
+                                    void       *fNewCb,
+                                    TI_HANDLE   hNewCb,
+                                    void      **pPrevCb,
+                                    TI_HANDLE  *pPrevHndl)
 {
     TEventMbox *pEventMbox = (TEventMbox *)hEventMbox;
     if (fNewCb == NULL || hNewCb == NULL)
-    { 
+    {
 TRACE0(pEventMbox->hReport, REPORT_SEVERITY_ERROR , "eventMbox_ReplaceEvent: NULL parameters\n");
         return TI_NOK;
     }
@@ -532,7 +537,7 @@ TRACE1(pEventMbox->hReport, REPORT_SEVERITY_ERROR, "eventMbox_ReplaceEvent: inva
 
 /*
  * \brief	Un mask an event
- * 
+ *
  * \param  hEventMbox  - Handle to EventMbox
  * \param  EvID - the event ID to un mask
  * \param  fCb - CB function
@@ -541,11 +546,11 @@ TRACE1(pEventMbox->hReport, REPORT_SEVERITY_ERROR, "eventMbox_ReplaceEvent: inva
  *
  * \par Description
  * This function is called from the user upon request to un mask an event.
- * This function change the mask vector in FW but doesn't register for it in the driver and 
- * doesn't set Cb function and Cb Handle in case of un mask event without registered for it an 
+ * This function change the mask vector in FW but doesn't register for it in the driver and
+ * doesn't set Cb function and Cb Handle in case of un mask event without registered for it an
  * error will be handling!!!
- * 
- * \sa 
+ *
+ * \sa
  */
 TI_STATUS eventMbox_UnMaskEvent(TI_HANDLE hEventMbox,TI_UINT32 EvID,void* fCb,TI_HANDLE hCb)
 {
@@ -576,11 +581,11 @@ TRACE0(pEventMbox->hReport, REPORT_SEVERITY_INFORMATION, "eventMbox_UnMaskEvent 
  * \param  fCb - CB function
  * \param  hCb - CB handle
  * \return TI_COMPLETE,TI_PENDING,TI_ERROR
- * 
+ *
  * \par Description
  * This function is called from the user upon request to mask an event.
- * This function change the mask vector in FW but doesn't unregister it in the driver. 
- * \sa 
+ * This function change the mask vector in FW but doesn't unregister it in the driver.
+ * \sa
  */
 TI_STATUS eventMbox_MaskEvent(TI_HANDLE hEventMbox,TI_UINT32 EvID,void* fCb,TI_HANDLE hCb)
 {
@@ -588,7 +593,7 @@ TI_STATUS eventMbox_MaskEvent(TI_HANDLE hEventMbox,TI_UINT32 EvID,void* fCb,TI_H
 	TI_STATUS	aStatus;
     TEventMbox *pEventMbox = (TEventMbox *)hEventMbox;
 	pEventMask = (TI_UINT32*)&pEventMbox->iTxnEventMbox.iEventMboxBuf.eventsMask;
-    
+
     if (EvID >= TWD_OWN_EVENT_ALL)
     {
 TRACE1(pEventMbox->hReport, REPORT_SEVERITY_ERROR, "eventMbox_MaskEvent : Mask an Invalid event = 0x%x\n",EvID);
@@ -607,14 +612,14 @@ TRACE1(pEventMbox->hReport, REPORT_SEVERITY_ERROR, "eventMbox_MaskEvent : Mask a
 
 /*
  * \brief	Handle the incoming event read the Mbox data
- * 
+ *
  * \param  hEventMbox  - Handle to EventMbox
  * \param  TFwStatus  - FW status
  * \return none
  *
  * \par Description
  * This function is called from the FW Event upon receiving MBOX event.
- * \sa 
+ * \sa
  */
 ETxnStatus eventMbox_Handle(TI_HANDLE hEventMbox,FwStatus_t* pFwStatus)
 {
@@ -643,7 +648,7 @@ TRACE1(pEventMbox->hReport, REPORT_SEVERITY_INFORMATION, "eventMbox_Handle : Rea
         }
     }
 #endif /* TI_DBG */
-    
+
 	if (pEventMbox->CurrentState != EVENT_MBOX_STATE_IDLE)
 	{
 TRACE0(pEventMbox->hReport, REPORT_SEVERITY_ERROR, "eventMbox_Handle : Receiving event not in Idle state");
@@ -658,7 +663,7 @@ TRACE0(pEventMbox->hReport, REPORT_SEVERITY_ERROR, "eventMbox_Handle : Receiving
 
 	pEventMbox->ActiveMbox = 1 - pEventMbox->ActiveMbox;
 	if (rc == TXN_STATUS_COMPLETE)
-    {   
+    {
 		eventMbox_ReadCompleteCB(pEventMbox,pTxn);
     }
 
@@ -667,16 +672,16 @@ TRACE0(pEventMbox->hReport, REPORT_SEVERITY_ERROR, "eventMbox_Handle : Receiving
 
 
 /*
- * \brief	Process the event 
+ * \brief	Process the event
  *
  * \param  hEventMbox  - Handle to EventMbox
  * \param  pTxnStruct  - the Txn data
  * \return none
- * 
+ *
  * \par Description
  * This function is called from the upon reading completion of the event MBOX
  * it will call all registered event according to the pending bits in event MBOX vector.
- * \sa 
+ * \sa
  */
 static void eventMbox_ReadCompleteCB(TI_HANDLE hEventMbox, TTxnStruct *pTxnStruct)
 {
@@ -690,7 +695,7 @@ static void eventMbox_ReadCompleteCB(TI_HANDLE hEventMbox, TTxnStruct *pTxnStruc
     for (EvID = 0; EvID < TWD_OWN_EVENT_ALL; EvID++)
     {
         if (pEventMbox->iTxnEventMbox.iEventMboxBuf.eventsVector & eventTable[EvID].bitMask)
-        { 
+        {
             if (eventTable[EvID].dataLen)
             {
                 ((TEventMboxDataCb)pEventMbox->CbTable[EvID].fCb)(pEventMbox->CbTable[EvID].hCb,(TI_CHAR*)pEventMbox->CbTable[EvID].pDataOffset,eventTable[EvID].dataLen);
@@ -700,7 +705,7 @@ static void eventMbox_ReadCompleteCB(TI_HANDLE hEventMbox, TTxnStruct *pTxnStruc
                 ((TEventMboxEvCb)pEventMbox->CbTable[EvID].fCb)(pEventMbox->CbTable[EvID].hCb);
             }
         }
-    }     
+    }
 
     /* Check if the state is changed in the context of the event callbacks */
     if (pEventMbox->CurrentState == EVENT_MBOX_STATE_IDLE)
@@ -709,7 +714,7 @@ static void eventMbox_ReadCompleteCB(TI_HANDLE hEventMbox, TTxnStruct *pTxnStruc
          * When eventMbox_stop is called state is changed to IDLE
          * This is done in the context of the above events callbacks
          * Don't send the EVENT ACK transaction because the driver stop process includes power off
-         */ 
+         */
         TRACE0(pEventMbox->hReport, REPORT_SEVERITY_WARNING, "eventMbox_ReadCompleteCB : State is IDLE ! don't send the EVENT ACK");
         return;
     }
@@ -721,7 +726,7 @@ static void eventMbox_ReadCompleteCB(TI_HANDLE hEventMbox, TTxnStruct *pTxnStruc
 	/* Applying a CB in case of an async read */
     BUILD_TTxnStruct(pTxn, ACX_REG_INTERRUPT_TRIG, &pEventMbox->iTxnGenRegSize.iRegBuffer, sizeof(pEventMbox->iTxnGenRegSize.iRegBuffer), NULL, NULL)
 	twIf_Transact(pEventMbox->hTwif,pTxn);
-}    
+}
 
 
 #ifdef TI_DBG

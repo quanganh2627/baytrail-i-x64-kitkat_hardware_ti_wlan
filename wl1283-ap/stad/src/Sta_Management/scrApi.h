@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * scrApi.h
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file ScrApi.h
  *  \brief This file include public definitions for the SCR module, comprising its API.
  *  \
@@ -48,8 +53,8 @@
  *  Enums.
  ***********************************************************************
  */
-/** \enum EScrModeId 
- * \brief enumerates the different modes available in the system    
+/** \enum EScrModeId
+ * \brief enumerates the different modes available in the system
  */
 typedef enum
 {
@@ -58,7 +63,7 @@ typedef enum
     SCR_MID_NUM_OF_MODES
 } EScrModeId;
 
-/** \enum EScrGroupId 
+/** \enum EScrGroupId
  * \brief enumerates the different groups available in the system
  */
 typedef enum
@@ -72,7 +77,7 @@ typedef enum
     SCR_GID_NUM_OF_GROUPS
 } EScrGroupId;
 
-/** \enum EScrResourceId 
+/** \enum EScrResourceId
  * \brief enumerates the different resources controlled by the SCR
  */
 typedef enum
@@ -82,7 +87,7 @@ typedef enum
     SCR_RESOURCE_NUM_OF_RESOURCES
 } EScrResourceId;
 
-/** \enum EScrClientId 
+/** \enum EScrClientId
  * \brief enumerates the different clients available in the system
  */
 typedef enum
@@ -90,7 +95,7 @@ typedef enum
     SCR_CID_APP_SCAN = 0,    /* lowest priority */
     SCR_CID_DRIVER_FG_SCAN,
     SCR_CID_CONT_SCAN,
-    SCR_CID_CCX_MEASURE,
+    SCR_CID_XCC_MEASURE,
     SCR_CID_BASIC_MEASURE,
     SCR_CID_CONNECT,
     SCR_CID_IMMED_SCAN,
@@ -99,10 +104,10 @@ typedef enum
     SCR_CID_NO_CLIENT
 } EScrClientId;
 
-/** \enum EScrClientRequestStatus 
+/** \enum EScrClientRequestStatus
  * \brief enumerates the status reports the client may receive
  */
-typedef enum 
+typedef enum
 {
     SCR_CRS_RUN = 0,            /**< the client can use the channel */
     SCR_CRS_PEND,               /**< the channel is in use, The client may wait for it. */
@@ -110,13 +115,13 @@ typedef enum
     SCR_CRS_FW_RESET            /**< Notification of recovery (client should elect what to do) */
 } EScrClientRequestStatus;
 
-/** \enum EScePendReason 
+/** \enum EScePendReason
  * \brief enumerates the different reasons which can cause a client request to return with pend status.
  */
 typedef enum
 {
-    SCR_PR_OTHER_CLIENT_ABORTING = 0,       /**< 
-                                             * The requesting client is waiting for a client with lower priority  
+    SCR_PR_OTHER_CLIENT_ABORTING = 0,       /**<
+                                             * The requesting client is waiting for a client with lower priority
                                              * to abort operation
                                              */
     SCR_PR_OTHER_CLIENT_RUNNING,            /**<
@@ -136,7 +141,7 @@ typedef enum
  /** \typedef scr_abortReason_e
   * \brief Defines the function prototype a client should register as callback.
   */
-typedef void (*TScrCB)( TI_HANDLE hClient, 
+typedef void (*TScrCB)( TI_HANDLE hClient,
                         EScrClientRequestStatus requestStatus,
                         EScrResourceId eResource,
                         EScePendReason pendReason );
@@ -186,7 +191,7 @@ void scr_release( TI_HANDLE hScr );
  * \brief Initializes the SCR object
  *
  * \param  pStadHandles  - The driver modules handles
- * \return void  
+ * \return void
  */
 void scr_init (TStadHandlesList *pStadHandles);
 
@@ -201,9 +206,9 @@ void scr_init (TStadHandlesList *pStadHandles);
  * \param callbackFunc - the address of the callback function to use.\n
  * \param callbackObj - the handle of the object to pass to the callback function (the client object).\n
  */
-void scr_registerClientCB( TI_HANDLE hScr, 
+void scr_registerClientCB( TI_HANDLE hScr,
                            EScrClientId client,
-                           TScrCB callbackFunc, 
+                           TScrCB callbackFunc,
                            TI_HANDLE callbackObj );
 
 /**

@@ -1,0 +1,5 @@
+# This makefile is included from vendor/intel/*/AndroidBoard.mk.
+
+.PHONY: build_wl1283-ap
+build_wl1283-ap: build_kernel
+	TARGET_TOOLS_PREFIX="$(ANDROID_BUILD_TOP)/$(TARGET_TOOLS_PREFIX)" vendor/intel/support/wl1283-ap-build.sh -c $(CUSTOM_BOARD)

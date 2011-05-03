@@ -1,41 +1,46 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * txResult.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 /****************************************************************************
  *
  *   MODULE:  txResult.c
- *   
- *   PURPOSE:  Handle packets Tx results upon Tx-complete from the FW. 
- * 
- *   DESCRIPTION:  
+ *
+ *   PURPOSE:  Handle packets Tx results upon Tx-complete from the FW.
+ *
+ *   DESCRIPTION:
  *   ============
- *      This module is called upon Tx-complete from FW. 
+ *      This module is called upon Tx-complete from FW.
  *      It retrieves the transmitted packets results from the FW TxResult table and
  *        calls the upper layer callback function for each packet with its results.
  *
@@ -55,7 +60,7 @@
 
 #define TX_RESULT_QUEUE_DEPTH_MASK  (TRQ_DEPTH - 1)
 
-#if (TX_RESULT_QUEUE_DEPTH_MASK & TRQ_DEPTH) 
+#if (TX_RESULT_QUEUE_DEPTH_MASK & TRQ_DEPTH)
     #error  TRQ_DEPTH should be a power of 2 !!
 #endif
 
@@ -74,7 +79,7 @@ typedef enum
 typedef struct
 {
     TTxnStruct tTxnStruct;
-    TI_UINT32  uCounter;              
+    TI_UINT32  uCounter;
 } THostCounterWriteTxn;
 
 /* The Tx-results counters and table read transaction structure. */
@@ -115,12 +120,12 @@ static void txResult_StateMachine (TI_HANDLE hTxResult);
 /****************************************************************************
  *                      txResult_Create()
  ****************************************************************************
- * DESCRIPTION: Create the Tx-Result object 
- * 
+ * DESCRIPTION: Create the Tx-Result object
+ *
  * INPUTS:  hOs
- * 
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: The Created object
  ****************************************************************************/
 TI_HANDLE txResult_Create(TI_HANDLE hOs)
@@ -142,12 +147,12 @@ TI_HANDLE txResult_Create(TI_HANDLE hOs)
 /****************************************************************************
  *                      txResult_Destroy()
  ****************************************************************************
- * DESCRIPTION: Destroy the Tx-Result object 
- * 
+ * DESCRIPTION: Destroy the Tx-Result object
+ *
  * INPUTS:  hTxResult - The object to free
- * 
+ *
  * OUTPUT:  None
- * 
+ *
  * RETURNS: TI_OK or TI_NOK
  ****************************************************************************/
 TI_STATUS txResult_Destroy(TI_HANDLE hTxResult)
@@ -164,7 +169,7 @@ TI_STATUS txResult_Destroy(TI_HANDLE hTxResult)
 /****************************************************************************
  *               txResult_Init()
  ****************************************************************************
-   DESCRIPTION:  
+   DESCRIPTION:
    ============
      Initialize the txResult module.
  ****************************************************************************/
@@ -184,11 +189,11 @@ TI_STATUS txResult_Init(TI_HANDLE hTxResult, TI_HANDLE hReport, TI_HANDLE hTwIf)
     /* Prepare Tx-Result counter and table read transaction (HwAddr is filled before each transaction) */
     pTxn = &pTxResult->tResultsInfoReadTxn.tTxnStruct;
     TXN_PARAM_SET(pTxn, TXN_LOW_PRIORITY, TXN_FUNC_ID_WLAN, TXN_DIRECTION_READ, TXN_INC_ADDR)
-    BUILD_TTxnStruct(pTxn, 
-                     0, 
-                     &pTxResult->tResultsInfoReadTxn.tTxResultInfo, 
-                     sizeof(TxResultInterface_t), 
-                     (TTxnDoneCb)txResult_StateMachine, 
+    BUILD_TTxnStruct(pTxn,
+                     0,
+                     &pTxResult->tResultsInfoReadTxn.tTxResultInfo,
+                     sizeof(TxResultInterface_t),
+                     (TTxnDoneCb)txResult_StateMachine,
                      hTxResult)
 
     txResult_Restart (pTxResult);
@@ -200,7 +205,7 @@ TI_STATUS txResult_Init(TI_HANDLE hTxResult, TI_HANDLE hReport, TI_HANDLE hTwIf)
 /****************************************************************************
  *               txResult_Restart()
  ****************************************************************************
-   DESCRIPTION:  
+   DESCRIPTION:
    ============
      Restarts the Tx-Result module.
      Called upon init and recovery.
@@ -210,14 +215,14 @@ TI_STATUS txResult_Init(TI_HANDLE hTxResult, TI_HANDLE hReport, TI_HANDLE hTwIf)
 static void txResult_Restart (TTxResultObj *pTxResult)
 {
 	pTxResult->uHostResultsCounter = 0;
-    pTxResult->eState = TX_RESULT_STATE_IDLE;      
+    pTxResult->eState = TX_RESULT_STATE_IDLE;
 }
 
 
 /****************************************************************************
  *                      txResult_setHwInfo()
  ****************************************************************************
- * DESCRIPTION:  
+ * DESCRIPTION:
  *      Called after the HW configuration upon init or recovery.
  *      Store the Tx-result table HW address.
  ****************************************************************************/
@@ -226,27 +231,27 @@ void  txResult_setHwInfo(TI_HANDLE hTxResult, TDmaParams *pDmaParams)
     TTxResultObj *pTxResult = (TTxResultObj *)hTxResult;
 
     pTxResult->uTxResultInfoAddr = (TI_UINT32)(pDmaParams->fwTxResultInterface);
-	pTxResult->uTxResultHostCounterAddr = pTxResult->uTxResultInfoAddr + 
+	pTxResult->uTxResultHostCounterAddr = pTxResult->uTxResultInfoAddr +
 		TI_FIELD_OFFSET(TxResultControl_t, TxResultHostCounter);
 
     txResult_Restart (pTxResult);
-} 
+}
 
 
 /****************************************************************************
  *                      txResult_TxCmpltIntrCb()
  ****************************************************************************
- * DESCRIPTION:   
+ * DESCRIPTION:
  * ============
  *  Called upon DATA interrupt from the FW.
  *  If new Tx results are available, start handling them.
- * 
+ *
  * INPUTS:  hTxResult - the txResult object handle.
  *          pFwStatus - The FW status registers read by the FwEvent
- *  
+ *
  * OUTPUT:  None
- * 
- * RETURNS:  ETxnStatus 
+ *
+ * RETURNS:  ETxnStatus
  ***************************************************************************/
 ETxnStatus txResult_TxCmpltIntrCb (TI_HANDLE hTxResult, FwStatus_t *pFwStatus)
 {
@@ -282,33 +287,33 @@ ETxnStatus txResult_TxCmpltIntrCb (TI_HANDLE hTxResult, FwStatus_t *pFwStatus)
 /****************************************************************************
  *                      txResult_StateMachine()
  ****************************************************************************
- * DESCRIPTION:  
+ * DESCRIPTION:
  *
- *  The main SM of the module. Called in IDLE eState by txResult_TxCmpltIntrCb() on 
- *      Data interrupt from the FW. 
+ *  The main SM of the module. Called in IDLE eState by txResult_TxCmpltIntrCb() on
+ *      Data interrupt from the FW.
  *  If no new results - exit (may happen since Data interrupt is common to all Tx&Rx events)
  *  Read all Tx-Result cyclic table.
  *  Go over the new Tx-results and call the upper layer callback function for each packet result.
  *  At the end - write the new host counter to the FW.
- *          
- * INPUTS:  
  *
- * OUTPUT:  
- * 
- * RETURNS: None 
+ * INPUTS:
+ *
+ * OUTPUT:
+ *
+ * RETURNS: None
  ****************************************************************************/
 static void txResult_StateMachine (TI_HANDLE hTxResult)
 {
     TTxResultObj *pTxResult  = (TTxResultObj *)hTxResult;
 	ETxnStatus   eTwifStatus = TXN_STATUS_COMPLETE;  /* Last bus operation status: Complete (Sync) or Pending (Async). */
     TTxnStruct   *pTxn       = &(pTxResult->tResultsInfoReadTxn.tTxnStruct);
- 
+
     /* Loop while processing is completed in current context (sync), or until fully completed */
     while (eTwifStatus == TXN_STATUS_COMPLETE)
     {
         TRACE2(pTxResult->hReport, REPORT_SEVERITY_INFORMATION, ": eState = %d, eTwifStatus = %d\n", pTxResult->eState, eTwifStatus);
 
-        switch(pTxResult->eState) 
+        switch(pTxResult->eState)
         {
         case TX_RESULT_STATE_IDLE:
             /* Read Tx-Result queue and counters. */
@@ -317,7 +322,7 @@ static void txResult_StateMachine (TI_HANDLE hTxResult)
 
             pTxResult->eState = TX_RESULT_STATE_READING;
             break;
-    
+
         case TX_RESULT_STATE_READING:
             /* Process new Tx results, call upper layers to handle them and update host-index in the FW. */
             txResult_HandleNewResults (pTxResult);
@@ -331,7 +336,7 @@ static void txResult_StateMachine (TI_HANDLE hTxResult)
     }
 
     if (eTwifStatus == TXN_STATUS_ERROR)
-    {   
+    {
         TRACE2(pTxResult->hReport, REPORT_SEVERITY_ERROR, ": returning ERROR in eState %d, eTwifStatus=%d !!!\n", pTxResult->eState, eTwifStatus);
     }
 }
@@ -340,11 +345,11 @@ static void txResult_StateMachine (TI_HANDLE hTxResult)
 /****************************************************************************
  *                      txResult_HandleNewResults()
  ****************************************************************************
- * DESCRIPTION:   
+ * DESCRIPTION:
  * ============
  *	We now have the Tx Result table info from the FW so do as follows:
  *	1.	Find the number of new results (FW counter minus host counter), and if 0 exit.
- *  2.	Call the upper layers callback per Tx result. 
+ *  2.	Call the upper layers callback per Tx result.
  *	3.	Update Host-Counter to be equal to the FW-Counter, and write it to the FW.
  ***************************************************************************/
 static void txResult_HandleNewResults (TTxResultObj *pTxResult)
@@ -356,7 +361,7 @@ static void txResult_HandleNewResults (TTxResultObj *pTxResult)
 	TxResultDescriptor_t *pCurrentResult;
     TTxnStruct *pTxn = &(pTxResult->tHostCounterWriteTxn.tTxnStruct);
 
-	/* The uFwResultsCounter is the accumulated number of Tx-Results provided by the FW, and the 
+	/* The uFwResultsCounter is the accumulated number of Tx-Results provided by the FW, and the
 	 *   uHostResultsCounter is the accumulated number of Tx-Results processed by the host.
 	 * The delta is the number of new Tx-results in the queue, waiting for host processing.
 	 * Since the difference is always a small positive number, a simple subtraction is good
@@ -376,7 +381,7 @@ TRACE2(pTxResult->hReport, REPORT_SEVERITY_WARNING, ": No New Results although i
 
 	/* Update host results-counter in FW to be equal to the FW counter (all new results were processed). */
 	pTxResult->tHostCounterWriteTxn.uCounter = ENDIAN_HANDLE_LONG(uFwResultsCounter);
-    pTxn->uHwAddr = pTxResult->uTxResultHostCounterAddr; 
+    pTxn->uHwAddr = pTxResult->uTxResultHostCounterAddr;
     twIf_Transact(pTxResult->hTwIf, pTxn);
 
     TRACE3(pTxResult->hReport, REPORT_SEVERITY_INFORMATION, ": NumResults=%d, OriginalHostCount=%d, FwCount=%d\n", uNumNewResults, pTxResult->uHostResultsCounter, uFwResultsCounter);

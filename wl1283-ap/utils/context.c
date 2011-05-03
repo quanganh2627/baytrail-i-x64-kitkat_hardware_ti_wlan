@@ -1,40 +1,45 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * context.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
-/** \file   context.c 
+
+/** \file   context.c
  *  \brief  The Context-Engine is an OS independent module, which provides the
  *            infrustracture for switching from external contexts to the driver's context.
- *          This includes also the driver task itself (workqueue in Linux), which invokes the 
+ *          This includes also the driver task itself (workqueue in Linux), which invokes the
  *            driver specific handlers in the driver's context.
- *          The OS specific implementation under this module (e.g. task-switching or 
+ *          The OS specific implementation under this module (e.g. task-switching or
  *            protection-locking) is provided by the OS abstraction layer (osapi.c).
- * 
+ *
  *  \see    context.h, osapi.c
  */
 
@@ -51,18 +56,18 @@
 #define MAX_NAME_SIZE   16  /* Maximum client's name string size */
 
 #ifdef TI_DBG
-typedef struct 
+typedef struct
 {
     TI_UINT32       uSize;                  /* Clients' name string size */
     char            sName [MAX_NAME_SIZE];  /* Clients' name string      */
-} TClientName;	
+} TClientName;
 #endif /* TI_DBG */
 
 /* context module structure */
-typedef struct 
+typedef struct
 {
 	TI_HANDLE        hOs;
-	TI_HANDLE        hReport; 
+	TI_HANDLE        hReport;
 
     TI_HANDLE        hProtectionLock;              /* Handle of protection lock used by context clients */
     TI_UINT32        uNumClients;                  /* Number of registered clients      */
@@ -77,52 +82,52 @@ typedef struct
     TI_UINT32        aInvokeCount  [MAX_CLIENTS];  /* Clients' invocations counter      */
 #endif
 
-} TContext;	
+} TContext;
 
 
 
 
-/** 
- * \fn     context_Create 
- * \brief  Create the module 
- * 
+/**
+ * \fn     context_Create
+ * \brief  Create the module
+ *
  * Allocate and clear the module object.
- * 
- * \note    
+ *
+ * \note
  * \param  hOs      - Handle to Os Abstraction Layer
- * \return Handle of the allocated object 
+ * \return Handle of the allocated object
  * \sa     context_Destroy
- */ 
+ */
 TI_HANDLE context_Create (TI_HANDLE hOs)
 {
 	TI_HANDLE hContext;
 
 	/* allocate module object */
 	hContext = os_memoryAlloc (hOs, sizeof(TContext));
-	
+
 	if (!hContext)
 	{
 		WLAN_OS_REPORT (("context_Create():  Allocation failed!!\n"));
 		return NULL;
 	}
-	
+
     os_memoryZero (hOs, hContext, (sizeof(TContext)));
 
 	return (hContext);
 }
 
 
-/** 
+/**
  * \fn     context_Destroy
- * \brief  Destroy the module. 
- * 
+ * \brief  Destroy the module.
+ *
  * Free the module memory.
- * 
- * \note   
+ *
+ * \note
  * \param  hContext - The module object
- * \return TI_OK on success or TI_NOK on failure 
+ * \return TI_OK on success or TI_NOK on failure
  * \sa     context_Create
- */ 
+ */
 TI_STATUS context_Destroy (TI_HANDLE hContext)
 {
     TContext *pContext = (TContext *)hContext;
@@ -132,52 +137,52 @@ TI_STATUS context_Destroy (TI_HANDLE hContext)
 
     /* free module object */
 	os_memoryFree (pContext->hOs, pContext, sizeof(TContext));
-	
+
     return TI_OK;
 }
 
 
-/** 
- * \fn     context_Init 
- * \brief  Init required handles 
- * 
+/**
+ * \fn     context_Init
+ * \brief  Init required handles
+ *
  * Init required handles.
- * 
- * \note    
+ *
+ * \note
  * \param  hContext  - The queue object
  * \param  hOs       - Handle to Os Abstraction Layer
  * \param  hReport   - Handle to report module
- * \return void        
- * \sa     
- */ 
+ * \return void
+ * \sa
+ */
 void context_Init (TI_HANDLE hContext, TI_HANDLE hOs, TI_HANDLE hReport)
 {
 	TContext *pContext = (TContext *)hContext;
 
     pContext->hOs     = hOs;
     pContext->hReport = hReport;
-	
+
     /* Create the module's protection lock and save its handle */
     pContext->hProtectionLock = os_protectCreate (pContext->hOs);
 }
 
-/** 
+/**
  * \fn     context_RegisterClient
  * \brief  Save client's parameters
- * 
- * This function is used by the Context clients in their init process, for registering 
- *   their information, 
+ *
+ * This function is used by the Context clients in their init process, for registering
+ *   their information,
  * This includes their callback function that should be invoked from the driver context
- *   when they are pending. 
- * 
- * \note   
+ *   when they are pending.
+ *
+ * \note
  * \param  hContext - The module handle
  * \param  fCbFunc  - The client's callback function.
  * \param  hCbHndl  - The client's callback function handle.
  * \param  bEnable  - TRUE = Enabled.
  * \return TI_UINT32 - The index allocated for the client
- * \sa     
- */ 
+ * \sa
+ */
 TI_UINT32 context_RegisterClient (TI_HANDLE       hContext,
                                   TContextCbFunc  fCbFunc,
                                   TI_HANDLE       hCbHndl,
@@ -189,7 +194,7 @@ TI_UINT32 context_RegisterClient (TI_HANDLE       hContext,
     TI_UINT32 uClientId = pContext->uNumClients;
 
     /* If max number of clients is exceeded, report error and exit. */
-    if (uClientId == MAX_CLIENTS) 
+    if (uClientId == MAX_CLIENTS)
     {
         TRACE0(pContext->hReport, REPORT_SEVERITY_ERROR , "context_RegisterClient() MAX_CLIENTS limit exceeded!!\n");
         return 0;
@@ -202,15 +207,15 @@ TI_UINT32 context_RegisterClient (TI_HANDLE       hContext,
     pContext->aClientPending[uClientId] = TI_FALSE;
 
 #ifdef TI_DBG
-    if (uNameSize <= MAX_NAME_SIZE) 
+    if (uNameSize <= MAX_NAME_SIZE)
     {
-        os_memoryCopy(pContext->hOs, 
+        os_memoryCopy(pContext->hOs,
                       (void *)(pContext->aClientName[uClientId].sName),
-                      (void *)sName, 
+                      (void *)sName,
                       uNameSize);
         pContext->aClientName[uClientId].uSize = uNameSize;
     }
-    else 
+    else
     {
         TRACE0(pContext->hReport, REPORT_SEVERITY_ERROR , "context_RegisterClient() MAX_NAME_SIZE limit exceeded!\n");
     }
@@ -225,26 +230,26 @@ TI_UINT32 context_RegisterClient (TI_HANDLE       hContext,
 }
 
 
-/** 
+/**
  * \fn     context_RequestSchedule
  * \brief  Handle client's switch to driver's context.
- * 
+ *
  * This function is called by a client from external context event.
  * It sets the client's Pending flag and requests the driver's task scheduling.
  * Thus, the client's callback will be called afterwards from the driver context.
- * 
- * \note   
+ *
+ * \note
  * \param  hContext   - The module handle
  * \param  uClientId  - The client's index
- * \return void 
+ * \return void
  * \sa     context_DriverTask
- */ 
+ */
 void context_RequestSchedule (TI_HANDLE hContext, TI_UINT32 uClientId)
 {
 	TContext *pContext = (TContext *)hContext;
 	TI_BOOL bContextSwitchRequired;
 #ifdef TI_DBG
-    pContext->aRequestCount[uClientId]++; 
+    pContext->aRequestCount[uClientId]++;
     TRACE3(pContext->hReport, REPORT_SEVERITY_INFORMATION , "context_RequestSchedule(): Client=, ID=%d, enabled=%d, pending=%d\n", uClientId, pContext->aClientEnabled[uClientId], pContext->aClientPending[uClientId]);
 #endif /* TI_DBG */
 
@@ -254,9 +259,9 @@ void context_RequestSchedule (TI_HANDLE hContext, TI_UINT32 uClientId)
     /* Disable system suspend (enabled again after task completion) */
     os_WakeLock (pContext->hOs);
 
-    /* 
+    /*
      * If configured to switch context, request driver task scheduling.
-     * Else (context switch not required) call the driver task directly. 
+     * Else (context switch not required) call the driver task directly.
      */
     if (os_RequestSchedule (pContext->hOs, &bContextSwitchRequired) != TI_OK)
     {
@@ -269,19 +274,19 @@ void context_RequestSchedule (TI_HANDLE hContext, TI_UINT32 uClientId)
 }
 
 
-/** 
+/**
  * \fn     context_DriverTask
  * \brief  The driver task
- * 
- * This function is the driver's main task that always runs in the driver's 
- * single context, scheduled through the OS (the driver's workqueue in Linux). 
+ *
+ * This function is the driver's main task that always runs in the driver's
+ * single context, scheduled through the OS (the driver's workqueue in Linux).
  * Only one instantiation of this task may run at a time!
- * 
- * \note   
+ *
+ * \note
  * \param  hContext   - The module handle
- * \return void 
+ * \return void
  * \sa     context_RequestSchedule
- */ 
+ */
 void context_DriverTask (TI_HANDLE hContext)
 {
 	TContext       *pContext = (TContext *)hContext;
@@ -299,7 +304,7 @@ void context_DriverTask (TI_HANDLE hContext)
         if (pContext->aClientPending[i]  &&  pContext->aClientEnabled[i])
         {
             #ifdef TI_DBG
-                pContext->aInvokeCount[i]++; 
+                pContext->aInvokeCount[i]++;
                 TRACE1(pContext->hReport, REPORT_SEVERITY_INFORMATION , "Invoking - Client=, ID=%d\n", i);
             #endif /* TI_DBG */
 
@@ -317,19 +322,19 @@ void context_DriverTask (TI_HANDLE hContext)
 }
 
 
-/** 
+/**
  * \fn     context_EnableClient / context_DisableClient
  * \brief  Enable a specific client activation
- * 
+ *
  * Called by the driver main when needed to enble/disable a specific event handling.
  * The Enable function also schedules the driver-task if the specified client is pending.
- * 
- * \note   
+ *
+ * \note
  * \param  hContext   - The module handle
  * \param  uClientId  - The client's index
- * \return void 
+ * \return void
  * \sa     context_DriverTask
- */ 
+ */
 void context_EnableClient (TI_HANDLE hContext, TI_UINT32 uClientId)
 {
 	TContext *pContext = (TContext *)hContext;
@@ -352,9 +357,9 @@ void context_EnableClient (TI_HANDLE hContext, TI_UINT32 uClientId)
         /* Disable system suspend (enabled again after task completion) */
         os_WakeLock (pContext->hOs);
 
-        /* 
+        /*
          * If configured to switch context, request driver task scheduling.
-         * Else (context switch not required) call the driver task directly. 
+         * Else (context switch not required) call the driver task directly.
          */
         if (os_RequestSchedule (pContext->hOs, &bContextSwitchRequired) != TI_OK)
         {
@@ -385,18 +390,18 @@ void context_DisableClient (TI_HANDLE hContext, TI_UINT32 uClientId)
 }
 
 
-/** 
+/**
  * \fn     context_EnterCriticalSection / context_LeaveCriticalSection
  * \brief  Lock / Unlock context related critical sections
- * 
+ *
  * The context clients should use these functions for protecting their critical sections
  *   when handling context transition to driver context.
- * 
- * \note   
+ *
+ * \note
  * \param  hContext   - The module handle
- * \return void 
- * \sa     
- */ 
+ * \return void
+ * \sa
+ */
 void context_EnterCriticalSection (TI_HANDLE hContext)
 {
 	TContext *pContext = (TContext *)hContext;
@@ -418,17 +423,17 @@ void context_LeaveCriticalSection (TI_HANDLE hContext)
 }
 
 
-/** 
+/**
  * \fn     context_Print
  * \brief  Print module information
- * 
+ *
  * Print the module's clients parameters.
- * 
- * \note   
+ *
+ * \note
  * \param  hContext - The queue object
  * \return void
- * \sa     
- */ 
+ * \sa
+ */
 
 #ifdef TI_DBG
 

@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * MacServices_api.h
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file MacServicesApi.h
  *  \brief This file include public definitions for the MacServices module, comprising its API.
  *  \
@@ -106,11 +111,11 @@ void MacServices_destroy( TI_HANDLE hMacServices );
  * \param hCmdBld - handle to the HAL ctrl object.\n
  * \param hEventMbpx - handle to the HAL ctrl object.\n
  */
-void MacServices_init (TI_HANDLE hMacServices, 
-                       TI_HANDLE hReport, 
-                       TI_HANDLE hTWD, 
-                       TI_HANDLE hCmdBld, 
-                       TI_HANDLE hEventMbox, 
+void MacServices_init (TI_HANDLE hMacServices,
+                       TI_HANDLE hReport,
+                       TI_HANDLE hTWD,
+                       TI_HANDLE hCmdBld,
+                       TI_HANDLE hEventMbox,
                        TI_HANDLE hTimer);
 void MacServices_config (TI_HANDLE hMacServices, TTwdInitParams *pInitParams);
 void MacServices_restart (TI_HANDLE hMacServices);
@@ -133,7 +138,7 @@ void MacServices_registerFailureEventCB (TI_HANDLE hMacServices, void * failureE
  * \param scanCompleteCB - the complete callback function.\n
  * \param hScanCompleteObj - handle to the object passed to the scan complete callback function.\n
  */
-void MacServices_scanSRV_registerScanCompleteCB( TI_HANDLE hMacServices, 
+void MacServices_scanSRV_registerScanCompleteCB( TI_HANDLE hMacServices,
                                      TScanSrvCompleteCb scanCompleteCB, TI_HANDLE hScanCompleteObj );
 
 
@@ -151,13 +156,13 @@ void MacServices_scanSRV_registerScanCompleteCB( TI_HANDLE hMacServices,
  * \param bDriverMode - whether to try to enter driver mode (with PS on) before issuing the scan command.\n
  * \param bScanOnDriverModeError - whether to proceed with the scan if requested to enter driver mode and failed.\n
  * \param bSendNullData - whether to send Null data when exiting driver mode on scan complete.\n
- * \param psRequest - Parameter sent to PowerSaveServer on PS request to indicate PS on or "keep current" 
+ * \param psRequest - Parameter sent to PowerSaveServer on PS request to indicate PS on or "keep current"
  * \param commandResponseFunc - CB function which called after downloading the command. \n
  * \param commandResponseObj -  The CB function Obj (Notice : last 2 params are NULL in Legacy run). \n
   * \return TI_OK if successful (various, TBD codes if not).\n
  */
 TI_STATUS MacServices_scanSRV_scan( TI_HANDLE hMacServices, TScanParams *scanParams, EScanResultTag eScanTag,
-                                    TI_BOOL bHighPriority, TI_BOOL bDriverMode, TI_BOOL bScanOnDriverModeError, 
+                                    TI_BOOL bHighPriority, TI_BOOL bDriverMode, TI_BOOL bScanOnDriverModeError,
 						E80211PsMode psRequest, TI_BOOL bSendNullData,
 						TCmdResponseCb commandResponseFunc, TI_HANDLE commandResponseObj );
 
@@ -221,8 +226,8 @@ void MacServices_scanSRV_scanCompleteCB( TI_HANDLE hScanSRV, char* str, TI_UINT3
  */
 void MacServices_scanSRV_scanTimerExpired (TI_HANDLE hScanSRV, TI_BOOL bTwdInitOccured);
 
-void MacServices_scanSrv_UpdateDtimTbtt (TI_HANDLE hMacServices, 
-                                         TI_UINT8  uDtimPeriod, 
+void MacServices_scanSrv_UpdateDtimTbtt (TI_HANDLE hMacServices,
+                                         TI_UINT8  uDtimPeriod,
                                          TI_UINT16 uBeaconInterval);
 
 #ifdef TI_DBG
@@ -247,7 +252,7 @@ void MacServices_scanSrv_printDebugStatus(TI_HANDLE hMacServices);
  *
  * Function Scope \e Public.\n
  * Parameters:\n
- * 1) hPowerSrv 						- handle to the PowerSrv object.\n		
+ * 1) hPowerSrv 						- handle to the PowerSrv object.\n
  * 2) psMode							- Power save/Active request.\n
  * 3) sendNullDataOnExit				- \n
  * 4) powerSaveCompleteCBObject		- handle to the Callback functin module.\n
@@ -329,7 +334,7 @@ TI_STATUS MacServices_powerSrv_ReleasePS( 	TI_HANDLE 	hMacServices,
  * Function Scope \e Public.\n
  * Parameters:\n
  * 1) TI_HANDLE - handle to the powerSrv object.\n
- * Return Value:\n 
+ * Return Value:\n
  * TI_BOOL - thre is in PS false otherwise.\n
 */
 TI_BOOL MacServices_powerSrv_getPsStatus(TI_HANDLE hMacServices);
@@ -344,7 +349,7 @@ TI_BOOL MacServices_powerSrv_getPsStatus(TI_HANDLE hMacServices);
  * Parameters:\n
  * 1) TI_HANDLE 	- handle to the powerSrv object.\n
  * 2) TI_UINT16		- desierd rate .\n
- * Return Value:\n 
+ * Return Value:\n
  * void.\n
 */
 void MacServices_powerSrv_SetRateModulation(TI_HANDLE hMacServices, TI_UINT16  rate);
@@ -380,8 +385,8 @@ TI_UINT32 MacServices_powerSrv_GetRateModulation(TI_HANDLE hMacServices);
  * \param cmdCompleteCBFunc - callback function to be used for command complete.\n
  * \param cmdCompleteCBObj - handle to pass to command complete CB.\n
  * \return TI_OK if successful (various, TBD codes if not).\n
- */ 
-TI_STATUS MacServices_measurementSRV_startMeasurement( TI_HANDLE hMacServices, 
+ */
+TI_STATUS MacServices_measurementSRV_startMeasurement( TI_HANDLE hMacServices,
                                                        TMeasurementRequest* pMsrRequest,
 													   TI_UINT32 timeToRequestExpiryMs,
                                                        TCmdResponseCb cmdResponseCBFunc,
@@ -416,7 +421,7 @@ TI_STATUS MacServices_measurementSRV_stopMeasurement( TI_HANDLE hMacServices,
  */
 void MacServices_measurementSRV_FWReset( TI_HANDLE hMacServices );
 
-/** 
+/**
  * \\n
  * \date 09-November-2005\n
  * \brief callback function used by the power manager to notify driver mode result
@@ -428,10 +433,10 @@ void MacServices_measurementSRV_FWReset( TI_HANDLE hMacServices );
  */
 void MacServices_measurementSRV_powerSaveCB( TI_HANDLE hMeasurementSRV, TI_UINT8 PSMode,TI_UINT8 psStatus );
 
-/** 
+/**
  * \\n
  * \date 14-November-2005\n
- * \brief callback function used by the HAL for measure start event (sent when the FW 
+ * \brief callback function used by the HAL for measure start event (sent when the FW
  * has started measurement operation, i.e. switched channel and changed RX filters).\n
  *
  * Function Scope \e Public.\n
@@ -439,10 +444,10 @@ void MacServices_measurementSRV_powerSaveCB( TI_HANDLE hMeasurementSRV, TI_UINT8
  */
 void MacServices_measurementSRV_measureStartCB( TI_HANDLE hMeasurementSRV );
 
-/** 
+/**
  * \\n
  * \date 14-November-2005\n
- * \brief callback function used by the HAL for measure stop event (sent when the FW 
+ * \brief callback function used by the HAL for measure stop event (sent when the FW
  * has finished measurement operation, i.e. switched channel to serving channel and changed back RX filters).\n
  *
  * Function Scope \e Public.\n
@@ -450,10 +455,10 @@ void MacServices_measurementSRV_measureStartCB( TI_HANDLE hMeasurementSRV );
  */
 void MacServices_measurementSRV_measureCompleteCB( TI_HANDLE hMeasurementSRV );
 
-/** 
+/**
  * \\n
  * \date 14-November-2005\n
- * \brief callback function used by the HAL for AP discovery stop event (sent when the FW 
+ * \brief callback function used by the HAL for AP discovery stop event (sent when the FW
  * has finished AP discovery operation).\n
  *
  * Function Scope \e Public.\n
@@ -461,7 +466,7 @@ void MacServices_measurementSRV_measureCompleteCB( TI_HANDLE hMeasurementSRV );
  */
 void MacServices_measurementSRV_apDiscoveryCompleteCB( TI_HANDLE hMeasurementSRV );
 
-/** 
+/**
  * \\n
  * \date 16-November-2005\n
  * \brief Callback for channel load get param call.\n
@@ -473,7 +478,7 @@ void MacServices_measurementSRV_apDiscoveryCompleteCB( TI_HANDLE hMeasurementSRV
  */
 void MacServices_measurementSRV_channelLoadParamCB( TI_HANDLE hMeasurementSRV, TI_STATUS status, TI_UINT8* CB_buf );
 
-/** 
+/**
  * \date 03-January-2005\n
  * \brief Dummy callback for channel load get param call. Used to clear the channel load tracker.\n
  *
@@ -484,7 +489,7 @@ void MacServices_measurementSRV_channelLoadParamCB( TI_HANDLE hMeasurementSRV, T
  */
 void MacServices_measurementSRV_dummyChannelLoadParamCB( TI_HANDLE hMeasurementSRV, TI_STATUS status, TI_UINT8* CB_buf );
 
-/** 
+/**
  * \\n
  * \date 16-November-2005\n
  * \brief Callback for noise histogram get param call.\n

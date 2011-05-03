@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * ScanCncnSm.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file  ScanCncnSm.c
  *  \brief Scan concentrator state machine implementation
  *
@@ -50,14 +55,14 @@ static void scanCncnSm_RejectScan       (TI_HANDLE hScanCncnClient);
 static void scanCncnSm_Recovery         (TI_HANDLE hScanCncnClient);
 
 
-static TGenSM_actionCell tSmMatrix[ SCAN_CNCN_SM_NUMBER_OF_STATES ][ SCAN_CNCN_SM_NUMBER_OF_EVENTS ] = 
+static TGenSM_actionCell tSmMatrix[ SCAN_CNCN_SM_NUMBER_OF_STATES ][ SCAN_CNCN_SM_NUMBER_OF_EVENTS ] =
     {
         { /* SCAN_CNCN_SM_STATE_IDLE */
             { SCAN_CNCN_SM_STATE_SCR_WAIT, scanCncnSm_RequestScr },         /* SCAN_CNCN_SM_EVENT_START */
             { SCAN_CNCN_SM_STATE_IDLE, scanCncnSm_ActionUnexpected },       /* SCAN_CNCN_SM_EVENT_RUN */
             { SCAN_CNCN_SM_STATE_IDLE, scanCncnSm_ActionUnexpected },       /* SCAN_CNCN_SM_EVENT_SCAN_COMPLETE */
             { SCAN_CNCN_SM_STATE_IDLE, scanCncnSm_ActionUnexpected },       /* SCAN_CNCN_SM_EVENT_STOP */
-            { SCAN_CNCN_SM_STATE_IDLE, scanCncnSm_ActionUnexpected },       /* SCAN_CNCN_SM_EVENT_ABORT */ 
+            { SCAN_CNCN_SM_STATE_IDLE, scanCncnSm_ActionUnexpected },       /* SCAN_CNCN_SM_EVENT_ABORT */
             { SCAN_CNCN_SM_STATE_IDLE, scanCncnSm_ActionUnexpected },       /* SCAN_CNCN_SM_EVENT_RECOVERY */
             { SCAN_CNCN_SM_STATE_IDLE, scanCncnSm_ActionUnexpected }        /* SCAN_CNCN_SM_EVENT_REJECT */
         },
@@ -66,7 +71,7 @@ static TGenSM_actionCell tSmMatrix[ SCAN_CNCN_SM_NUMBER_OF_STATES ][ SCAN_CNCN_S
             { SCAN_CNCN_SM_STATE_SCANNING, scanCncnSm_StartScan },          /* SCAN_CNCN_SM_EVENT_RUN */
             { SCAN_CNCN_SM_STATE_SCR_WAIT, scanCncnSm_ActionUnexpected },   /* SCAN_CNCN_SM_EVENT_SCAN_COMPLETE */
             { SCAN_CNCN_SM_STATE_IDLE, scanCncnSm_RejectScan },             /* SCAN_CNCN_SM_EVENT_STOP */
-            { SCAN_CNCN_SM_STATE_SCR_WAIT, scanCncnSm_ActionUnexpected },   /* SCAN_CNCN_SM_EVENT_ABORT */ 
+            { SCAN_CNCN_SM_STATE_SCR_WAIT, scanCncnSm_ActionUnexpected },   /* SCAN_CNCN_SM_EVENT_ABORT */
             { SCAN_CNCN_SM_STATE_SCR_WAIT, scanCncnSm_ActionUnexpected },   /* SCAN_CNCN_SM_EVENT_RECOVERY */
             { SCAN_CNCN_SM_STATE_IDLE, scanCncnSm_RejectScan }              /* SCAN_CNCN_SM_EVENT_REJECT */
         },
@@ -90,7 +95,7 @@ static TGenSM_actionCell tSmMatrix[ SCAN_CNCN_SM_NUMBER_OF_STATES ][ SCAN_CNCN_S
         }
     };
 
-static TI_INT8*  uStateDescription[] = 
+static TI_INT8*  uStateDescription[] =
     {
         "IDLE",
         "SCR_WAIT",
@@ -98,7 +103,7 @@ static TI_INT8*  uStateDescription[] =
         "STOPPING"
     };
 
-static TI_INT8*  uEventDescription[] = 
+static TI_INT8*  uEventDescription[] =
     {
         "START",
         "RUN",
@@ -109,16 +114,16 @@ static TI_INT8*  uEventDescription[] =
         "REJECT",
     };
 
-/** 
- * \fn     scanCncnSm_Create 
+/**
+ * \fn     scanCncnSm_Create
  * \brief  Cerates a scan concentrator client object
- * 
+ *
  * Cerates a scan concentrator client - allocates object and create a state-machine instance
- * 
+ *
  * \param  hOS - handle to the OS object
  * \return Handle to the new scan concentrator client object
  * \sa     scanCncnSm_Init, scanCncnSm_Destroy
- */ 
+ */
 TI_HANDLE scanCncnSm_Create (TI_HANDLE hOS)
 {
     TScanCncnClient *pScanCncnClient;
@@ -146,12 +151,12 @@ TI_HANDLE scanCncnSm_Create (TI_HANDLE hOS)
     return (TI_HANDLE)pScanCncnClient;
 }
 
-/** 
+/**
  * \fn     scanCncnSm_Init
  * \brief  Initialize a scan concentartor client object
- * 
+ *
  * Initialize a scan concentartor client object - store handles and specific SM functions
- * 
+ *
  * \note   Some of the values (e.g. scan result CB( are initialized from the main scan concentartor object)
  * \param  hScanCncnClient - handle to the scan concnentrator client object
  * \param  hReport - handle to the report object
@@ -166,11 +171,11 @@ TI_HANDLE scanCncnSm_Create (TI_HANDLE hOS)
  * \param  fRecovery - SM specific recovery handling function
  * \param  pScanSmName - state machine name
  * \return None
- * \sa     scanCncnSm_Cretae 
- */ 
-void scanCncnSm_Init (TI_HANDLE hScanCncnClient, TI_HANDLE hReport, TI_HANDLE hTWD, TI_HANDLE hSCR, 
-                      TI_HANDLE hApConn, TI_HANDLE hMlme, TI_HANDLE hScanCncn, TScanPrivateSMFunction fScrRequest, 
-                      TScanPrivateSMFunction fScrRelease, TScanPrivateSMFunction fStartScan, 
+ * \sa     scanCncnSm_Cretae
+ */
+void scanCncnSm_Init (TI_HANDLE hScanCncnClient, TI_HANDLE hReport, TI_HANDLE hTWD, TI_HANDLE hSCR,
+                      TI_HANDLE hApConn, TI_HANDLE hMlme, TI_HANDLE hScanCncn, TScanPrivateSMFunction fScrRequest,
+                      TScanPrivateSMFunction fScrRelease, TScanPrivateSMFunction fStartScan,
                       TScanPrivateSMFunction fStopScan, TScanPrivateSMFunction fRecovery, TI_INT8* pScanSmName)
 {
     TScanCncnClient *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
@@ -196,21 +201,21 @@ void scanCncnSm_Init (TI_HANDLE hScanCncnClient, TI_HANDLE hReport, TI_HANDLE hT
     /* initialize the state-machine */
     genSM_Init (pScanCncnClient->hGenSM, hReport);
     genSM_SetDefaults (pScanCncnClient->hGenSM, SCAN_CNCN_SM_NUMBER_OF_STATES, SCAN_CNCN_SM_NUMBER_OF_EVENTS,
-                       (TGenSM_matrix)tSmMatrix, SCAN_CNCN_SM_STATE_IDLE, pScanCncnClient->pScanSmName, uStateDescription, 
+                       (TGenSM_matrix)tSmMatrix, SCAN_CNCN_SM_STATE_IDLE, pScanCncnClient->pScanSmName, uStateDescription,
                        uEventDescription, __FILE_ID__);
 }
 
-/** 
- * \fn     scanCncnSm_Destroy 
+/**
+ * \fn     scanCncnSm_Destroy
  * \brief  Destroys a scan concentartor client object
- * 
- * Destroys a scan concentartor client object. destroys the state-machine object and 
+ *
+ * Destroys a scan concentartor client object. destroys the state-machine object and
  * de-allcoates system resources
- * 
+ *
  * \param  hScanCncnClient - handle to the scan concnentrator client object
  * \return None
  * \sa     scanCncnSm_Cretae
- */ 
+ */
 void scanCncnSm_Destroy (TI_HANDLE hScanCncnClient)
 {
     TScanCncnClient *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
@@ -222,37 +227,37 @@ void scanCncnSm_Destroy (TI_HANDLE hScanCncnClient)
     os_memoryFree (pScanCncnClient->hOS, hScanCncnClient, sizeof (TScanCncnClient));
 }
 
-/** 
- * \fn     scanCncnSm_RequestScr 
+/**
+ * \fn     scanCncnSm_RequestScr
  * \brief  Scan concentartor SM action function for SCR request
- * 
+ *
  * Calls the Sm specific SCR request function
- * 
+ *
  * \param  hScanCncnClient - Handle to the scan concentrator client object
  * \return None
- */ 
+ */
 void scanCncnSm_RequestScr (TI_HANDLE hScanCncnClient)
 {
     TScanCncnClient *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
 
     TRACE0(pScanCncnClient->hReport, REPORT_SEVERITY_INFORMATION , "scanCncnSm_RequestScr: SM  requesting SCR\n");
 
-    /* 
+    /*
      * just call the specific SCR request function, it will send an event if necessary
      * according to SCR return code by itself
      */
     pScanCncnClient->fScrRequest (hScanCncnClient);
 }
 
-/** 
- * \fn     scanCncnSm_StartScan 
+/**
+ * \fn     scanCncnSm_StartScan
  * \brief  Scan concentrator SM action function for starting scan
- * 
- * Register for MLME CB and call the SM specific scan start function 
- * 
+ *
+ * Register for MLME CB and call the SM specific scan start function
+ *
  * \param  hScanCncnClient - Handle to the scan concentrator client object
  * \return None
- */ 
+ */
 void scanCncnSm_StartScan (TI_HANDLE hScanCncnClient)
 {
     TScanCncnClient *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
@@ -263,21 +268,21 @@ void scanCncnSm_StartScan (TI_HANDLE hScanCncnClient)
     pScanCncnClient->uResultCounter = 0;
     pScanCncnClient->uResultExpectedNumber = 0;
     pScanCncnClient->bScanCompletePending = TI_FALSE;
-	pScanCncnClient->bScanRejectedOn2_4 = TI_FALSE;  
+	pScanCncnClient->bScanRejectedOn2_4 = TI_FALSE;
 
     /* call the specific start scan command. It will handle errors by itself */
     pScanCncnClient->fStartScan (hScanCncnClient);
 }
 
-/** 
- * \fn     scanCncnSm_StopScan 
+/**
+ * \fn     scanCncnSm_StopScan
  * \brief  Scan concentrator SM action function for stoping scan by outside request
- * 
+ *
  * Calls the SM specific stop scan function
- * 
+ *
  * \param  hScanCncnClient - Handle to the scan concentrator client object
  * \return None
- */ 
+ */
 void scanCncnSm_StopScan (TI_HANDLE hScanCncnClient)
 {
     TScanCncnClient *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
@@ -288,15 +293,15 @@ void scanCncnSm_StopScan (TI_HANDLE hScanCncnClient)
     pScanCncnClient->fStopScan (hScanCncnClient);
 }
 
-/** 
- * \fn     scanCncnSm_ScanComplete 
- * \brief  Scan concentrator SM action function for scan complete 
- * 
+/**
+ * \fn     scanCncnSm_ScanComplete
+ * \brief  Scan concentrator SM action function for scan complete
+ *
  * Unregister MLME, release SCR and call client scan complete CB, if not running within a request context
- * 
+ *
  * \param  hScanCncnClient - Handle to the scan concentrator client object
  * \return None
- */ 
+ */
 void scanCncnSm_ScanComplete (TI_HANDLE hScanCncnClient)
 {
     TScanCncnClient *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
@@ -314,28 +319,28 @@ void scanCncnSm_ScanComplete (TI_HANDLE hScanCncnClient)
     }
 }
 
-/** 
- * \fn     scanCncnSm_Nop 
- * \brief  Scan concentrator SM action function for no operation 
- * 
+/**
+ * \fn     scanCncnSm_Nop
+ * \brief  Scan concentrator SM action function for no operation
+ *
  * Used when no operation is required not due to an error
- * 
+ *
  * \param  hScanCncnClient - Handle to the scan concentrator client object
  * \return None
- */ 
+ */
 void scanCncnSm_Nop (TI_HANDLE hScanCncnClient)
 {
 }
 
-/** 
- * \fn     ScanCncnSm_ActionUnexpected 
- * \brief  Scan concentrator SM action function for unexpected events 
- * 
+/**
+ * \fn     ScanCncnSm_ActionUnexpected
+ * \brief  Scan concentrator SM action function for unexpected events
+ *
  * Print an error message
- * 
+ *
  * \param  hScanCncnClient - Handle to the scan concentrator client object
  * \return None
- */ 
+ */
 void scanCncnSm_ActionUnexpected (TI_HANDLE hScanCncnClient)
 {
     TScanCncnClient *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
@@ -346,15 +351,15 @@ void scanCncnSm_ActionUnexpected (TI_HANDLE hScanCncnClient)
     pScanCncnClient->eScanResult = SCAN_CRS_SCAN_FAILED;
 }
 
-/** 
+/**
  * \fn     scanCncnSm_RejectScan
  * \brief  Scan concentrator SM action function for rejecting a scan by the SCR
- * 
+ *
  * Releases the SCR and calls the client scan complete CB, if not running within a request context
- * 
+ *
  * \param  hScanCncnClient - Handle to the scan concentrator client object
  * \return None
- */ 
+ */
 void scanCncnSm_RejectScan (TI_HANDLE hScanCncnClient)
 {
     TScanCncnClient *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
@@ -369,20 +374,20 @@ void scanCncnSm_RejectScan (TI_HANDLE hScanCncnClient)
     if (TI_FALSE == pScanCncnClient->bInRequest)
     {
         pScanCncnClient->tScanResultCB (pScanCncnClient->hScanResultCBObj, pScanCncnClient->eScanResult,
-                                        NULL, pScanCncnClient->uSPSScanResult); 
-    }   
+                                        NULL, pScanCncnClient->uSPSScanResult);
+    }
 }
 
-/** 
+/**
  * \fn     scanCncnSm_Recovery
  * \brief  Scan concentrator SM action function for handling recovery during scan
- * 
+ *
  * Calls the SM specific recovery handling function and send a scan complete event. Used to stop timer
  * on one-shot scans
- * 
+ *
  * \param  hScanCncnClient - Handle to the scan concentrator client object
  * \return None
- */ 
+ */
 void scanCncnSm_Recovery (TI_HANDLE hScanCncnClient)
 {
     TScanCncnClient *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;

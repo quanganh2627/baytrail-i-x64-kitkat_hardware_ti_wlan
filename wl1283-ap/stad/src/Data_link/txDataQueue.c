@@ -1,35 +1,40 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * txDataQueue.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
-/** \file   txDataQueue.c 
+
+/** \file   txDataQueue.c
  *  \brief  The Tx Data Queues module.
- *  
+ *
  *  \see    txDataQueue.h
  */
 
@@ -66,24 +71,24 @@ extern void wlanDrvIf_ResumeTx (TI_HANDLE hOs);
 ****************************************************************************/
 
 
-/** 
+/**
  * \fn     txDataQ_Create
  * \brief  Create the module and its queues
- * 
+ *
  * Create the Tx Data module and its queues.
- * 
- * \note   
- * \param  hOs - Handle to the Os Abstraction Layer                           
- * \return Handle to the allocated Tx Data Queue module (NULL if failed) 
- * \sa     
- */ 
+ *
+ * \note
+ * \param  hOs - Handle to the Os Abstraction Layer
+ * \return Handle to the allocated Tx Data Queue module (NULL if failed)
+ * \sa
+ */
 TI_HANDLE txDataQ_Create(TI_HANDLE hOs)
 {
     TTxDataQ *pTxDataQ;
 
     /* allocate TxDataQueue module */
     pTxDataQ = os_memoryAlloc (hOs, (sizeof(TTxDataQ)));
-	
+
     if (!pTxDataQ)
 	{
         WLAN_OS_REPORT(("Error allocating the TxDataQueue Module\n"));
@@ -97,17 +102,17 @@ TI_HANDLE txDataQ_Create(TI_HANDLE hOs)
 }
 
 
-/** 
+/**
  * \fn     txDataQ_Init
  * \brief  Save required modules handles
- * 
+ *
  * Save other modules handles.
- * 
- * \note   
+ *
+ * \note
  * \param  pStadHandles  - The driver modules handles
- * \return void  
- * \sa     
- */ 
+ * \return void
+ * \sa
+ */
 void txDataQ_Init (TStadHandlesList *pStadHandles)
 {
     TTxDataQ  *pTxDataQ = (TTxDataQ *)(pStadHandles->hTxDataQ);
@@ -115,7 +120,7 @@ void txDataQ_Init (TStadHandlesList *pStadHandles)
     TI_UINT8   uQueId;
     TDataLinkQ *pLinkQ;
     TI_UINT32  uHlid;
-	
+
     /* save modules handles */
     pTxDataQ->hContext	= pStadHandles->hContext;
     pTxDataQ->hTxCtrl	= pStadHandles->hTxCtrl;
@@ -130,7 +135,7 @@ void txDataQ_Init (TStadHandlesList *pStadHandles)
 	/* Configures the NextQueId to zero => scheduler will strart from Queue 1*/
 	pTxDataQ->uNextQueId = 0;
 	pTxDataQ->uNextHlid = 0;
-	
+
 	/* init the number of the Data queue to be used */
 	pTxDataQ->uNumQueues = MAX_NUM_OF_AC;
 
@@ -145,23 +150,23 @@ void txDataQ_Init (TStadHandlesList *pStadHandles)
         pTxDataQ->aTxSendPaceThresh[uQueId] = 1;
     }
 
-    /* 
-     * init all queues in all links 
+    /*
+     * init all queues in all links
      */
     for (uHlid = 0; uHlid < WLANLINKS_MAX_LINKS; uHlid++)
     {
         pLinkQ = &pTxDataQ->aDataLinkQ[uHlid]; /* Link queues */
         pLinkQ->bBusy = TI_FALSE; /* default is not busy */
         pLinkQ->bEnabled = TI_FALSE; /* default is not enabled */
-    
+
         /* Create the tx data queues */
         for (uQueId = 0; uQueId < pTxDataQ->uNumQueues; uQueId++)
         {
-            pLinkQ->aQueues[uQueId] = que_Create (pTxDataQ->hOs, 
-                                                pTxDataQ->hReport, 
-                                                pTxDataQ->aQueueMaxSize[uQueId], 
+            pLinkQ->aQueues[uQueId] = que_Create (pTxDataQ->hOs,
+                                                pTxDataQ->hReport,
+                                                pTxDataQ->aQueueMaxSize[uQueId],
                                                 uNodeHeaderOffset);
-        
+
             /* If any Queues' allocation failed, print error, free TxDataQueue module and exit */
             if (pLinkQ->aQueues[uQueId] == NULL)
             {
@@ -170,15 +175,15 @@ void txDataQ_Init (TStadHandlesList *pStadHandles)
                 os_memoryFree (pTxDataQ->hOs, pTxDataQ, sizeof(TTxDataQ));
                 return;
             }
-    
+
             /* Configure the Queues default values */
-            pLinkQ->aNetStackQueueStopped[uQueId] = TI_FALSE;  
+            pLinkQ->aNetStackQueueStopped[uQueId] = TI_FALSE;
         }
     }
     /* Init busy flag per AC (not also per link) */
     for (uQueId = 0; uQueId < pTxDataQ->uNumQueues; uQueId++)
     {
-        pTxDataQ->aQueueBusy[uQueId] = TI_FALSE;   
+        pTxDataQ->aQueueBusy[uQueId] = TI_FALSE;
     }
     pTxDataQ->hTxSendPaceTimer = tmr_CreateTimer (pStadHandles->hTimer);
     if (pTxDataQ->hTxSendPaceTimer == NULL)
@@ -186,7 +191,7 @@ void txDataQ_Init (TStadHandlesList *pStadHandles)
         TRACE0(pTxDataQ->hReport, REPORT_SEVERITY_ERROR, "txDataQ_Init(): Failed to create hTxSendPaceTimer!\n");
         return;
     }
-    
+
     /* Register to the context engine and get the client ID */
     pTxDataQ->uContextId = context_RegisterClient (pTxDataQ->hContext,
                                                    txDataQ_RunScheduler,
@@ -194,23 +199,23 @@ void txDataQ_Init (TStadHandlesList *pStadHandles)
                                                    TI_TRUE,
                                                    "TX_DATA",
                                                    sizeof("TX_DATA"));
-	
+
 }
 
 
-/** 
+/**
  * \fn     txDataQ_SetDefaults
  * \brief  Configure module with default settings
- * 
+ *
  * Init the Tx Data queues.
  * Register as the context-engine client.
- * 
- * \note   
- * \param  hTxDataQ - The object                                          
- * \param  Other modules handles                              
- * \return TI_OK on success or TI_NOK on failure 
- * \sa     
- */ 
+ *
+ * \note
+ * \param  hTxDataQ - The object
+ * \param  Other modules handles
+ * \return TI_OK on success or TI_NOK on failure
+ * \sa
+ */
 TI_STATUS txDataQ_SetDefaults (TI_HANDLE  hTxDataQ, txDataInitParams_t *pTxDataInitParams)
 {
     TTxDataQ  *pTxDataQ = (TTxDataQ *)hTxDataQ;
@@ -219,7 +224,7 @@ TI_STATUS txDataQ_SetDefaults (TI_HANDLE  hTxDataQ, txDataInitParams_t *pTxDataI
     /* configure the classifier sub-module */
     eStatus = txDataClsfr_Config (hTxDataQ, &pTxDataInitParams->ClsfrInitParam);
     if (eStatus != TI_OK)
-    {  
+    {
         TRACE0(pTxDataQ->hReport, REPORT_SEVERITY_CONSOLE ,"FATAL ERROR: txDataQ_SetDefaults(): txDataClsfr_Config failed - Aborting\n");
         WLAN_OS_REPORT(("FATAL ERROR: txDataQ_SetDefaults(): txDataClsfr_Config failed - Aborting\n"));
         return eStatus;
@@ -231,27 +236,27 @@ TI_STATUS txDataQ_SetDefaults (TI_HANDLE  hTxDataQ, txDataInitParams_t *pTxDataI
 	pTxDataQ->aTxSendPaceThresh[QOS_AC_BK] = pTxDataInitParams->uTxSendPaceThresh;
 	pTxDataQ->aTxSendPaceThresh[QOS_AC_VI] = pTxDataInitParams->uTxSendPaceThresh;
 	pTxDataQ->aTxSendPaceThresh[QOS_AC_VO] = 1;     /* Don't delay voice packts! */
-    
+
     /* configure the classifier sub-module */
     txDataQ_InitResources (pTxDataQ, &pTxDataInitParams->tDataRsrcParam);
 
     TRACE0(pTxDataQ->hReport, REPORT_SEVERITY_INIT, ".....Tx Data Queue configured successfully\n");
-	
+
     return TI_OK;
 }
 
 
-/** 
+/**
  * \fn     txDataQ_Destroy
  * \brief  Destroy the module and its queues
- * 
+ *
  * Clear and destroy the queues and then destroy the module object.
- * 
- * \note   
- * \param  hTxDataQ - The object                                          
- * \return TI_OK - Unload succesfull, TI_NOK - Unload unsuccesfull 
- * \sa     
- */ 
+ *
+ * \note
+ * \param  hTxDataQ - The object
+ * \return TI_OK - Unload succesfull, TI_NOK - Unload unsuccesfull
+ * \sa
+ */
 TI_STATUS txDataQ_Destroy (TI_HANDLE hTxDataQ)
 {
     TTxDataQ  *pTxDataQ = (TTxDataQ *)hTxDataQ;
@@ -263,8 +268,8 @@ TI_STATUS txDataQ_Destroy (TI_HANDLE hTxDataQ)
     /* Dequeue and free all queued packets */
     txDataQ_ClearQueues (hTxDataQ);
 
-    /* 
-     * init all queues in all links 
+    /*
+     * init all queues in all links
      */
     for (uHlid = 0; uHlid < WLANLINKS_MAX_LINKS; uHlid++)
     {
@@ -294,43 +299,43 @@ TI_STATUS txDataQ_Destroy (TI_HANDLE hTxDataQ)
 }
 
 
-/** 
+/**
  * \fn     txDataQ_ClearQueues
  * \brief  Clear all queues
- * 
+ *
  * Dequeue and free all queued packets.
- * 
- * \note   
- * \param  hTxDataQ - The object                                          
- * \return void 
- * \sa     
- */ 
+ *
+ * \note
+ * \param  hTxDataQ - The object
+ * \return void
+ * \sa
+ */
 void txDataQ_ClearQueues (TI_HANDLE hTxDataQ)
 {
     TI_UINT32  uHlid;
 
-    /* 
-     * init all queues in all links 
+    /*
+     * init all queues in all links
      */
     for (uHlid = 0; uHlid < WLANLINKS_MAX_LINKS; uHlid++)
     {
-        txDataQ_FlushLinkQueues(hTxDataQ, uHlid); 
+        txDataQ_FlushLinkQueues(hTxDataQ, uHlid);
     }
 }
 
 
-/** 
+/**
  * \fn     txDataQ_FlushLinkQueues
  * \brief  Flush all queues of the specific link
- * 
+ *
  * Free all pending packets in link queue
  *
- * \note   
- * \param  hTxDataQ - The object                                          
+ * \note
+ * \param  hTxDataQ - The object
  * \param  uHlid - Link ID
  * \return void
  * \sa
- */ 
+ */
 void txDataQ_FlushLinkQueues (TI_HANDLE hTxDataQ, TI_UINT32 uHlid)
 {
     TTxDataQ   *pTxDataQ = (TTxDataQ *)hTxDataQ;
@@ -348,7 +353,7 @@ void txDataQ_FlushLinkQueues (TI_HANDLE hTxDataQ, TI_UINT32 uHlid)
             context_EnterCriticalSection (pTxDataQ->hContext);
             pPktCtrlBlk = (TTxCtrlBlk *) que_Dequeue (pLinkQ->aQueues[uQueId]);
             context_LeaveCriticalSection (pTxDataQ->hContext);
-            if (pPktCtrlBlk == NULL) 
+            if (pPktCtrlBlk == NULL)
             {
                 break;
             }
@@ -357,16 +362,16 @@ void txDataQ_FlushLinkQueues (TI_HANDLE hTxDataQ, TI_UINT32 uHlid)
     }
 }
 
-/** 
+/**
  * \fn     txDataQ_SetLinkType
- * \brief  set link type 
- * 
- * \note   
- * \param  hTxDataQ     - The module's object                                          
- * \param  uHlid        - link id                                          
- * \param  eLinkType    - link state                                          
- * \return void 
- */ 
+ * \brief  set link type
+ *
+ * \note
+ * \param  hTxDataQ     - The module's object
+ * \param  uHlid        - link id
+ * \param  eLinkType    - link state
+ * \return void
+ */
 void txDataQ_SetLinkType (TI_HANDLE hTxDataQ, TI_UINT32 uHlid, EWlanLinkType eLinkType)
 {
     TTxDataQ *pTxDataQ = (TTxDataQ *)hTxDataQ;
@@ -377,28 +382,28 @@ void txDataQ_SetLinkType (TI_HANDLE hTxDataQ, TI_UINT32 uHlid, EWlanLinkType eLi
 	TRACE3(pTxDataQ->hReport, REPORT_SEVERITY_INFORMATION, "%s: link %d, LinkType %d\n", __FUNCTION__, uHlid, pLinkQ->eType);
 
     /* save broadcast link id */
-    if (pLinkQ->eType == WLANLINK_TYPE_BRCST) 
+    if (pLinkQ->eType == WLANLINK_TYPE_BRCST)
     {
         pTxDataQ->uBcastHlid = uHlid;
     }
 }
 
-/** 
+/**
  * \fn     txDataQ_InsertPacket
  * \brief  Insert packet in queue and schedule task
- * 
- * This function is called by the hard_start_xmit() callback function. 
+ *
+ * This function is called by the hard_start_xmit() callback function.
  * If the packet it an EAPOL, forward it to the Mgmt-Queue.
- * Otherwise, classify the packet, enqueue it and request 
+ * Otherwise, classify the packet, enqueue it and request
  *   context switch for handling it in the driver's context.
  *
- * \note   
- * \param  hTxDataQ    - The object                                          
- * \param  pPktCtrlBlk - Pointer to the packet                                         
+ * \note
+ * \param  hTxDataQ    - The object
+ * \param  pPktCtrlBlk - Pointer to the packet
  * \param  uPacketDtag - The packet priority optionaly set by the OAL
- * \return TI_OK - if the packet was queued, TI_NOK - if the packet was dropped. 
+ * \return TI_OK - if the packet was queued, TI_NOK - if the packet was dropped.
  * \sa     txDataQ_Run
- */ 
+ */
 
 
 TI_STATUS txDataQ_InsertPacket (TI_HANDLE hTxDataQ, TTxCtrlBlk *pPktCtrlBlk, TI_UINT8 uPacketDtag, TIntraBssBridge *pIntraBssBridgeParam)
@@ -427,7 +432,7 @@ TI_STATUS txDataQ_InsertPacket (TI_HANDLE hTxDataQ, TTxCtrlBlk *pPktCtrlBlk, TI_
 
     /* Find link id by destination MAC address, if not found drop the packet */
     /* use Intra Bss bridge params*/
-    if(!pIntraBssBridgeParam) 
+    if(!pIntraBssBridgeParam)
     {
         if (TI_UNLIKELY(MAC_MULTICAST(pEthHead->dst)))
         {
@@ -506,17 +511,17 @@ TI_STATUS txDataQ_InsertPacket (TI_HANDLE hTxDataQ, TTxCtrlBlk *pPktCtrlBlk, TI_
             bRequestSchedule = TI_TRUE;
         }
         /* If below Tx-Send pacing threshold, start timer to trigger packets handling if expired */
-        else if (uQueSize < pTxDataQ->aTxSendPaceThresh[uQueId]) 
+        else if (uQueSize < pTxDataQ->aTxSendPaceThresh[uQueId])
         {
-            tmr_StartTimer (pTxDataQ->hTxSendPaceTimer, 
-                            txDataQ_TxSendPaceTimeout, 
-                            hTxDataQ, 
-                            TX_SEND_PACE_TIMEOUT_MSEC, 
+            tmr_StartTimer (pTxDataQ->hTxSendPaceTimer,
+                            txDataQ_TxSendPaceTimeout,
+                            hTxDataQ,
+                            TX_SEND_PACE_TIMEOUT_MSEC,
                             TI_FALSE);
         }
     }
 
-    /* If allowed to stop network stack and the queue is full, indicate to stop network and 
+    /* If allowed to stop network stack and the queue is full, indicate to stop network and
           to schedule Tx handling (both are executed below, outside the critical section!) */
     if ((pTxDataQ->bStopNetStackTx) && (uQueSize == pTxDataQ->aQueueMaxSize[uQueId]))
     {
@@ -564,17 +569,17 @@ TI_STATUS txDataQ_InsertPacket (TI_HANDLE hTxDataQ, TTxCtrlBlk *pPktCtrlBlk, TI_
 }
 
 
-/** 
+/**
  * \fn     txDataQ_StopLink
  * \brief  Stop Data-Queue module access to Tx link.
- * 
+ *
  * Called by the backpressure.
  *
- * \note   
- * \param  hTxDataQ - The object                                          
- * \return void 
- * \sa     txDataQ_StartLink  
- */ 
+ * \note
+ * \param  hTxDataQ - The object
+ * \return void
+ * \sa     txDataQ_StartLink
+ */
 void txDataQ_StopLink (TI_HANDLE hTxDataQ, TI_UINT32 uHlid)
 {
     TTxDataQ *pTxDataQ = (TTxDataQ *)hTxDataQ;
@@ -583,20 +588,20 @@ void txDataQ_StopLink (TI_HANDLE hTxDataQ, TI_UINT32 uHlid)
     pLinkQ->bBusy = TI_TRUE;
 }
 
-/** 
+/**
  * \fn     txDataQ_StopQueue
  * \brief  Set queue's busy indication
- * 
- * This function is called by the txCtrl_xmitData() if the queue's backpressure 
- *   indication is set. 
+ *
+ * This function is called by the txCtrl_xmitData() if the queue's backpressure
+ *   indication is set.
  * It sets the internal queue's Busy indication.
  *
- * \note   
- * \param  hTxDataQ - The object                                          
- * \param  uTidBitMap   - The changed TIDs busy bitmap                                          
- * \return void 
- * \sa     txDataQ_UpdateBusyMap 
- */ 
+ * \note
+ * \param  hTxDataQ - The object
+ * \param  uTidBitMap   - The changed TIDs busy bitmap
+ * \return void
+ * \sa     txDataQ_UpdateBusyMap
+ */
 void txDataQ_StopQueue (TI_HANDLE hTxDataQ, TI_UINT32 uTidBitMap)
 {
 	TTxDataQ *pTxDataQ = (TTxDataQ *)hTxDataQ;
@@ -606,25 +611,25 @@ void txDataQ_StopQueue (TI_HANDLE hTxDataQ, TI_UINT32 uTidBitMap)
 }
 
 
-/** 
+/**
  * \fn     txDataQ_UpdateBusyMap
  * \brief  Set queue's busy indication
- * 
+ *
  * This function is called by the txCtrl if the backpressure map per TID is changed.
  * This could be as a result of Tx-Complete, admission change or association.
  * The function modifies the internal queue's Busy indication and calls the scheduler.
  *
- * \note   
- * \param  hTxDataQ - The object                                          
- * \param  uTidBitMap   - The changed TIDs busy bitmap                                          
- * \param  uLinkBitMap   - The changed LINKs busy bitmap                                          
- * \return void 
+ * \note
+ * \param  hTxDataQ - The object
+ * \param  uTidBitMap   - The changed TIDs busy bitmap
+ * \param  uLinkBitMap   - The changed LINKs busy bitmap
+ * \return void
  * \sa     txDataQ_StopQueue
- */ 
+ */
 void txDataQ_UpdateBusyMap (TI_HANDLE hTxDataQ, TI_UINT32 tidBitMap, TI_UINT32 uLinkBitMap)
 {
 	TTxDataQ *pTxDataQ = (TTxDataQ *)hTxDataQ;
-	
+
 	/* Update the Link(s) mode */
 	txDataQ_UpdateLinksBusyState (pTxDataQ, tidBitMap);
 
@@ -636,18 +641,18 @@ void txDataQ_UpdateBusyMap (TI_HANDLE hTxDataQ, TI_UINT32 tidBitMap, TI_UINT32 u
 }
 
 
-/** 
+/**
  * \fn     txDataQ_StopAll
  * \brief  Disable Data-Queue module access to Tx path.
- * 
+ *
  * Called by the Tx-Port when the data-queue module can't access the Tx path.
  * Sets stop-all-queues indication.
  *
- * \note   
- * \param  hTxDataQ - The object                                          
- * \return void 
- * \sa     txDataQ_WakeAll  
- */ 
+ * \note
+ * \param  hTxDataQ - The object
+ * \return void
+ * \sa     txDataQ_WakeAll
+ */
 void txDataQ_StopAll (TI_HANDLE hTxDataQ)
 {
     TTxDataQ *pTxDataQ = (TTxDataQ *)hTxDataQ;
@@ -657,18 +662,18 @@ void txDataQ_StopAll (TI_HANDLE hTxDataQ)
 }
 
 
-/** 
+/**
  * \fn     txDataQ_WakeAll
  * \brief  Enable Data-Queue module access to Tx path.
- * 
+ *
  * Called by the Tx-Port when the data-queue module can access the Tx path.
  * Clears the stop-all-queues indication and calls the scheduler.
  *
- * \note   
- * \param  hTxDataQ - The object                                          
- * \return void 
+ * \note
+ * \param  hTxDataQ - The object
+ * \return void
  * \sa     txDataQ_StopAll
- */ 
+ */
 void txDataQ_WakeAll (TI_HANDLE hTxDataQ)
 {
     TTxDataQ *pTxDataQ = (TTxDataQ *)hTxDataQ;
@@ -680,17 +685,17 @@ void txDataQ_WakeAll (TI_HANDLE hTxDataQ)
 	txDataQ_RunScheduler (hTxDataQ);
 }
 
-/** 
+/**
  * \fn     txDataQ_DisableLink
  * \brief  Disable Data-Queue module access to Tx link.
- * 
+ *
  * Called by the Tx-Port when the data-queue module can't access the Tx link.
  *
- * \note   
- * \param  hTxDataQ - The object                                          
- * \return void 
- * \sa     txDataQ_EnableLink  
- */ 
+ * \note
+ * \param  hTxDataQ - The object
+ * \return void
+ * \sa     txDataQ_EnableLink
+ */
 void txDataQ_DisableLink (TI_HANDLE hTxDataQ, TI_UINT32 uHlid)
 {
     TTxDataQ *pTxDataQ = (TTxDataQ *)hTxDataQ;
@@ -702,17 +707,17 @@ void txDataQ_DisableLink (TI_HANDLE hTxDataQ, TI_UINT32 uHlid)
 }
 
 
-/** 
+/**
  * \fn     txDataQ_EnableLink
  * \brief  Enable Data-Queue module access to Tx link.
- * 
+ *
  * Called by the Tx-Port when the data-queue module can access the Tx link.
  *
- * \note   
- * \param  hTxDataQ - The object                                          
- * \return void 
+ * \note
+ * \param  hTxDataQ - The object
+ * \return void
  * \sa     txDataQ_StopLink
- */ 
+ */
 void txDataQ_EnableLink (TI_HANDLE hTxDataQ, TI_UINT32 uHlid)
 {
     TTxDataQ *pTxDataQ = (TTxDataQ *)hTxDataQ;
@@ -726,13 +731,13 @@ void txDataQ_EnableLink (TI_HANDLE hTxDataQ, TI_UINT32 uHlid)
 	txDataQ_RunScheduler (hTxDataQ);
 }
 
-/** 
+/**
  * \fn     txDataQ_LinkMacAdd
  * \brief  Set MAC address for the link id.
- * 
-  * \return void 
+ *
+  * \return void
  * \sa     txDataQ_LinkMacAdd
- */ 
+ */
 TI_STATUS txDataQ_LinkMacAdd (TI_HANDLE hTxDataQ, TI_UINT32 uHlid, TMacAddr tMacAddr)
 {
     TTxDataQ *pTxDataQ = (TTxDataQ *)hTxDataQ;
@@ -753,13 +758,13 @@ TI_STATUS txDataQ_LinkMacAdd (TI_HANDLE hTxDataQ, TI_UINT32 uHlid, TMacAddr tMac
     return TI_OK;
 }
 
-/** 
+/**
  * \fn     txDataQ_LinkMacRemove
  * \brief  Set LinkMac table entry as invalid
- * 
- * \return void 
+ *
+ * \return void
  * \sa     txDataQ_LinkMacRemove
- */ 
+ */
 void txDataQ_LinkMacRemove (TI_HANDLE hTxDataQ, TI_UINT32 uHlid)
 {
     TTxDataQ *pTxDataQ = (TTxDataQ *)hTxDataQ;
@@ -776,13 +781,13 @@ void txDataQ_LinkMacRemove (TI_HANDLE hTxDataQ, TI_UINT32 uHlid)
 }
 
 
-/** 
+/**
  * \fn     txDataQ_LinkMacFind
  * \brief  Find entry with MAC address
- * 
- * \return status 
+ *
+ * \return status
  * \sa     txDataQ_LinkMacFind
- */ 
+ */
 TI_STATUS txDataQ_LinkMacFind (TI_HANDLE hTxDataQ, TI_UINT32 *uHlid, TMacAddr tMacAddr)
 {
     TTxDataQ *pTxDataQ = (TTxDataQ *)hTxDataQ;
@@ -791,14 +796,14 @@ TI_STATUS txDataQ_LinkMacFind (TI_HANDLE hTxDataQ, TI_UINT32 *uHlid, TMacAddr tM
 
 	/* Enter critical section to protect links data */
 	context_EnterCriticalSection (pTxDataQ->hContext);
-	for (i=0; i<LINK_MAC_TABLE_SIZE; i++) 
+	for (i=0; i<LINK_MAC_TABLE_SIZE; i++)
 	{
 		if (!pTxDataQ->aLinkMac[i].uValid)
 		{
 			/* entry not valid, skip to next entry */
 			continue;
 		}
-		for (j=MAC_ADDR_LEN-1; j>=0; j--) 
+		for (j=MAC_ADDR_LEN-1; j>=0; j--)
 		{
 			if (pTxDataQ->aLinkMac[i].tMacAddr[j] != tMacAddr[j])
 			{
@@ -806,7 +811,7 @@ TI_STATUS txDataQ_LinkMacFind (TI_HANDLE hTxDataQ, TI_UINT32 *uHlid, TMacAddr tM
 				break;
 			}
 		}
-		if (j < 0) 
+		if (j < 0)
 		{
 			/* Found, return index */
 			*uHlid = i;
@@ -821,14 +826,14 @@ TI_STATUS txDataQ_LinkMacFind (TI_HANDLE hTxDataQ, TI_UINT32 *uHlid, TMacAddr tM
 	return TI_NOK;
 }
 
-/** 
+/**
  * \fn     txDataQ_CheckResources
  * \brief  Check resources per Link and per Ac
- * 
+ *
  * NOTE: the caller only will protect with critical section
- * 
+ *
  * \return TI_STATUS TI_NOK when there are no resources
- */ 
+ */
 TI_STATUS txDataQ_AllocCheckResources (TI_HANDLE hTxDataQ, TTxCtrlBlk *pPktCtrlBlk)
 {
     TTxDataQ *pTxDataQ = (TTxDataQ *)hTxDataQ;
@@ -847,7 +852,7 @@ TI_STATUS txDataQ_AllocCheckResources (TI_HANDLE hTxDataQ, TTxCtrlBlk *pPktCtrlB
 
     /* Update Effective totals = Sum of Max ( PktInUse_PerAc [uAc],  Min_PerAc[uAc] ), uAc=0..MAX_AC */
     /* no need to calculate Sum of Max on every packet, just small check for this ac only */
-    if (pDataRsrc->uPktInUse_PerAc[uAc] > pDataRsrc->uMinGuarantee_PerAc[uAc]) 
+    if (pDataRsrc->uPktInUse_PerAc[uAc] > pDataRsrc->uMinGuarantee_PerAc[uAc])
     {
         pDataRsrc->uEffectiveTotal_Ac++;
         bPktInUse_AboveAcMin = TI_TRUE;
@@ -855,7 +860,7 @@ TI_STATUS txDataQ_AllocCheckResources (TI_HANDLE hTxDataQ, TTxCtrlBlk *pPktCtrlB
 
     /* Update Effective totals = Sum of Max ( PktInUse_PerLik [uHlid],  Min_PerLink[uHlid] ), uHlid=0..MAX_LINK */
     /* no need to calculate Sum of Max on every packet, just small check for this link only */
-    if (pDataRsrc->uPktInUse_PerLink[uHlid] > pDataRsrc->uMinGuarantee_PerLink) 
+    if (pDataRsrc->uPktInUse_PerLink[uHlid] > pDataRsrc->uMinGuarantee_PerLink)
     {
         pDataRsrc->uEffectiveTotal_Link++;
         bPktInUse_AboveLinkMin = TI_TRUE;
@@ -888,7 +893,7 @@ TI_STATUS txDataQ_AllocCheckResources (TI_HANDLE hTxDataQ, TTxCtrlBlk *pPktCtrlB
     /* save AC in tx ctrl block, it may change when QOS is disabled and by AC downgrade algo, used in txDataQ_FreeResources */
     SET_TX_CTRL_FLAG_RSRC_AC(pPktCtrlBlk, uAc);
 
-    if (!bEnqueuePacket) 
+    if (!bEnqueuePacket)
     {
         /* In case of failure, the caller will free the resources */
         return TI_NOK;
@@ -897,11 +902,11 @@ TI_STATUS txDataQ_AllocCheckResources (TI_HANDLE hTxDataQ, TTxCtrlBlk *pPktCtrlB
     return TI_OK;
 }
 
-/** 
+/**
  * \fn     txDataQ_FreeResources
  * \brief  Free resources per Link and per Ac
- * 
- */ 
+ *
+ */
 void txDataQ_FreeResources (TI_HANDLE hTxDataQ, TTxCtrlBlk *pPktCtrlBlk)
 {
     TTxDataQ *pTxDataQ = (TTxDataQ *)hTxDataQ;
@@ -910,7 +915,7 @@ void txDataQ_FreeResources (TI_HANDLE hTxDataQ, TTxCtrlBlk *pPktCtrlBlk)
     TI_UINT32 uAc;
 
     /* Free TxData resources only if previous allocated by txDataQ_AllocCheckResources */
-    if (!IS_TX_CTRL_FLAG_RSRC_ALLOCATED(pPktCtrlBlk)) 
+    if (!IS_TX_CTRL_FLAG_RSRC_ALLOCATED(pPktCtrlBlk))
     {
         return;
     }
@@ -927,12 +932,12 @@ void txDataQ_FreeResources (TI_HANDLE hTxDataQ, TTxCtrlBlk *pPktCtrlBlk)
 
     /* Update Effective totals = Sum of Max ( PktInUse_PerAc [uAc],  Min_PerAc[uAc] ), uAc=0..MAX_AC */
     /* no need to calculate Sum of Max on every packet, just small check for this ac only */
-    if (pDataRsrc->uPktInUse_PerAc[uAc] >= pDataRsrc->uMinGuarantee_PerAc[uAc]) 
+    if (pDataRsrc->uPktInUse_PerAc[uAc] >= pDataRsrc->uMinGuarantee_PerAc[uAc])
     {
         pDataRsrc->uEffectiveTotal_Ac--;
 #ifdef TI_DBG
         /* sanity check */
-        if (pDataRsrc->uEffectiveTotal_Ac < pDataRsrc->uEffectiveTotal_Ac_Min ) 
+        if (pDataRsrc->uEffectiveTotal_Ac < pDataRsrc->uEffectiveTotal_Ac_Min )
         {
             WLAN_OS_REPORT(("%s: uEffectiveTotal_Ac=%d is below MIN=%d\n", __FUNCTION__, pDataRsrc->uEffectiveTotal_Ac, pDataRsrc->uEffectiveTotal_Ac_Min));
         }
@@ -941,12 +946,12 @@ void txDataQ_FreeResources (TI_HANDLE hTxDataQ, TTxCtrlBlk *pPktCtrlBlk)
 
     /* Update Effective totals = Sum of Max ( PktInUse_PerLik [uHlid],  Min_PerLink[uHlid] ), uHlid=0..MAX_LINK */
     /* no need to calculate Sum of Max on every packet, just small check for this link only*/
-    if (pDataRsrc->uPktInUse_PerLink[uHlid] >= pDataRsrc->uMinGuarantee_PerLink) 
+    if (pDataRsrc->uPktInUse_PerLink[uHlid] >= pDataRsrc->uMinGuarantee_PerLink)
     {
         pDataRsrc->uEffectiveTotal_Link--;
 #ifdef TI_DBG
         /* sanity check */
-        if (pDataRsrc->uEffectiveTotal_Link < pDataRsrc->uEffectiveTotal_Link_Min ) 
+        if (pDataRsrc->uEffectiveTotal_Link < pDataRsrc->uEffectiveTotal_Link_Min )
         {
             WLAN_OS_REPORT(("%s: uEffectiveTotal_Ac=%d is below MIN=%d\n", __FUNCTION__, pDataRsrc->uEffectiveTotal_Link, pDataRsrc->uEffectiveTotal_Link_Min));
         }
@@ -957,11 +962,11 @@ void txDataQ_FreeResources (TI_HANDLE hTxDataQ, TTxCtrlBlk *pPktCtrlBlk)
     context_LeaveCriticalSection (pTxDataQ->hContext);
 }
 
-/** 
+/**
  * \fn     txDataQ_InitResources
  * \brief  Init resources counters per Link and per Ac
- * 
- */ 
+ *
+ */
 static void txDataQ_InitResources (TTxDataQ *pTxDataQ, TTxDataResourcesParams_t *pDataRsrcParams)
 {
     TDataResources *pDataRsrc = &pTxDataQ->tDataRsrc;
@@ -995,13 +1000,13 @@ static void txDataQ_InitResources (TTxDataQ *pTxDataQ, TTxDataResourcesParams_t 
 }
 
 
-/** 
+/**
  * \fn     txDataQ_GetBcasttLink
  * \brief  Get Broadcast Link Id
- * 
- * \return void 
+ *
+ * \return void
  * \sa     txDataQ_GetBcasttLink
- */ 
+ */
 
 void txDataQ_GetBcastLink  (TI_HANDLE hTxDataQ, TI_UINT32 *uHlid)
 {
@@ -1015,26 +1020,26 @@ void txDataQ_GetBcastLink  (TI_HANDLE hTxDataQ, TI_UINT32 *uHlid)
 
 #ifdef TI_DBG
 
-/** 
+/**
  * \fn     txDataQ_PrintModuleParams
  * \brief  Print Module Parameters
- * 
+ *
  * Print Module Parameters
  *
- * \note   
- * \param  hTxDataQ - The object                                          
- * \return void 
- * \sa     
- */ 
-void txDataQ_PrintModuleParams (TI_HANDLE hTxDataQ) 
+ * \note
+ * \param  hTxDataQ - The object
+ * \return void
+ * \sa
+ */
+void txDataQ_PrintModuleParams (TI_HANDLE hTxDataQ)
 {
     TTxDataQ *pTxDataQ = (TTxDataQ *)hTxDataQ;
     TI_UINT32      qIndex;
     TDataLinkQ     *pLinkQ;
     TI_UINT32      uHlid;
-    
+
     WLAN_OS_REPORT(("--------- txDataQueue_printModuleParams ----------\n\n"));
-    
+
     WLAN_OS_REPORT(("bStopNetStackTx = %d\n",pTxDataQ->bStopNetStackTx));
     WLAN_OS_REPORT(("bDataPortEnable = %d\n",pTxDataQ->bDataPortEnable));
     WLAN_OS_REPORT(("uNumQueues      = %d\n",pTxDataQ->uNumQueues));
@@ -1046,21 +1051,21 @@ void txDataQ_PrintModuleParams (TI_HANDLE hTxDataQ)
     WLAN_OS_REPORT(("aQueueMaxSize     %2d %2d %2d %2d\n", pTxDataQ->aQueueMaxSize[0], pTxDataQ->aQueueMaxSize[1], pTxDataQ->aQueueMaxSize[2], pTxDataQ->aQueueMaxSize[3]));
     WLAN_OS_REPORT(("aTxSendPaceThresh %2d %2d %2d %2d\n", pTxDataQ->aTxSendPaceThresh[0], pTxDataQ->aTxSendPaceThresh[1], pTxDataQ->aTxSendPaceThresh[2], pTxDataQ->aTxSendPaceThresh[3]));
     WLAN_OS_REPORT(("aQueueBusy        %2d %2d %2d %2d\n", pTxDataQ->aQueueBusy[0], pTxDataQ->aQueueBusy[1], pTxDataQ->aQueueBusy[2], pTxDataQ->aQueueBusy[3]));
-    /* 
-     * init all queues in all links 
+    /*
+     * init all queues in all links
     */
     for (uHlid = 0; uHlid < WLANLINKS_MAX_LINKS; uHlid++)
     {
         TI_UINT8 *pMacAddr = pTxDataQ->aLinkMac[uHlid].tMacAddr;
         pLinkQ = &pTxDataQ->aDataLinkQ[uHlid]; /* Link queues */
-        
+
         WLAN_OS_REPORT(("Link %3d ----------------------------------------\n", uHlid));
         WLAN_OS_REPORT(("  eType=%1d, bEnabled=%1d, bBusy=%1d\n", pLinkQ->eType, pLinkQ->bEnabled, pLinkQ->bBusy));
-        if (!pLinkQ->bEnabled) 
+        if (!pLinkQ->bEnabled)
             continue;
         WLAN_OS_REPORT(("  MAC(valid=%01d) = %02x:%02x:%02x:%02x:%02x:%02x\n", pTxDataQ->aLinkMac[uHlid].uValid, pMacAddr[0], pMacAddr[1], pMacAddr[2], pMacAddr[3], pMacAddr[4], pMacAddr[5] ));
         WLAN_OS_REPORT(("  aNetStackQueueStopped  %2d %2d %2d %2d\n", pLinkQ->aNetStackQueueStopped[0], pLinkQ->aNetStackQueueStopped[1], pLinkQ->aNetStackQueueStopped[2], pLinkQ->aNetStackQueueStopped[3]));
-        
+
         for (qIndex = 0; qIndex < MAX_NUM_OF_AC; qIndex++)
         {
             WLAN_OS_REPORT(("  Que %d: ", qIndex));
@@ -1070,38 +1075,38 @@ void txDataQ_PrintModuleParams (TI_HANDLE hTxDataQ)
 }
 
 
-/** 
+/**
  * \fn     txDataQ_PrintQueueStatistics
  * \brief  Print queues statistics
- * 
+ *
  * Print queues statistics
  *
- * \note   
- * \param  hTxDataQ - The object                                          
- * \return void 
- * \sa     
- */ 
+ * \note
+ * \param  hTxDataQ - The object
+ * \return void
+ * \sa
+ */
 void txDataQ_PrintQueueStatistics (TI_HANDLE hTxDataQ)
 {
     TTxDataQ *pTxDataQ = (TTxDataQ *)hTxDataQ;
     TDataLinkQ     *pLinkQ;
     TI_UINT32      uHlid;
-    
+
     WLAN_OS_REPORT(("-------------- txDataQueue_printStatistics -------\n\n"));
-    
+
     WLAN_OS_REPORT(("uClsfrMismatchCount      = %d\n",pTxDataQ->uClsfrMismatchCount));
     WLAN_OS_REPORT(("uTxSendPaceTimeoutsCount = %d\n",pTxDataQ->uTxSendPaceTimeoutsCount));
-    
-    /* 
-     * init all queues in all links 
+
+    /*
+     * init all queues in all links
     */
     for (uHlid = 0; uHlid < WLANLINKS_MAX_LINKS; uHlid++)
     {
         TI_UINT8 *pMacAddr = pTxDataQ->aLinkMac[uHlid].tMacAddr;
         pLinkQ = &pTxDataQ->aDataLinkQ[uHlid]; /* Link queues */
-    
+
         WLAN_OS_REPORT(("Link %3d, Enabled=%1d--------------------------\n", uHlid, pLinkQ->bEnabled));
-        if (!pLinkQ->bEnabled) 
+        if (!pLinkQ->bEnabled)
             continue;
         WLAN_OS_REPORT(("  MAC(valid=%01d) = %02x:%02x:%02x:%02x:%02x:%02x\n", pTxDataQ->aLinkMac[uHlid].uValid, pMacAddr[0], pMacAddr[1], pMacAddr[2], pMacAddr[3], pMacAddr[4], pMacAddr[5] ));
         WLAN_OS_REPORT(("  uEnqueuePacket: %8d %8d %8d %8d\n", pLinkQ->aQueueCounters[0].uEnqueuePacket, pLinkQ->aQueueCounters[1].uEnqueuePacket, pLinkQ->aQueueCounters[2].uEnqueuePacket, pLinkQ->aQueueCounters[3].uEnqueuePacket ));
@@ -1115,25 +1120,25 @@ void txDataQ_PrintQueueStatistics (TI_HANDLE hTxDataQ)
     txDataQ_PrintResources(pTxDataQ);
 }
 
-/** 
+/**
  * \fn     txDataQ_ResetQueueStatistics
  * \brief  Reset queues statistics
- * 
+ *
  * Reset queues statistics
  *
- * \note   
- * \param  hTxDataQ - The object                                          
- * \return void 
- * \sa     
- */ 
-void txDataQ_ResetQueueStatistics (TI_HANDLE hTxDataQ) 
+ * \note
+ * \param  hTxDataQ - The object
+ * \return void
+ * \sa
+ */
+void txDataQ_ResetQueueStatistics (TI_HANDLE hTxDataQ)
 {
 	TTxDataQ *pTxDataQ = (TTxDataQ *)hTxDataQ;
 	TDataLinkQ *pLinkQ;
 	TI_UINT32  uHlid;
 
-	/* 
-	 * init all queues in all links 
+	/*
+	 * init all queues in all links
 	*/
 	for (uHlid = 0; uHlid < WLANLINKS_MAX_LINKS; uHlid++)
 	{
@@ -1144,11 +1149,11 @@ void txDataQ_ResetQueueStatistics (TI_HANDLE hTxDataQ)
     pTxDataQ->uTxSendPaceTimeoutsCount = 0;
 }
 
-/** 
+/**
  * \fn     txDataQ_PrintResources
  * \brief  Print resources counters per Link and per Ac
- * 
- */ 
+ *
+ */
 static void txDataQ_PrintResources (TTxDataQ *pTxDataQ)
 {
     TDataResources *pDataRsrc = &pTxDataQ->tDataRsrc;
@@ -1173,18 +1178,18 @@ static void txDataQ_PrintResources (TTxDataQ *pTxDataQ)
 
 
 #endif /* TI_DBG */
-	  
-		
-		  
+
+
+
 /***************************************************************************
 *                      INTERNAL  FUNCTIONS  IMPLEMENTATION				   *
 ****************************************************************************/
 
 
-/** 
+/**
  * \fn     txDataQ_RunScheduler
  * \brief  The module's Tx scheduler
- * 
+ *
  * This function is the Data-Queue scheduler.
  * It selects a packet to transmit from the tx queues and sends it to the TxCtrl.
  * The queues are selected in a round-robin order.
@@ -1193,10 +1198,10 @@ static void txDataQ_PrintResources (TTxDataQ *pTxDataQ)
  *     txDataQ_UpdateBusyMap()
  *     txDataQ_WakeAll()
  *
- * \note   
- * \param  hTxDataQ - The object                                          
- * \return void 
- * \sa     
+ * \note
+ * \param  hTxDataQ - The object
+ * \return void
+ * \sa
  */
 static void txDataQ_RunScheduler (TI_HANDLE hTxDataQ)
 {
@@ -1210,7 +1215,7 @@ static void txDataQ_RunScheduler (TI_HANDLE hTxDataQ)
 	TDataLinkQ *pLinkQ;
     TI_BOOL bStopScheduler = TI_FALSE;
 
-    while(!bStopScheduler) 
+    while(!bStopScheduler)
     {
         bStopScheduler = TI_TRUE;
         for(uIdleLinkCount = 0; uIdleLinkCount < WLANLINKS_MAX_LINKS; uIdleLinkCount++)
@@ -1225,7 +1230,7 @@ static void txDataQ_RunScheduler (TI_HANDLE hTxDataQ)
             {
                 uHlid = 0;
             }
-    
+
             pLinkQ = &pTxDataQ->aDataLinkQ[uHlid]; /* Link queues */
         	/* If the link is busy (AC is full), continue to next queue. */
             if ( (!pLinkQ->bEnabled) || (pLinkQ->bBusy))
@@ -1234,7 +1239,7 @@ static void txDataQ_RunScheduler (TI_HANDLE hTxDataQ)
                 uHlid++;
                 continue;
             }
-    
+
             for(uIdleAcCount = 0; uIdleAcCount < pTxDataQ->uNumQueues; uIdleAcCount++)
             {
                 if ( !pTxDataQ->bDataPortEnable )
@@ -1242,7 +1247,7 @@ static void txDataQ_RunScheduler (TI_HANDLE hTxDataQ)
                     TWD_txXfer_EndOfBurst (pTxDataQ->hTWD);
                     return;
                 }
-    
+
                 if (uQueId == pTxDataQ->uNumQueues)
                 {
                     uQueId = 0;
@@ -1256,7 +1261,7 @@ static void txDataQ_RunScheduler (TI_HANDLE hTxDataQ)
                 context_EnterCriticalSection (pTxDataQ->hContext);
         		pPktCtrlBlk = (TTxCtrlBlk *) que_Dequeue (pLinkQ->aQueues[uQueId]);
                 context_LeaveCriticalSection (pTxDataQ->hContext);
-        
+
         		/* If the queue was empty, continue to the next queue */
         		if (pPktCtrlBlk == NULL)
                 {
@@ -1269,28 +1274,28 @@ static void txDataQ_RunScheduler (TI_HANDLE hTxDataQ)
                     uQueId++;
         			continue;
                 }
-                
+
 #ifdef TI_DBG
                 pLinkQ->aQueueCounters[uQueId].uDequeuePacket++;
 #endif /* TI_DBG */
                 /* Send the packet */
                 eStatus = txCtrl_XmitData (pTxDataQ->hTxCtrl, pPktCtrlBlk);
-    
-                /* 
+
+                /*
                  * If the return status is busy it means that the packet was not sent
                  *   so we need to requeue it for future try.
                  */
                 if(eStatus == STATUS_XMIT_BUSY)
                 {
                     TI_STATUS eQueStatus;
-    
+
                     /* Requeue the packet in a critical section */
                     context_EnterCriticalSection (pTxDataQ->hContext);
                     eQueStatus = que_Requeue (pLinkQ->aQueues[uQueId], (TI_HANDLE)pPktCtrlBlk);
-                    if (eQueStatus != TI_OK) 
+                    if (eQueStatus != TI_OK)
                     {
                         /* If the packet can't be queued drop it */
-                        /* Note: may happen only if this thread was preempted between the   
+                        /* Note: may happen only if this thread was preempted between the
                            dequeue and requeue and new packets were inserted into this quque */
                         txCtrl_FreePacket (pTxDataQ->hTxCtrl, pPktCtrlBlk, TI_NOK);
 #ifdef TI_DBG
@@ -1298,7 +1303,7 @@ static void txDataQ_RunScheduler (TI_HANDLE hTxDataQ)
 #endif /* TI_DBG */
                     }
                     context_LeaveCriticalSection (pTxDataQ->hContext);
-    
+
 #ifdef TI_DBG
                     pLinkQ->aQueueCounters[uQueId].uRequeuePacket++;
 #endif /* TI_DBG */
@@ -1307,7 +1312,7 @@ static void txDataQ_RunScheduler (TI_HANDLE hTxDataQ)
                 }
                 else if( eStatus == STATUS_XMIT_SUCCESS )
                 {
-    
+
                     bStopScheduler = TI_FALSE;
                     /* Save the next que should be proceed by scheduler */
                     pTxDataQ->uNextQueId = uQueId + 1;
@@ -1316,30 +1321,30 @@ static void txDataQ_RunScheduler (TI_HANDLE hTxDataQ)
 #ifdef TI_DBG
                 pLinkQ->aQueueCounters[uQueId].uXmittedPacket++;
 #endif /* TI_DBG */
-    
+
                 uQueId++;
             } /* for(uIdleAcCount = 0; uIdleAcCount < pTxDataQ->uNumQueues; uIdleAcCount++)*/
             uHlid++;
-    
+
         }  /*for(uIdleLinkCount = 0; uIdleLinkCount < WLANLINKS_MAX_LINKS; uIdleLinkCount++)*/
     }  /*while(!bStopScheduler)*/
     TWD_txXfer_EndOfBurst (pTxDataQ->hTWD);
 
 }
 
-/** 
+/**
  * \fn     txDataQ_UpdateLinksBusyState
  * \brief  Update links' busy state
- * 
+ *
  * Update the Links Mode to Busy according to the input LinkBitMap.
-*               Each Link bit that is set indicates that the related Link is Busy. 
+*               Each Link bit that is set indicates that the related Link is Busy.
 *
- * \note   
- * \param  hTxDataQ - The object                                          
- * \param  uLinkBitMap   - The changed TIDs busy bitmap                                          
- * \return void 
- * \sa     
- */ 
+ * \note
+ * \param  hTxDataQ - The object
+ * \param  uLinkBitMap   - The changed TIDs busy bitmap
+ * \return void
+ * \sa
+ */
 static void txDataQ_UpdateLinksBusyState (TTxDataQ *pTxDataQ, TI_UINT32 uLinkBitMap)
 {
 	TI_UINT32 uHlid;
@@ -1358,23 +1363,23 @@ static void txDataQ_UpdateLinksBusyState (TTxDataQ *pTxDataQ, TI_UINT32 uLinkBit
 	}
 }
 
-/** 
+/**
  * \fn     txDataQ_UpdateQueuesBusyState
  * \brief  Update queues' busy state
- * 
+ *
  * Update the Queues Mode to Busy according to the input TidBitMap.
-*               Each Tid that is set indicates that the related Queue is Busy. 
+*               Each Tid that is set indicates that the related Queue is Busy.
 *
- * \note   
- * \param  hTxDataQ - The object                                          
- * \param  uTidBitMap   - The changed TIDs busy bitmap                                          
- * \return void 
- * \sa     
- */ 
+ * \note
+ * \param  hTxDataQ - The object
+ * \param  uTidBitMap   - The changed TIDs busy bitmap
+ * \return void
+ * \sa
+ */
 static void txDataQ_UpdateQueuesBusyState (TTxDataQ *pTxDataQ, TI_UINT32 uTidBitMap)
 {
 	TI_UINT32 uTidIdx;
-	
+
 	/* Go over the TidBitMap and update the related queue busy state */
 	for (uTidIdx = 0; uTidIdx < MAX_NUM_OF_802_1d_TAGS; uTidIdx++, uTidBitMap >>= 1)
 	{
@@ -1392,15 +1397,15 @@ static void txDataQ_UpdateQueuesBusyState (TTxDataQ *pTxDataQ, TI_UINT32 uTidBit
 
 /*
  * \brief   Handle Tx-Send-Pacing timeout.
- * 
+ *
  * \param  hTxDataQ        - Module handle
  * \param  bTwdInitOccured - Indicate if TWD restart (recovery) occured
  * \return void
- * 
+ *
  * \par Description
  * Call the Tx scheduler to handle the queued packets.
- * 
- * \sa 
+ *
+ * \sa
  */
 static void txDataQ_TxSendPaceTimeout (TI_HANDLE hTxDataQ, TI_BOOL bTwdInitOccured)
 {
@@ -1412,16 +1417,16 @@ static void txDataQ_TxSendPaceTimeout (TI_HANDLE hTxDataQ, TI_BOOL bTwdInitOccur
 }
 
 
-/** 
+/**
  * \fn     TxDataQ_SetEncryptFlag
  * \brief  Update link encrypted bit
- * 
- * * \note   
- * \param  pTxdataQ   - The module's object                                          
- * \param  uHlid - link id                                          
- * \return void 
- * \sa     
- */ 
+ *
+ * * \note
+ * \param  pTxdataQ   - The module's object
+ * \param  uHlid - link id
+ * \return void
+ * \sa
+ */
 
 void TxDataQ_SetEncryptFlag(TI_HANDLE hTxDataQ, TI_UINT32  uHlid,int flag)
 {
@@ -1434,16 +1439,16 @@ void TxDataQ_SetEncryptFlag(TI_HANDLE hTxDataQ, TI_UINT32  uHlid,int flag)
     pLinkQ->bEncrypt = flag;
 }
 
-/** 
+/**
  * \fn     TxDataQ_setEncryptionFieldSizes
  * \brief  update encrypted size
- * 
- * * \note   
- * \param  pTxdataQ   - The module's object                                          
- * \param  uHlid - link id                                          
- * \return void 
- * \sa     
- */ 
+ *
+ * * \note
+ * \param  pTxdataQ   - The module's object
+ * \param  uHlid - link id
+ * \return void
+ * \sa
+ */
 void TxDataQ_setEncryptionFieldSizes(TI_HANDLE hTxDataQ, TI_UINT32  uHlid,TI_UINT8 encryptionFieldSize)
 {
     TTxDataQ *pTxDataQ = (TTxDataQ *)hTxDataQ;
@@ -1451,19 +1456,19 @@ void TxDataQ_setEncryptionFieldSizes(TI_HANDLE hTxDataQ, TI_UINT32  uHlid,TI_UIN
 
     pLinkQ = &pTxDataQ->aDataLinkQ[uHlid]; /* Link queues */
     pLinkQ->cEncryptSize = encryptionFieldSize;
-   
+
 }
 
-/** 
+/**
  * \fn     TxDataQ_getEncryptionFieldSizes
  * \brief  update encrypted size
- * 
- * * \note   
- * \param  pTxdataQ   - The module's object                                          
- * \param  uHlid - link id                                          
- * \return void 
- * \sa     
- */ 
+ *
+ * * \note
+ * \param  pTxdataQ   - The module's object
+ * \param  uHlid - link id
+ * \return void
+ * \sa
+ */
 TI_UINT8 TxDataQ_getEncryptionFieldSizes(TI_HANDLE hTxDataQ, TI_UINT32  uHlid)
 {
     TTxDataQ *pTxDataQ = (TTxDataQ *)hTxDataQ;

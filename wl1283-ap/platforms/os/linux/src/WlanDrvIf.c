@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * WlanDrvIf.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 
 /*
@@ -100,11 +105,12 @@ MODULE_LICENSE("Dual BSD/GPL");
 
 /* linux/irq.h declarations */
 extern void disable_irq(unsigned int);
+extern void hPlatform_SetupPm(int (*suspend_cb)(void*), int (*resume_cb)(void*) , void* susres_ctx);
 static int xmit_Bridge (struct sk_buff *skb, struct net_device *dev, TIntraBssBridge *pBssBridgeParam);
 static int SuspendCb(TI_HANDLE hWlanDrvIf);
 static int ResumeCb(TI_HANDLE hWlanDrvIf);
 
-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 31))
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 31))
 static int wlanDrvIf_Xmit(struct sk_buff *skb, struct net_device *dev);
 static int wlanDrvIf_XmitDummy(struct sk_buff *skb, struct net_device *dev);
 static struct net_device_stats *wlanDrvIf_NetGetStat(struct net_device *dev);
@@ -345,7 +351,7 @@ void wlanDrvIf_UpdateDriverState (TI_HANDLE hOs, EDriverSteadyState eDriverState
     /* If the new state is not RUNNING, replace the Tx handler to a dummy one. */
     if (eDriverState != DRV_STATE_RUNNING)
     {
-#if (LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 31))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 31))
        drv->netdev->hard_start_xmit = wlanDrvIf_XmitDummy;
 #else
 		drv->netdev->netdev_ops = &tiwlan_ops_dummy;
@@ -609,7 +615,7 @@ int wlanDrvIf_GetFile (TI_HANDLE hOs, TFileInfo *pFileInfo)
         break;
     case FILE_TYPE_FW:
         if (drv->tCommon.tFwImage.pImage == NULL)
-        {	
+        {
             ti_dprintf(TIWLAN_LOG_ERROR, "wlanDrv_GetFile: ERROR: no Firmware image, exiting\n");
             return TI_NOK;
         }
@@ -755,7 +761,7 @@ int wlanDrvIf_Start (struct net_device *dev)
      *  Insert Start command in DrvMain action queue, request driver scheduling
      *      and wait for action completion (all init process).
      */
-    if (TI_OK != drvMain_InsertAction (drv->tCommon.hDrvMain, ACTION_TYPE_START)) 
+    if (TI_OK != drvMain_InsertAction (drv->tCommon.hDrvMain, ACTION_TYPE_START))
     {
         return -ENODEV;
     }
@@ -794,7 +800,7 @@ int wlanDrvIf_Open (struct net_device *dev)
     if (drv->tCommon.eDriverState != DRV_STATE_RUNNING)
     {
     	status = wlanDrvIf_Start(dev);
-#if (LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 31))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 31))
     	drv->netdev->hard_start_xmit = wlanDrvIf_Xmit;
 #else
     	drv->netdev->netdev_ops = &tiwlan_ops_pri;
@@ -837,7 +843,7 @@ int wlanDrvIf_Stop (struct net_device *dev)
      *  Insert Stop command in DrvMain action queue, request driver scheduling
      *      and wait for Stop process completion.
      */
-    if (TI_OK != drvMain_InsertAction (drv->tCommon.hDrvMain, ACTION_TYPE_STOP)) 
+    if (TI_OK != drvMain_InsertAction (drv->tCommon.hDrvMain, ACTION_TYPE_STOP))
     {
         return -ENODEV;
     }
@@ -901,8 +907,8 @@ static int wlanDrvIf_SetupNetif (TWlanDrvIfObj *drv)
    drv->netdev = dev;
    strcpy (dev->name, TIWLAN_DRV_IF_NAME);
    netif_carrier_off (dev);
-#if (LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 31))
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,23)
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 31))
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,23)
 	dev->validate_addr = NULL;
 #endif
     /* the following is required on at least BSP 23.8 and higher.
@@ -998,12 +1004,6 @@ static int wlanDrvIf_Create (void)
 
     drv->bSuspendInProgress = TI_FALSE;
 
-#if !defined STANDARD_BUS
-   	WLAN_OS_REPORT(("\nZoom2 use external board configuration as well"));
-
-		drv->irq = (OMAP_GPIO_IRQ(IRQ_GPIO));
-	
-#endif
 
     drv->tCommon.eDriverState = DRV_STATE_IDLE;
 #ifdef AP_MODE_ENABLED
@@ -1086,26 +1086,24 @@ static int wlanDrvIf_Create (void)
         ti_dprintf (TIWLAN_LOG_ERROR, "wlanDrvIf_Create(): Failed to register interrupt handler!\n");
 		goto drv_create_end_5;
     }
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23)
-    set_irq_type (drv->irq, IRQT_FALLING);
-#endif
+
 #endif  /* PRIODIC_INTERRUPT */
 
     return 0;
 drv_create_end_5:
-	if (drv->tCommon.hDrvMain) 
+	if (drv->tCommon.hDrvMain)
     {
 		drvMain_Destroy (drv->tCommon.hDrvMain);
 	}
 
 drv_create_end_4:
-	if (drv->wl_sock) 
+	if (drv->wl_sock)
     {
 		sock_release (drv->wl_sock->sk_socket);
 	}
 
 drv_create_end_3:
-	if (drv->netdev) 
+	if (drv->netdev)
     {
 		unregister_netdev (drv->netdev);
 		free_netdev (drv->netdev);
@@ -1152,10 +1150,10 @@ static void wlanDrvIf_Destroy (TWlanDrvIfObj *drv)
         return;
     }
     /* Release the driver network interface */
-	if (drv->pWorkQueue) 
+	if (drv->pWorkQueue)
     {
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,21))
-    cancel_work_sync (&drv->tWork); 
+    cancel_work_sync (&drv->tWork);
 #else
     cancel_delayed_work (&drv->tWork);
 #endif
@@ -1192,12 +1190,7 @@ static void wlanDrvIf_Destroy (TWlanDrvIfObj *drv)
 #else
     if (drv->irq)
     {
-#if defined STANDARD_BUS
         hPlatform_freeInterrupt (drv);
-#else
-    free_irq (drv->irq, drv);
-        hPlatform_freeInterrupt (drv);
-#endif
     }
 #endif
 
@@ -1258,11 +1251,12 @@ static void wlanDrvIf_Destroy (TWlanDrvIfObj *drv)
  * \return Init: 0 - OK, else - failure.   Exit: void
  * \sa     wlanDrvIf_Create, wlanDrvIf_Destroy
  */
+
 static int __init wlanDrvIf_ModuleInit (void)
 {
     printk(KERN_INFO "TIWLAN: driver init\n");
 #ifndef SDIO_KERNEL_MODULE
-	sdioDrv_init();
+	//sdioDrv_init();
 #endif
     return wlanDrvIf_Create ();
 }
@@ -1271,7 +1265,7 @@ static void __exit wlanDrvIf_ModuleExit (void)
 {
     wlanDrvIf_Destroy (pDrvStaticHandle);
 #ifndef SDIO_KERNEL_MODULE
-	sdioDrv_exit();
+	//sdioDrv_exit();
 #endif
     printk (KERN_INFO "TI WLAN: driver unloaded\n");
 }

@@ -1,36 +1,41 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * fwDebug.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
- 
-/** \file  FWDebug.c 
- * 
- *  \see   FWDebug.h 
+
+
+/** \file  FWDebug.c
+ *
+ *  \see   FWDebug.h
  */
 
 #define __FILE_ID__  FILE_ID_103
@@ -45,7 +50,7 @@
 
 #define DMA_SIZE_BUF 256
 
-typedef struct 
+typedef struct
 {
     TI_HANDLE       hOs;
     TI_HANDLE       hReport;
@@ -55,7 +60,7 @@ typedef struct
 	TI_HANDLE hCb;
 
 	TI_UINT8*		pReadBuf;
-        
+
 	TTxnStruct		tTxn;
 	TI_UINT8*		pDMABuf;
 
@@ -69,14 +74,14 @@ static void     fwDbg_ReadAddrCb    (TI_HANDLE hFwDebug,TTxnStruct* pTxn);
 
 /*
  * \brief	Create the FW Debug module
- * 
+ *
  * \param  hOs  - Handle to OS
  * \return The created object
- * 
+ *
  * \par Description
  * This function will allocate memory to FW Debug module.
- * 
- * \sa 
+ *
+ * \sa
  */
 TI_HANDLE fwDbg_Create (TI_HANDLE hOs)
 {
@@ -98,16 +103,16 @@ TI_HANDLE fwDbg_Create (TI_HANDLE hOs)
 
 /*
  * \brief	Initialize the module
- * 
+ *
  * \param  hFwDebug  - Handle to FW Debug
  * \param  hReport - Handle to report
  * \param  hTwif - Handle to TWIF
  * \return none
- * 
+ *
  * \par Description
- * 
- * 
- * \sa 
+ *
+ *
+ * \sa
  */
 void fwDbg_Init (TI_HANDLE hFwDebug,
 				 TI_HANDLE hReport,
@@ -124,14 +129,14 @@ void fwDbg_Init (TI_HANDLE hFwDebug,
 
 /*
  * \brief	Destroy the object
- * 
+ *
  * \param  hFwDebug  - Handle to FW Debug
  * \return none
- * 
+ *
  * \par Description
  * Deallocate the object memory
- * 
- * \sa 
+ *
+ * \sa
  */
 void fwDbg_Destroy (TI_HANDLE hFwDebug)
 {
@@ -150,7 +155,7 @@ void fwDbg_Destroy (TI_HANDLE hFwDebug)
 
 /*
  * \brief	Write Address to FW
- * 
+ *
  * \param  hFwDebug  - Handle to FW Debug
  * \param  Address - Absolute HW address
  * \param  Length - Length in byte to write
@@ -158,12 +163,12 @@ void fwDbg_Destroy (TI_HANDLE hFwDebug)
  * \param  fCb - CB function
  * \param  hCb - CB Handle
  * \return none
- * 
+ *
  * \par Description
  * Write buffer to HW must receive length in byte max size 256 bytes
  * address must be absolute HW address.
- * 
- * \sa 
+ *
+ * \sa
  */
 TI_STATUS fwDbg_WriteAddr (TI_HANDLE hFwDebug,
                            TI_UINT32 Address,
@@ -201,7 +206,7 @@ TRACE1(pFwDebug->hOs, REPORT_SEVERITY_ERROR, "fwDbg_WriteAddr : Buffer Length to
 
 /*
  * \brief	Read Address to FW
- * 
+ *
  * \param  hFwDebug  - Handle to FW Debug
  * \param  Address - Absolute HW address
  * \param  Length - Length in byte to write
@@ -209,12 +214,12 @@ TRACE1(pFwDebug->hOs, REPORT_SEVERITY_ERROR, "fwDbg_WriteAddr : Buffer Length to
  * \param  fCb - CB function
  * \param  hCb - CB Handle
  * \return none
- * 
+ *
  * \par Description
  * Read from HW, must receive length in byte max size 256 bytes
  * address must be absolute HW address.
- * 
- * \sa 
+ *
+ * \sa
  */
 TI_STATUS fwDbg_ReadAddr (TI_HANDLE hFwDebug,
                           TI_UINT32 Address,
@@ -254,15 +259,15 @@ TRACE1(pFwDebug->hOs, REPORT_SEVERITY_ERROR, "fwDbg_ReadAddr : Buffer Length too
 
 /*
  * \brief	Write CB function
- * 
+ *
  * \param  hFwDebug  - Handle to FW Debug
  * \param  pTxn - pointer ti Transact
  * \return none
- * 
+ *
  * \par Description
  * This function called from TWIF upon Async Write
- * 
- * \sa 
+ *
+ * \sa
  */
 static void fwDbg_WriteAddrCb (TI_HANDLE hFwDebug,TTxnStruct* pTxn)
 {
@@ -277,15 +282,15 @@ static void fwDbg_WriteAddrCb (TI_HANDLE hFwDebug,TTxnStruct* pTxn)
 
 /*
  * \brief	Read CB function
- * 
+ *
  * \param  hFwDebug  - Handle to FW Debug
  * \param  pTxn - pointer ti Transact
  * \return none
- * 
+ *
  * \par Description
  * This function called from TWIF upon Async Read
- * 
- * \sa 
+ *
+ * \sa
  */
 static void fwDbg_ReadAddrCb (TI_HANDLE hFwDebug,TTxnStruct* pTxn)
 {
@@ -298,22 +303,22 @@ static void fwDbg_ReadAddrCb (TI_HANDLE hFwDebug,TTxnStruct* pTxn)
 		pFwDebug->fCb(pFwDebug->hCb);
     }
 }
-    
+
 
 /*
  * \brief	Check HW address
- * 
+ *
  * \param  hFwDebug  - Handle to FW Debug
  * \return TI_TRUE, TI_FALSE
- * 
+ *
  * \par Description
  * This function called to check the given address to be a valid memory address.
- * 
- * \sa 
+ *
+ * \sa
  */
 TI_BOOL fwDbg_isValidMemoryAddr (TI_HANDLE hFwDebug, TI_UINT32 Address, TI_UINT32 Length)
 {
-	TFwDebug *pFwDebug = (TFwDebug*)hFwDebug; 
+	TFwDebug *pFwDebug = (TFwDebug*)hFwDebug;
 
 	return twIf_isValidMemoryAddr(pFwDebug->hTwif, Address, Length);
 }
@@ -321,18 +326,18 @@ TI_BOOL fwDbg_isValidMemoryAddr (TI_HANDLE hFwDebug, TI_UINT32 Address, TI_UINT3
 
 /*
  * \brief	Check HW address
- * 
+ *
  * \param  hFwDebug  - Handle to FW Debug
  * \return TI_TRUE, TI_FALSE
- * 
+ *
  * \par Description
  * This function called to check the given address to be a valid register address.
- * 
- * \sa 
+ *
+ * \sa
  */
 TI_BOOL fwDbg_isValidRegAddr (TI_HANDLE hFwDebug, TI_UINT32 Address, TI_UINT32 Length)
 {
-	TFwDebug *pFwDebug = (TFwDebug*)hFwDebug; 
+	TFwDebug *pFwDebug = (TFwDebug*)hFwDebug;
 
 	return twIf_isValidRegAddr(pFwDebug->hTwif, Address, Length);
 }

@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * TrafficMonitor.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /***************************************************************************/
 /*                                                                         */
 /*              MODULE:         TrafficMonitor.c                           */
@@ -42,7 +47,7 @@
 #include "DrvMainModules.h"
 
 
-/* Percentage of max down events test interval to use in our "traffic down" timer */ 
+/* Percentage of max down events test interval to use in our "traffic down" timer */
 #define MIN_INTERVAL_PERCENT 50
 
 /*#define TRAFF_TEST*/
@@ -82,8 +87,8 @@ static void TrafficMonitor_ChangeDownTimerStatus (TI_HANDLE hTrafficMonitor, TI_
 TI_HANDLE TrafficMonitor_create(TI_HANDLE hOs)
 {
     TrafficMonitor_t *TrafficMonitor;
-    
-    /* Allocate the data structure TrafficMonitor*/     
+
+    /* Allocate the data structure TrafficMonitor*/
         TrafficMonitor = (TrafficMonitor_t*)os_memoryAlloc(hOs, sizeof(TrafficMonitor_t));
         if (TrafficMonitor == NULL)
         return NULL;
@@ -95,12 +100,12 @@ TI_HANDLE TrafficMonitor_create(TI_HANDLE hOs)
 #endif
 
     TrafficMonitor->hOs = hOs;
-    
+
     /*Creates the list that will hold all the registered alert requests*/
     TrafficMonitor->NotificationRegList = List_create(hOs,MAX_MONITORED_REQ,sizeof(TrafficAlertElement_t));
     if (TrafficMonitor->NotificationRegList == NULL)
         return TrafficMonitor_ExitFunc(TrafficMonitor,hOs);
- 
+
     return (TI_HANDLE)TrafficMonitor;
 }
 
@@ -116,7 +121,7 @@ static TI_HANDLE TrafficMonitor_ExitFunc(TrafficMonitor_t *TrafficMonitor,TI_HAN
         {
             tmr_DestroyTimer (TrafficMonitor->hTrafficMonTimer);
         }
-        os_memoryFree(hOs, TrafficMonitor, sizeof(TrafficMonitor_t));            
+        os_memoryFree(hOs, TrafficMonitor, sizeof(TrafficMonitor_t));
     }
     return NULL;
 }
@@ -130,7 +135,7 @@ void TrafficMonitor_Init (TStadHandlesList *pStadHandles, TI_UINT32 BWwindowMs)
 {
     TrafficMonitor_t *TrafficMonitor = (TrafficMonitor_t *)(pStadHandles->hTrafficMon);
     TI_UINT32 uCurrTS = os_timeStampMs (TrafficMonitor->hOs);
-        
+
     /* Create the base threshold timer that will serve all the down thresholds*/
     TrafficMonitor->hTrafficMonTimer = tmr_CreateTimer (pStadHandles->hTimer);
 
@@ -145,16 +150,16 @@ void TrafficMonitor_Init (TStadHandlesList *pStadHandles, TI_UINT32 BWwindowMs)
 	os_memoryZero(TrafficMonitor->hOs,&TrafficMonitor->DirectRxFrameBW,sizeof(BandWidth_t));
 	TrafficMonitor->DirectRxFrameBW.auFirstEventsTS[0] = uCurrTS;
 	TrafficMonitor->DirectTxFrameBW.auFirstEventsTS[0] = uCurrTS;
-    
+
     /*Registering to the RX module for notification.*/
-    TrafficMonitor->RxRegReqHandle = rxData_RegNotif (pStadHandles->hRxData, 
+    TrafficMonitor->RxRegReqHandle = rxData_RegNotif (pStadHandles->hRxData,
                                                       DIRECTED_FRAMES_RECV,
                                                       TrafficMonitor_Event,
                                                       TrafficMonitor,
                                                       RX_TRAFF_MODULE);
 
     /*Registering to the TX module for notification .*/
-    TrafficMonitor->TxRegReqHandle = txCtrlParams_RegNotif (pStadHandles->hTxCtrl, 
+    TrafficMonitor->TxRegReqHandle = txCtrlParams_RegNotif (pStadHandles->hTxCtrl,
                                                             DIRECTED_FRAMES_XFER,
                                                             TrafficMonitor_Event,
                                                             TrafficMonitor,
@@ -173,12 +178,12 @@ void TrafficMonitor_Init (TStadHandlesList *pStadHandles, TI_UINT32 BWwindowMs)
 /************************************************************************/
 /*                TrafficMonitor_Start                                  */
 /************************************************************************/
-TI_STATUS TrafficMonitor_Start(TI_HANDLE hTrafficMonitor)       
+TI_STATUS TrafficMonitor_Start(TI_HANDLE hTrafficMonitor)
 {
     TrafficMonitor_t *TrafficMonitor =(TrafficMonitor_t*)hTrafficMonitor;
     TrafficAlertElement_t *AlertElement;
     TI_UINT32 CurentTime;
-  
+
 
     if(TrafficMonitor == NULL)
         return TI_NOK;
@@ -186,16 +191,16 @@ TI_STATUS TrafficMonitor_Start(TI_HANDLE hTrafficMonitor)
     /*starts the bandwidth TIMER*/
     if(!TrafficMonitor->Active) /*To prevent double call to timer start*/
     {
-        TrafficMonitor_UpdateDownTrafficTimerState (TrafficMonitor);	
+        TrafficMonitor_UpdateDownTrafficTimerState (TrafficMonitor);
     }
-   
+
     AlertElement  = (TrafficAlertElement_t*)List_GetFirst(TrafficMonitor->NotificationRegList);
     CurentTime = os_timeStampMs(TrafficMonitor->hOs);
-   
-    /* go over all the Down elements and reload the timer*/    
+
+    /* go over all the Down elements and reload the timer*/
     while(AlertElement)
     {
-        if(AlertElement->CurrentState != ALERT_WAIT_FOR_RESET) 
+        if(AlertElement->CurrentState != ALERT_WAIT_FOR_RESET)
         {
             AlertElement->EventCounter = 0;
             AlertElement->TimeOut = AlertElement->TimeIntervalMs + CurentTime;
@@ -212,34 +217,34 @@ TI_STATUS TrafficMonitor_Start(TI_HANDLE hTrafficMonitor)
 /************************************************************************/
 /*              TrafficMonitor_Stop                                     */
 /************************************************************************/
-TI_STATUS TrafficMonitor_Stop(TI_HANDLE hTrafficMonitor)        
+TI_STATUS TrafficMonitor_Stop(TI_HANDLE hTrafficMonitor)
 {
     TrafficMonitor_t       *pTrafficMonitor = (TrafficMonitor_t*)hTrafficMonitor;
     TrafficAlertElement_t  *AlertElement;
-       
+
     if (pTrafficMonitor == NULL)
     {
         return TI_NOK;
     }
-    
+
     if (pTrafficMonitor->Active) /*To prevent double call to timer stop*/
     {
-    
-        pTrafficMonitor->Active = TI_FALSE;  
-   
+
+        pTrafficMonitor->Active = TI_FALSE;
+
         pTrafficMonitor->DownTimerEnabled = TI_FALSE;
         tmr_StopTimer (pTrafficMonitor->hTrafficMonTimer);
-    }  
+    }
 
     /* Set all events state to ALERT_OFF to enable them to "kick" again once after TrafficMonitor is started */
     AlertElement = (TrafficAlertElement_t*)List_GetFirst(pTrafficMonitor->NotificationRegList);
-    
+
     while(AlertElement)
     {
         AlertElement->CurrentState = ALERT_OFF;
         AlertElement = (TrafficAlertElement_t*)List_GetNext(pTrafficMonitor->NotificationRegList);
-    }  
-    
+    }
+
     return TI_OK;
 }
 
@@ -248,7 +253,7 @@ TI_STATUS TrafficMonitor_Stop(TI_HANDLE hTrafficMonitor)
 /************************************************************************/
 /*                  TrafficMonitor_Destroy                              */
 /************************************************************************/
-TI_STATUS TrafficMonitor_Destroy(TI_HANDLE hTrafficMonitor)     
+TI_STATUS TrafficMonitor_Destroy(TI_HANDLE hTrafficMonitor)
 {
     TrafficMonitor_t *TrafficMonitor = (TrafficMonitor_t*)hTrafficMonitor;
 
@@ -267,42 +272,42 @@ TI_STATUS TrafficMonitor_Destroy(TI_HANDLE hTrafficMonitor)
         {
             tmr_DestroyTimer (TrafficMonitor->hTrafficMonTimer);
         }
-        
+
 #ifdef TRAFF_TEST
 		if (TestEventTimer)
 		{
 			tmr_DestroyTimer (TestEventTimer);
 		}
-#endif    
-    
-        os_memoryFree(TrafficMonitor->hOs, TrafficMonitor, sizeof(TrafficMonitor_t)); 
+#endif
+
+        os_memoryFree(TrafficMonitor->hOs, TrafficMonitor, sizeof(TrafficMonitor_t));
 
         return TI_OK;
     }
-    
+
     return TI_NOK;
 }
 
 
 /***********************************************************************
- *                        TrafficMonitor_RegEvent                               
+ *                        TrafficMonitor_RegEvent
  ***********************************************************************
 DESCRIPTION: Reg event processing function, Perform the following:
 
-                                
+
 INPUT:          hTrafficMonitor -       Traffic Monitor the object.
-                        
-            TrafficAlertRegParm -       structure which include values to set for 
+
+            TrafficAlertRegParm -       structure which include values to set for
                                                 the requested Alert event
-                        
-            AutoResetCreate - is only relevant to edge alerts. 
+
+            AutoResetCreate - is only relevant to edge alerts.
                   If AutoResetCreate flag is set to true then the registration function will create a conjunction reset element automatic
                  this reset element will be with the same threshold but opposite in direction
- 
+
                  If AutoResetCreate flag is set to false then the reset element will be supplied afterward by the user with the function
                  TrafficMonitor_SetRstCondition() the alert will not be active till the reset function will be set.
 
-OUTPUT:         
+OUTPUT:
 
 RETURN:     TrafficAlertElement pointer on success, NULL otherwise
 
@@ -312,7 +317,7 @@ TI_HANDLE TrafficMonitor_RegEvent(TI_HANDLE hTrafficMonitor,TrafficAlertRegParm_
     TrafficMonitor_t *TrafficMonitor =(TrafficMonitor_t*)hTrafficMonitor;
     TrafficAlertElement_t  *TrafficAlertElement;
     TI_UINT32 CurentTime ;
-   
+
     if(TrafficMonitor == NULL)
        return NULL;
 
@@ -320,7 +325,7 @@ TI_HANDLE TrafficMonitor_RegEvent(TI_HANDLE hTrafficMonitor,TrafficAlertRegParm_
 
     /*Gets a TrafficAlertElement_t memory from the list to assign to the registered request*/
     TrafficAlertElement = (TrafficAlertElement_t*)List_AllocElement(TrafficMonitor->NotificationRegList);
-    if (TrafficAlertElement == NULL) 
+    if (TrafficAlertElement == NULL)
     {   /* add print*/
                 return NULL  ;
     }
@@ -336,7 +341,7 @@ TI_HANDLE TrafficMonitor_RegEvent(TI_HANDLE hTrafficMonitor,TrafficAlertRegParm_
     TrafficAlertElement->TimeOut = CurentTime + TrafficAlertRegParm->TimeIntervalMs;
     TrafficAlertElement->EventCounter = 0;
     TrafficMonitor_SetMask(TrafficMonitor,TrafficAlertElement,TrafficAlertRegParm->MonitorType);
-    
+
     TrafficAlertElement->CurrentState = ALERT_OFF;
     TrafficAlertElement->AutoCreated = TI_FALSE;
     TrafficAlertElement->Enabled = TI_FALSE;
@@ -357,7 +362,7 @@ TI_HANDLE TrafficMonitor_RegEvent(TI_HANDLE hTrafficMonitor,TrafficAlertRegParm_
 
             /*
              copy the Traffic Element init params to the reset Elemnt Except for
-             the direction and the call back that is set to null the CurrentState set to disable.   
+             the direction and the call back that is set to null the CurrentState set to disable.
              And the reset condition,that points to the muster alert.
              */
             os_memoryCopy(TrafficMonitor->hOs,TrafficAlertElement->ResetElment[0],TrafficAlertElement,sizeof(TrafficAlertElement_t));
@@ -370,24 +375,24 @@ TI_HANDLE TrafficMonitor_RegEvent(TI_HANDLE hTrafficMonitor,TrafficAlertRegParm_
             TrafficAlertElement->ResetElment[0]->CurrentState = ALERT_WAIT_FOR_RESET;
             TrafficAlertElement->ResetElment[0]->ResetElment[0] = TrafficAlertElement;
             TrafficAlertElement->ResetElment[0]->AutoCreated = TI_TRUE;
- 
+
             TrafficAlertElement->ResetElment[0]->RstWasAssigned = TI_TRUE;
             TrafficAlertElement->RstWasAssigned = TI_TRUE;
-   
+
         }
         else/* The reset element will be supplied afterward by the user in the meanwhile disable the alert till then*/
         {
             TrafficAlertElement->RstWasAssigned = TI_FALSE;
             TrafficAlertElement->CurrentState = ALERT_WAIT_FOR_RESET;
         }
-        
+
     }
 
     TrafficMonitor_UpdateDownTrafficTimerState (TrafficMonitor);
 
     return TrafficAlertElement;
 }
- 
+
 
 /************************************************************************/
 /*                  FindRstElemEntryIndex                               */
@@ -410,7 +415,7 @@ static TI_STATUS FindRstElemEntryIndex (TrafficMonitor_t *TrafficMonitor,Traffic
 /*                  TrafficMonitor_SetMask                              */
 /************************************************************************/
 /*
- *      Convert the Mask from the types that declared in the 
+ *      Convert the Mask from the types that declared in the
  *  TrafficMonitorAPI to the types that are used in the Rx Tx modules.
  *  And update the TX and RX module of the new event req
  *  Sets the aggregation function that corresponds to the specific mask type
@@ -419,7 +424,7 @@ static TI_STATUS TrafficMonitor_SetMask(TrafficMonitor_t *TrafficMonitor,Traffic
 {
     TI_UINT32 TxMask = 0;
     TI_UINT32 RxMask = 0;
-    
+
    switch(MaskType) {
    case TX_RX_DIRECTED_FRAMES:
         TxMask = DIRECTED_FRAMES_XFER;
@@ -463,15 +468,15 @@ static TI_STATUS TrafficMonitor_SetMask(TrafficMonitor_t *TrafficMonitor,Traffic
         WLAN_OS_REPORT(("TrafficMonitor_SetMask - unknown parameter: %d\n", MaskType));
        return TI_NOK;
    }
- 
-   
+
+
    if(RxMask)
    {
        TrafficAlertElement->MonitorMask[RX_TRAFF_MODULE] = RxMask;
        if(rxData_AddToNotifMask(TrafficMonitor->hRxData,TrafficMonitor->RxRegReqHandle,RxMask) == TI_NOK)
            return TI_NOK;
    }
-   
+
    if(TxMask)
    {
        TrafficAlertElement->MonitorMask[TX_TRAFF_MODULE] = TxMask;
@@ -484,25 +489,25 @@ static TI_STATUS TrafficMonitor_SetMask(TrafficMonitor_t *TrafficMonitor,Traffic
 
 
 /***********************************************************************
- *                        TrafficMonitor_SetRstCondition                        
+ *                        TrafficMonitor_SetRstCondition
  ***********************************************************************
 DESCRIPTION: Reg event processing function, Perform the following:
-             Sets the given reset element to the Alert element. 
-             if MutualRst is set, then The operation is done vise versa .  
-                                
-INPUT:          hTrafficMonitor -       Traffic Monitor the object.
-                        
-            EventHandle -         Alert event
-            
-            ResetEventHandle  Alert Event that will be  used to as the rest for above.
-                        
-            MutualRst - if the 2 elements are used to reset One another. 
+             Sets the given reset element to the Alert element.
+             if MutualRst is set, then The operation is done vise versa .
 
-NOTE        If the reset element event condition is the same as the alert element the user 
-            have to check the that threshold is bigger or smaller according to the direction 
+INPUT:          hTrafficMonitor -       Traffic Monitor the object.
+
+            EventHandle -         Alert event
+
+            ResetEventHandle  Alert Event that will be  used to as the rest for above.
+
+            MutualRst - if the 2 elements are used to reset One another.
+
+NOTE        If the reset element event condition is the same as the alert element the user
+            have to check the that threshold is bigger or smaller according to the direction
             else it can create a deadlock
 
-OUTPUT:         
+OUTPUT:
 
 RETURN:     TI_OK on success, TI_NOK otherwise
 
@@ -515,17 +520,17 @@ TI_STATUS TrafficMonitor_SetRstCondition(TI_HANDLE hTrafficMonitor, TI_HANDLE Ev
     int i,x;
     TI_UINT32 CurentTime ;
 
-    if((TrafficMonitor == NULL) || (EventHandle == NULL) || (TrafficResetAlertElement == NULL)) 
+    if((TrafficMonitor == NULL) || (EventHandle == NULL) || (TrafficResetAlertElement == NULL))
         return TI_NOK;
 
-    
+
     CurentTime = os_timeStampMs(TrafficMonitor->hOs);
 
     /*
-    Check that validity of the reset condition 
+    Check that validity of the reset condition
     1.The reset condition is edge.
     2.The direction is opposite from the main alert.
-    3.The threshold is bigger or smaller according to the direction 
+    3.The threshold is bigger or smaller according to the direction
     This condition is not checked but the user have check it else it can create a deadlock..
     */
     if((TrafficResetAlertElement->Trigger != TRAFF_EDGE) || (TrafficAlertElement->Trigger != TRAFF_EDGE))
@@ -537,10 +542,10 @@ TI_STATUS TrafficMonitor_SetRstCondition(TI_HANDLE hTrafficMonitor, TI_HANDLE Ev
     /*Find an empty Rst element entry*/
     if(FindRstElemEntryIndex(TrafficMonitor,TrafficResetAlertElement,&i) == TI_NOK)
         return TI_NOK;
-    
+
     TrafficResetAlertElement->ResetElment[i] = TrafficAlertElement;
-    
-    /*if we know for sure that No Rst Element was assigned  
+
+    /*if we know for sure that No Rst Element was assigned
     therefore that element was in disable mode and we have to enable it.*/
     if (!(TrafficAlertElement->RstWasAssigned))
     {
@@ -549,7 +554,7 @@ TI_STATUS TrafficMonitor_SetRstCondition(TI_HANDLE hTrafficMonitor, TI_HANDLE Ev
         TrafficAlertElement->TimeOut = CurentTime + TrafficAlertElement->TimeIntervalMs;
         TrafficAlertElement->EventCounter =0;
     }
-    
+
 
     if(MutualRst)
     {
@@ -562,7 +567,7 @@ TI_STATUS TrafficMonitor_SetRstCondition(TI_HANDLE hTrafficMonitor, TI_HANDLE Ev
       }
 
       TrafficAlertElement->ResetElment[x] = TrafficResetAlertElement;
-      /*if know for sure that No Rst Element was assigned  
+      /*if know for sure that No Rst Element was assigned
       therefore that element was in disable mode and we have to enable it.*/
       if (!(TrafficResetAlertElement->RstWasAssigned))
       {
@@ -581,11 +586,11 @@ TI_STATUS TrafficMonitor_SetRstCondition(TI_HANDLE hTrafficMonitor, TI_HANDLE Ev
 /************************************************************************/
 void TrafficMonitor_CleanRelatedRef(TrafficMonitor_t *TrafficMonitor,TrafficAlertElement_t *TrafficAlertElement)
 {
- 
+
     int i;
     TrafficAlertElement_t *AlertElement  = (TrafficAlertElement_t*)List_GetFirst(TrafficMonitor->NotificationRegList);
-      
-    /* go over all the Down elements and check for alert ResetElment that ref to TrafficAlertElement*/    
+
+    /* go over all the Down elements and check for alert ResetElment that ref to TrafficAlertElement*/
     while(AlertElement)
     {
         for(i=0;i<MAX_RST_ELMENT_PER_ALERT;i++)
@@ -594,9 +599,9 @@ void TrafficMonitor_CleanRelatedRef(TrafficMonitor_t *TrafficMonitor,TrafficAler
                 AlertElement->ResetElment[i] = NULL;
         }
         AlertElement = (TrafficAlertElement_t*)List_GetNext(TrafficMonitor->NotificationRegList);
-    } 
+    }
 }
- 
+
 
 
 /************************************************************************/
@@ -671,7 +676,7 @@ void TrafficMonitor_UnregEvent(TI_HANDLE hTrafficMonitor, TI_HANDLE EventHandle)
 
     if(TrafficMonitor == NULL)
         return ;
-    
+
     /*If it was an edge alert then there can be one more alert element to free.*/
     /*one is the alert, and the second is the reset element that corresponds to this alert*/
     /*if it was  Auto Created*/
@@ -685,14 +690,14 @@ void TrafficMonitor_UnregEvent(TI_HANDLE hTrafficMonitor, TI_HANDLE EventHandle)
 
     TrafficMonitor_UpdateDownTrafficTimerState (TrafficMonitor);
 }
- 
+
 
 
 /***********************************************************************
- *                        isThresholdUp                 
+ *                        isThresholdUp
  ***********************************************************************
-DESCRIPTION: Evaluate if alert element as crossed his threshold 
-             if yes it operate the callback registered for this alert and take care of the alert state.  
+DESCRIPTION: Evaluate if alert element as crossed his threshold
+             if yes it operate the callback registered for this alert and take care of the alert state.
                          For alert with UP direction the following algorithm is preformed
              If the threshold is passed in the req time interval or less. then
              For Level
@@ -701,32 +706,32 @@ DESCRIPTION: Evaluate if alert element as crossed his threshold
                 The alert mode is changed to wait for reset and the reset element is set to off.
                 And his timeout is set
 
-INPUT:                          
+INPUT:
             EventHandle -         Alert event
-            CurrentTime - the current time Time stamp 
-            
-OUTPUT:         
+            CurrentTime - the current time Time stamp
+
+OUTPUT:
 
 RETURN:     If  threshold crossed TI_TRUE else False
 
 ************************************************************************/
 static TI_BOOL isThresholdUp(TrafficAlertElement_t *AlertElement , TI_UINT32 CurrentTime)
-{  
+{
     int i;
-    
-    if (AlertElement->TimeOut < CurrentTime)        
+
+    if (AlertElement->TimeOut < CurrentTime)
     {
         AlertElement->EventCounter = AlertElement->LastCounte;
         AlertElement->TimeOut = CurrentTime + AlertElement->TimeIntervalMs;
     }
-    
+
     if (AlertElement->EventCounter > AlertElement->Threshold)
     {
         AlertElement->EventCounter = 0;
         /*Sets the new due time (time out)*/
         AlertElement->TimeOut = CurrentTime + AlertElement->TimeIntervalMs;
-        
-        /*For Edge alert change the alert status to wait for reset and 
+
+        /*For Edge alert change the alert status to wait for reset and
         The corresponding reset element from wait for reset To off.
         That way toggling the two elements*/
         if(AlertElement->Trigger == TRAFF_EDGE)
@@ -744,25 +749,25 @@ static TI_BOOL isThresholdUp(TrafficAlertElement_t *AlertElement , TI_UINT32 Cur
                     }
             }
         }
-        else 
+        else
             AlertElement->CurrentState = ALERT_ON;
-        
+
         /*Call the callback function*/
         if((AlertElement->CallBack != NULL) && AlertElement->Enabled)
             AlertElement->CallBack(AlertElement->Context,AlertElement->Cookie);
         return TI_TRUE;
     }
-    
+
     return TI_FALSE;
 }
 
 
 
 /***********************************************************************
- *                        isThresholdDown               
+ *                        isThresholdDown
  ***********************************************************************
-DESCRIPTION: Evaluate if alert element as crossed his threshold 
-             if yes it operate the callback registered for this alert and take care of the alert state.  
+DESCRIPTION: Evaluate if alert element as crossed his threshold
+             if yes it operate the callback registered for this alert and take care of the alert state.
                          For alert with DOWN direction the following algorithm is preformed
              If the threshold is passed (EventCounter < Threshold) in the req time only. then
              For Level
@@ -772,11 +777,11 @@ DESCRIPTION: Evaluate if alert element as crossed his threshold
                The alert mode is changed to wait for reset and the reset element is set to off.
                And his timeout is set.
 
-INPUT:                          
+INPUT:
             EventHandle -         Alert event
-            CurrentTime - the current time Time stamp 
-            
-OUTPUT:         
+            CurrentTime - the current time Time stamp
+
+OUTPUT:
 
 RETURN:     If threshold crossed TI_TRUE else False
 
@@ -789,14 +794,14 @@ static TI_BOOL isThresholdDown(TrafficAlertElement_t *AlertElement , TI_UINT32 C
     /*
     if its end of window time.
     */
-    if (AlertElement->TimeOut <= CurrentTime)        
+    if (AlertElement->TimeOut <= CurrentTime)
     {
         /*
         if there was a down edge event.
         */
         if (AlertElement->EventCounter <= AlertElement->Threshold)
         {
-            /*For Edge alert change the alert status to wait for reset and 
+            /*For Edge alert change the alert status to wait for reset and
             The corresponding reset element from wait for reset To off.
             That way toggling the two elements*/
             if(AlertElement->Trigger == TRAFF_EDGE)
@@ -814,13 +819,13 @@ static TI_BOOL isThresholdDown(TrafficAlertElement_t *AlertElement , TI_UINT32 C
                         }
                 }
             }
-            else 
+            else
                 AlertElement->CurrentState = ALERT_ON;
-            
+
             /*Call the callback function*/
             if((AlertElement->CallBack != NULL) && AlertElement->Enabled)
                 AlertElement->CallBack(AlertElement->Context,AlertElement->Cookie);
-            
+
             returnVal = TI_TRUE;
         }
 
@@ -851,37 +856,37 @@ static TI_BOOL isThresholdDown(TrafficAlertElement_t *AlertElement , TI_UINT32 C
 /*              TimerMonitor_TimeOut                                    */
 /************************************************************************/
 /*
- *      Timer function that is called for every x time interval 
- *   That will invoke a process if any down limit as occurred. 
+ *      Timer function that is called for every x time interval
+ *   That will invoke a process if any down limit as occurred.
  *
  ************************************************************************/
 static void TimerMonitor_TimeOut (TI_HANDLE hTrafficMonitor, TI_BOOL bTwdInitOccured)
 {
-    
+
     TrafficMonitor_t *TrafficMonitor =(TrafficMonitor_t*)hTrafficMonitor;
     TrafficAlertElement_t *AlertElement;
     TI_UINT32 CurentTime;
     TI_UINT32 activeTrafDownEventsNum = 0;
     TI_UINT32 trafficDownMinTimeout = 0xFFFFFFFF;
-  
+
     if(TrafficMonitor == NULL)
         return;
 
     AlertElement  = (TrafficAlertElement_t*)List_GetFirst(TrafficMonitor->NotificationRegList);
     CurentTime = os_timeStampMs(TrafficMonitor->hOs);
-    
-    
-    /* go over all the Down elements and check for alert */    
+
+
+    /* go over all the Down elements and check for alert */
     while(AlertElement)
     {
-        if(AlertElement->CurrentState != ALERT_WAIT_FOR_RESET) 
+        if(AlertElement->CurrentState != ALERT_WAIT_FOR_RESET)
         {
             if (AlertElement->Direction == TRAFF_DOWN)
             {
                isThresholdDown(AlertElement,CurentTime);
-            }   
+            }
         }
- 
+
          if ((AlertElement->Direction == TRAFF_DOWN) && (AlertElement->Trigger == TRAFF_EDGE) && (AlertElement->CurrentState == ALERT_OFF) && (AlertElement->Enabled == TI_TRUE))
 {
             /* Increase counter of active traffic down events */
@@ -891,12 +896,12 @@ static void TimerMonitor_TimeOut (TI_HANDLE hTrafficMonitor, TI_BOOL bTwdInitOcc
             if ((AlertElement->TimeIntervalMs) < (trafficDownMinTimeout))
                trafficDownMinTimeout = AlertElement->TimeIntervalMs;
          }
-    
+
         AlertElement = (TrafficAlertElement_t*)List_GetNext(TrafficMonitor->NotificationRegList);
-    }   
-    
+    }
+
    TrafficMonitor_ChangeDownTimerStatus (TrafficMonitor,activeTrafDownEventsNum,trafficDownMinTimeout);
-    
+
 }
 
 /***********************************************************************
@@ -904,7 +909,7 @@ static void TimerMonitor_TimeOut (TI_HANDLE hTrafficMonitor, TI_BOOL bTwdInitOcc
  ***********************************************************************
 DESCRIPTION: Returns the current status of an event element.
 
-INPUT:      TrafficAlertElement_t 
+INPUT:      TrafficAlertElement_t
 
 
 OUTPUT:    bool
@@ -918,8 +923,8 @@ TI_BOOL TrafficMonitor_IsEventOn(TI_HANDLE EventHandle)
 
     if(TrafficAlertElement == NULL)
         return TI_FALSE;
-    
-    
+
+
     if (TrafficAlertElement->CurrentState == ALERT_OFF)
         return TI_FALSE;
     else
@@ -930,26 +935,26 @@ TI_BOOL TrafficMonitor_IsEventOn(TI_HANDLE EventHandle)
 
 
 /***********************************************************************
- *                        TrafficMonitor_GetFrameBandwidth                        
+ *                        TrafficMonitor_GetFrameBandwidth
  ***********************************************************************
-DESCRIPTION: Returns the total direct frames in the Rx and Tx per second. 
-                                
+DESCRIPTION: Returns the total direct frames in the Rx and Tx per second.
+
 INPUT:          hTrafficMonitor -       Traffic Monitor the object.
-                        
-            
-OUTPUT:         
+
+
+OUTPUT:
 
 RETURN:     Total BW
 ************************************************************************/
 int TrafficMonitor_GetFrameBandwidth(TI_HANDLE hTrafficMonitor)
 {
 	TrafficMonitor_t 	*pTrafficMonitor =(TrafficMonitor_t*)hTrafficMonitor;
-	TI_UINT32 			uCurentTS;  
-   
+	TI_UINT32 			uCurentTS;
+
 	if(pTrafficMonitor == NULL)
         return TI_NOK;
 
-	uCurentTS = os_timeStampMs(pTrafficMonitor->hOs);  
+	uCurentTS = os_timeStampMs(pTrafficMonitor->hOs);
 
 	/* Calculate BW for Rx & Tx */
 	return ( TrafficMonitor_calcBW(&pTrafficMonitor->DirectRxFrameBW, uCurentTS) +
@@ -957,13 +962,13 @@ int TrafficMonitor_GetFrameBandwidth(TI_HANDLE hTrafficMonitor)
 }
 
 /***********************************************************************
-*                        TrafficMonitor_updateBW                        
+*                        TrafficMonitor_updateBW
 ***********************************************************************
-DESCRIPTION: Upon receiving an event of Tx/Rx (a packet was sent or received), This function is 
+DESCRIPTION: Upon receiving an event of Tx/Rx (a packet was sent or received), This function is
 				called and performs BW calculation.
 
-INPUT:          
-				pBandWidth		- BW of Rx or Tx	
+INPUT:
+				pBandWidth		- BW of Rx or Tx
 				uCurrentTS		- current TS of the recent event
 
 OUTPUT:         pBandWidth		- updated counters and TS
@@ -973,25 +978,25 @@ void TrafficMonitor_updateBW(BandWidth_t *pBandWidth, TI_UINT32 uCurrentTS)
 {
 	/* Check if we should move to the next window */
 	if ( (uCurrentTS - pBandWidth->auFirstEventsTS[pBandWidth->uCurrentWindow]) < (SIZE_OF_WINDOW_MS) )
-	{	
+	{
 		pBandWidth->auWindowCounter[pBandWidth->uCurrentWindow]++;
 	}
 	else	/* next window */
-	{	
-		/* increment current window and mark the first event received */	
+	{
+		/* increment current window and mark the first event received */
 		pBandWidth->uCurrentWindow = (pBandWidth->uCurrentWindow + 1) & CYCLIC_COUNTER_ELEMENT;
 		pBandWidth->auFirstEventsTS[pBandWidth->uCurrentWindow] = uCurrentTS;
 		pBandWidth->auWindowCounter[pBandWidth->uCurrentWindow] = 1;
 	}
 }
 /***********************************************************************
-*                        TrafficMonitor_calcBW                        
+*                        TrafficMonitor_calcBW
 ***********************************************************************
 DESCRIPTION: Returns the total direct frames in Rx or Tx.
-			 It is called when outside module request the BW. 
+			 It is called when outside module request the BW.
 			 Calculate band width by summing up the sliding windows.
 
-INPUT:       pBandWidth		- BW of Rx or Tx	
+INPUT:       pBandWidth		- BW of Rx or Tx
 			 uCurrentTS		- current TS
 
 RETURN:     Total BW
@@ -1005,42 +1010,42 @@ TI_UINT32 TrafficMonitor_calcBW(BandWidth_t *pBandWidth, TI_UINT32 uCurrentTS)
 
 	/* As long as the summed windows are less than BW_WINDOW_MS and we didn't loop the whole array */
 	while ( (uTotalTime < BW_WINDOW_MS) && (iNextIter != pBandWidth->uCurrentWindow))
-	{ 
+	{
 		uTotalBW	+= pBandWidth->auWindowCounter[iter];
 		/* add next window time - next loop will check if we exceeded the BW window */
 		uTotalTime   = uCurrentTS - pBandWidth->auFirstEventsTS[iNextIter];
 
-		iter = iNextIter; 
-		iNextIter = (iter - 1) & CYCLIC_COUNTER_ELEMENT;					
+		iter = iNextIter;
+		iNextIter = (iter - 1) & CYCLIC_COUNTER_ELEMENT;
 	} ;
 
-	/* 
-	 * Note that if (iNextIter == pBandWidth->uCurrentWindow) than the calculated BW could be up to 
-	 * SIZE_OF_WINDOW_MS less than BW_WINDOW_MS 
+	/*
+	 * Note that if (iNextIter == pBandWidth->uCurrentWindow) than the calculated BW could be up to
+	 * SIZE_OF_WINDOW_MS less than BW_WINDOW_MS
 	 */
 	return uTotalBW;
 }
 
 
 /***********************************************************************
- *                        TrafficMonitor_Event                  
+ *                        TrafficMonitor_Event
  ***********************************************************************
 DESCRIPTION: this function is called for every event that was requested from the Tx or Rx
-             The function preformes update of the all the relevant Alert in the system 
+             The function preformes update of the all the relevant Alert in the system
              that corresponds to the event. checks the Alert Status due to this event.
-             
- 
-                                
+
+
+
 INPUT:          hTrafficMonitor -       Traffic Monitor the object.
-                        
+
             Count - evnet count.
             Mask - the event mask that That triggered this function.
-            
-            MonitorModuleType Will hold the module type from where this function was called. 
-            
-OUTPUT:         
 
-RETURN:     
+            MonitorModuleType Will hold the module type from where this function was called.
+
+OUTPUT:
+
+RETURN:
 
 ************************************************************************/
 void TrafficMonitor_Event(TI_HANDLE hTrafficMonitor,int Count,TI_UINT16 Mask,TI_UINT32 MonitorModuleType)
@@ -1054,7 +1059,7 @@ void TrafficMonitor_Event(TI_HANDLE hTrafficMonitor,int Count,TI_UINT16 Mask,TI_
     if(TrafficMonitor == NULL)
         return;
 
-    if(!TrafficMonitor->Active)   
+    if(!TrafficMonitor->Active)
         return;
 
 	uCurentTS = os_timeStampMs(TrafficMonitor->hOs);
@@ -1064,8 +1069,8 @@ void TrafficMonitor_Event(TI_HANDLE hTrafficMonitor,int Count,TI_UINT16 Mask,TI_
     {
         if(Mask & DIRECTED_FRAMES_RECV)
 		{
-            TrafficMonitor_updateBW(&TrafficMonitor->DirectRxFrameBW, uCurentTS); 
-		} 
+            TrafficMonitor_updateBW(&TrafficMonitor->DirectRxFrameBW, uCurentTS);
+		}
     }
     else if (MonitorModuleType == TX_TRAFF_MODULE)
     {
@@ -1074,17 +1079,17 @@ void TrafficMonitor_Event(TI_HANDLE hTrafficMonitor,int Count,TI_UINT16 Mask,TI_
             TrafficMonitor_updateBW(&TrafficMonitor->DirectTxFrameBW, uCurentTS);
 		}
     }
-    else  
+    else
 	{
         return; /* module type does not exist, error return */
 	}
 
     AlertElement  = (TrafficAlertElement_t*)List_GetFirst(TrafficMonitor->NotificationRegList);
-    
-    /* go over all the elements and check for alert */    
+
+    /* go over all the elements and check for alert */
     while(AlertElement)
     {
-        if(AlertElement->CurrentState != ALERT_WAIT_FOR_RESET) 
+        if(AlertElement->CurrentState != ALERT_WAIT_FOR_RESET)
         {
             if(AlertElement->MonitorMask[MonitorModuleType] & Mask)
             {
@@ -1115,13 +1120,13 @@ void TrafficMonitor_Event(TI_HANDLE hTrafficMonitor,int Count,TI_UINT16 Mask,TI_
 
 
 /*
- *      Used as the aggregation function that is used by the alerts for counting the events. 
+ *      Used as the aggregation function that is used by the alerts for counting the events.
  */
 static void SimpleByteAggregation(TI_HANDLE TraffElem,int Count)
 {
     TrafficAlertElement_t *AlertElement = TraffElem;
     AlertElement->EventCounter += Count;
-    AlertElement->LastCounte = Count; 
+    AlertElement->LastCounte = Count;
 }
 
 
@@ -1132,7 +1137,7 @@ static void SimpleFrameAggregation(TI_HANDLE TraffElem,int Count)
 {
     TrafficAlertElement_t *AlertElement = TraffElem;
     AlertElement->EventCounter++;
-    AlertElement->LastCounte = 1; 
+    AlertElement->LastCounte = 1;
 }
 
 /*-----------------------------------------------------------------------------
@@ -1151,7 +1156,7 @@ static void TrafficMonitor_UpdateDownTrafficTimerState (TI_HANDLE hTrafficMonito
     TI_UINT32 trafficDownMinTimeout = 0xFFFFFFFF;
 
     AlertElement  = (TrafficAlertElement_t*)List_GetFirst(TrafficMonitor->NotificationRegList);
-    
+
     while(AlertElement)
     {
 
@@ -1168,7 +1173,7 @@ static void TrafficMonitor_UpdateDownTrafficTimerState (TI_HANDLE hTrafficMonito
       AlertElement = (TrafficAlertElement_t*)List_GetNext(TrafficMonitor->NotificationRegList);
 
     }
-   
+
     TrafficMonitor_ChangeDownTimerStatus (TrafficMonitor,activeTrafDownEventsNum,trafficDownMinTimeout);
 
 }
@@ -1182,7 +1187,7 @@ Return Value:
 static void TrafficMonitor_ChangeDownTimerStatus (TI_HANDLE hTrafficMonitor, TI_UINT32 downEventsFound, TI_UINT32 minIntervalTime)
 {
 	TrafficMonitor_t *pTrafficMonitor = (TrafficMonitor_t*)hTrafficMonitor;
-    
+
     if ((downEventsFound == 0) && pTrafficMonitor->DownTimerEnabled)
     {
         pTrafficMonitor->DownTimerEnabled = TI_FALSE;
@@ -1195,7 +1200,7 @@ static void TrafficMonitor_ChangeDownTimerStatus (TI_HANDLE hTrafficMonitor, TI_
         tmr_StartTimer (pTrafficMonitor->hTrafficMonTimer,
                         TimerMonitor_TimeOut,
                         (TI_HANDLE)pTrafficMonitor,
-                        ((minIntervalTime * pTrafficMonitor->trafficDownTestIntervalPercent) / 100), 
+                        ((minIntervalTime * pTrafficMonitor->trafficDownTestIntervalPercent) / 100),
                         TI_TRUE);
     }
 }
@@ -1204,7 +1209,7 @@ static void TrafficMonitor_ChangeDownTimerStatus (TI_HANDLE hTrafficMonitor, TI_
 
 /*-----------------------------------------------------------------------------
 Routine Name: TrafficMonitor_UpdateActiveEventsCounters
-Routine Description: 
+Routine Description:
 Arguments:
 Return Value:
 -----------------------------------------------------------------------------*/
@@ -1215,7 +1220,7 @@ void TrafficMonitor_UpdateActiveEventsCounters (TI_HANDLE hTrafficMonitor)
     TI_UINT32 activeTrafDownEventsNum = 0;
 
     AlertElement  = (TrafficAlertElement_t*)List_GetFirst(TrafficMonitor->NotificationRegList);
-    
+
     while(AlertElement)
     {
       if ((AlertElement->Direction == TRAFF_DOWN) && (AlertElement->Trigger == TRAFF_EDGE) && (AlertElement->CurrentState == ALERT_OFF) && (AlertElement->Enabled == TI_TRUE))
@@ -1232,7 +1237,7 @@ void TrafficMonitor_UpdateActiveEventsCounters (TI_HANDLE hTrafficMonitor)
 
 #ifdef TRAFF_TEST
 /*
- *      TEST Function 
+ *      TEST Function
  */
 void func1(TI_HANDLE Context,TI_UINT32 Cookie)
 {
@@ -1244,13 +1249,13 @@ void func1(TI_HANDLE Context,TI_UINT32 Cookie)
                 WLAN_OS_REPORT(("TRAFF - ALERT UP limit - 30 ON"));
     break;
     case 3:
-                WLAN_OS_REPORT(("TRAFF - ALERT DOWN limit - 25 ON"));  
+                WLAN_OS_REPORT(("TRAFF - ALERT DOWN limit - 25 ON"));
     break;
     case 4:
-                WLAN_OS_REPORT(("TRAFF - ALERT DOWN limit - 10 ON"));  
+                WLAN_OS_REPORT(("TRAFF - ALERT DOWN limit - 10 ON"));
     break;
    }
-    
+
 }
 
 
@@ -1258,8 +1263,8 @@ void PrintElertStus()
 {
     TrafficMonitor_t *TrafficMonitor =(TrafficMonitor_t*)TestTrafficMonitor;
     TrafficAlertElement_t *AlertElement  = (TrafficAlertElement_t*)List_GetFirst(TrafficMonitor->NotificationRegList);
-      
-    /* go over all the Down elements and check for alert ResetElment that ref to TrafficAlertElement*/    
+
+    /* go over all the Down elements and check for alert ResetElment that ref to TrafficAlertElement*/
     while(AlertElement)
     {
         if(AlertElement->CurrentState == ALERT_WAIT_FOR_RESET)
@@ -1267,9 +1272,9 @@ void PrintElertStus()
         else
             WLAN_OS_REPORT(("TRAFF - ALERT ENABLED"));
 
-            
+
         AlertElement = (TrafficAlertElement_t*)List_GetNext(TrafficMonitor->NotificationRegList);
-    } 
+    }
 }
 
 void TestEventFunc (TI_HANDLE hTrafficMonitor, TI_BOOL bTwdInitOccured)
@@ -1281,46 +1286,46 @@ void TestEventFunc (TI_HANDLE hTrafficMonitor, TI_BOOL bTwdInitOccured)
     {
 
         TrafficAlertRegParm.CallBack = func1;
-        TrafficAlertRegParm.Context = NULL ; 
-        TrafficAlertRegParm.Cookie =  1 ;    
+        TrafficAlertRegParm.Context = NULL ;
+        TrafficAlertRegParm.Cookie =  1 ;
         TrafficAlertRegParm.Direction = TRAFF_UP ;
         TrafficAlertRegParm.Trigger = TRAFF_EDGE;
         TrafficAlertRegParm.TimeIntervalMs = 1000;
         TrafficAlertRegParm.Threshold = 50;
         TrafficAlertRegParm.MonitorType = TX_RX_DIRECTED_FRAMES;
-        Alert1 = TrafficMonitor_RegEvent(TestTrafficMonitor,&TrafficAlertRegParm,TI_FALSE);   
-        
+        Alert1 = TrafficMonitor_RegEvent(TestTrafficMonitor,&TrafficAlertRegParm,TI_FALSE);
+
         TrafficAlertRegParm.CallBack = func1;
-        TrafficAlertRegParm.Context = NULL ; 
-        TrafficAlertRegParm.Cookie =  2 ;    
+        TrafficAlertRegParm.Context = NULL ;
+        TrafficAlertRegParm.Cookie =  2 ;
         TrafficAlertRegParm.Direction = TRAFF_UP ;
         TrafficAlertRegParm.Trigger = TRAFF_EDGE;
         TrafficAlertRegParm.TimeIntervalMs = 1000;
         TrafficAlertRegParm.Threshold = 30;
         TrafficAlertRegParm.MonitorType = TX_RX_DIRECTED_FRAMES;
         Alert2 = TrafficMonitor_RegEvent(TestTrafficMonitor,&TrafficAlertRegParm,TI_FALSE);
-        
-      
+
+
         TrafficAlertRegParm.CallBack = func1;
-        TrafficAlertRegParm.Context = NULL ; 
-        TrafficAlertRegParm.Cookie =  3 ;    
+        TrafficAlertRegParm.Context = NULL ;
+        TrafficAlertRegParm.Cookie =  3 ;
         TrafficAlertRegParm.Direction = TRAFF_DOWN ;
         TrafficAlertRegParm.Trigger = TRAFF_EDGE;
         TrafficAlertRegParm.TimeIntervalMs = 1000;
         TrafficAlertRegParm.Threshold = 25;
         TrafficAlertRegParm.MonitorType = TX_RX_DIRECTED_FRAMES;
-        Alert3 = TrafficMonitor_RegEvent(TestTrafficMonitor,&TrafficAlertRegParm,TI_FALSE);   
-        
+        Alert3 = TrafficMonitor_RegEvent(TestTrafficMonitor,&TrafficAlertRegParm,TI_FALSE);
+
         TrafficAlertRegParm.CallBack = func1;
-        TrafficAlertRegParm.Context = NULL ; 
-        TrafficAlertRegParm.Cookie =  4 ;    
+        TrafficAlertRegParm.Context = NULL ;
+        TrafficAlertRegParm.Cookie =  4 ;
         TrafficAlertRegParm.Direction = TRAFF_DOWN ;
         TrafficAlertRegParm.Trigger = TRAFF_LEVEL;
         TrafficAlertRegParm.TimeIntervalMs = 1000;
         TrafficAlertRegParm.Threshold = 10;
         TrafficAlertRegParm.MonitorType = TX_RX_DIRECTED_FRAMES;
         Alert4 = TrafficMonitor_RegEvent(TestTrafficMonitor,&TrafficAlertRegParm,TI_FALSE);
-        
+
        TrafficMonitor_SetRstCondition(TestTrafficMonitor, Alert1,Alert3,TI_TRUE);
        TrafficMonitor_SetRstCondition(TestTrafficMonitor, Alert2,Alert3,TI_FALSE);
        flag = TI_FALSE;

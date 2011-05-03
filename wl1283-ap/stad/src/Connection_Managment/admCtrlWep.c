@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * admCtrlWep.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file admCtrlWep.c
  *  \brief Admission control API implimentation
  *
@@ -50,9 +55,9 @@
 #include "admCtrl.h"
 #include "rsn.h"
 #include "admCtrl.h"
-#ifdef CCX_MODULE_INCLUDED
+#ifdef XCC_MODULE_INCLUDED
 #include "admCtrlWpa.h"
-#include "admCtrlCcx.h"
+#include "admCtrlXCC.h"
 #endif
 #include "TWDriver.h"
 
@@ -81,37 +86,37 @@ TI_STATUS admCtrlWep_evalSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TRsnSiteP
 
 /**
 *
-* admCtrlWep_config  - Configure CCX admission control.
+* admCtrlWep_config  - Configure XCC admission control.
 *
-* \b Description: 
+* \b Description:
 *
-* Configure CCX admission control.
+* Configure XCC admission control.
 *
 * \b ARGS:
 *
 *  I   - pAdmCtrl - context \n
-*  
+*
 * \b RETURNS:
 *
 *  TI_OK on success, TI_NOK on failure.
 *
-* \sa 
+* \sa
 */
 TI_STATUS admCtrlWep_config(admCtrl_t *pAdmCtrl)
 {
 	TI_STATUS			status;
 	TRsnPaeConfig   	paeConfig;
 
-	
+
 	/* set admission control parameters */
-	pAdmCtrl->externalAuthMode = (EExternalAuthMode)pAdmCtrl->authSuite;	   
-	if ((pAdmCtrl->unicastSuite != TWD_CIPHER_WEP) && 
+	pAdmCtrl->externalAuthMode = (EExternalAuthMode)pAdmCtrl->authSuite;
+	if ((pAdmCtrl->unicastSuite != TWD_CIPHER_WEP) &&
 		(pAdmCtrl->unicastSuite != TWD_CIPHER_CKIP))
 	{
 		pAdmCtrl->unicastSuite = TWD_CIPHER_WEP;
 	}
-	
-	if ((pAdmCtrl->broadcastSuite != TWD_CIPHER_WEP) && 
+
+	if ((pAdmCtrl->broadcastSuite != TWD_CIPHER_WEP) &&
 		(pAdmCtrl->broadcastSuite != TWD_CIPHER_CKIP))
 	{
 		pAdmCtrl->broadcastSuite = TWD_CIPHER_WEP;
@@ -126,7 +131,7 @@ TI_STATUS admCtrlWep_config(admCtrl_t *pAdmCtrl)
     pAdmCtrl->get802_1x_AkmExists = admCtrl_nullGet802_1x_AkmExists;
 
 
-		
+
 	pAdmCtrl->keyMngSuite = RSN_KEY_MNG_802_1X;
 
 	/* set PAE parametrs */
@@ -140,12 +145,12 @@ TI_STATUS admCtrlWep_config(admCtrl_t *pAdmCtrl)
 	return status;
 }
 
- 
+
 /**
 *
 * admCtrlWep_getInfoElement - Build the current information element.
 *
-* \b Description: 
+* \b Description:
 *
 * Build the current information element.
 *
@@ -154,17 +159,17 @@ TI_STATUS admCtrlWep_config(admCtrl_t *pAdmCtrl)
 *  I   - pAdmCtrl - context \n
 *  I   - pIe - IE buffer \n
 *  I   - pLength - length of IE \n
-*  
+*
 * \b RETURNS:
 *
 *  TI_OK on success, TI_NOK on failure.
-*							  
-* \sa 
+*
+* \sa
 */
 TI_STATUS admCtrlWep_getInfoElement(admCtrl_t *pAdmCtrl, TI_UINT8 *pIe, TI_UINT32 *pLength)
 {
-	 
-	if ((pAdmCtrl==NULL) || (pLength==NULL)) 
+
+	if ((pAdmCtrl==NULL) || (pLength==NULL))
 	{
 		return TI_NOK;
 	}
@@ -176,7 +181,7 @@ TI_STATUS admCtrlWep_getInfoElement(admCtrl_t *pAdmCtrl, TI_UINT8 *pIe, TI_UINT3
 *
 * admCtrlWep_setSite  - Set current primary site parameters for registration.
 *
-* \b Description: 
+* \b Description:
 *
 * Set current primary site parameters for registration.
 *
@@ -186,12 +191,12 @@ TI_STATUS admCtrlWep_getInfoElement(admCtrl_t *pAdmCtrl, TI_UINT8 *pIe, TI_UINT3
 *  I   - pRsnData - site's RSN data \n
 *  O   - pAssocIe - result IE of evaluation \n
 *  O   - pAssocIeLen - length of result IE of evaluation \n
-*  
+*
 * \b RETURNS:
 *
 *  TI_OK on site is aproved, TI_NOK on site is rejected.
 *
-* \sa 
+* \sa
 */
 TI_STATUS admCtrlWep_setSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TI_UINT8 *pAssocIe, TI_UINT8 *pAssocIeLen)
 {
@@ -200,16 +205,16 @@ TI_STATUS admCtrlWep_setSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TI_UINT8 *
     TTwdParamInfo       tTwdParam;
 	EAuthSuite			authSuite;
 
-#ifdef CCX_MODULE_INCLUDED
-	if (mlmeParser_ParseIeBuffer (pAdmCtrl->hMlme, pRsnData->pIe, pRsnData->ieLen, CCX_EXT_1_IE_ID, NULL, NULL, 0))
+#ifdef XCC_MODULE_INCLUDED
+	if (mlmeParser_ParseIeBuffer (pAdmCtrl->hMlme, pRsnData->pIe, pRsnData->ieLen, XCC_EXT_1_IE_ID, NULL, NULL, 0))
 	{
-		pAdmCtrl->ccxSupport = TI_TRUE;
-		return (admCtrlCcx_setSite(pAdmCtrl, pRsnData, pAssocIe, pAssocIeLen));
+		pAdmCtrl->XCCSupport = TI_TRUE;
+		return (admCtrlXCC_setSite(pAdmCtrl, pRsnData, pAssocIe, pAssocIeLen));
 	}
 #endif
 
 
-	pAdmCtrl->ccxSupport = TI_FALSE;
+	pAdmCtrl->XCCSupport = TI_FALSE;
 	pAdmCtrl->unicastSuite = TWD_CIPHER_WEP;
 	pAdmCtrl->broadcastSuite = TWD_CIPHER_WEP;
 
@@ -228,11 +233,11 @@ TI_STATUS admCtrlWep_setSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TI_UINT8 *
 	}
 
 
-	/* Now we configure the MLME module with the 802.11 legacy authentication suite, 
+	/* Now we configure the MLME module with the 802.11 legacy authentication suite,
 		THe MLME will configure later the authentication module */
 	param.paramType = MLME_LEGACY_TYPE_PARAM;
-#ifdef CCX_MODULE_INCLUDED	
-	if (pAdmCtrl->networkEapMode!=OS_CCX_NETWORK_EAP_OFF)
+#ifdef XCC_MODULE_INCLUDED
+	if (pAdmCtrl->networkEapMode!=OS_XCC_NETWORK_EAP_OFF)
     {
         param.content.mlmeLegacyAuthType = AUTH_LEGACY_RESERVED1;
     }
@@ -245,7 +250,7 @@ TI_STATUS admCtrlWep_setSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TI_UINT8 *
             param.content.mlmeLegacyAuthType = AUTH_LEGACY_OPEN_SYSTEM;
             break;
 
-        case RSN_AUTH_SHARED_KEY: 
+        case RSN_AUTH_SHARED_KEY:
             param.content.mlmeLegacyAuthType = AUTH_LEGACY_SHARED_KEY;
             break;
 
@@ -258,7 +263,7 @@ TI_STATUS admCtrlWep_setSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TI_UINT8 *
             return TI_NOK;
         }
     }
-	
+
 	status = mlme_setParam(pAdmCtrl->hMlme, &param);
 	if (status != TI_OK)
 	{
@@ -286,7 +291,7 @@ TI_STATUS admCtrlWep_setSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TI_UINT8 *
 *
 * admCtrlWep_evalSite  - Evaluate site for registration.
 *
-* \b Description: 
+* \b Description:
 *
 * evaluate site RSN capabilities against the station's cap.
 * If the BSS type is infrastructure, the station matches the site only if it's WEP status is same as the site
@@ -297,32 +302,32 @@ TI_STATUS admCtrlWep_setSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TI_UINT8 *
 *  I   - pAdmCtrl - Context \n
 *  I   - pRsnData - site's RSN data \n
 *  O   - pEvaluation - Result of evaluation \n
-*  
+*
 * \b RETURNS:
 *
-*  TI_OK 
+*  TI_OK
 *
-* \sa 
+* \sa
 */
 TI_STATUS admCtrlWep_evalSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TRsnSiteParams *pRsnSiteParams, TI_UINT32 *pEvaluation)
 {
 	*pEvaluation = 0;
-	
+
 	if (pRsnData==NULL)
 	{
 		return TI_NOK;
 	}
     pAdmCtrl->setSiteFirst = TI_FALSE;
 
-#ifdef CCX_MODULE_INCLUDED
-	if (admCtrlCcx_evalSite(pAdmCtrl, pRsnData, pRsnSiteParams, pEvaluation, &pAdmCtrl->ccxSupport) != TI_OK)
+#ifdef XCC_MODULE_INCLUDED
+	if (admCtrlXCC_evalSite(pAdmCtrl, pRsnData, pRsnSiteParams, pEvaluation, &pAdmCtrl->XCCSupport) != TI_OK)
     {
         return TI_NOK;
     }
 #else
-	pAdmCtrl->ccxSupport = TI_FALSE;
-#endif /*CCX_MODULE_INCLUDED*/
-	if (!pAdmCtrl->ccxSupport)
+	pAdmCtrl->XCCSupport = TI_FALSE;
+#endif /*XCC_MODULE_INCLUDED*/
+	if (!pAdmCtrl->XCCSupport)
 	{	/* WEP only */
 		*pEvaluation = 1;
 	}

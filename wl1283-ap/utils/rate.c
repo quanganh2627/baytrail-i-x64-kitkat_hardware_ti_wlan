@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * rate.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 /** \file  rate.c
  *  \brief Rate conversion
@@ -132,11 +137,11 @@ ERate rate_NetToDrv (TI_UINT32 rate)
 /************************************************************************
  *                        hostToNetworkRate                         *
  ************************************************************************
-DESCRIPTION: Translates a host rate (1, 2, 3, ....) to network rate (0x02, 0x82, 0x84, etc...) 
-                                                                                                   
+DESCRIPTION: Translates a host rate (1, 2, 3, ....) to network rate (0x02, 0x82, 0x84, etc...)
+
 INPUT:      rate        -   Host rate
 
-OUTPUT:     
+OUTPUT:
 
 
 RETURN:     Network rate if the input rate is valid, otherwise returns 0.
@@ -193,22 +198,22 @@ ENetRate rate_DrvToNet (ERate rate)
 
         case DRV_RATE_MCS_1:
             return NET_RATE_MCS1;
-    
+
         case DRV_RATE_MCS_2:
             return NET_RATE_MCS2;
-    
+
         case DRV_RATE_MCS_3:
             return NET_RATE_MCS3;
-    
+
         case DRV_RATE_MCS_4:
             return NET_RATE_MCS4;
-    
+
         case DRV_RATE_MCS_5:
             return NET_RATE_MCS5;
-    
+
         case DRV_RATE_MCS_6:
             return NET_RATE_MCS6;
-    
+
         case DRV_RATE_MCS_7:
             return NET_RATE_MCS7;
 
@@ -220,13 +225,13 @@ ENetRate rate_DrvToNet (ERate rate)
 /***************************************************************************
 *                   getMaxActiveRatefromBitmap                             *
 ****************************************************************************
-* DESCRIPTION:  
+* DESCRIPTION:
 *
 * INPUTS:       hCtrlData - the object
-*               
-* OUTPUT:       
 *
-* RETURNS:      
+* OUTPUT:
+*
+* RETURNS:
 ***************************************************************************/
 ERate rate_GetMaxFromDrvBitmap (TI_UINT32 uRateBitMap)
 {
@@ -342,10 +347,10 @@ ERate rate_GetMaxFromDrvBitmap (TI_UINT32 uRateBitMap)
  *                        validateNetworkRate                           *
  ************************************************************************
 DESCRIPTION: Verify that the input nitwork rate is valid
-                                                                                                   
+
 INPUT:      rate    -   input network rate
 
-OUTPUT:     
+OUTPUT:
 
 
 RETURN:     TI_OK if valid, otherwise TI_NOK
@@ -392,10 +397,10 @@ static TI_STATUS rate_ValidateNet (ENetRate eRate)
  *                        getMaxBasicRate                           *
  ************************************************************************
 DESCRIPTION: Goes over an array of network rates and returns the max basic rate
-                                                                                                   
+
 INPUT:      pRates      -   Rate array
 
-OUTPUT:     
+OUTPUT:
 
 
 RETURN:     Max basic rate (in network units)
@@ -404,7 +409,7 @@ RETURN:     Max basic rate (in network units)
 ENetRate rate_GetMaxBasicFromStr (TI_UINT8 *pRatesString, TI_UINT32 len, ENetRate eMaxRate)
 {
     TI_UINT32   i;
-    
+
     for (i = 0; i < len; i++)
     {
         if (NET_BASIC_RATE (pRatesString[i]) && rate_ValidateNet (pRatesString[i]) == TI_OK)
@@ -420,10 +425,10 @@ ENetRate rate_GetMaxBasicFromStr (TI_UINT8 *pRatesString, TI_UINT32 len, ENetRat
  *                        getMaxActiveRate                          *
  ************************************************************************
 DESCRIPTION: Goes over an array of network rates and returns the max active rate
-                                                                                                   
+
 INPUT:      pRates      -   Rate array
 
-OUTPUT:     
+OUTPUT:
 
 
 RETURN:     Max active rate (in network units)
@@ -432,7 +437,7 @@ RETURN:     Max active rate (in network units)
 ENetRate rate_GetMaxActiveFromStr (TI_UINT8 *pRatesString, TI_UINT32 len, ENetRate eMaxRate)
 {
     TI_UINT32   i;
-    
+
     for (i = 0; i < len; i++)
     {
         if (NET_ACTIVE_RATE (pRatesString[i]) && rate_ValidateNet (pRatesString[i]) == TI_OK)
@@ -489,25 +494,25 @@ TI_UINT32 rate_DrvToNumber (ERate eRate)
 
         case DRV_RATE_MCS_0:
             return 6;
-    
+
         case DRV_RATE_MCS_1:
             return 13;
-    
+
         case DRV_RATE_MCS_2:
             return 19;
-    
+
         case DRV_RATE_MCS_3:
             return 26;
-    
+
         case DRV_RATE_MCS_4:
             return 39;
-    
+
         case DRV_RATE_MCS_5:
             return 52;
-    
+
         case DRV_RATE_MCS_6:
             return 58;
-    
+
         case DRV_RATE_MCS_7:
             return 65;
 
@@ -614,7 +619,7 @@ ERate rate_NetToNumber (TI_UINT32 rate)
  *                        bitMapToNetworkStringRates                    *
  ************************************************************************
 DESCRIPTION: Converts bit map to the rates string
-                                                                                                   
+
 INPUT:      suppRatesBitMap     -   bit map of supported rates
             basicRatesBitMap    -   bit map of basic rates
 
@@ -633,7 +638,7 @@ TI_STATUS rate_DrvBitmapToNetStr (TI_UINT32   uSuppRatesBitMap,
                                   TI_UINT32   *pFirstOfdmRate)
 {
     TI_UINT32   i = 0;
-    
+
     if (uSuppRatesBitMap & DRV_RATE_MASK_1_BARKER)
     {
         if (uBasicRatesBitMap & DRV_RATE_MASK_1_BARKER)
@@ -695,7 +700,7 @@ TI_STATUS rate_DrvBitmapToNetStr (TI_UINT32   uSuppRatesBitMap,
     }
 
     *pFirstOfdmRate = i;
-    
+
     if (uSuppRatesBitMap & DRV_RATE_MASK_6_OFDM)
     {
         if (uBasicRatesBitMap & DRV_RATE_MASK_6_OFDM)
@@ -792,9 +797,9 @@ TI_STATUS rate_DrvBitmapToNetStr (TI_UINT32   uSuppRatesBitMap,
         }
     }
 
-/* 
- * Don't convert MCS rates, 
- * it is only for basic and extended rates, otherwise it will exceed 16 bytes string 
+/*
+ * Don't convert MCS rates,
+ * it is only for basic and extended rates, otherwise it will exceed 16 bytes string
  * the code below is a sample and can be used in the future, if need to parse MCS rates bit map to string
  */
 
@@ -896,7 +901,7 @@ TI_STATUS rate_DrvBitmapToNetStr (TI_UINT32   uSuppRatesBitMap,
     }
 #endif
     *len = i;
-    
+
     return TI_OK;
 }
 
@@ -904,7 +909,7 @@ TI_STATUS rate_DrvBitmapToNetStr (TI_UINT32   uSuppRatesBitMap,
  *                        networkStringToBitMapSuppRates                *
  ************************************************************************
 DESCRIPTION: Converts supported rates string to the bit map
-                                                                                                   
+
 INPUT:      string      -   array of rates in the network format
             len - array length
 
@@ -916,9 +921,9 @@ RETURN:     None
 TI_STATUS rate_NetStrToDrvBitmap (TI_UINT32 *pBitMap, TI_UINT8 *string, TI_UINT32 len)
 {
     TI_UINT32   i;
-    
+
     *pBitMap = 0;
-    
+
     for (i = 0; i < len; i++)
     {
         switch (string[i])
@@ -992,37 +997,37 @@ TI_STATUS rate_NetStrToDrvBitmap (TI_UINT32 *pBitMap, TI_UINT8 *string, TI_UINT3
             case NET_RATE_MCS0_BASIC:
                 *pBitMap |= DRV_RATE_MASK_MCS_0_OFDM;
                 break;
-    
+
             case NET_RATE_MCS1:
             case NET_RATE_MCS1_BASIC:
                 *pBitMap |= DRV_RATE_MASK_MCS_1_OFDM;
                 break;
-    
+
             case NET_RATE_MCS2:
             case NET_RATE_MCS2_BASIC:
                 *pBitMap |= DRV_RATE_MASK_MCS_2_OFDM;
                 break;
-    
+
             case NET_RATE_MCS3:
             case NET_RATE_MCS3_BASIC:
                 *pBitMap |= DRV_RATE_MASK_MCS_3_OFDM;
                 break;
-    
+
             case NET_RATE_MCS4:
             case NET_RATE_MCS4_BASIC:
                 *pBitMap |= DRV_RATE_MASK_MCS_4_OFDM;
                 break;
-    
+
             case NET_RATE_MCS5:
             case NET_RATE_MCS5_BASIC:
                 *pBitMap |= DRV_RATE_MASK_MCS_5_OFDM;
                 break;
-    
+
             case NET_RATE_MCS6:
             case NET_RATE_MCS6_BASIC:
                 *pBitMap |= DRV_RATE_MASK_MCS_6_OFDM;
                 break;
-    
+
             case NET_RATE_MCS7:
             case NET_RATE_MCS7_BASIC:
                 *pBitMap |= DRV_RATE_MASK_MCS_7_OFDM;
@@ -1040,7 +1045,7 @@ TI_STATUS rate_NetStrToDrvBitmap (TI_UINT32 *pBitMap, TI_UINT8 *string, TI_UINT3
  *                        networkStringToBitMapBasicRates               *
  ************************************************************************
 DESCRIPTION: Converts basic rates string to the bit map
-                                                                                                   
+
 INPUT:      string      -   array of rates in the network format
             len - array length
 
@@ -1052,9 +1057,9 @@ RETURN:     None
 TI_STATUS rate_NetBasicStrToDrvBitmap (TI_UINT32 *pBitMap, TI_UINT8 *string, TI_UINT32 len)
 {
     TI_UINT32   i;
-    
+
     *pBitMap = 0;
-    
+
     for (i = 0; i < len; i++)
     {
         switch (string[i])
@@ -1114,35 +1119,35 @@ TI_STATUS rate_NetBasicStrToDrvBitmap (TI_UINT32 *pBitMap, TI_UINT8 *string, TI_
             case NET_RATE_MCS0_BASIC:
                 *pBitMap |= DRV_RATE_MASK_MCS_0_OFDM;
                 break;
-    
+
             case NET_RATE_MCS1_BASIC:
                 *pBitMap |= DRV_RATE_MASK_MCS_1_OFDM;
                 break;
-    
+
             case NET_RATE_MCS2_BASIC:
                 *pBitMap |= DRV_RATE_MASK_MCS_2_OFDM;
                 break;
-    
+
             case NET_RATE_MCS3_BASIC:
                 *pBitMap |= DRV_RATE_MASK_MCS_3_OFDM;
                 break;
-    
+
             case NET_RATE_MCS4_BASIC:
                 *pBitMap |= DRV_RATE_MASK_MCS_4_OFDM;
                 break;
-    
+
             case NET_RATE_MCS5_BASIC:
                 *pBitMap |= DRV_RATE_MASK_MCS_5_OFDM;
                 break;
-    
+
             case NET_RATE_MCS6_BASIC:
                 *pBitMap |= DRV_RATE_MASK_MCS_6_OFDM;
                 break;
-    
+
             case NET_RATE_MCS7_BASIC:
                 *pBitMap |= DRV_RATE_MASK_MCS_7_OFDM;
                 break;
-    
+
             default:
                 break;
         }
@@ -1155,9 +1160,9 @@ TI_STATUS rate_NetBasicStrToDrvBitmap (TI_UINT32 *pBitMap, TI_UINT8 *string, TI_
 /************************************************************************
  *                        rate_McsNetStrToDrvBitmap                     *
  ************************************************************************
-DESCRIPTION: Converts MCS IEs rates bit map to driver bit map. 
-             supported only MCS0 - MCS7 
-                                                                                                   
+DESCRIPTION: Converts MCS IEs rates bit map to driver bit map.
+             supported only MCS0 - MCS7
+
 INPUT:      string - HT capabilities IE in the network format
             len - IE array length
 
@@ -1179,7 +1184,7 @@ TI_STATUS rate_McsNetStrToDrvBitmap (TI_UINT32 *pBitMap, TI_UINT8 *string)
 TI_STATUS rate_DrvBitmapToHwBitmap (TI_UINT32 uDrvBitMap, TI_UINT32 *pHwBitmap)
 {
     TI_UINT32   uHwBitMap = 0;
-    
+
     if (uDrvBitMap & DRV_RATE_MASK_1_BARKER)
     {
         uHwBitMap |= HW_BIT_RATE_1MBPS;
@@ -1286,7 +1291,7 @@ TI_STATUS rate_DrvBitmapToHwBitmap (TI_UINT32 uDrvBitMap, TI_UINT32 *pHwBitmap)
     }
 
     *pHwBitmap = uHwBitMap;
-    
+
     return TI_OK;
 }
 
@@ -1327,7 +1332,7 @@ TI_STATUS rate_PolicyToDrv (ETxRateClassId ePolicyRate, ERate *eAppRate)
     if (status == TI_OK)
         *eAppRate = Rate;
     else
-        *eAppRate = DRV_RATE_INVALID; 
+        *eAppRate = DRV_RATE_INVALID;
 
     return status;
 }
@@ -1340,13 +1345,13 @@ TI_UINT32 rate_BasicToDrvBitmap (EBasicRateSet eBasicRateSet, TI_BOOL bDot11a)
         switch (eBasicRateSet)
         {
             case BASIC_RATE_SET_1_2:
-                return DRV_RATE_MASK_1_BARKER | 
+                return DRV_RATE_MASK_1_BARKER |
                        DRV_RATE_MASK_2_BARKER;
 
             case BASIC_RATE_SET_1_2_5_5_11:
-                return DRV_RATE_MASK_1_BARKER | 
-                       DRV_RATE_MASK_2_BARKER | 
-                       DRV_RATE_MASK_5_5_CCK | 
+                return DRV_RATE_MASK_1_BARKER |
+                       DRV_RATE_MASK_2_BARKER |
+                       DRV_RATE_MASK_5_5_CCK |
                        DRV_RATE_MASK_11_CCK;
 
             case BASIC_RATE_SET_UP_TO_12:
@@ -1419,8 +1424,8 @@ TI_UINT32 rate_BasicToDrvBitmap (EBasicRateSet eBasicRateSet, TI_BOOL bDot11a)
                        DRV_RATE_MASK_54_OFDM;
 
             case BASIC_RATE_SET_6_12_24:
-                return DRV_RATE_MASK_6_OFDM | 
-                       DRV_RATE_MASK_12_OFDM | 
+                return DRV_RATE_MASK_6_OFDM |
+                       DRV_RATE_MASK_12_OFDM |
                        DRV_RATE_MASK_24_OFDM;
 
             case BASIC_RATE_SET_1_2_5_5_6_11_12_24:
@@ -1441,14 +1446,14 @@ TI_UINT32 rate_BasicToDrvBitmap (EBasicRateSet eBasicRateSet, TI_BOOL bDot11a)
                        DRV_RATE_MASK_MCS_5_OFDM |
                        DRV_RATE_MASK_MCS_6_OFDM |
                        DRV_RATE_MASK_MCS_7_OFDM |
-                       DRV_RATE_MASK_1_BARKER   | 
+                       DRV_RATE_MASK_1_BARKER   |
                        DRV_RATE_MASK_2_BARKER   |
-                       DRV_RATE_MASK_5_5_CCK    |  
+                       DRV_RATE_MASK_5_5_CCK    |
                        DRV_RATE_MASK_11_CCK;
 
 
             default:
-                return DRV_RATE_MASK_1_BARKER | 
+                return DRV_RATE_MASK_1_BARKER |
                        DRV_RATE_MASK_2_BARKER;
         }
     }
@@ -1457,14 +1462,14 @@ TI_UINT32 rate_BasicToDrvBitmap (EBasicRateSet eBasicRateSet, TI_BOOL bDot11a)
         switch (eBasicRateSet)
         {
             case BASIC_RATE_SET_UP_TO_12:
-                return DRV_RATE_MASK_6_OFDM | 
-                       DRV_RATE_MASK_9_OFDM | 
+                return DRV_RATE_MASK_6_OFDM |
+                       DRV_RATE_MASK_9_OFDM |
                        DRV_RATE_MASK_12_OFDM;
 
             case BASIC_RATE_SET_UP_TO_18:
-                return DRV_RATE_MASK_6_OFDM | 
-                       DRV_RATE_MASK_9_OFDM | 
-                       DRV_RATE_MASK_12_OFDM | 
+                return DRV_RATE_MASK_6_OFDM |
+                       DRV_RATE_MASK_9_OFDM |
+                       DRV_RATE_MASK_12_OFDM |
                        DRV_RATE_MASK_18_OFDM;
 
             case BASIC_RATE_SET_UP_TO_24:
@@ -1502,8 +1507,8 @@ TI_UINT32 rate_BasicToDrvBitmap (EBasicRateSet eBasicRateSet, TI_BOOL bDot11a)
                        DRV_RATE_MASK_54_OFDM;
 
             case BASIC_RATE_SET_6_12_24:
-                return DRV_RATE_MASK_6_OFDM | 
-                       DRV_RATE_MASK_12_OFDM | 
+                return DRV_RATE_MASK_6_OFDM |
+                       DRV_RATE_MASK_12_OFDM |
                        DRV_RATE_MASK_24_OFDM;
 
             case BASIC_RATE_SET_ALL_MCS_RATES:
@@ -1515,13 +1520,13 @@ TI_UINT32 rate_BasicToDrvBitmap (EBasicRateSet eBasicRateSet, TI_BOOL bDot11a)
                        DRV_RATE_MASK_MCS_5_OFDM |
                        DRV_RATE_MASK_MCS_6_OFDM |
                        DRV_RATE_MASK_MCS_7_OFDM |
-                       DRV_RATE_MASK_6_OFDM | 
-                       DRV_RATE_MASK_12_OFDM | 
+                       DRV_RATE_MASK_6_OFDM |
+                       DRV_RATE_MASK_12_OFDM |
                        DRV_RATE_MASK_24_OFDM;
 
             default:
-                return DRV_RATE_MASK_6_OFDM | 
-                       DRV_RATE_MASK_12_OFDM | 
+                return DRV_RATE_MASK_6_OFDM |
+                       DRV_RATE_MASK_12_OFDM |
                        DRV_RATE_MASK_24_OFDM;
         }
     }
@@ -1534,13 +1539,13 @@ TI_UINT32 rate_SupportedToDrvBitmap (ESupportedRateSet eSupportedRateSet, TI_BOO
         switch (eSupportedRateSet)
         {
             case SUPPORTED_RATE_SET_1_2:
-                return DRV_RATE_MASK_1_BARKER | 
+                return DRV_RATE_MASK_1_BARKER |
                        DRV_RATE_MASK_2_BARKER;
 
             case SUPPORTED_RATE_SET_1_2_5_5_11:
-                return DRV_RATE_MASK_1_BARKER | 
-                       DRV_RATE_MASK_2_BARKER | 
-                       DRV_RATE_MASK_5_5_CCK | 
+                return DRV_RATE_MASK_1_BARKER |
+                       DRV_RATE_MASK_2_BARKER |
+                       DRV_RATE_MASK_5_5_CCK |
                        DRV_RATE_MASK_11_CCK;
 
             case SUPPORTED_RATE_SET_1_2_5_5_11_22:
@@ -1634,7 +1639,7 @@ TI_UINT32 rate_SupportedToDrvBitmap (ESupportedRateSet eSupportedRateSet, TI_BOO
                        DRV_RATE_MASK_36_OFDM |
                        DRV_RATE_MASK_48_OFDM |
                        DRV_RATE_MASK_54_OFDM;
-                       
+
             case SUPPORTED_RATE_SET_ALL_MCS_RATES:
                 return DRV_RATE_MASK_MCS_0_OFDM |
                        DRV_RATE_MASK_MCS_1_OFDM |
@@ -1679,9 +1684,9 @@ TI_UINT32 rate_SupportedToDrvBitmap (ESupportedRateSet eSupportedRateSet, TI_BOO
         switch (eSupportedRateSet)
         {
             case SUPPORTED_RATE_SET_UP_TO_18:
-                return DRV_RATE_MASK_6_OFDM | 
-                       DRV_RATE_MASK_9_OFDM | 
-                       DRV_RATE_MASK_12_OFDM | 
+                return DRV_RATE_MASK_6_OFDM |
+                       DRV_RATE_MASK_9_OFDM |
+                       DRV_RATE_MASK_12_OFDM |
                        DRV_RATE_MASK_18_OFDM;
 
             case SUPPORTED_RATE_SET_UP_TO_24:
@@ -1717,7 +1722,7 @@ TI_UINT32 rate_SupportedToDrvBitmap (ESupportedRateSet eSupportedRateSet, TI_BOO
                        DRV_RATE_MASK_36_OFDM |
                        DRV_RATE_MASK_48_OFDM |
                        DRV_RATE_MASK_54_OFDM;
-                       
+
             case SUPPORTED_RATE_SET_ALL:
             case SUPPORTED_RATE_SET_ALL_OFDM:
                 return DRV_RATE_MASK_6_OFDM |
@@ -1728,7 +1733,7 @@ TI_UINT32 rate_SupportedToDrvBitmap (ESupportedRateSet eSupportedRateSet, TI_BOO
                        DRV_RATE_MASK_36_OFDM |
                        DRV_RATE_MASK_48_OFDM |
                        DRV_RATE_MASK_54_OFDM;
-                       
+
             case SUPPORTED_RATE_SET_ALL_MCS_RATES:
                 return DRV_RATE_MASK_MCS_0_OFDM |
                        DRV_RATE_MASK_MCS_1_OFDM |

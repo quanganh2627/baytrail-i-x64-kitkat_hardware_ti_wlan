@@ -1,31 +1,36 @@
-/***************************************************************************
-**+----------------------------------------------------------------------+**
-**|                                ****                                  |**
-**|                                ****                                  |**
-**|                                ******o***                            |**
-**|                          ********_///_****                           |**
-**|                           ***** /_//_/ ****                          |**
-**|                            ** ** (__/ ****                           |**
-**|                                *********                             |**
-**|                                 ****                                 |**
-**|                                  ***                                 |**
-**|                                                                      |**
-**|     Copyright (c) 1998 - 2009 Texas Instruments Incorporated         |**
-**|                        ALL RIGHTS RESERVED                           |**
-**|                                                                      |**
-**| Permission is hereby granted to licensees of Texas Instruments       |**
-**| Incorporated (TI) products to use this computer program for the sole |**
-**| purpose of implementing a licensee product based on TI products.     |**
-**| No other rights to reproduce, use, or disseminate this computer      |**
-**| program, whether in part or in whole, are granted.                   |**
-**|                                                                      |**
-**| TI makes no representation or warranties with respect to the         |**
-**| performance of this computer program, and specifically disclaims     |**
-**| any responsibility for any damages, special or consequential,        |**
-**| connected with the use of this program.                              |**
-**|                                                                      |**
-**+----------------------------------------------------------------------+**
-***************************************************************************/
+/*
+ * DrvMain.c
+ *
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 /** \file   DrvMain.c
  *  \brief  The DrvMain module. Handles driver init, stop and recovery processes.
@@ -60,8 +65,8 @@
 #include "scanMngrApi.h"
 #include "regulatoryDomainApi.h"
 #include "measurementMgrApi.h"
-#ifdef CCX_MODULE_INCLUDED
-#include "ccxMngr.h"
+#ifdef XCC_MODULE_INCLUDED
+#include "XCCMngr.h"
 #endif
 #include "TxnQueue.h"
 #include "TWDriver.h"
@@ -465,15 +470,15 @@ TI_STATUS drvMain_Create (TI_HANDLE  hOs,
         return TI_NOK;
     }
 
-#ifdef CCX_MODULE_INCLUDED
-    pDrvMain->tStadHandles.hCcxMngr = ccxMngr_create (hOs);
-    if (pDrvMain->tStadHandles.hCcxMngr == NULL)
+#ifdef XCC_MODULE_INCLUDED
+    pDrvMain->tStadHandles.hXCCMngr = XCCMngr_create (hOs);
+    if (pDrvMain->tStadHandles.hXCCMngr == NULL)
     {
         drvMain_Destroy (pDrvMain);
         return TI_NOK;
     }
 #else
-    pDrvMain->tStadHandles.hCcxMngr = NULL;
+    pDrvMain->tStadHandles.hXCCMngr = NULL;
 #endif
 
     pDrvMain->tStadHandles.hRoamingMngr = roamingMngr_create (hOs);
@@ -745,10 +750,10 @@ TI_STATUS drvMain_Destroy (TI_HANDLE  hDrvMain)
         SoftGemini_destroy (pDrvMain->tStadHandles.hSoftGemini);
     }
 
-#ifdef CCX_MODULE_INCLUDED
-    if (pDrvMain->tStadHandles.hCcxMngr != NULL)
+#ifdef XCC_MODULE_INCLUDED
+    if (pDrvMain->tStadHandles.hXCCMngr != NULL)
     {
-        ccxMngr_unload (pDrvMain->tStadHandles.hCcxMngr);
+        XCCMngr_unload (pDrvMain->tStadHandles.hXCCMngr);
     }
 #endif
 
@@ -867,8 +872,8 @@ static void drvMain_Init (TI_HANDLE hDrvMain)
     scr_init (pModules);
     conn_init (pModules);
     ctrlData_init (pModules,
-#ifdef CCX_MODULE_INCLUDED
-                   ccxMngr_LinkTestRetriesUpdate, pModules->hCcxMngr);
+#ifdef XCC_MODULE_INCLUDED
+                   XCCMngr_LinkTestRetriesUpdate, pModules->hXCCMngr);
 #else
                    NULL, NULL);
 #endif
@@ -887,8 +892,8 @@ static void drvMain_Init (TI_HANDLE hDrvMain)
     sme_Init (pModules);
     rsn_init (pModules);
     measurementMgr_init (pModules);
-#ifdef CCX_MODULE_INCLUDED
-    ccxMngr_init (pModules);
+#ifdef XCC_MODULE_INCLUDED
+    XCCMngr_init (pModules);
 #endif
     scanMngr_init (pModules);
     currBSS_init (pModules);
@@ -971,9 +976,9 @@ static TI_STATUS drvMain_SetDefaults (TI_HANDLE hDrvMain, TI_UINT8 *pBuf, TI_UIN
     sme_SetDefaults (pDrvMain->tStadHandles.hSme, &pInitTable->tSmeModifiedInitParams, &pInitTable->tSmeInitParams);
     rsn_SetDefaults (pDrvMain->tStadHandles.hRsn, &pInitTable->rsnInitParams);
     measurementMgr_SetDefaults (pDrvMain->tStadHandles.hMeasurementMgr, &pInitTable->measurementInitParams);
-#ifdef CCX_MODULE_INCLUDED
-    ccxMngr_SetDefaults (pDrvMain->tStadHandles.hCcxMngr, &pInitTable->ccxMngrParams);
-#endif /*CCX_MODULE_INCLUDED*/
+#ifdef XCC_MODULE_INCLUDED
+    XCCMngr_SetDefaults (pDrvMain->tStadHandles.hXCCMngr, &pInitTable->XCCMngrParams);
+#endif /*XCC_MODULE_INCLUDED*/
     apConn_SetDefaults (pDrvMain->tStadHandles.hAPConnection, &pInitTable->apConnParams);
     qosMngr_SetDefaults (pDrvMain->tStadHandles.hQosMngr, &pInitTable->qosMngrInitParams);
     switchChannel_SetDefaults (pDrvMain->tStadHandles.hSwitchChannel, &pInitTable->SwitchChannelInitParams);
