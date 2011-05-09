@@ -74,10 +74,12 @@ static int wifi_probe(struct platform_device *pdev)
 
 	wifi_irqres = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
 	if (wifi_irqres) {
-		printk(KERN_INFO "%s: got wlan irq %lu\n", __func__, (unsigned long)(wifi_irqres->start));
-		printk(KERN_INFO "%s: got wlan irq trigger %s flag\n", __func__,
+		printk(KERN_INFO "TIWLAN: got wlan irq %lu\n",
+			(unsigned long)(wifi_irqres->start));
+		printk(KERN_INFO "TIWLAN: got wlan irq trigger flag '%s'\n",
 			wifi_irqres->flags & IRQF_TRIGGER_FALLING ? "falling" : "unknown");
 	} else {
+		printk(KERN_ERR "TIWLAN: no resources!\n");
 		return -ENODEV;
 	}
 
@@ -85,6 +87,7 @@ static int wifi_probe(struct platform_device *pdev)
 		int gpio = wifi_ctrl->gpio[i] & 0xFFFF;
 		int dir = (wifi_ctrl->gpio[i] >> 16) & 0x1;
 
+		printk(KERN_INFO "TIWLAN: Request GPIO %d\n", gpio);
 		ret = gpio_request(gpio, "ti_wlan");
 		if (ret < 0)
 			goto request_gpio_failed;
@@ -103,7 +106,7 @@ static int wifi_probe(struct platform_device *pdev)
 
 request_gpio_failed:
 	for (; i > 0; i--) {
-		gpio_free(i-1);
+		gpio_free(wifi_ctrl->gpio[i-1] & 0xFFFF);
 	}
 	return ret;
 }
@@ -111,20 +114,11 @@ request_gpio_failed:
 static int wifi_remove(struct platform_device *pdev)
 {
 	int i;
-	struct wifi_platform_data *wifi_ctrl = (struct wifi_platform_data *)(pdev->dev.platform_data);
 
-	wifi_irqres = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
-	if (wifi_irqres) {
-		printk(KERN_INFO "%s: got wlan irq %lu\n", __func__, (unsigned long)(wifi_irqres->start));
-		printk(KERN_INFO "%s: got wlan irq trigger %s flag\n", __func__,
-			wifi_irqres->flags & IRQF_TRIGGER_FALLING ? "falling" : "unknown");
-	} else {
-		return -ENODEV;
-	}
+	for (i = 0; i < wifi_control_data->gpio_num; i++) {
+		int gpio = wifi_control_data->gpio[i] & 0xFFFF;
 
-	for (i = 0; i < wifi_ctrl->gpio_num; i++) {
-		int gpio = wifi_ctrl->gpio[i] & 0xFFFF;
-		printk(KERN_INFO "%s: trying gpio_free: %d\n", __func__, gpio);
+		printk(KERN_INFO "TIWLAN: Release GPIO %d\n", gpio);
 		gpio_free(gpio);
 	}
 	return 0;
@@ -349,8 +343,11 @@ int hPlatform_initInterrupt(void *tnet_drv, void* handle_add)
 		return rc;
 	}
 
-	set_irq_wake(drv->irq, 1);
-
+	drv->irq_wake = 1;
+	if (set_irq_wake(drv->irq, 1) != 0) {
+		printk(KERN_INFO "TIWLAN: IRQ wake not implemented on platform\n");
+		drv->irq_wake = 0;
+	}
 	return rc;
 } /* hPlatform_initInterrupt() */
 
@@ -360,7 +357,10 @@ void hPlatform_freeInterrupt(void *tnet_drv)
 {
 	TWlanDrvIfObj *drv = tnet_drv;
 
-	//set_irq_wake(drv->irq, 0);
+	if (drv->irq_wake) {
+		set_irq_wake(drv->irq, 0);
+		drv->irq_wake = 0;
+	}
 	free_irq(drv->irq, drv);
 }
 

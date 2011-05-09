@@ -138,6 +138,7 @@ typedef struct
     TWlanDrvIfCommon         tCommon;   /* The driver object common part */
 
     int                      irq;       /* The OS IRQ handle */
+    int                      irq_wake;  /* IRQ wake flag */
 	unsigned long 			 irq_flags; /* The IRQ flags */
     struct workqueue_struct *pWorkQueue;/* The OS work queue */
     struct work_struct       tWork;     /* The OS work handle. */
