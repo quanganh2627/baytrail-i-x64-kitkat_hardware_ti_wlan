@@ -1,14 +1,3 @@
-export KMODDIR?= kernel/drivers/net/wireless/tiwlan
-KMODDIR_ARG:=   "INSTALL_MOD_DIR=$(KMODDIR)"
-ifneq ($(origin KLIB), undefined)
-KMODPATH_ARG:=  "INSTALL_MOD_PATH=$(KLIB)"
-else
-export KLIB:=          /lib/modules/$(shell uname -r)
-endif
-export KLIB_BUILD ?=	$(KLIB)/build
-
-
-DESTDIR?=
 
 CTRL_INTERFACE  := stad/src/Ctrl_Interface
 DATA_LINK       := stad/src/Data_link
@@ -39,9 +28,7 @@ TWD_MAC_EXPORT  := $(TWD_MAC_SERV)/Export_Inc
 TWD_DATA_EXPORT := $(TWD_DATA_SERV)/Export_Inc
 TWD_CTRL_EXPORT := $(TWD_CTRL)/Export_Inc
 
-ifneq ($(KERNELRELEASE),)
-
-NOSTDINC_FLAGS  := -I$(M)/$(CTRL_INTERFACE)/ \
+EXTRA_CFLAGS    += -I$(M)/$(CTRL_INTERFACE)/ \
                    -I$(M)/$(DATA_LINK)/ \
                    -I$(M)/$(STA_MGMT)/ \
                    -I$(M)/$(AIRLINK_MGMT)/ \
@@ -278,30 +265,4 @@ tiap_drv-objs += $(PLAT_LINUX_SRC)/WlanDrvIf.o \
 tiap_drv-objs += $(PLAT_HOST_LINUX)/host_platform.o \
                  $(PLAT_HOST_LINUX)/SdioAdapter.o
 
-
 EXTRA_CFLAGS += -D__LINUX__ -DTI_DBG -DREPORT_LOG -D__BYTE_ORDER_LITTLE_ENDIAN -DHOST_COMPILE -DAP_MODE_ENABLED -DTNETW1283
-
-else
-
-export PWD :=	$(shell pwd)
-
-all: modules
-
-modules:
-	$(MAKE) -C $(KLIB_BUILD) M=$(PWD) modules
-	@touch $@
-
-install-modules: modules
-	$(MAKE) -C $(KLIB_BUILD) M=$(PWD) $(KMODDIR_ARG) $(KMODPATH_ARG) \
-		modules_install
-
-clean:
-	@if [ -d net -a -d $(KLIB_BUILD) ]; then \
-		$(MAKE) -C $(KLIB_BUILD) M=$(PWD) clean ;\
-	fi
-
-.PHONY: all clean install-modules modules
-
-endif
-
-clean-files += Module.symvers Module.markers modules modules.order
