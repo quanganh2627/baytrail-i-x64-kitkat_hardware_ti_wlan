@@ -182,7 +182,7 @@ OUTPUT:		fraemReq        - The Parsered Frame Request
 RETURN:     TI_OK on success, TI_NOK otherwise
 
 ************************************************************************/
-TI_STATUS measurementMgr_dot11hParseFrameReq(TI_HANDLE hMeasurementMgr, 
+/*TI_STATUS measurementMgr_dot11hParseFrameReq(TI_HANDLE hMeasurementMgr, 
                                            TI_UINT8 *pData, TI_INT32 dataLen,
                                            TMeasurementFrameRequest *frameReq)
 {
@@ -199,7 +199,7 @@ TI_STATUS measurementMgr_dot11hParseFrameReq(TI_HANDLE hMeasurementMgr,
 
     return TI_OK;
 }
-
+*/
 /************************************************************************
  *					measurementMgr_dot11hParserRequestIEHdr				*
  ************************************************************************
@@ -345,66 +345,6 @@ TRACE1(pMeasurementMgr->hReport, REPORT_SEVERITY_WARNING, "Measurement was rejec
 	return mlmeBuilder_sendFrame(pMeasurementMgr->hMlme,ACTION,(TI_UINT8*)&measurementReport,8,0);
 }
 
-
-/***********************************************************************
- *                        measurementMgr_dot11hBuildReport							
- ***********************************************************************
-DESCRIPTION:	build measurement report Function.
-                The function does the following:
-				-	builds measurement report IE.
-				
-INPUT:      hMeasurementMgr -	MeasurementMgr Handle
-			pRequestArr		-	Array of pointer to all measurement 
-								request that should be reported.
-			numOfRequestsInParallel - indicates the number of 
-								request that should be reported.
-			
-OUTPUT:		None
-
-RETURN:     TI_OK on success, TI_NOK otherwise
-************************************************************************/
-TI_STATUS measurementMgr_dot11hBuildReport(TI_HANDLE hMeasurementMgr, MeasurementRequest_t request, TMeasurementTypeReply * reply)
-{
-	/*measurementMgr_t				*pMeasurement	 = (measurementMgr_t*)hMeasurementMgr;*/
-	MeasurementReportFrame_t	measurementReport;
-	TI_UINT8						totalReportLen = 0;
-	TI_UINT8						map = 0;
-	TI_UINT8*						pMeasurReport = (TI_UINT8 *)&(measurementReport.measurementReports[0]);
-
-	/* Building the measurement report frame contents */
-	measurementReport.actionField[0] = CATAGORY_SPECTRUM_MANAGEMENT;
-	measurementReport.actionField[1] = MEASUREMENT_REPORT;
-	measurementReport.dialogToken = (TI_UINT8)request.frameToken;
-
-	measurementReport.hdr[0] = DOT11_MEASUREMENT_REPORT_ELE_ID;
-	measurementReport.measurementToken = (TI_UINT8)request.measurementToken;
-	
-	/* setting Parallel Bit in the measurement mode */
-	if(request.bIsParallel)
-		measurementReport.measurementMode = 0x1;
-	
-	measurementReport.measurementType = request.Type;
-	
-	
-	/* Building the reports included in the current measurement report IE */
-	/* Note: The current implementation supports only Basic Report */
-	if(request.Type == MSR_TYPE_BASIC_MEASUREMENT)
-	{		
-			*pMeasurReport++ = request.channelNumber;
-			*pMeasurReport++ = (TI_UINT8)request.DurationTime;
-
-/* The following function uses features from the old Measurement module. */
-/* It will have to be adapted to using the new Measurement Manager. */
-#if 0
-			/* building the map subfield */
-			buildMapSubFieldForBasicReport(hMeasurementMgr,&map);
-#endif /* 0 */
-
-			*pMeasurReport++ = map;
-			totalReportLen += 3;
-	}
-	return TI_OK;
-}
 
 /***********************************************************************
  *                   measurementMgr_dot11hSendReportAndCleanObject							

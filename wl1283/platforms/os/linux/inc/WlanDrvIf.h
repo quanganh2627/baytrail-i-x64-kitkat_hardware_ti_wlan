@@ -44,19 +44,18 @@
 #include <linux/completion.h>
 #include <linux/netdevice.h>
 #include <linux/workqueue.h>
-#include <mach/gpio.h>
-#ifdef CONFIG_HAS_WAKELOCK
-#include <linux/wakelock.h>
-#endif
 #include "tidef.h"
 #include "WlanDrvCommon.h"
 #include "paramOut.h"
 #include "DrvMain.h"
 #include "windows_types.h"
+#ifdef CONFIG_HAS_WAKELOCK
+#include <linux/wakelock.h>
+#endif
 
 #define TIWLAN_DRV_NAME    "tiwlan"
-#define DRIVERWQ_NAME      "tiwlan_wq"
 #define TIWLAN_DRV_IF_NAME TIWLAN_DRV_NAME"%d"
+
 
 #ifdef TI_DBG
 #define ti_dprintf(log, fmt, args...) do { \
@@ -71,7 +70,6 @@
 
 #define ti_nodprintf(log, fmt, args...)
 
-
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29)
 #define NETDEV_SET_PRIVATE(dev, drv)    dev->priv = drv
 #define NETDEV_GET_PRIVATE(dev)         dev->priv
@@ -81,7 +79,7 @@
 #endif
 
 
-typedef enum
+typedef enum 
 {
    TIWLAN_LOG_ERROR,
    TIWLAN_LOG_INFO,
@@ -98,15 +96,15 @@ typedef struct
 {
 } TCmdRespUnion;
 
-
 /* Driver object */
-typedef struct
+typedef struct 
 {
     TWlanDrvIfCommon         tCommon;   /* The driver object common part */
 
     int                      irq;       /* The OS IRQ handle */
+    int                      irq_wake;  /* IRQ wake flag */
 	unsigned long 			 irq_flags; /* The IRQ flags */
-    struct workqueue_struct *tiwlan_wq; /* Work Queue */
+    struct workqueue_struct *pWorkQueue;/* The OS work queue */
     struct work_struct       tWork;     /* The OS work handle. */
     spinlock_t               lock;      /* The OS spinlock handle. */
     unsigned long            flags;     /* For saving the cpu flags during spinlock */
@@ -122,9 +120,16 @@ typedef struct
 #endif
     NDIS_HANDLE		         ConfigHandle;/* Temp - For Windows compatibility */
 
+    EExternalParam           eSuspendCmd; /* command to issue upon suspend request */
+    EExternalParam           eResumeCmd;  /* command to issue upon resume request */
+    TI_BOOL                  bSuspendInProgress; /* true if driver currently suspending/suspended; false if suspend not started or already resumed */
 } TWlanDrvIfObj, *TWlanDrvIfObjPtr;
 
 
 #define NETDEV(drv) (((TWlanDrvIfObj*)(drv))->netdev)
+
+void wlanDrvIf_UpdateDriverState (TI_HANDLE hOs, EDriverSteadyState eDriverState);
+TI_BOOL wlanDrvIf_IsIoctlEnabled(TI_HANDLE hWlanDrvIf, TI_UINT32 uIoctl);
+TI_BOOL wlanDrvIf_IsCmdEnabled(TI_HANDLE hWlanDrvIf, TI_UINT32 uCmd);
 
 #endif /* WLAN_DRV_IF_H*/

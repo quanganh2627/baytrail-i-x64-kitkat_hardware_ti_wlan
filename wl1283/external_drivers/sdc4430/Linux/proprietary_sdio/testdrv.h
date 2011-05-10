@@ -1,17 +1,36 @@
 /*
  * testdrv.h
  *
- * Copyright (C) 2009 Texas Instruments, Inc. - http://www.ti.com/
- * 
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as 
- * published by the Free Software Foundation version 2.
- *
- * This program is distributed "as is" WITHOUT ANY WARRANTY of any
- * kind, whether express or implied; without even the implied warranty
- * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.      
+ * All rights reserved.                                                  
+ *                                                                       
+ * Redistribution and use in source and binary forms, with or without    
+ * modification, are permitted provided that the following conditions    
+ * are met:                                                              
+ *                                                                       
+ *  * Redistributions of source code must retain the above copyright     
+ *    notice, this list of conditions and the following disclaimer.      
+ *  * Redistributions in binary form must reproduce the above copyright  
+ *    notice, this list of conditions and the following disclaimer in    
+ *    the documentation and/or other materials provided with the         
+ *    distribution.                                                      
+ *  * Neither the name Texas Instruments nor the names of its            
+ *    contributors may be used to endorse or promote products derived    
+ *    from this software without specific prior written permission.      
+ *                                                                       
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS   
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT     
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR 
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT  
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT      
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY 
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT   
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 
 #ifndef _MMC_TEST_H_
 #define _MMC_TEST_H_
@@ -24,22 +43,53 @@
 #define DBG(x...)	do { } while (0)
 #endif
 
-#define DRPW_BASE		         0x00310000
-#define REGISTERS_BASE			 0x00300000
+#define TESTDRV_GPIO_OUTPUT		                0
 
-#define PARTITION_DOWN_REG_ADDR       REGISTERS_BASE	
-#define PARTITION_DOWN_REG_SIZE       0x8800            
-
-
-
+#if 0
+#include <asm/arch/hardware.h>
+#endif
+#include <mach/hardware.h>
 
 #define TXN_FUNC_ID_CTRL         0
 #define TXN_FUNC_ID_BT           1
 #define TXN_FUNC_ID_WLAN         2
 
-#define TESTDRV_GPIO_INITIAL_VALUE_FOR_OUTPUT   0
-#define TESTDRV_MUXMODE_3                       3
-#define TESTDRV_TIWLAN_IRQ                     (OMAP_GPIO_IRQ(TESTDRV_GPIO_9))
+/* in case of defined in include/asm/arch/omap34xx.h */
+#ifndef OMAP_CTRL_BASE
+#define OMAP_CTRL_BASE          		OMAP343X_CTRL_BASE
+#endif
+#define OMAP_HSMMC2_BASE				0x480b4000
+
+
+#define CONTROL_PADCONF_MMC2_CLK        0x48002158   /* mmc2_cmd */
+#define CONTROL_PADCONF_MMC2_DAT0       0x4800215C   /* mmc2_dat0, mmc2_dat1 */
+#define CONTROL_PADCONF_MMC2_DAT2       0x48002160   /* mmc2_dat2, mmc2_dat3 */
+
+#ifdef EXPANSION_BOARD_MCS7
+#define CONTROL_PADCONF_SYS_BOOT1       0x48002164   /* WLAN_ENABLE */
+#define CONTROL_PADCONF_GPMC_NBE1       0x48002168   /* WLAN_IRQ    */
+#define PMENA_GPIO                      136
+#define IRQ_GPIO                        139
+#else 
+#ifdef EXPANSION_BOARD_TST
+#define CONTROL_PADCONF_SYS_BOOT1       0x48002A0C   /* WLAN_ENABLE */
+#define CONTROL_PADCONF_GPMC_NBE1       0x480020C8   /* WLAN_IRQ    */
+#define PMENA_GPIO                      3
+#define IRQ_GPIO                        61
+#else
+#define CONTROL_PADCONF_GPMC_NCS5       0x480020B8   /* WLAN_ENABLE */
+#define CONTROL_PADCONF_GPMC_NBE1       0x480020C8   /* WLAN_IRQ    */
+#define PMENA_GPIO                      57
+#define IRQ_GPIO                        61
+#endif
+#endif
+
+
+#define MUXMODE_3                       3
+#define TNETW_IRQ                       (OMAP_GPIO_IRQ(IRQ_GPIO))
+#define TIWLAN_IRQ_POLL_INTERVAL	    HZ/100
+#define HZ_IN_MSEC						HZ/1000
+#define TIWLAN_IRQ_POLL_INTERVAL_MS		TIWLAN_IRQ_POLL_INTERVAL/HZ_IN_MSEC
 
 #define TESTDRV_SDIO_FUNC1_OFFSET           	0x1FFC0  /* address of the partition table */
 

@@ -43,26 +43,28 @@
 #ifndef _VERSION_H_                                                                                                             
 #define _VERSION_H_                                                                                                             
 
-#define MCP_WL7_VERSION_STR "MCP-WL_2.5.0.3"
+#include "TWDriver.h"
 
-#define SW_VERSION_STR      "MCP-WiLink_Driver_2.5.0.0.7"
+#define MCP_WL7_VERSION_STR "MCP-WL_2.5.0.10"
+
+#define SW_VERSION_STR      "MCP-WiLink_Driver_2.5.3.0.18"
 /*
 based on WiLink 6.1.0.0.144
 */
 
-#define SW_RELEASE_MONTH    08
-#define SW_RELEASE_DAY      11
+#define SW_RELEASE_MONTH    01
+#define SW_RELEASE_DAY      26
 
 /*
-Navilink version. Navilink/inc/version.h
+Navilink version.  Navilink/inc/version.h
 */
 
-#define GPS_SW_VERSION_STR "NL6.2 M3"
+#define GPS_SW_VERSION_STR "NaviLink_MCP2.5_RC1.9"
 /*
 BT version.     MCP_Common/Platform/bthal/LINUX/android_zoom2/inc/EBTIPS_version.h
 */
 
-#define BT_SW_VERSION_STR "L2.22.32"
+#define BT_SW_VERSION_STR "BTIPS 2.24.0.6"
 
 
 #define FM_SW_VERSION_STR "L2.00.4"
@@ -70,8 +72,9 @@ BT version.     MCP_Common/Platform/bthal/LINUX/android_zoom2/inc/EBTIPS_version
 /*
 BSP version
 */
-#define BSP_VERSION_STR "Android 25.19"
+#define BSP_VERSION_STR "Android L25.inc.3.4.p2_2.5.0.9 Froyo"
 
 #endif /* _VERSION_H_ */
-                                                                                                       
-  
+
+TI_BOOL version_fwDriverMatch(TI_UINT8* fwVersion, TI_UINT16* pFwVersionOutput);
+TI_BOOL version_IniDriverMatch(TI_UINT16 iniVersion);

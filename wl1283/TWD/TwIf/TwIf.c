@@ -758,7 +758,7 @@ TRACE2(pTwIf->hReport, REPORT_SEVERITY_ERROR, "twIf_SendTransaction: Unaligned H
     if (eStatus == TXN_STATUS_PENDING)
     {
         /* Prevent system suspend one more second after WLAN task completion (to cover DMA transaction) */
-        os_wake_lock_timeout_enable(pTwIf->hOs);
+        os_WakeLockTimeoutEnable (pTwIf->hOs);
 
         twIf_HandleSmEvent (pTwIf, SM_EVENT_START);
     }

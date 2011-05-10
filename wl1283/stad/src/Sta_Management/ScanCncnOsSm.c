@@ -57,16 +57,16 @@
 #define SCAN_OID_DEFAULT_PROBE_REQUEST_NUMBER_A                     3
 #define SCAN_OID_DEFAULT_MAX_DWELL_TIME_PASSIVE_G                   100000
 #define SCAN_OID_DEFAULT_MAX_DWELL_TIME_PASSIVE_A                   100000
-#define SCAN_OID_DEFAULT_MAX_DWELL_TIME_ACTIVE_G                    30000
-#define SCAN_OID_DEFAULT_MAX_DWELL_TIME_ACTIVE_A                    30000
+#define SCAN_OID_DEFAULT_MAX_DWELL_TIME_ACTIVE_G                    60000
+#define SCAN_OID_DEFAULT_MAX_DWELL_TIME_ACTIVE_A                    60000
 #define SCAN_OID_DEFAULT_MIN_DWELL_TIME_PASSIVE_G                   100000
 #define SCAN_OID_DEFAULT_MIN_DWELL_TIME_PASSIVE_A                   100000
-#define SCAN_OID_DEFAULT_MIN_DWELL_TIME_ACTIVE_G                    15000
-#define SCAN_OID_DEFAULT_MIN_DWELL_TIME_ACTIVE_A                    15000
-#define SCAN_OID_DEFAULT_EARLY_TERMINATION_EVENT_PASSIVE_G          SCAN_ET_COND_BEACON
-#define SCAN_OID_DEFAULT_EARLY_TERMINATION_EVENT_PASSIVE_A          SCAN_ET_COND_BEACON
-#define SCAN_OID_DEFAULT_EARLY_TERMINATION_EVENT_ACTIVE_G           SCAN_ET_COND_ANY_FRAME
-#define SCAN_OID_DEFAULT_EARLY_TERMINATION_EVENT_ACTIVE_A           SCAN_ET_COND_ANY_FRAME
+#define SCAN_OID_DEFAULT_MIN_DWELL_TIME_ACTIVE_G                    30000
+#define SCAN_OID_DEFAULT_MIN_DWELL_TIME_ACTIVE_A                    30000
+#define SCAN_OID_DEFAULT_EARLY_TERMINATION_EVENT_PASSIVE_G          0 /*SCAN_ET_COND_BEACON*/
+#define SCAN_OID_DEFAULT_EARLY_TERMINATION_EVENT_PASSIVE_A          0 /*SCAN_ET_COND_BEACON*/
+#define SCAN_OID_DEFAULT_EARLY_TERMINATION_EVENT_ACTIVE_G           0 /*SCAN_ET_COND_ANY_FRAME*/
+#define SCAN_OID_DEFAULT_EARLY_TERMINATION_EVENT_ACTIVE_A           0 /*SCAN_ET_COND_ANY_FRAME*/
 
 /* For WiFi  WPA OOB scenario, 4 APs need to be configure on the same channel */
 #define SCAN_OID_DEFAULT_EARLY_TERMINATION_COUNT_PASSIVE_G          4 
@@ -89,13 +89,16 @@ static TGenSM_actionCell tSmMatrix[ SCAN_CNCN_OS_SM_NUMBER_OF_STATES ][ SCAN_CNC
         { /* SCAN_CNCN_OS_SM_STATE_IDLE */
             { SCAN_CNCN_OS_SM_STATE_SCAN_ON_G,  scanCncnOsSm_ActionStartGScan },    /* SCAN_CNCN_OS_SM_EVENT_START_SCAN */
             { SCAN_CNCN_OS_SM_STATE_IDLE,       scanCncnOsSm_ActionUnexpected },    /* SCAN_CNCN_OS_SM_EVENT_SCAN_COMPLETE */
+			{ SCAN_CNCN_OS_SM_STATE_IDLE,		scanCncnOsSm_ActionUnexpected },
         },
         { /* SCAN_CNCN_OS_SM_STATE_SCAN_ON_G */
             { SCAN_CNCN_OS_SM_STATE_SCAN_ON_G,  scanCncnOsSm_ActionUnexpected },    /* SCAN_CNCN_OS_SM_EVENT_START_SCAN */
             { SCAN_CNCN_OS_SM_STATE_SCAN_ON_A,  scanCncnOsSm_ActionStartAScan },    /* SCAN_CNCN_OS_SM_EVENT_SCAN_COMPLETE */
+			{ SCAN_CNCN_OS_SM_STATE_IDLE,		scanCncnOsSm_ActionCompleteScan },
         },
         { /* SCAN_CNCN_OS_SM_STATE_SCAN_ON_A */
             { SCAN_CNCN_OS_SM_STATE_SCAN_ON_A,  scanCncnOsSm_ActionUnexpected },    /* SCAN_CNCN_OS_SM_EVENT_START_SCAN */
+            { SCAN_CNCN_OS_SM_STATE_IDLE,       scanCncnOsSm_ActionCompleteScan },  /* SCAN_CNCN_OS_SM_EVENT_SCAN_COMPLETE */
             { SCAN_CNCN_OS_SM_STATE_IDLE,       scanCncnOsSm_ActionCompleteScan },  /* SCAN_CNCN_OS_SM_EVENT_SCAN_COMPLETE */
         }
     };
@@ -311,28 +314,31 @@ void scanCncnOsSm_ActionStartAScan (TI_HANDLE hScanCncn)
     regulatoryDomain_getParam (pScanCncn->hRegulatoryDomain, &tParam);
 
     /* scan type is passive if 802.11d is enabled and country IE was not yet found, active otherwise */
-    if (((TI_TRUE == bRegulatoryDomainEnabled) && (TI_FALSE == tParam.content.bIsCountryFound)) || SCAN_TYPE_TRIGGERED_PASSIVE == pScanCncn->tOsScanParams.scanType)
+    if (((TI_TRUE == bRegulatoryDomainEnabled) &&
+        (TI_FALSE == tParam.content.bIsCountryFound)) ||
+        SCAN_TYPE_TRIGGERED_PASSIVE == pScanCncn->tOsScanParams.scanType ||
+        SCAN_TYPE_NORMAL_PASSIVE == pScanCncn->tOsScanParams.scanType)
     {
-        pScanCncn->tOsScanParams.scanType = SCAN_TYPE_TRIGGERED_PASSIVE;
+        pScanCncn->tOsScanParams.scanType = SCAN_TYPE_NORMAL_PASSIVE;
     }
     /* All paramters in the func are hard coded, due to that we set to active if not passive */
 	else
     {
-        pScanCncn->tOsScanParams.scanType = SCAN_TYPE_TRIGGERED_ACTIVE;
+        pScanCncn->tOsScanParams.scanType = SCAN_TYPE_NORMAL_ACTIVE;
         /* also set number and rate of probe requests */
         pScanCncn->tOsScanParams.probeReqNumber = SCAN_OID_DEFAULT_PROBE_REQUEST_NUMBER_A;
         pScanCncn->tOsScanParams.probeRequestRate = (ERateMask)SCAN_OID_DEFAULT_PROBE_REQUEST_RATE_A;
     }
-    
-    /* add supported channels on G */
+
+    /* add supported channels on A */
     if (SCAN_TYPE_NORMAL_PASSIVE == pScanCncn->tOsScanParams.scanType )
     {
-        uValidChannelsCount = scanCncnOsSm_FillAllAvailableChannels (hScanCncn, RADIO_BAND_5_0_GHZ, 
-                                       SCAN_TYPE_NORMAL_PASSIVE, &(pScanCncn->tOsScanParams.channelEntry[0]),
-                                       SCAN_OID_DEFAULT_MAX_DWELL_TIME_PASSIVE_A,
-                                       SCAN_OID_DEFAULT_MIN_DWELL_TIME_PASSIVE_A,
-                                       SCAN_OID_DEFAULT_EARLY_TERMINATION_EVENT_PASSIVE_A,
-                                       SCAN_OID_DEFAULT_EARLY_TERMINATION_COUNT_PASSIVE_A );
+     	uValidChannelsCount = scanCncnOsSm_FillAllAvailableChannels (hScanCncn, RADIO_BAND_5_0_GHZ, 
+                                           SCAN_TYPE_NORMAL_PASSIVE, &(pScanCncn->tOsScanParams.channelEntry[0]),
+                                           SCAN_OID_DEFAULT_MAX_DWELL_TIME_PASSIVE_A,
+                                           SCAN_OID_DEFAULT_MIN_DWELL_TIME_PASSIVE_A,
+                                           SCAN_OID_DEFAULT_EARLY_TERMINATION_EVENT_PASSIVE_A,
+                                           SCAN_OID_DEFAULT_EARLY_TERMINATION_COUNT_PASSIVE_A );
     }
     else
     {
@@ -381,31 +387,34 @@ void scanCncnOsSm_ActionStartAScan (TI_HANDLE hScanCncn)
 void scanCncnOsSm_ActionCompleteScan (TI_HANDLE hScanCncn)
 {
     TScanCncn       *pScanCncn = (TScanCncn*)hScanCncn;
-    TI_UINT32	statusData;
 
-	 /*Update the table only if scan was not rejected*/
-	 if ( !pScanCncn->pScanClients[ pScanCncn->eCurrentRunningAppScanClient ]->bScanRejectedOn2_4)
-	 {
-		     /* 
-     * set the result table to stable state. Note: OID scans are always done for the application, so the
-     * results will always be sent to the scan concentartor app scan result table, regardless of the
-     * SME connection mode. However, it is expected that the SME will NOT attempt to connect when an OID
-     * scan request will be received
-     */
-		  scanResultTable_SetStableState (pScanCncn->hScanResultTable);
-	 }
-	 else
-	 {
-		  pScanCncn->pScanClients[ pScanCncn->eCurrentRunningAppScanClient ]->bScanRejectedOn2_4 = TI_FALSE;
-	 }
+    EScanClient scanClient  = pScanCncn->pScanClients[ SCAN_SCC_APP_ONE_SHOT ]->uScanParams.tOneShotScanParams.eScanClient;
+
+    /*Update the table only if scan was not rejected*/
+    if(pScanCncn->pScanClients[ SCAN_SCC_APP_ONE_SHOT ]->bCurrentlyRunning)
+    {
+         if ( !pScanCncn->pScanClients[ SCAN_SCC_APP_ONE_SHOT ]->bScanRejectedOn2_4)
+         {
+         /* 
+         * set the result table to stable state. Note: OID scans are always done for the application, so the
+         * results will always be sent to the scan concentartor app scan result table, regardless of the
+         * SME connection mode. However, it is expected that the SME will NOT attempt to connect when an OID
+         * scan request will be received
+         */
+              scanResultTable_SetStableState (pScanCncn->hScanResultTable);
+         }
+         else
+         {
+              pScanCncn->pScanClients[ SCAN_SCC_APP_ONE_SHOT ]->bScanRejectedOn2_4 = TI_FALSE;
+         }
+    }
 
     /* mark that OID scan process is no longer running */
     pScanCncn->bOSScanRunning = TI_FALSE;
     /* also mark that no app scan client is running */
-    pScanCncn->eCurrentRunningAppScanClient = SCAN_SCC_NO_CLIENT;
+    pScanCncn->pScanClients[SCAN_SCC_APP_ONE_SHOT]->bCurrentlyRunning = TI_FALSE;
  
-    statusData = SCAN_STATUS_COMPLETE;	/* Completed status */
-	EvHandlerSendEvent (pScanCncn->hEvHandler, IPC_EVENT_SCAN_COMPLETE, (TI_UINT8 *)&statusData, sizeof(TI_UINT32));
+	EvHandlerSendEvent (pScanCncn->hEvHandler, IPC_EVENT_SCAN_COMPLETE, (TI_UINT8 *)&scanClient, sizeof(TI_UINT32));
  
     /* no need to send scan complete event - WZC (or equivalent other OS apps) will query for the results */
 }
@@ -483,8 +492,8 @@ TI_UINT32 scanCncnOsSm_FillAllAvailableChannels (TI_HANDLE hScanCncn, ERadioBand
             pChannelArray[ uValidChannelsCnt ].normalChannelEntry.maxChannelDwellTime = uMaxDwellTime;
             pChannelArray[ uValidChannelsCnt ].normalChannelEntry.earlyTerminationEvent = eETCondition;
             pChannelArray[ uValidChannelsCnt ].normalChannelEntry.ETMaxNumOfAPframes = uETFrameNumber;
-            pChannelArray[ uValidChannelsCnt ].normalChannelEntry.txPowerDbm  = 
-                tParam.content.channelCapabilityRet.maxTxPowerDbm;
+            pChannelArray[ uValidChannelsCnt ].normalChannelEntry.txPowerDbm  = 205;
+                /*tParam.content.channelCapabilityRet.maxTxPowerDbm;*/
 
             /* Fill broadcast BSSID */
             for (j = 0; j < 6; j++)

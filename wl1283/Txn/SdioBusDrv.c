@@ -414,7 +414,8 @@ static TI_BOOL busDrv_PrepareTxnParts (TBusDrvObj *pBusDrv, TTxnStruct *pTxn)
 
         uPartNum++;
     }
-
+//Comment line below to enable Packet Aggregation
+//#define DISABLE_SDIO_MULTI_BLK_MODE
 #ifdef  DISABLE_SDIO_MULTI_BLK_MODE
 
     /* SDIO multi-block mode is disabled so split to 512 bytes blocks */

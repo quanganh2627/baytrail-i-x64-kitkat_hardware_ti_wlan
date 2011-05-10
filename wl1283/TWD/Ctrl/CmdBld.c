@@ -1358,7 +1358,7 @@ static TI_STATUS __cfg_radio_params (TI_HANDLE hCmdBld)
 		return TI_NOK;
 
     return cmdBld_CfgIeRadioParams (hCmdBld, 
-                                    &DB_RADIO(hCmdBld), 
+                                    DB_RADIO(hCmdBld), 
                                     (void *)cmdBld_ConfigSeq, 
                                     hCmdBld);
 }
@@ -1370,7 +1370,7 @@ static TI_STATUS __cfg_extended_radio_params (TI_HANDLE hCmdBld)
 		return TI_NOK;
 
     return cmdBld_CfgIeExtendedRadioParams (hCmdBld,
-											&DB_EXT_RADIO(hCmdBld),
+											DB_EXT_RADIO(hCmdBld),
 											(void *)cmdBld_ConfigSeq,
 											hCmdBld);
 }
@@ -2413,10 +2413,13 @@ TI_STATUS cmdBld_GetParam (TI_HANDLE hCmdBld, TTwdParamInfo *pParamInfo)
     case TWD_RSSI_LEVEL_PARAM_ID:
     case TWD_SNR_RATIO_PARAM_ID:
         /* Retrive the Callback function and read buffer pointer that are in fact stored in the TIWLAN_ADAPTER and then send it to the Command Mailbox */
-        cmdBld_ItrRSSI (hCmdBld, 
+        if (cmdBld_ItrRSSI (hCmdBld, 
                         pParamInfo->content.interogateCmdCBParams.fCb, 
                         pParamInfo->content.interogateCmdCBParams.hCb, 
-                        pParamInfo->content.interogateCmdCBParams.pCb);
+                        pParamInfo->content.interogateCmdCBParams.pCb) != TI_OK)
+        {
+            return TI_NOK;
+        }
         break;
 
     case TWD_BCN_BRC_OPTIONS_PARAM_ID:
@@ -2880,6 +2883,24 @@ TI_STATUS cmdBld_SetSecuritySeqNum (TI_HANDLE hCmdBld, TI_UINT8 securitySeqNumLs
 
     return TI_OK;
 }
+
+#ifndef TNETW1283
+/*
+ * \fn		cmdBld_SetPGVersion
+ *
+ * \brief	Stores the PG Version in the database
+ *
+ * \param	hCmdBld    - handle for the CmdBld module
+ * \param	uPGVersion - the PG Version to store
+ *
+ * \return	TI_OK
+ */
+TI_STATUS cmdBld_SetPGVersion(TI_HANDLE hCmdBld, TI_UINT32 uPGVersion)
+{
+	DB_HW(hCmdBld).uPGVersion = uPGVersion;
+	return TI_OK;
+}
+#endif
 
 /****************************************************************************
  *                      cmdBld_JoinCmpltForReconfigCb()

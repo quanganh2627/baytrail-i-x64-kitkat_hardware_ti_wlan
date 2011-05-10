@@ -57,13 +57,19 @@
  * #define PRINTF_ROLLBACK
  */
 
+
+#define PRINTF_ROLLBACK
+
 #include "osApi.h"
 #include "commonTypes.h"
-    
+
 #define MAX_STRING_LEN         32 
-#ifdef REPORT_LOG
-#define PRINTF_ROLLBACK
-#endif
+
+
+
+
+
+
 
 /*******************************/
 /*      Report Files IDs       */
@@ -211,6 +217,7 @@ typedef enum
 	FILE_ID_137	   ,    /*   cmdinterpretoid          */
     FILE_ID_138	   ,    /*   wlandrvif                */
     FILE_ID_139	   ,    /*   rrmMgr                   */
+    FILE_ID_140	   ,    /*   pwrState                 */
     
 	REPORT_FILES_NUM	/*   Number of files with trace reports   */
 

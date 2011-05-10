@@ -191,10 +191,10 @@ void mlme_smStartIdle(TI_HANDLE hMlme)
     TI_STATUS       status = TI_OK;
 	mlme_t *pMlme = (mlme_t*)hMlme;
 
-	tmr_StopTimer(pMlme->hMlmeTimer);
-	status = mlme_sendAuthRequest(pMlme);
-
-	if (TI_OK == status)
+    tmr_StopTimer(pMlme->hMlmeTimer);
+    status = mlme_sendAuthRequest(pMlme);
+    
+    if (TI_OK == status)
 	{
 		tmr_StartTimer(pMlme->hMlmeTimer, mlme_authTmrExpiry, pMlme, pMlme->authInfo.timeout, TI_FALSE);
 	}
@@ -203,8 +203,8 @@ void mlme_smStartIdle(TI_HANDLE hMlme)
 		TRACE0(pMlme->hReport, REPORT_SEVERITY_ERROR, "mlme_smStartIdle: failed to send auth request\n");
         pMlme->mlmeData.mgmtStatus = STATUS_UNSPECIFIED;
         pMlme->mlmeData.uStatusCode = TI_NOK;
-		mlme_smEvent(pMlme->hMlmeSm, MLME_SM_EVENT_FAIL, pMlme);
-	}
+        mlme_smEvent(pMlme->hMlmeSm, MLME_SM_EVENT_FAIL, pMlme);
+    }
 }
 
 /** 
@@ -403,11 +403,21 @@ void mlme_smStop(TI_HANDLE hMlme)
  *  
  * \param  hMlme - handler to mlme
  */ 
-void mlme_smFail(TI_HANDLE hMlme)
+void mlme_smFail(TI_HANDLE hMlme)    
 {
 	mlme_t *pMlme = (mlme_t*)hMlme;
-	mlme_smToIdle(pMlme);
-	conn_reportMlmeStatus(pMlme->hConn, pMlme->mlmeData.mgmtStatus, pMlme->mlmeData.uStatusCode);
+    
+    mlme_smToIdle(pMlme);  
+    TRACE2(pMlme->hReport, REPORT_SEVERITY_INFORMATION, "mlme_smFail : status = %d Type = %d \n",pMlme->mlmeData.mgmtStatus ,pMlme->legacyAuthType);
+    /* if the auth mode is AutoSwitch and the connection in SHARED mode fail then connect with OPEN mode */
+	if ((pMlme->legacyAuthType == RSN_AUTH_AUTO_SWITCH) && (pMlme->mlmeData.mgmtStatus == STATUS_AUTH_REJECT ) && ( pMlme->bSharedFailed == TI_FALSE))
+    {
+        pMlme->bSharedFailed = TI_TRUE;
+        pMlme->authInfo.authType = AUTH_LEGACY_OPEN_SYSTEM;
+		return mlme_smEvent(pMlme->hMlmeSm, MLME_SM_EVENT_START, pMlme);
+    }
+
+    conn_reportMlmeStatus(pMlme->hConn, pMlme->mlmeData.mgmtStatus, pMlme->mlmeData.uStatusCode);
 }
 
 /** 

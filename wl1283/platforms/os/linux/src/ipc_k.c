@@ -74,7 +74,7 @@ TI_INT32 IPC_EventSend(TI_HANDLE hAdapter, TI_UINT8* pEvData, TI_UINT32 EvDataSi
      TI_UINT8 *msg;
 
      /* Prevent system suspend for one more second after WLAN task completion */
-	 os_wake_lock_timeout_enable(drv);
+     os_WakeLockTimeoutEnable(drv);
 
      /* This event is targetted to the OS process Id 0 is not a valid pId for LINUX*/
 

@@ -90,6 +90,7 @@ typedef struct
     void               *hEvHandler;
     void               *hReport;
     void               *hCmdDispatch;
+    void               *hPwrState;
 
     /* Initialization files info */
     TInitImageInfo      tIniFile;

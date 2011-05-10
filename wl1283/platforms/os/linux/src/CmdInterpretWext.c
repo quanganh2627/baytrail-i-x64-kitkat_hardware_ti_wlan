@@ -575,13 +575,19 @@ int cmdInterpret_convertAndExecute(TI_HANDLE hCmdInterpret, TConfigCommand *cmdO
         }
     
 
-        /* trigger scanning (list cells) */
+    /* trigger scanning (list cells) */
     case SIOCSIWSCAN:
         {
 			struct iw_scan_req scanReq;
-            TScanParams scanParams;
-	    pParam->content.pScanParams = &scanParams;
+            TScanParams *pScanParams = os_memoryAlloc(pCmdInterpret->hOs, sizeof(TScanParams));
 
+            if (!pScanParams) 
+            {
+                res = -ENOMEM;
+                goto cmd_end;
+            }
+
+            pParam->content.pScanParams = pScanParams;
 
 			/* Init the parameters in case the Supplicant doesn't support them*/
             pParam->content.pScanParams->desiredSsid.len = 0;
@@ -617,6 +623,8 @@ int cmdInterpret_convertAndExecute(TI_HANDLE hCmdInterpret, TConfigCommand *cmdO
             pParam->paramLength = sizeof(TScanParams);
             res = cmdDispatch_SetParam (pCmdInterpret->hCmdDispatch, pParam );
             CHECK_PENDING_RESULT(res,pParam)
+
+            os_memoryFree(pCmdInterpret->hOs, pScanParams, sizeof(TScanParams));
         }
         break;
 
@@ -674,10 +682,6 @@ int cmdInterpret_convertAndExecute(TI_HANDLE hCmdInterpret, TConfigCommand *cmdO
 
             /* Allocate required memory */
             rate_list = os_memoryAlloc (pCmdInterpret->hOs, rates_allocated_size);
-	    if (!rate_list) {
-		res = -ENOMEM;
-		goto cmd_end;
-	    }
 
 			/* And retrieve the list */
             pParam->paramType = SCAN_CNCN_BSSID_RATE_LIST_PARAM;
@@ -1368,9 +1372,9 @@ int cmdInterpret_convertAndExecute(TI_HANDLE hCmdInterpret, TConfigCommand *cmdO
            
             pParam->paramType = my_command->cmd;
 
+
             if (IS_PARAM_ASYNC(my_command->cmd))
             {
-
                 /* os_printf ("Detected ASYNC command - setting CB \n"); */
                 pParam->content.interogateCmdCBParams.hCb  =  (TI_HANDLE)pCmdInterpret;
                 pParam->content.interogateCmdCBParams.fCb  =  (void*)cmdInterpret_ServiceCompleteCB;
@@ -1405,9 +1409,7 @@ int cmdInterpret_convertAndExecute(TI_HANDLE hCmdInterpret, TConfigCommand *cmdO
             } 
             else if (my_command->flags & PRIVATE_CMD_GET_FLAG)
             {
-                
-                /* os_printf ("Calling getParam\n"); */
-                pParam->paramLength = my_command->out_buffer_len;
+                  pParam->paramLength = my_command->out_buffer_len;
                 res = cmdDispatch_GetParam (pCmdInterpret->hCmdDispatch,pParam);
                 if(res == EXTERNAL_GET_PARAM_DENIED)
                 {
@@ -1430,23 +1432,26 @@ int cmdInterpret_convertAndExecute(TI_HANDLE hCmdInterpret, TConfigCommand *cmdO
             }
 
             if (res == TI_OK)
-                {
-                 if(IS_PARAM_ASYNC(my_command->cmd))
+            {
+                if(IS_PARAM_ASYNC(my_command->cmd))
                 {
                     pCmdInterpret->pAsyncCmd = cmdObj; /* Save command handle for completion CB */
                     res = COMMAND_PENDING;
                 }
                 else
                 {
+
                     if ((my_command->out_buffer) && (my_command->out_buffer_len))
                     {
+
                         if(IS_ALLOC_NEEDED_PARAM(my_command->cmd))
                         {
+
                             os_memoryCopy(pCmdInterpret->hOs,my_command->out_buffer,*(void**)&pParam->content,my_command->out_buffer_len);
                         }
                         else
                         {
-                            os_memoryCopy(pCmdInterpret->hOs,my_command->out_buffer,&pParam->content,my_command->out_buffer_len);
+                             os_memoryCopy(pCmdInterpret->hOs,my_command->out_buffer,&pParam->content,my_command->out_buffer_len);
                         }                   
                     }               
                 }
@@ -1554,7 +1559,7 @@ static TI_INT32 cmdInterpret_Event(IPC_EV_DATA* pData)
 
     switch (pData->EvParams.uEventType)
     {
-    case IPC_EVENT_ASSOCIATED:
+	case IPC_EVENT_ASSOCIATED:
         {
             paramInfo_t *pParam;
             pParam = (paramInfo_t *)os_memoryAlloc(pCmdInterpret->hOs, sizeof(paramInfo_t));
@@ -1705,26 +1710,24 @@ event_end:
 
     case IPC_EVENT_SCAN_COMPLETE:
         {
-			TI_UINT8 *buf;
+			TI_INT32 *pClient;
+            TI_UINT8 scanComplete[18];
+            TI_INT32 scanClient;
 			wrqu.data.length = 0;
 			wrqu.data.flags = 0;
-			buf = pData->uBuffer;
 
-			if (*(TI_UINT32*)buf == SCAN_STATUS_COMPLETE)
-				wireless_send_event(NETDEV(pCmdInterpret->hOs), SIOCGIWSCAN, &wrqu, NULL);
-			else			
-			{
-                if (*(TI_UINT32*)buf == SCAN_STATUS_STOPPED)          // scan is stopped successfully
-					pData->EvParams.uEventType = IPC_EVENT_SCAN_STOPPED;
-                else if (*(TI_UINT32*)buf == SCAN_STATUS_FAILED)          // scan is stopped successfully
-					pData->EvParams.uEventType = IPC_EVENT_SCAN_FAILED;
-				else
-					break;
+            os_memoryCopy(pCmdInterpret->hOs, &scanClient, pData->uBuffer, 4); 
 
-				os_memorySet (pCmdInterpret->hOs,&wrqu, 0, sizeof(wrqu));
-				wrqu.data.length = sizeof(IPC_EV_DATA);
-				wireless_send_event(NETDEV(pCmdInterpret->hOs), IWEVCUSTOM, &wrqu, (u8 *)pData);
-			}
+			wireless_send_event(NETDEV(pCmdInterpret->hOs), SIOCGIWSCAN, &wrqu, NULL);
+
+            os_memorySet (pCmdInterpret->hOs, &wrqu, 0, sizeof(wrqu));
+
+            wrqu.data.length = sprintf(scanComplete, "SCAN_COMPLETE=");
+            pClient = (TI_INT32*)&scanComplete[wrqu.data.length];
+            *pClient = scanClient;
+            wrqu.data.length += sizeof(scanClient);
+
+            wireless_send_event(NETDEV(pCmdInterpret->hOs), IWEVCUSTOM, &wrqu, (TI_UINT8 *)scanComplete);
 		}
         break;
 
@@ -1903,7 +1906,6 @@ static int cmdInterpret_setSecurityParams (TI_HANDLE hCmdInterpret)
     pParam->paramType = RSN_ENCRYPTION_STATUS_PARAM;
     pParam->content.rsnEncryptionStatus = encr_mode;
     cmdDispatch_SetParam ( pCmdInterpret->hCmdDispatch, pParam );
-    os_memoryFree(pCmdInterpret->hOs, pParam, sizeof(paramInfo_t));
 #ifdef SUPPL_WPS_SUPPORT
 	pParam->paramType = SITE_MGR_SIMPLE_CONFIG_MODE;
 	if (pCmdInterpret->wai.iw_auth_key_mgmt & TI_AUTH_KEY_MGMT_WPS)
@@ -1913,6 +1915,7 @@ static int cmdInterpret_setSecurityParams (TI_HANDLE hCmdInterpret)
     cmdDispatch_SetParam ( pCmdInterpret->hCmdDispatch, pParam );
 #endif
 
+    os_memoryFree(pCmdInterpret->hOs, pParam, sizeof(paramInfo_t));
 	return TI_OK;
 }
 

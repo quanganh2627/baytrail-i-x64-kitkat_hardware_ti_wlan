@@ -55,13 +55,13 @@
 #include "smeApi.h"
 #include "apConnApi.h"
 #include "EvHandler.h"
-
+#include "pwrState.h"
 
 
 
 /* static functions */
 void scanCncn_SGupdateScanParams (TI_HANDLE hScanCncn, UScanParams *puScanParams, TI_BOOL bPeriodicScan) ;
-static void scanCncn_VerifyChannelsWithRegDomain (TI_HANDLE hScanCncn, UScanParams *puScanParams, TI_BOOL bPeriodicScan);
+static TI_STATUS scanCncn_VerifyChannelsWithRegDomain (TI_HANDLE hScanCncn, UScanParams *puScanParams, TI_BOOL bPeriodicScan);
 static void scanCncn_Mix1ShotScanChannels (TScanChannelEntry *pChannelArray, TI_UINT32 uValidChannelsCount);
 static void scanCncn_MixPeriodicScanChannels (TPeriodicChannelEntry *pChannelArray, TI_UINT32 uValidChannelsCount);
 static void scanCncn_ScanCompleteCB( TI_HANDLE hScanCncn, char* str, TI_UINT32 strLen );
@@ -152,12 +152,6 @@ void scanCncn_Destroy (TI_HANDLE hScanCncn)
     TScanCncn   *pScanCncn = (TScanCncn*)hScanCncn;
     TI_UINT32   uIndex;
 
-    /* destroy the scan guard timer */
-	if (pScanCncn->hScanGuardTimer)
-    {
-		tmr_DestroyTimer (pScanCncn->hScanGuardTimer);
-    }
-
     /* destory the app scan result table */
     scanResultTable_Destroy (pScanCncn->hScanResultTable);
 
@@ -200,36 +194,31 @@ void scanCncn_Init (TStadHandlesList *pStadHandles)
     pScanCncn->hHealthMonitor = pStadHandles->hHealthMonitor;
     pScanCncn->hSme = pStadHandles->hSme;
 	pScanCncn->hTimer = pStadHandles->hTimer;
+	pScanCncn->hPwrState = pStadHandles->hPwrState;
 
     /* nullify other parameters */
     pScanCncn->eConnectionStatus = STA_NOT_CONNECTED;
     pScanCncn->bUseSGParams = TI_FALSE; /* bUseSGParams is TI_TRUE only when SG module is enabled */
-    pScanCncn->eCurrentRunningAppScanClient = SCAN_SCC_NO_CLIENT;
     pScanCncn->uOSScanLastTimeStamp = 0;
     pScanCncn->bOSScanRunning = TI_FALSE;
 	pScanCncn->numOfConsTimerExpiry = 0;
 	pScanCncn->bScanCompleteFlag = TI_TRUE;
-    pScanCncn->hScanGuardTimer = NULL;
+    pScanCncn->bPendingPeriodicScan = TI_FALSE;
 
     /* initialize client objects */
-    scanCncnSm_Init (pScanCncn->pScanClients[ SCAN_SCC_ROAMING_IMMED ], pScanCncn->hReport, pScanCncn->hTWD,
-                     pScanCncn->hSCR, pScanCncn->hAPConn, pScanCncn->hMlme, (TI_HANDLE)pScanCncn,
+    scanCncnSm_Init (pScanCncn->pScanClients[ SCAN_SCC_ROAMING_IMMED ], pStadHandles,
                      scanCncnSmImmed1Shot_ScrRequest, scanCncnSmImmed1Shot_ScrRelease, scanCncnSmImmed1Shot_StartScan,
                      scanCncnSmImmed1Shot_StopScan, scanCncnSm_NoOp, "Immediate scan SM");
-    scanCncnSm_Init (pScanCncn->pScanClients[ SCAN_SCC_ROAMING_CONT ], pScanCncn->hReport, pScanCncn->hTWD,
-                     pScanCncn->hSCR, pScanCncn->hAPConn, pScanCncn->hMlme, (TI_HANDLE)pScanCncn,
+    scanCncnSm_Init (pScanCncn->pScanClients[ SCAN_SCC_ROAMING_CONT ], pStadHandles,
                      scanCncnSmCont1Shot_ScrRequest, scanCncnSmCont1Shot_ScrRelease, scanCncnSmCont1Shot_StartScan,
                      scanCncnSmCont1Shot_StopScan, scanCncnSm_NoOp, "Continuous scan SM");
-    scanCncnSm_Init (pScanCncn->pScanClients[ SCAN_SCC_DRIVER ], pScanCncn->hReport, pScanCncn->hTWD,
-                     pScanCncn->hSCR, pScanCncn->hAPConn, pScanCncn->hMlme, (TI_HANDLE)pScanCncn, 
+    scanCncnSm_Init (pScanCncn->pScanClients[ SCAN_SCC_DRIVER ], pStadHandles,
                      scanCncnSmDrvP_ScrRequest, scanCncnSmDrvP_ScrRelease, scanCncnSmDrvP_StartScan,
                      scanCncnSmDrvP_StopScan, scanCncnSm_NoOp, "Driver scan SM");
-    scanCncnSm_Init (pScanCncn->pScanClients[ SCAN_SCC_APP_PERIODIC ], pScanCncn->hReport, pScanCncn->hTWD,
-                     pScanCncn->hSCR, pScanCncn->hAPConn, pScanCncn->hMlme, (TI_HANDLE)pScanCncn,
+    scanCncnSm_Init (pScanCncn->pScanClients[ SCAN_SCC_APP_PERIODIC ], pStadHandles,
                      scanCncnSmAppP_ScrRequest, scanCncnSmAppP_ScrRelease, scanCncnSmAppP_StartScan,
                      scanCncnSmAppP_StopScan, scanCncnSm_NoOp, "Periodic application scan SM");
-    scanCncnSm_Init (pScanCncn->pScanClients[ SCAN_SCC_APP_ONE_SHOT ], pScanCncn->hReport, pScanCncn->hTWD,
-                     pScanCncn->hSCR, pScanCncn->hAPConn, pScanCncn->hMlme, (TI_HANDLE)pScanCncn,
+    scanCncnSm_Init (pScanCncn->pScanClients[ SCAN_SCC_APP_ONE_SHOT ], pStadHandles,
                      scanCncnSmApp1Shot_ScrRequest, scanCncnSmApp1Shot_ScrRelease, scanCncnSmApp1Shot_StartScan,
                      scanCncnSmApp1Shot_StopScan, scanCncnSm_NoOp, "One-shot application scan SM");
 
@@ -250,8 +239,16 @@ void scanCncn_Init (TStadHandlesList *pStadHandles)
 void scanCncn_Recover (TI_HANDLE hScanCncn)
 {
     TScanCncn   *pScanCncn = (TScanCncn*)hScanCncn;
+    uint8       uIndex = 0;
 
-    tmr_StopTimer(pScanCncn->hScanGuardTimer);
+    /* stop scan guard timers for all clients */
+    for (uIndex = 0; uIndex < SCAN_SCC_NUM_OF_CLIENTS; uIndex++) 
+    {
+        if (pScanCncn->pScanClients[uIndex]->hScanClientGuardTimer) 
+        {
+            tmr_StopTimer(pScanCncn->pScanClients[uIndex]->hScanClientGuardTimer);
+        }
+    }
 }
 
 /** 
@@ -268,6 +265,7 @@ void scanCncn_Recover (TI_HANDLE hScanCncn)
 TI_STATUS scanCncn_SetDefaults (TI_HANDLE hScanCncn, TScanCncnInitParams *pScanCncnInitParams)
 {
     TScanCncn   *pScanCncn = (TScanCncn*)hScanCncn;
+    uint8       uIndex     = 0;
 
     /* copy registry values */
     os_memoryCopy (pScanCncn->hOS, 
@@ -275,12 +273,17 @@ TI_STATUS scanCncn_SetDefaults (TI_HANDLE hScanCncn, TScanCncnInitParams *pScanC
                    pScanCncnInitParams,
                    sizeof (TScanCncnInitParams));
 
-    /* create scan guard timer */
-	pScanCncn->hScanGuardTimer = tmr_CreateTimer(pScanCncn->hTimer);
-    if ( pScanCncn->hScanGuardTimer == NULL)
+    /* create scan guard timers for all clients */
+    for (uIndex = 0; uIndex < SCAN_SCC_NUM_OF_CLIENTS; uIndex++) 
     {
-		TRACE0(pScanCncn->hReport, REPORT_SEVERITY_INIT, "scanCncn_SetDefaults - ERROR creating timer - ABROTING init!\n");
-		return TI_NOK;
+        pScanCncn->pScanClients[uIndex]->hScanClientGuardTimer = tmr_CreateTimer(pScanCncn->hTimer);
+        if ( pScanCncn->pScanClients[uIndex]->hScanClientGuardTimer == NULL)
+        {
+    		TRACE1(pScanCncn->hReport, REPORT_SEVERITY_INIT, "scanCncn_SetDefaults - "
+                                                             "ERROR creating timer for client %d - "
+                                                             "ABROTING init!\n", uIndex);
+    		return TI_NOK;
+        }
     }
 
     /* register SCR callbacks */
@@ -312,8 +315,8 @@ TI_STATUS scanCncn_SetDefaults (TI_HANDLE hScanCncn, TScanCncnInitParams *pScanC
     TWD_EnableEvent (pScanCncn->hTWD, TWD_OWN_EVENT_PERIODIC_SCAN_REPORT);
 
     /* "register" the application scan result callback */
-    scanCncn_RegisterScanResultCB ((TI_HANDLE)pScanCncn, SCAN_SCC_APP_ONE_SHOT, scanCncn_AppScanResultCB, (TI_HANDLE)pScanCncn);
-    scanCncn_RegisterScanResultCB ((TI_HANDLE)pScanCncn, SCAN_SCC_APP_PERIODIC, scanCncn_AppScanResultCB, (TI_HANDLE)pScanCncn);
+    scanCncn_RegisterScanResultCB ((TI_HANDLE)pScanCncn, SCAN_SCC_APP_ONE_SHOT, scanCncnApp_ApplicationScanResultCB, (TI_HANDLE)pScanCncn);
+    scanCncn_RegisterScanResultCB ((TI_HANDLE)pScanCncn, SCAN_SCC_APP_PERIODIC, scanCncnApp_PeriodicScanResultCB, (TI_HANDLE)pScanCncn);
 
     /* set the Scan Result Aging threshold for the scan concentrator's Scan Result Table */
     scanResultTable_SetSraThreshold(pScanCncn->hScanResultTable, pScanCncnInitParams->uSraThreshold);
@@ -444,8 +447,15 @@ EScanCncnResultStatus scanCncn_Start1ShotScan (TI_HANDLE hScanCncn,
 {
     TScanCncn           *pScanCncn = (TScanCncn*)hScanCncn;
     paramInfo_t         *pParam;
+    TI_STATUS           status = TI_OK;
 
     TRACE1(pScanCncn->hReport, REPORT_SEVERITY_INFORMATION , "scanCncn_Start1ShotScan: Received scan request from client %d\n", eClient);
+
+    /* assert eClient is valid */
+    if (eClient >= SCAN_SCC_NUM_OF_CLIENTS) {
+    	TRACE1(pScanCncn->hReport, REPORT_SEVERITY_WARNING, "scanCncn_Start1ShotScan: invalid eClient (%d). returning\n", eClient);
+    	return SCAN_CRS_SCAN_FAILED;
+    }
 
     pParam = (paramInfo_t *)os_memoryAlloc(pScanCncn->hOS, sizeof(paramInfo_t));
     if (!pParam) {
@@ -475,11 +485,14 @@ EScanCncnResultStatus scanCncn_Start1ShotScan (TI_HANDLE hScanCncn,
     }
     os_memoryFree(pScanCncn->hOS, pParam, sizeof(paramInfo_t));
 
+
     /* ask the reg domain which channels are allowed for the requested scan type */
-    scanCncn_VerifyChannelsWithRegDomain (hScanCncn, &(pScanCncn->pScanClients[ eClient ]->uScanParams), TI_FALSE);
+    status = scanCncn_VerifyChannelsWithRegDomain (hScanCncn, &(pScanCncn->pScanClients[ eClient ]->uScanParams), TI_FALSE);
+
 
     /* if no channels are available for scan, return negative result */
-    if (0 == pScanCncn->pScanClients[ eClient ]->uScanParams.tOneShotScanParams.numOfChannels)
+    if (TI_NOK == status ||
+        0 == pScanCncn->pScanClients[ eClient ]->uScanParams.tOneShotScanParams.numOfChannels)
     {
         TRACE0(pScanCncn->hReport, REPORT_SEVERITY_ERROR , "scanCncn_Start1ShotScan: no cahnnels to scan after reg. domain verification, can't scan\n");
         return SCAN_CRS_SCAN_FAILED;
@@ -558,6 +571,7 @@ EScanCncnResultStatus scanCncn_StartPeriodicScan (TI_HANDLE hScanCncn,
                                                   TPeriodicScanParams *pScanParams)
 {
     TScanCncn           *pScanCncn = (TScanCncn*)hScanCncn;
+    TI_STATUS           status = TI_OK;
 
     TRACE1(pScanCncn->hReport, REPORT_SEVERITY_INFORMATION , "scanCncn_startPeriodicScan: Received scan request from client %d\n", eClient);
 
@@ -565,11 +579,14 @@ EScanCncnResultStatus scanCncn_StartPeriodicScan (TI_HANDLE hScanCncn,
     os_memoryCopy (pScanCncn->hOS, &(pScanCncn->pScanClients[ eClient ]->uScanParams.tPeriodicScanParams), 
                    pScanParams, sizeof(TPeriodicScanParams));
 
+
     /* ask the reg domain which channels are allowed for the requested scan type */
-    scanCncn_VerifyChannelsWithRegDomain (hScanCncn, &(pScanCncn->pScanClients[ eClient ]->uScanParams), TI_TRUE);
+    status = scanCncn_VerifyChannelsWithRegDomain (hScanCncn, &(pScanCncn->pScanClients[ eClient ]->uScanParams), TI_TRUE);
+
 
     /* if no channels are available for scan, return negative result */
-    if (0 == pScanCncn->pScanClients[ eClient ]->uScanParams.tPeriodicScanParams.uChannelNum)
+    if (TI_NOK == status ||
+        0 == pScanCncn->pScanClients[ eClient ]->uScanParams.tPeriodicScanParams.uChannelNum)
     {
         TRACE0(pScanCncn->hReport, REPORT_SEVERITY_ERROR , "scanCncn_StartPeriodicScan: no cahnnels to scan after reg. domain verification, can't scan\n");
         return SCAN_CRS_SCAN_FAILED;
@@ -669,10 +686,22 @@ void scanCncn_ScanCompleteNotification (TI_HANDLE hScanCncn, EScanResultTag eTag
     TScanCncn           *pScanCncn = (TScanCncn*)hScanCncn;
     EScanCncnClient     eClient;
 
+    if (hScanCncn == NULL )
+    {
+        return;
+    }
+
     TRACE5(pScanCncn->hReport, REPORT_SEVERITY_INFORMATION , "scanCncn_ScanCompleteNotificationCB: tag: %d, result count: %d, SPS status: %d, TSF Error: %d, scan status: %d\n", eTag, uResultCount, SPSStatus, bTSFError, scanStatus);
 
     /* get the scan client value from the scan tag */
     eClient = SCAN_CLIENT_FROM_TAG (eTag);
+
+    if (eClient >= SCAN_SCC_NUM_OF_CLIENTS) /* Sanity check should not happen.
+                                               if it happens the scan timer will expire and scan will eventualy fail */
+    {
+        TRACE1(pScanCncn->hReport, REPORT_SEVERITY_ERROR , "scanCncn_ScanCompleteNotificationCB: eClient = %d >= SCAN_SCC_NUM_OF_CLIENTS\n", eClient);
+        return;
+    }
 
     /* update scan result if scan SRV reported error (and no error occured so far) */
     if ((TI_OK != scanStatus) && (SCAN_CRS_SCAN_COMPLETE_OK == pScanCncn->pScanClients[ eClient ]->eScanResult))
@@ -695,6 +724,7 @@ void scanCncn_ScanCompleteNotification (TI_HANDLE hScanCncn, EScanResultTag eTag
 
     /* check if all frames had been received */
     if (pScanCncn->pScanClients[ eClient ]->uResultCounter >= pScanCncn->pScanClients[ eClient ]->uResultExpectedNumber)
+        
     {
         TRACE2(pScanCncn->hReport, REPORT_SEVERITY_INFORMATION , "scanCncn_ScanCompleteNotificationCB: client %d received %d results, matching scan complete FW indication, sending scan complete event\n", eClient, pScanCncn->pScanClients[ eClient ]->uResultCounter);
 
@@ -853,6 +883,13 @@ void scanCncn_MlmeResultCB (TI_HANDLE hScanCncn, TMacAddr* bssid, mlmeFrameInfo_
             bssEntry_t *pCurrentAP;
 
             pCurrentAP = apConn_getBSSParams(pScanCncn->hAPConn);
+            if (NULL == pCurrentAP) /* sanity check, this should not happen since continues and immediate scan are
+                                       performed only when connected therfore currentAp should not be NULL */
+            {
+                TRACE1(pScanCncn->hReport, REPORT_SEVERITY_ERROR , "scanCncn_MlmeResultCB: client = %d, pCurrentAP is NULL\n", eClient);
+                return;
+            }
+
             if(MAC_EQUAL(*bssid, pCurrentAP->BSSID) ||
                ((os_memoryCompare (pScanCncn->hOS,
                                    (TI_UINT8*)frameInfo->content.iePacket.pSsid->serviceSetId, 
@@ -1187,80 +1224,154 @@ void scanCncn_ScrDriverCB (TI_HANDLE hScanCncn, EScrClientRequestStatus eRequest
  * \param  hScanCncn - handle to the scan concentrator object
  * \param  puScanParams - a pointer to the scan parmeters union
  * \param  bPeriodicScan - TRUE if the parameters are for periodic scan, FALSE if for one-shot scan
- * \return None
+ * \return TI_OK if scanParams is legal (channel list may contain 0 entries)
+ * 		   TI_NOK if the scanParams were illegal (i.e. number of channels to big)
  */ 
-void scanCncn_VerifyChannelsWithRegDomain (TI_HANDLE hScanCncn, UScanParams *puScanParams, TI_BOOL bPeriodicScan)
+TI_STATUS scanCncn_VerifyChannelsWithRegDomain (TI_HANDLE hScanCncn, UScanParams *puScanParams, TI_BOOL bPeriodicScan)
 {
     TScanCncn           *pScanCncn = (TScanCncn*)hScanCncn;
     paramInfo_t         *pParam;
     paramInfo_t         tDfsParam;
     TI_UINT8            i, uChannelNum;
 
+    TI_BOOL          bRegulatoryDomainEnabled;
+    TI_BOOL          bForceBGPassive    = TI_FALSE;
+    TI_BOOL          bForceAPassive 	= TI_FALSE;
+
+
+
+
     pParam = (paramInfo_t *)os_memoryAlloc(pScanCncn->hOS, sizeof(paramInfo_t));
     if (!pParam) {
-        return;
+        return TI_NOK;
     }
+
+    /* query the regulatory domain if 802.11d is in use */
+    pParam->paramType = REGULATORY_DOMAIN_ENABLED_PARAM;
+    regulatoryDomain_getParam (pScanCncn->hRegulatoryDomain, pParam );
+    bRegulatoryDomainEnabled = pParam->content.regulatoryDomainEnabled;
+
+    /* Get country code status for 5.2 */
+    pParam->paramType          = REGULATORY_DOMAIN_IS_COUNTRY_FOUND;
+    pParam->content.eRadioBand = RADIO_BAND_5_0_GHZ;
+    regulatoryDomain_getParam (pScanCncn->hRegulatoryDomain, pParam);
+
+    /* scan type is passive if 802.11d is enabled and country IE was not yet found, active otherwise */
+    if ((TI_TRUE == bRegulatoryDomainEnabled) && (TI_FALSE == pParam->content.bIsCountryFound))
+    {
+        bForceAPassive = TI_TRUE;
+    }
+
+    /* Get country code status for 2.4*/
+    pParam->content.eRadioBand = RADIO_BAND_2_4_GHZ;
+    regulatoryDomain_getParam (pScanCncn->hRegulatoryDomain, pParam);    
+    if ((TI_TRUE == bRegulatoryDomainEnabled) && (TI_FALSE == pParam->content.bIsCountryFound))
+    {
+        bForceBGPassive = TI_TRUE;
+    }
+
 
     /* get channel number according to scan type */
     if (TI_TRUE == bPeriodicScan)
     {
         uChannelNum = puScanParams->tPeriodicScanParams.uChannelNum;
+        if (uChannelNum > PERIODIC_SCAN_MAX_CHANNEL_NUM)
+        {
+            TRACE1(pScanCncn->hReport, REPORT_SEVERITY_ERROR, "scanCncn_VerifyChannelsWithRegDomain: uChannelNum = %d > PERIODIC_SCAN_MAX_CHANNEL_NUM\n", uChannelNum);
+            return TI_NOK;
+        }
     }
     else
-    {
-        uChannelNum = puScanParams->tOneShotScanParams.numOfChannels;
+    {   
+        uChannelNum = puScanParams->tOneShotScanParams.numOfChannels; 
+        if (uChannelNum > MAX_NUMBER_OF_CHANNELS_PER_SCAN) 
+        {
+            TRACE1(pScanCncn->hReport, REPORT_SEVERITY_ERROR, "scanCncn_VerifyChannelsWithRegDomain: uChannelNum = %d > MAX_NUMBER_OF_CHANNELS_PER_SCAN\n", uChannelNum);
+            return TI_NOK;
+        }
+        if (((puScanParams->tOneShotScanParams.band == RADIO_BAND_5_0_GHZ) && (TI_TRUE == bForceAPassive)) ||
+            ((puScanParams->tOneShotScanParams.band == RADIO_BAND_2_4_GHZ) && (TI_TRUE == bForceBGPassive)))
+        {
+            puScanParams->tOneShotScanParams.scanType = PASSIVE_SCANNING;
+        }
     }
 
-        /* check channels */
+    /* check channels */
     for (i = 0; i < uChannelNum; )
-        { /* Note that i is only increased when channel is valid - if channel is invalid, another 
+    {  
+
+        /* Note that i is only increased when channel is valid - if channel is invalid, another 
              channel is copied in its place, and thus the same index should be checked again. However,
              since the number of channels is decreased, the loop end condition is getting nearer! */
-        pParam->paramType = REGULATORY_DOMAIN_GET_SCAN_CAPABILITIES;
+
         if (TI_TRUE == bPeriodicScan)
         {
-            /* set band and scan type for periodic scan */
-            pParam->content.channelCapabilityReq.band = puScanParams->tPeriodicScanParams.tChannels[ i ].eBand;
-            if (puScanParams->tPeriodicScanParams.tChannels[ i ].eScanType == SCAN_TYPE_NORMAL_PASSIVE)
-            {
-                pParam->content.channelCapabilityReq.scanOption = PASSIVE_SCANNING;
-            }
-            else
-            {
-                /* query the reg. domain whether this is a DFS channel */
-                tDfsParam.paramType = REGULATORY_DOMAIN_IS_DFS_CHANNEL;
-                tDfsParam.content.tDfsChannel.eBand = puScanParams->tPeriodicScanParams.tChannels[ i ].eBand;
-                tDfsParam.content.tDfsChannel.uChannel = puScanParams->tPeriodicScanParams.tChannels[ i ].uChannel;
-                regulatoryDomain_getParam (pScanCncn->hRegulatoryDomain, &tDfsParam);
-
-                /* if this is a DFS channel */
-                if (TI_TRUE == tDfsParam.content.tDfsChannel.bDfsChannel)
-                {
-                    /* 
-                     * DFS channels are first scanned passive and than active, so reg. domain can only validate
-                     * these channels for pasiive scanning at the moment
-                     */
-                    pParam->content.channelCapabilityReq.scanOption = PASSIVE_SCANNING;
-
-                    /* set the channel scan type to DFS */
-                    puScanParams->tPeriodicScanParams.tChannels[ i ].eScanType = SCAN_TYPE_PACTSIVE;
-                    /* passive scan time is passed for all channels to the TWD, and copied there to the FW */
-                }
-                else
-                {
-                    pParam->content.channelCapabilityReq.scanOption = ACTIVE_SCANNING;
-                }
-            }
-
             /* set channel for periodic scan */
             pParam->content.channelCapabilityReq.channelNum =
                 puScanParams->tPeriodicScanParams.tChannels[ i ].uChannel;
-            regulatoryDomain_getParam (pScanCncn->hRegulatoryDomain, pParam);
+
+            /* Check channel validity according to single/dual band*/
+            pParam->paramType = SITE_MGR_DESIRED_DOT11_MODE_PARAM;
+            siteMgr_getParam(pScanCncn->hSiteManager, pParam);
+    
+            if ((pParam->content.siteMgrDot11Mode != DOT11_A_MODE) &&
+                (pParam->content.siteMgrDot11Mode != DOT11_DUAL_MODE) &&
+                (pParam->content.channelCapabilityReq.channelNum > A_5G_BAND_MIN_CHANNEL)) 
+            {
+                pParam->content.channelCapabilityRet.channelValidity = TI_FALSE;
+            }
+            else
+            {
+                pParam->paramType = REGULATORY_DOMAIN_GET_SCAN_CAPABILITIES;
+
+                /* set band and scan type for periodic scan */
+                pParam->content.channelCapabilityReq.band = puScanParams->tPeriodicScanParams.tChannels[ i ].eBand;
+    
+                if ((puScanParams->tPeriodicScanParams.tChannels[ i ].eScanType == SCAN_TYPE_NORMAL_PASSIVE) ||
+                ((pParam->content.channelCapabilityReq.band == RADIO_BAND_5_0_GHZ) && (TI_TRUE == bForceAPassive)) ||
+                ((pParam->content.channelCapabilityReq.band == RADIO_BAND_2_4_GHZ) && (TI_TRUE == bForceBGPassive)))
+                {
+                    pParam->content.channelCapabilityReq.scanOption = PASSIVE_SCANNING;
+                }
+                else
+                {
+                    /* query the reg. domain whether this is a DFS channel */
+                    tDfsParam.paramType = REGULATORY_DOMAIN_IS_DFS_CHANNEL;
+                    tDfsParam.content.tDfsChannel.eBand = puScanParams->tPeriodicScanParams.tChannels[ i ].eBand;
+                    tDfsParam.content.tDfsChannel.uChannel = puScanParams->tPeriodicScanParams.tChannels[ i ].uChannel;
+                    regulatoryDomain_getParam (pScanCncn->hRegulatoryDomain, &tDfsParam);
+    
+                    /* if this is a DFS channel */
+                    if (TI_TRUE == tDfsParam.content.tDfsChannel.bDfsChannel)
+                    {
+                        /* 
+                         * DFS channels are first scanned passive and than active, so reg. domain can only validate
+                         * these channels for pasiive scanning at the moment
+                         */
+                        pParam->content.channelCapabilityReq.scanOption = PASSIVE_SCANNING;
+    
+                        /* set the channel scan type to DFS */
+                        puScanParams->tPeriodicScanParams.tChannels[ i ].eScanType = SCAN_TYPE_PACTSIVE;
+                        /* passive scan time is passed for all channels to the TWD, and copied there to the FW */
+                    }
+                    else
+                    {
+                        pParam->content.channelCapabilityReq.scanOption = ACTIVE_SCANNING;
+                    }
+                }
+                regulatoryDomain_getParam (pScanCncn->hRegulatoryDomain, pParam);
+
+            }
             if (TI_FALSE == pParam->content.channelCapabilityRet.channelValidity)
-            {   /* channel not allowed - copy the rest of the channel in its place */
-                os_memoryCopy (pScanCncn->hOS, &(puScanParams->tPeriodicScanParams.tChannels[ i ]),
+            { 
+                if (i < uChannelNum - 1)
+                {
+                    /* channel not allowed - copy the rest of the channel in its place */
+                    os_memoryCopy (pScanCncn->hOS, &(puScanParams->tPeriodicScanParams.tChannels[ i ]),
                                &(puScanParams->tPeriodicScanParams.tChannels[ i + 1 ]),
                                sizeof(TPeriodicChannelEntry) * (puScanParams->tPeriodicScanParams.uChannelNum - i - 1));
+                
+                }
                 puScanParams->tPeriodicScanParams.uChannelNum--;
                 uChannelNum--;
             }
@@ -1276,11 +1387,15 @@ void scanCncn_VerifyChannelsWithRegDomain (TI_HANDLE hScanCncn, UScanParams *puS
         }
         else
         {
+
+            pParam->paramType = REGULATORY_DOMAIN_GET_SCAN_CAPABILITIES;
+
             /* set band and scan type for one-shot scan */
             pParam->content.channelCapabilityReq.band = puScanParams->tOneShotScanParams.band;
             if ((puScanParams->tOneShotScanParams.scanType == SCAN_TYPE_NORMAL_PASSIVE) ||
                 (puScanParams->tOneShotScanParams.scanType == SCAN_TYPE_TRIGGERED_PASSIVE) ||
-                (puScanParams->tOneShotScanParams.scanType == SCAN_TYPE_SPS))
+                (puScanParams->tOneShotScanParams.scanType == SCAN_TYPE_SPS) || 
+                (puScanParams->tOneShotScanParams.scanType == PASSIVE_SCANNING))
             {
                 pParam->content.channelCapabilityReq.scanOption = PASSIVE_SCANNING;
             }
@@ -1296,10 +1411,15 @@ void scanCncn_VerifyChannelsWithRegDomain (TI_HANDLE hScanCncn, UScanParams *puS
                     puScanParams->tOneShotScanParams.channelEntry[ i ].SPSChannelEntry.channel;
                 regulatoryDomain_getParam (pScanCncn->hRegulatoryDomain, pParam);
                 if (TI_FALSE == pParam->content.channelCapabilityRet.channelValidity)
-                {   /* channel not allowed - copy the rest of the channel in its place */
-                    os_memoryCopy (pScanCncn->hOS, &(puScanParams->tOneShotScanParams.channelEntry[ i ]),
+                {   
+                    if (i < uChannelNum - 1)
+                    {
+                        /* channel not allowed - copy the rest of the channel in its place */
+                        os_memoryCopy (pScanCncn->hOS, &(puScanParams->tOneShotScanParams.channelEntry[ i ]),
                                    &(puScanParams->tOneShotScanParams.channelEntry[ i + 1 ]), 
-                                   sizeof(TScanSpsChannelEntry) * (puScanParams->tOneShotScanParams.numOfChannels - i - 1));
+                                   sizeof(TScanChannelEntry) * (puScanParams->tOneShotScanParams.numOfChannels - i - 1));
+                    
+                    }
                     puScanParams->tOneShotScanParams.numOfChannels--;
                     uChannelNum--;
                 }
@@ -1316,10 +1436,14 @@ void scanCncn_VerifyChannelsWithRegDomain (TI_HANDLE hScanCncn, UScanParams *puS
                     puScanParams->tOneShotScanParams.channelEntry[ i ].normalChannelEntry.channel;
                 regulatoryDomain_getParam (pScanCncn->hRegulatoryDomain, pParam);
                 if (TI_FALSE == pParam->content.channelCapabilityRet.channelValidity)
-                {   /* channel not allowed - copy the rest of the channel in its place */
-                    os_memoryCopy (pScanCncn->hOS, &(puScanParams->tOneShotScanParams.channelEntry[ i ]),
-                                   &(puScanParams->tOneShotScanParams.channelEntry[ i + 1 ]), 
-                                   sizeof(TScanNormalChannelEntry) * (puScanParams->tOneShotScanParams.numOfChannels - i - 1));
+                {   
+                    if (i < uChannelNum - 1)
+                    {
+                        /* channel not allowed - copy the rest of the channel in its place */
+                        os_memoryCopy (pScanCncn->hOS, &(puScanParams->tOneShotScanParams.channelEntry[ i ]),
+                                  &(puScanParams->tOneShotScanParams.channelEntry[ i + 1 ]), 
+                                  sizeof(TScanChannelEntry) * (puScanParams->tOneShotScanParams.numOfChannels - i - 1));
+                    }
                     puScanParams->tOneShotScanParams.numOfChannels--;
                     uChannelNum--;
                 }
@@ -1334,6 +1458,7 @@ void scanCncn_VerifyChannelsWithRegDomain (TI_HANDLE hScanCncn, UScanParams *puS
         }
     }    
     os_memoryFree(pScanCncn->hOS, pParam, sizeof(paramInfo_t));
+    return TI_OK;
 }
 
 /** 
@@ -1612,10 +1737,8 @@ static void scanCncn_ScanCompleteCB( TI_HANDLE hScanCncn, char* str, TI_UINT32 s
 	TI_UINT16           SPSScanResult = 0xffff;
 
 
-    TRACE0( pScanCncn->hReport, REPORT_SEVERITY_INFORMATION, "Scan complete event received\n");
+    TRACE0( pScanCncn->hReport, REPORT_SEVERITY_INFORMATION, "scanCncn_ScanCompleteCB - Scan complete event received\n");
 
-    tmr_StopTimer(pScanCncn->hScanGuardTimer);
-    
 	/* nullify the consecutive no scan complete events counter  - only if this is a scan complete that
        does not happen afetr a stop scan (due to a timer expiry) */
 	if ( TI_TRUE == pScanCncn->bScanCompleteFlag )
@@ -1664,4 +1787,103 @@ static void scanCncn_ScanCompleteCB( TI_HANDLE hScanCncn, char* str, TI_UINT32 s
 	scanCncn_ScanCompleteNotification (hScanCncn, eScanTag, uResultCount, SPSScanResult,
 									   bTSFError, TI_OK);
 }
+
+/*
+ * \brief	notifies the ScanCncn one of its clients has stopped
+ *
+ * 			Invoked by the client after it was stopped.
+ * 			Notifies the pwrState module when all clients have stopped.
+ *
+ * \param	hScanCncn		this module
+ * \param	hScanCncnClient	the client that was stopped
+ *
+ */
+void scanCncn_ClientStopped(TI_HANDLE hScanCncn, TI_HANDLE hScanCncnClient)
+{
+	TScanCncn *this = (TScanCncn*)hScanCncn;
+
+	pwrState_ScanCncnStopped(this->hPwrState);
+}
+
+/*
+ * \brief	Reverts scanCncn_Suspend()'s actions - restarts any scan-clients
+ * 			that were stopped
+ *
+ * \param	hScanCncn	this module
+ *
+ * \return	TI_OK
+ */
+TI_STATUS scanCncn_Resume(TI_HANDLE hScanCncn)
+{
+	TScanCncn       *this = (TScanCncn*)hScanCncn;
+
+	/* resume any one shot scan */
+	if (this->pScanClients[SCAN_SCC_APP_ONE_SHOT]->bSuspended)
+	{
+		TRACE1(this->hReport, REPORT_SEVERITY_INFORMATION, "scanCncn_Resume: resuming client %d\n", SCAN_SCC_APP_ONE_SHOT);
+
+		scanCncn_Start1ShotScan(this, SCAN_SCC_APP_ONE_SHOT, &this->pScanClients[SCAN_SCC_APP_ONE_SHOT]->uScanParams.tOneShotScanParams);
+		this->pScanClients[SCAN_SCC_APP_ONE_SHOT]->bSuspended = TI_FALSE;
+	}
+	/* resume any periodic scan */
+	else if (this->pScanClients[SCAN_SCC_APP_PERIODIC]->bSuspended)
+	{
+		TRACE1(this->hReport, REPORT_SEVERITY_INFORMATION, "scanCncn: resuming client %d\n", SCAN_SCC_APP_PERIODIC);
+
+		scanCncn_StartPeriodicScan(this, SCAN_SCC_APP_PERIODIC, &this->pScanClients[SCAN_SCC_APP_PERIODIC]->uScanParams.tPeriodicScanParams);
+		this->pScanClients[SCAN_SCC_APP_PERIODIC]->bSuspended = TI_FALSE;
+	}
+
+	return TI_OK;
+}
+
+/*
+ * \brief	Suspends the ScanCncn module
+ *
+ * 			Stops any ongoing scans
+ *
+ * \param	hScanCncn	this module
+ *
+ * \return	TI_OK if all clients are stopped;
+ * 			TI_PENDING if clients were told to stop (see scanCncn_ClientStopped)
+ */
+TI_STATUS scanCncn_Suspend(TI_HANDLE hScanCncn)
+{
+	TScanCncn       *this = (TScanCncn*)hScanCncn;
+
+	/* stop any one-shot scan */
+	if (this->pScanClients[SCAN_SCC_APP_ONE_SHOT]->bCurrentlyRunning)
+	{
+		TRACE1(this->hReport, REPORT_SEVERITY_INFORMATION, "scanCncn_Suspend: suspending client %d\n", SCAN_SCC_APP_ONE_SHOT);
+
+		scanCncn_StopScan(this, SCAN_SCC_APP_ONE_SHOT);
+		this->pScanClients[SCAN_SCC_APP_ONE_SHOT]->bSuspended = TI_TRUE;
+
+		this->pScanClients[SCAN_SCC_APP_ONE_SHOT]->bCurrentlyRunning = TI_FALSE;
+	}
+	/* stop any periodic scans */
+	else if (this->pScanClients[SCAN_SCC_APP_PERIODIC]->bCurrentlyRunning)
+	{
+		TRACE1(this->hReport, REPORT_SEVERITY_INFORMATION, "scanCncn_Suspend: suspending client %d\n", SCAN_SCC_APP_PERIODIC);
+
+		scanCncn_StopPeriodicScan(this, SCAN_SCC_APP_PERIODIC);
+		this->pScanClients[SCAN_SCC_APP_PERIODIC]->bSuspended = TI_TRUE;
+
+		this->pScanClients[SCAN_SCC_APP_PERIODIC]->bCurrentlyRunning = TI_FALSE;
+	}
+	/* nothing to do - this module is stopped */
+	else
+	{
+		TRACE0(this->hReport, REPORT_SEVERITY_INFORMATION, "scanCncn_Suspend: nothing to do\n");
+
+		pwrState_ScanCncnStopped(this->hPwrState);
+		return TI_OK;
+	}
+
+	return TI_PENDING;
+}
+
+
+
+
 

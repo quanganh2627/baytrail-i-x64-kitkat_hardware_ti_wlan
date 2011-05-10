@@ -180,7 +180,7 @@ void FW_DebugSendJoinCommand(TI_HANDLE hTWD, TI_HANDLE hTxMgmtQ)
 	JoinBss.basicRateSet = DRV_RATE_2M;
 	JoinBss.radioBand = RADIO_BAND_2_4_GHZ;
 	JoinBss.pBSSID = Bssid;
-	
+	JoinBss.txSessionCount = 0;
 	JoinBss.bssType = BSS_INDEPENDENT;
 	JoinBss.pSSID =ssid;
 	JoinBss.ssidLength = 5;
@@ -227,6 +227,13 @@ void sendDataPacket (TI_HANDLE hOs)
 
 	/* Allocate a TxCtrlBlk for the Tx packet and save timestamp, length and packet handle */
     pPktCtrlBlk = TWD_txCtrlBlk_Alloc (tmp_hTWD);
+	
+	if( NULL == pPktCtrlBlk )
+	{
+        os_printf("\n sendDataPacket() : pPktCtrlBlk returned as NULL from TWD_txCtrlBlk_Alloc() ");
+        return;   
+	}
+		
     pPktCtrlBlk->tTxDescriptor.startTime = os_timeStampMs (hOs);
     pPktCtrlBlk->tTxDescriptor.length    = (TI_UINT16)packetLength + ETHERNET_HDR_LEN;
     pPktCtrlBlk->tTxDescriptor.tid       = 0;
@@ -239,19 +246,27 @@ void sendDataPacket (TI_HANDLE hOs)
     tEthHeader.type = HTOWLANS(ETHERTYPE_IP);
     MAC_COPY (tEthHeader.src, SrcBssid);
     MAC_COPY (tEthHeader.dst, DesBssid);
-    os_memoryCopy (hOs, pPktBuf + 2, &tEthHeader, ETHERNET_HDR_LEN);
+    
+	if( pPktBuf )
+	{ 
+	    os_memoryCopy (hOs, pPktBuf + 2, &tEthHeader, ETHERNET_HDR_LEN);
 
-    /* Build BDL */
-    BUILD_TX_TWO_BUF_PKT_BDL (pPktCtrlBlk, 
-                              pPktBuf + 2, 
-                              ETHERNET_HDR_LEN, 
-                              pPktBuf + 2 + ETHERNET_HDR_LEN, 
-                              packetLength)
+        /* Build BDL */
+        BUILD_TX_TWO_BUF_PKT_BDL (pPktCtrlBlk, 
+                                  pPktBuf + 2, 
+                                  ETHERNET_HDR_LEN, 
+                                  pPktBuf + 2 + ETHERNET_HDR_LEN, 
+                                  packetLength)
 
-    /* Fill data buffer with incremented numbers */
-    for (i = 0; i < packetLength; i++) 
-    {
-        *(pPktBuf + 2 + ETHERNET_HDR_LEN + i) = i;
+        /* Fill data buffer with incremented numbers */
+        for (i = 0; i < packetLength; i++) 
+        {
+            *(pPktBuf + 2 + ETHERNET_HDR_LEN + i) = i;
+        }
+	}
+	else 
+	{
+        os_printf("\n sendDataPacket() : pPktBuf returned as NULL from txCtrl_AllocPacketBuffer() ");
     }
 
     /* Send Ether packet to TxCtrl */
@@ -259,38 +274,42 @@ void sendDataPacket (TI_HANDLE hOs)
 }
 
 
+
 void sendMgmtPacket(TI_HANDLE hOs)
 {
 	 //This is a debug function that is called from a debug CLI for testing only. It is not part of the final product
+	TI_UINT8     		*aMsg;
     TI_UINT32           i;
-    TI_UINT8            *pMsg;
     dot11MgmtSubType_e  eMsgType = DE_AUTH;
-
-    pMsg = (TI_UINT8 *)os_memoryAlloc(hOs, 2000*sizeof(TI_UINT8));
-    if(!pMsg) {
-	return;
-    }
-
-    for (i = 0; i < packetLength; i++)
+    aMsg = (TI_UINT8*)os_memoryAlloc(NULL, 2000*sizeof(TI_UINT8));
+    
+    if (NULL == aMsg)
     {
-        *(pMsg+i) = i;
+    	WLAN_OS_REPORT(("ERROR. sendMgmtPacket(): Cannot allocate memory!! length = %d\n", 2000*sizeof(TI_UINT8)));
+    	return;
     }
 
-    mlmeBuilder_sendFrame(tmp_hMlme, eMsgType, pMsg, packetLength, 0);
+    for (i = 0; i < packetLength; i++) 
+    {
+        aMsg[i] = i;
+    }
 
+    mlmeBuilder_sendFrame(tmp_hMlme, eMsgType, aMsg, packetLength, 0);
+    
     numOfPackets++;
     if ((infinitLoopFl == 0) && (numOfPackets > packetsNum))
-    {
+    {      
         os_timerStop(hOs, dTimer);
         os_printf("\n *********** Last Packet was sent **********");
         os_timerDestroy(hOs, dTimer);
     }
     else
     {
-        os_timerStart(hOs, dTimer, 1000);
+        os_timerStart(hOs, dTimer, 1000); 
     }
-    os_memoryFree(hOs, pMsg, 2000*sizeof(TI_UINT8));
+    os_memoryFree (NULL, aMsg, 2000*sizeof(TI_UINT8));
 }
+
 void FW_DebugSendPacket(TI_HANDLE hDrvMain ,TI_HANDLE hOs, TI_HANDLE hTxMgmtQ, void *pParam)
 {
     void *fSendPkt;

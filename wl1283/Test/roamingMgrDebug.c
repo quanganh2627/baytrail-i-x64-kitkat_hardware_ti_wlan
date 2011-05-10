@@ -60,12 +60,17 @@ void roamingMgrDebugFunction(TI_HANDLE hRoamingMngr,
 					   TI_UINT32	funcType, 
 					   void		*pParam)
 {
-	paramInfo_t			*pparam;
 
-	pparam = (paramInfo_t *)os_memoryAlloc(((roamingMngr_t*)hRoamingMngr)->hOs, sizeof(paramInfo_t));
-	if (!pparam) {
-		return;
-	}
+    roamingMngr_t *pRoamingMngr = (roamingMngr_t*)hRoamingMngr;
+
+    paramInfo_t	*param = (paramInfo_t*)os_memoryAlloc(NULL, sizeof(paramInfo_t));
+	if (NULL == param)
+     {
+		WLAN_OS_REPORT(("ERROR. roamingMgrDebugFunction(): Cannot allocate memory!! length = %d\n", sizeof(paramInfo_t)));
+     	return;
+     }
+
+	
 	switch (funcType)
 	{
 	case ROAMING_MGR_DEBUG_HELP_MENU:
@@ -73,71 +78,71 @@ void roamingMgrDebugFunction(TI_HANDLE hRoamingMngr,
 		break;
 
 	case PRINT_ROAMING_STATISTICS:
-		pparam->paramType = ROAMING_MNGR_PRINT_STATISTICS;
-		roamingMngr_getParam(hRoamingMngr, pparam);
+		param->paramType = ROAMING_MNGR_PRINT_STATISTICS;
+		roamingMngr_getParam(hRoamingMngr, param);
 		break;
 
 	case RESET_ROAMING_STATISTICS:
-		pparam->paramType = ROAMING_MNGR_RESET_STATISTICS;
-		roamingMngr_getParam(hRoamingMngr, pparam);
+		param->paramType = ROAMING_MNGR_RESET_STATISTICS;
+		roamingMngr_getParam(hRoamingMngr, param);
 		break;
 
 	case PRINT_ROAMING_CURRENT_STATUS:
-		pparam->paramType = ROAMING_MNGR_PRINT_CURRENT_STATUS;
-		roamingMngr_getParam(hRoamingMngr, pparam);
+		param->paramType = ROAMING_MNGR_PRINT_CURRENT_STATUS;
+		roamingMngr_getParam(hRoamingMngr, param);
 		break;
 
 	case PRINT_ROAMING_CANDIDATE_TABLE:
-		pparam->paramType = ROAMING_MNGR_PRINT_CANDIDATE_TABLE;
-		roamingMngr_getParam(hRoamingMngr, pparam);
+		param->paramType = ROAMING_MNGR_PRINT_CANDIDATE_TABLE;
+		roamingMngr_getParam(hRoamingMngr, param);
 		break;
 
 	case TRIGGER_ROAMING_LOW_QUALITY_EVENT:
-		pparam->paramType = ROAMING_MNGR_TRIGGER_EVENT;
-		pparam->content.roamingTriggerType = ROAMING_TRIGGER_LOW_QUALITY;
-		roamingMngr_setParam(hRoamingMngr, pparam);
+		param->paramType = ROAMING_MNGR_TRIGGER_EVENT;
+		param->content.roamingTriggerType = ROAMING_TRIGGER_LOW_QUALITY;
+		roamingMngr_setParam(hRoamingMngr, param);
 		break;
 
     case TRIGGER_ROAMING_BSS_LOSS_EVENT:
-		pparam->paramType = ROAMING_MNGR_TRIGGER_EVENT;
-		pparam->content.roamingTriggerType = ROAMING_TRIGGER_BSS_LOSS;
-		roamingMngr_setParam(hRoamingMngr, pparam);
+		param->paramType = ROAMING_MNGR_TRIGGER_EVENT;
+		param->content.roamingTriggerType = ROAMING_TRIGGER_BSS_LOSS;
+		roamingMngr_setParam(hRoamingMngr, param);
 		break;
 
 	case TRIGGER_ROAMING_SWITCH_CHANNEL_EVENT:
-		pparam->paramType = ROAMING_MNGR_TRIGGER_EVENT;
-		pparam->content.roamingTriggerType = ROAMING_TRIGGER_SWITCH_CHANNEL;
-		roamingMngr_setParam(hRoamingMngr, pparam);
+		param->paramType = ROAMING_MNGR_TRIGGER_EVENT;
+		param->content.roamingTriggerType = ROAMING_TRIGGER_SWITCH_CHANNEL;
+		roamingMngr_setParam(hRoamingMngr, param);
 		break;
 
 	case TRIGGER_ROAMING_AP_DISCONNECT_EVENT:
-		pparam->paramType = ROAMING_MNGR_TRIGGER_EVENT;
-		pparam->content.roamingTriggerType = ROAMING_TRIGGER_AP_DISCONNECT;
-		roamingMngr_setParam(hRoamingMngr, pparam);
+		param->paramType = ROAMING_MNGR_TRIGGER_EVENT;
+		param->content.roamingTriggerType = ROAMING_TRIGGER_AP_DISCONNECT;
+		roamingMngr_setParam(hRoamingMngr, param);
 		break;
 
 	case TRIGGER_ROAMING_CONNECT_EVENT:
-		pparam->paramType = ROAMING_MNGR_CONN_STATUS;
-		pparam->content.roamingConnStatus = CONN_STATUS_CONNECTED;
-		roamingMngr_setParam(hRoamingMngr, pparam);
+		param->paramType = ROAMING_MNGR_CONN_STATUS;
+		param->content.roamingConnStatus = CONN_STATUS_CONNECTED;
+		roamingMngr_setParam(hRoamingMngr, param);
 		break;
 
 	case TRIGGER_ROAMING_NOT_CONNECTED_EVENT:
-		pparam->paramType = ROAMING_MNGR_CONN_STATUS;
-		pparam->content.roamingConnStatus = CONN_STATUS_NOT_CONNECTED;
-		roamingMngr_setParam(hRoamingMngr, pparam);
+		param->paramType = ROAMING_MNGR_CONN_STATUS;
+		param->content.roamingConnStatus = CONN_STATUS_NOT_CONNECTED;
+		roamingMngr_setParam(hRoamingMngr, param);
 		break;
 
 	case TRIGGER_ROAMING_HANDOVER_SUCCESS_EVENT:
-		pparam->paramType = ROAMING_MNGR_CONN_STATUS;
-		pparam->content.roamingConnStatus = CONN_STATUS_HANDOVER_SUCCESS;
-		roamingMngr_setParam(hRoamingMngr, pparam);
+		param->paramType = ROAMING_MNGR_CONN_STATUS;
+		param->content.roamingConnStatus = CONN_STATUS_HANDOVER_SUCCESS;
+		roamingMngr_setParam(hRoamingMngr, param);
 		break;
 
 	case TRIGGER_ROAMING_HANDOVER_FAILURE_EVENT:
-		pparam->paramType = ROAMING_MNGR_CONN_STATUS;
-		pparam->content.roamingConnStatus = CONN_STATUS_HANDOVER_FAILURE;
-		roamingMngr_setParam(hRoamingMngr, pparam);
+		param->paramType = ROAMING_MNGR_CONN_STATUS;
+		param->content.roamingConnStatus = CONN_STATUS_HANDOVER_FAILURE;
+		roamingMngr_setParam(hRoamingMngr, param);
 		break;
 
     case ROAMING_REGISTER_BSS_LOSS_EVENT: /* 1613 */
@@ -146,41 +151,51 @@ void roamingMgrDebugFunction(TI_HANDLE hRoamingMngr,
     case ROAMING_START_IMMEDIATE_SCAN: /* 1614 */
         {
             int i=0,j =0;
-            channelList_t *pchannels;
+            channelList_t *pChannels = os_memoryAlloc(pRoamingMngr->hOs, sizeof(channelList_t));
 
-	    pchannels = (channelList_t *)os_memoryAlloc(((roamingMngr_t*)hRoamingMngr)->hOs, sizeof(channelList_t));
-            if (!pchannels) {
-                return;
+            if (NULL == pChannels)
+            {
+            	WLAN_OS_REPORT(("ERROR. roamingMgrDebugFunction(): Cannot allocate memory!! length = %d\n", sizeof(channelList_t)));
+            	break;
             }
-            pchannels->numOfChannels = 14;
+
+            pChannels->numOfChannels = 14;
 
 
-            for ( i = 0; i < pchannels->numOfChannels; i++ )
+            for ( i = 0; i < pChannels->numOfChannels; i++ )
             {
                 for ( j = 0; j < 6; j++ )
                 {
-                    pchannels->channelEntry[i].normalChannelEntry.bssId[j] = 0xff;
+                    pChannels->channelEntry[i].normalChannelEntry.bssId[j] = 0xff;
                 }
 
-                pchannels->channelEntry[i].normalChannelEntry.earlyTerminationEvent = SCAN_ET_COND_DISABLE;
-                pchannels->channelEntry[i].normalChannelEntry.ETMaxNumOfAPframes = 0;
-                pchannels->channelEntry[i].normalChannelEntry.maxChannelDwellTime = 60000;
-                pchannels->channelEntry[i].normalChannelEntry.minChannelDwellTime = 30000;
-                pchannels->channelEntry[i].normalChannelEntry.txPowerDbm = DEF_TX_POWER;
-                pchannels->channelEntry[i].normalChannelEntry.channel = i + 1;
+                pChannels->channelEntry[i].normalChannelEntry.earlyTerminationEvent = SCAN_ET_COND_DISABLE;
+                pChannels->channelEntry[i].normalChannelEntry.ETMaxNumOfAPframes = 0;
+                pChannels->channelEntry[i].normalChannelEntry.maxChannelDwellTime = 60000;
+                pChannels->channelEntry[i].normalChannelEntry.minChannelDwellTime = 30000;
+                pChannels->channelEntry[i].normalChannelEntry.txPowerDbm = DEF_TX_POWER;
+                pChannels->channelEntry[i].normalChannelEntry.channel = i + 1;
             }
 
             /* upon this call the scanMngr_reportImmediateScanResults() should be invoked and the BssList should be printed */
-            roamingMngr_startImmediateScan(hRoamingMngr, pchannels);
-	    os_memoryFree(((roamingMngr_t*)hRoamingMngr)->hOs, pchannels, sizeof(channelList_t));
+            roamingMngr_startImmediateScan(hRoamingMngr, pChannels);
+
+            os_memoryFree(pRoamingMngr->hOs, pChannels, sizeof(channelList_t));
         }
        
         break;
     case ROAMING_CONNECT: /* 1615 */
         {
-            TargetAp_t targetAP;
+            TargetAp_t *targetAP;
             bssList_t *bssList;
             roamingMngr_t *pRoamingMngr = (roamingMngr_t*)hRoamingMngr;
+            os_memoryZero(((roamingMngr_t*)hRoamingMngr)->hOs, &targetAP, sizeof(TargetAp_t));
+            targetAP = (TargetAp_t*)os_memoryAlloc(NULL,sizeof(TargetAp_t));
+            if (NULL == targetAP)
+            {
+            	WLAN_OS_REPORT(("ERROR. roamingMgrDebugFunction(): Cannot allocate memory!! length = %d\n", sizeof(TargetAp_t)));
+            	break;
+            }
 
             bssList = scanMngr_getBSSList(((roamingMngr_t*)hRoamingMngr)->hScanMngr); 
 
@@ -188,20 +203,21 @@ void roamingMgrDebugFunction(TI_HANDLE hRoamingMngr,
             PrintBssListGotAfterImemediateScan(((roamingMngr_t*)hRoamingMngr)->hScanMngr);
 
             /* The values below must be configured in manual mode */
-            targetAP.connRequest.requestType = AP_CONNECT_FULL_TO_AP;
-            targetAP.connRequest.dataBufLength = 0;
-            targetAP.transitionMethod = ReAssoc;
+            targetAP->connRequest.requestType = AP_CONNECT_FULL_TO_AP;
+            targetAP->connRequest.dataBufLength = 0;
+            targetAP->transitionMethod = ReAssoc;
 
-            os_memoryCopy(((roamingMngr_t*)hRoamingMngr)->hOs, &(targetAP.newAP), &(bssList->BSSList[0]), sizeof(bssEntry_t));
+            os_memoryCopy(((roamingMngr_t*)hRoamingMngr)->hOs, &(targetAP->newAP), &(bssList->BSSList[0]), sizeof(bssEntry_t));
 
             /* test if no buffer is present */
-            targetAP.newAP.bufferLength =0;
-            targetAP.newAP.pBuffer = 0;
+            targetAP->newAP.bufferLength =0;
+            targetAP->newAP.pBuffer = 0;
             /* ----------------------------- */
             
             os_memoryCopy(pRoamingMngr->hOs, &(pRoamingMngr->targetAP), &targetAP , sizeof(TargetAp_t));
             
             roamingMngr_connect(hRoamingMngr, &(pRoamingMngr->targetAP));
+            os_memoryFree(NULL, targetAP, sizeof (TargetAp_t));
         }
         
         break;
@@ -210,25 +226,34 @@ void roamingMgrDebugFunction(TI_HANDLE hRoamingMngr,
         {
             roamingMngr_t *pRoamingMngr = (roamingMngr_t*)hRoamingMngr;
             int i=0,j =0;
-            channelList_t channels;
-            channels.numOfChannels = 14;
+            channelList_t *pChannels = os_memoryAlloc(pRoamingMngr->hOs, sizeof(channelList_t));
 
-            for ( i = 0; i < channels.numOfChannels; i++ )
+            if (NULL == pChannels)
+            {
+            	WLAN_OS_REPORT(("ERROR. roamingMgrDebugFunction(): Cannot allocate memory!! length = %d\n", sizeof(channelList_t)));
+            	break;
+            }
+
+            pChannels->numOfChannels = 14;
+
+            for ( i = 0; i < pChannels->numOfChannels; i++ )
             {
                 for ( j = 0; j < 6; j++ )
                 {
-                    channels.channelEntry[i].normalChannelEntry.bssId[j] = 0xff;
+                    pChannels->channelEntry[i].normalChannelEntry.bssId[j] = 0xff;
                 }
 
-                channels.channelEntry[i].normalChannelEntry.earlyTerminationEvent = SCAN_ET_COND_DISABLE;
-                channels.channelEntry[i].normalChannelEntry.ETMaxNumOfAPframes = 0;
-                channels.channelEntry[i].normalChannelEntry.maxChannelDwellTime = 60000;
-                channels.channelEntry[i].normalChannelEntry.minChannelDwellTime = 30000;
-                channels.channelEntry[i].normalChannelEntry.txPowerDbm = DEF_TX_POWER;
-                channels.channelEntry[i].normalChannelEntry.channel = i + 1;
+                pChannels->channelEntry[i].normalChannelEntry.earlyTerminationEvent = SCAN_ET_COND_DISABLE;
+                pChannels->channelEntry[i].normalChannelEntry.ETMaxNumOfAPframes = 0;
+                pChannels->channelEntry[i].normalChannelEntry.maxChannelDwellTime = 60000;
+                pChannels->channelEntry[i].normalChannelEntry.minChannelDwellTime = 30000;
+                pChannels->channelEntry[i].normalChannelEntry.txPowerDbm = DEF_TX_POWER;
+                pChannels->channelEntry[i].normalChannelEntry.channel = i + 1;
             }
 
-            scanMngr_startContinuousScanByApp(pRoamingMngr->hScanMngr, &channels);
+            scanMngr_startContinuousScanByApp(pRoamingMngr->hScanMngr, pChannels);
+
+            os_memoryFree(pRoamingMngr->hOs, pChannels, sizeof(channelList_t));
         }
         
         break;
@@ -245,59 +270,66 @@ void roamingMgrDebugFunction(TI_HANDLE hRoamingMngr,
         {
             int i=0;
             roamingMngr_t *pRoamingMngr = (roamingMngr_t*)hRoamingMngr;
-            TScanPolicy scanPolicy;
-            pparam->paramType = SCAN_MNGR_SET_CONFIGURATION;
-            pparam->content.pScanPolicy = &scanPolicy;
+            TScanPolicy *scanPolicy = (TScanPolicy*)os_memoryAlloc(NULL,sizeof(TScanPolicy));
+            if (NULL == scanPolicy)
+            {
+            	WLAN_OS_REPORT(("ERROR. roamingMgrDebugFunction(): Cannot allocate memory!! length = %d\n", sizeof(TScanPolicy)));
+            	break;
+            }
+
+            param->paramType = SCAN_MNGR_SET_CONFIGURATION;
+            param->content.pScanPolicy = scanPolicy;
 
             // init default scan policy 
-            scanPolicy.normalScanInterval = 10000;
-            scanPolicy.deterioratingScanInterval = 5000;
-            scanPolicy.maxTrackFailures = 3;
-            scanPolicy.BSSListSize = 4;
-            scanPolicy.BSSNumberToStartDiscovery = 1;
-            scanPolicy.numOfBands = 1;
-            scanPolicy.bandScanPolicy[ 0 ].band = RADIO_BAND_2_4_GHZ;
-            scanPolicy.bandScanPolicy[ 0 ].rxRSSIThreshold = -80;
-            scanPolicy.bandScanPolicy[ 0 ].numOfChannles = 14;
-            scanPolicy.bandScanPolicy[ 0 ].numOfChannlesForDiscovery = 3;
+            scanPolicy->normalScanInterval = 10000;
+            scanPolicy->deterioratingScanInterval = 5000;
+            scanPolicy->maxTrackFailures = 3;
+            scanPolicy->BSSListSize = 4;
+            scanPolicy->BSSNumberToStartDiscovery = 1;
+            scanPolicy->numOfBands = 1;
+            scanPolicy->bandScanPolicy[ 0 ].band = RADIO_BAND_2_4_GHZ;
+            scanPolicy->bandScanPolicy[ 0 ].rxRSSIThreshold = -80;
+            scanPolicy->bandScanPolicy[ 0 ].numOfChannles = 14;
+            scanPolicy->bandScanPolicy[ 0 ].numOfChannlesForDiscovery = 3;
 
             for ( i = 0; i < 14; i++ )
             {
-                scanPolicy.bandScanPolicy[ 0 ].channelList[ i ] = i + 1;
+                scanPolicy->bandScanPolicy[ 0 ].channelList[ i ] = i + 1;
             }
 
-            scanPolicy.bandScanPolicy[ 0 ].trackingMethod.scanType = SCAN_TYPE_NORMAL_ACTIVE;
-            scanPolicy.bandScanPolicy[ 0 ].trackingMethod.method.basicMethodParams.earlyTerminationEvent = SCAN_ET_COND_DISABLE;
-            scanPolicy.bandScanPolicy[ 0 ].trackingMethod.method.basicMethodParams.ETMaxNumberOfApFrames = 0;
-            scanPolicy.bandScanPolicy[ 0 ].trackingMethod.method.basicMethodParams.maxChannelDwellTime = 30000;
-            scanPolicy.bandScanPolicy[ 0 ].trackingMethod.method.basicMethodParams.minChannelDwellTime = 15000;
-            scanPolicy.bandScanPolicy[ 0 ].trackingMethod.method.basicMethodParams.probReqParams.bitrate = RATE_MASK_UNSPECIFIED; /* Let the FW select */
-            scanPolicy.bandScanPolicy[ 0 ].trackingMethod.method.basicMethodParams.probReqParams.numOfProbeReqs = 3;
-            scanPolicy.bandScanPolicy[ 0 ].trackingMethod.method.basicMethodParams.probReqParams.txPowerDbm = DEF_TX_POWER;
-            scanPolicy.bandScanPolicy[ 0 ].discoveryMethod.scanType = SCAN_TYPE_NORMAL_ACTIVE;
-            scanPolicy.bandScanPolicy[ 0 ].discoveryMethod.method.basicMethodParams.earlyTerminationEvent = SCAN_ET_COND_DISABLE;
-            scanPolicy.bandScanPolicy[ 0 ].discoveryMethod.method.basicMethodParams.ETMaxNumberOfApFrames = 0;
-            scanPolicy.bandScanPolicy[ 0 ].discoveryMethod.method.basicMethodParams.maxChannelDwellTime = 30000;
-            scanPolicy.bandScanPolicy[ 0 ].discoveryMethod.method.basicMethodParams.minChannelDwellTime = 15000;
-            scanPolicy.bandScanPolicy[ 0 ].discoveryMethod.method.basicMethodParams.probReqParams.bitrate = RATE_MASK_UNSPECIFIED; /* Let the FW select */;
-            scanPolicy.bandScanPolicy[ 0 ].discoveryMethod.method.basicMethodParams.probReqParams.numOfProbeReqs = 3;
-            scanPolicy.bandScanPolicy[ 0 ].discoveryMethod.method.basicMethodParams.probReqParams.txPowerDbm = DEF_TX_POWER;
-            scanPolicy.bandScanPolicy[ 0 ].immediateScanMethod.scanType = SCAN_TYPE_NORMAL_ACTIVE;
-            scanPolicy.bandScanPolicy[ 0 ].immediateScanMethod.method.basicMethodParams.earlyTerminationEvent = SCAN_ET_COND_DISABLE;
-            scanPolicy.bandScanPolicy[ 0 ].immediateScanMethod.method.basicMethodParams.ETMaxNumberOfApFrames = 0;
-            scanPolicy.bandScanPolicy[ 0 ].immediateScanMethod.method.basicMethodParams.maxChannelDwellTime = 30000;
-            scanPolicy.bandScanPolicy[ 0 ].immediateScanMethod.method.basicMethodParams.minChannelDwellTime = 15000;
-            scanPolicy.bandScanPolicy[ 0 ].immediateScanMethod.method.basicMethodParams.probReqParams.bitrate = RATE_MASK_UNSPECIFIED; /* Let the FW select */;
-            scanPolicy.bandScanPolicy[ 0 ].immediateScanMethod.method.basicMethodParams.probReqParams.numOfProbeReqs = 3;
-            scanPolicy.bandScanPolicy[ 0 ].immediateScanMethod.method.basicMethodParams.probReqParams.txPowerDbm = DEF_TX_POWER;
+            scanPolicy->bandScanPolicy[ 0 ].trackingMethod.scanType = SCAN_TYPE_NORMAL_ACTIVE;
+            scanPolicy->bandScanPolicy[ 0 ].trackingMethod.method.basicMethodParams.earlyTerminationEvent = SCAN_ET_COND_DISABLE;
+            scanPolicy->bandScanPolicy[ 0 ].trackingMethod.method.basicMethodParams.ETMaxNumberOfApFrames = 0;
+            scanPolicy->bandScanPolicy[ 0 ].trackingMethod.method.basicMethodParams.maxChannelDwellTime = 30000;
+            scanPolicy->bandScanPolicy[ 0 ].trackingMethod.method.basicMethodParams.minChannelDwellTime = 15000;
+            scanPolicy->bandScanPolicy[ 0 ].trackingMethod.method.basicMethodParams.probReqParams.bitrate = RATE_MASK_UNSPECIFIED; /* Let the FW select */
+            scanPolicy->bandScanPolicy[ 0 ].trackingMethod.method.basicMethodParams.probReqParams.numOfProbeReqs = 3;
+            scanPolicy->bandScanPolicy[ 0 ].trackingMethod.method.basicMethodParams.probReqParams.txPowerDbm = DEF_TX_POWER;
+            scanPolicy->bandScanPolicy[ 0 ].discoveryMethod.scanType = SCAN_TYPE_NORMAL_ACTIVE;
+            scanPolicy->bandScanPolicy[ 0 ].discoveryMethod.method.basicMethodParams.earlyTerminationEvent = SCAN_ET_COND_DISABLE;
+            scanPolicy->bandScanPolicy[ 0 ].discoveryMethod.method.basicMethodParams.ETMaxNumberOfApFrames = 0;
+            scanPolicy->bandScanPolicy[ 0 ].discoveryMethod.method.basicMethodParams.maxChannelDwellTime = 30000;
+            scanPolicy->bandScanPolicy[ 0 ].discoveryMethod.method.basicMethodParams.minChannelDwellTime = 15000;
+            scanPolicy->bandScanPolicy[ 0 ].discoveryMethod.method.basicMethodParams.probReqParams.bitrate = RATE_MASK_UNSPECIFIED; /* Let the FW select */;
+            scanPolicy->bandScanPolicy[ 0 ].discoveryMethod.method.basicMethodParams.probReqParams.numOfProbeReqs = 3;
+            scanPolicy->bandScanPolicy[ 0 ].discoveryMethod.method.basicMethodParams.probReqParams.txPowerDbm = DEF_TX_POWER;
+            scanPolicy->bandScanPolicy[ 0 ].immediateScanMethod.scanType = SCAN_TYPE_NORMAL_ACTIVE;
+            scanPolicy->bandScanPolicy[ 0 ].immediateScanMethod.method.basicMethodParams.earlyTerminationEvent = SCAN_ET_COND_DISABLE;
+            scanPolicy->bandScanPolicy[ 0 ].immediateScanMethod.method.basicMethodParams.ETMaxNumberOfApFrames = 0;
+            scanPolicy->bandScanPolicy[ 0 ].immediateScanMethod.method.basicMethodParams.maxChannelDwellTime = 30000;
+            scanPolicy->bandScanPolicy[ 0 ].immediateScanMethod.method.basicMethodParams.minChannelDwellTime = 15000;
+            scanPolicy->bandScanPolicy[ 0 ].immediateScanMethod.method.basicMethodParams.probReqParams.bitrate = RATE_MASK_UNSPECIFIED; /* Let the FW select */;
+            scanPolicy->bandScanPolicy[ 0 ].immediateScanMethod.method.basicMethodParams.probReqParams.numOfProbeReqs = 3;
+            scanPolicy->bandScanPolicy[ 0 ].immediateScanMethod.method.basicMethodParams.probReqParams.txPowerDbm = DEF_TX_POWER;
              /* we should noe store the scanPolicy now */
-            scanMngr_setParam(pRoamingMngr->hScanMngr, pparam);
+            scanMngr_setParam(pRoamingMngr->hScanMngr, param);
 
 
             /* Enable roaming! */
-            pparam->paramType = ROAMING_MNGR_APPLICATION_CONFIGURATION;
-            pparam->content.roamingConfigBuffer.roamingMngrConfig.enableDisable = ROAMING_ENABLED;
-            roamingMngr_setParam(hRoamingMngr,pparam);
+            param->paramType = ROAMING_MNGR_APPLICATION_CONFIGURATION;
+            param->content.roamingConfigBuffer.roamingMngrConfig.enableDisable = ROAMING_ENABLED;
+            roamingMngr_setParam(hRoamingMngr,param);
+            os_memoryFree (NULL, scanPolicy, sizeof(TScanPolicy));
         }
         
         break;
@@ -310,7 +342,7 @@ void roamingMgrDebugFunction(TI_HANDLE hRoamingMngr,
 		WLAN_OS_REPORT(("Invalid function type in Debug  Function Command, funcType= %d\n\n", funcType));
 		break;
 	}
-	os_memoryFree(((roamingMngr_t*)hRoamingMngr)->hOs, pparam, sizeof(paramInfo_t));
+	os_memoryFree (NULL, param, sizeof (paramInfo_t));
 } 
 
 

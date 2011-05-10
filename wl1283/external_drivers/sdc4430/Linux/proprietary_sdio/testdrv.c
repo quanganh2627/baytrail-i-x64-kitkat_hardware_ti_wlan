@@ -1,17 +1,36 @@
 /*
  * testdrv.c
  *
- * Copyright (C) 2009 Texas Instruments, Inc. - http://www.ti.com/
- * 
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as 
- * published by the Free Software Foundation version 2.
- *
- * This program is distributed "as is" WITHOUT ANY WARRANTY of any
- * kind, whether express or implied; without even the implied warranty
- * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.      
+ * All rights reserved.                                                  
+ *                                                                       
+ * Redistribution and use in source and binary forms, with or without    
+ * modification, are permitted provided that the following conditions    
+ * are met:                                                              
+ *                                                                       
+ *  * Redistributions of source code must retain the above copyright     
+ *    notice, this list of conditions and the following disclaimer.      
+ *  * Redistributions in binary form must reproduce the above copyright  
+ *    notice, this list of conditions and the following disclaimer in    
+ *    the documentation and/or other materials provided with the         
+ *    distribution.                                                      
+ *  * Neither the name Texas Instruments nor the names of its            
+ *    contributors may be used to endorse or promote products derived    
+ *    from this software without specific prior written permission.      
+ *                                                                       
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS   
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT     
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR 
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT  
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT      
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY 
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT   
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 
 /* includes */
 #include <linux/module.h>
@@ -23,15 +42,25 @@
 #include <linux/fs.h>
 #include <linux/slab.h>
 #include <linux/delay.h>
+#if 0
+#include <asm/arch/dma.h>
+#endif
 #include <linux/mmc/card.h>
 #include <asm/system.h>
 #include <asm/io.h>
 #include <asm/irq.h>
-#include <linux/gpio.h>
-#include <mach/hardware.h>
+#if 0
+#include <asm/arch/hardware.h>
+#include <asm/arch/gpio.h>
+#include <asm/arch/clock.h>
+#include <asm/arch/board.h>
+#else
+#include <mach/gpio.h>
+#endif
 #include "testdrv.h"
+//#include "TxnDefs.h"
 #include "SdioDrv.h"
-#include "host_platform.h"
+#include <mach/hardware.h>
 
 int sdioAdapt_ConnectBus(void *fCbFunc, void *hCbArg, unsigned int  uBlkSizeShift, unsigned int  uSdioThreadPriority);
 
@@ -117,13 +146,37 @@ struct parts
 #define PERR2 PERR
 
 
+/* 
+ * Zoom2 defines - temp
+ * - should be taken from host_platform.h
+ * - Zoom1 use testdrv.h
+ */
+#define CONTROL_PADCONF_MMC3_CLK	   	0x480025D8  /* mmc3_cmd */
+#define CONTROL_PADCONF_MMC3_CMD	   	0x480021D0  /* mmc3_cmd */
+
+
+#define CONTROL_PADCONF_MMC3_DAT0		0x480025E4    /* mmc3_dat0, mmc3_dat1 */
+#define CONTROL_PADCONF_MMC3_DAT2		0x480025E8    /* mmc3_dat2 */
+#define CONTROL_PADCONF_MMC3_DAT3		0x480025E0    /* mmc3_dat3 */
+#ifdef EXPANSION_BOARD_MCS8
+#define CONTROL_PADCONF_MCBSP1_CLKX		0x48002184   /* WLAN_IRQ */
+#else
+#define CONTROL_PADCONF_MCBSP1_CLKX		0x48002198   /* WLAN_IRQ */
+#endif
+
 #undef IRQ_GPIO
 #undef PMENA_GPIO
 #undef TNETW_IRQ
 
-#define IRQ_GPIO                        53
-#define PMENA_GPIO                      54
+#ifdef EXPANSION_BOARD_MCS8
+#define IRQ_GPIO                        153
+#define PMENA_GPIO                      157
 #define TNETW_IRQ                       (OMAP_GPIO_IRQ(IRQ_GPIO))
+#else
+#define IRQ_GPIO                        162
+#define PMENA_GPIO                      157
+#define TNETW_IRQ                       (OMAP_GPIO_IRQ(IRQ_GPIO))
+#endif
 
 
 
@@ -136,47 +189,6 @@ struct parts
 /* For block mode configuration */
 #define FN0_FBR2_REG_108                    0x210
 #define FN0_FBR2_REG_108_BIT_MASK           0xFFF 
-#define SDIODRV_MAX_LOOPS 50000
-
-void dumpreg(void)
-{
-	printk(KERN_ERR "\n MMCHS_HL_REV      for mmc5 = %x  ", omap_readl( 0x480D5000 ));
-	printk(KERN_ERR "\n MMCHS_HL_HWINFO   for mmc5 = %x  ", omap_readl( 0x480D5004 ));
-	printk(KERN_ERR "\n MMCHS_HL_SYSCONFIG for mmc5 = %x ", omap_readl( 0x480D5010 ));
-	printk(KERN_ERR "\n MMCHS_SYSCONFIG   for mmc5 = %x  ", omap_readl( 0x480D5110 ));
-	printk(KERN_ERR "\n MMCHS_SYSSTATUS   for mmc5 = %x  ", omap_readl( 0x480D5114 ));
-	printk(KERN_ERR "\n MMCHS_CSRE	      for mmc5 = %x  ", omap_readl( 0x480D5124 ));
-	printk(KERN_ERR "\n MMCHS_SYSTEST     for mmc5 = %x  ", omap_readl( 0x480D5128 ));
-	printk(KERN_ERR "\n MMCHS_CON         for mmc5 = %x  ", omap_readl( 0x480D512C ));
-	printk(KERN_ERR "\n MMCHS_PWCNT       for mmc5 = %x  ", omap_readl( 0x480D5130 ));
-	printk(KERN_ERR "\n MMCHS_BLK         for mmc5 = %x  ", omap_readl( 0x480D5204 ));
-	printk(KERN_ERR "\n MMCHS_ARG         for mmc5 = %x  ", omap_readl( 0x480D5208 ));
-	printk(KERN_ERR "\n MMCHS_CMD         for mmc5 = %x  ", omap_readl( 0x480D520C ));
-	printk(KERN_ERR "\n MMCHS_RSP10       for mmc5 = %x  ", omap_readl( 0x480D5210 ));
-	printk(KERN_ERR "\n MMCHS_RSP32       for mmc5 = %x  ", omap_readl( 0x480D5214 ));
-	printk(KERN_ERR "\n MMCHS_RSP54       for mmc5 = %x  ", omap_readl( 0x480D5218 ));
-	printk(KERN_ERR "\n MMCHS_RSP76       for mmc5 = %x  ", omap_readl( 0x480D521C ));
-	printk(KERN_ERR "\n MMCHS_DATA        for mmc5 = %x  ", omap_readl( 0x480D5220 ));
-	printk(KERN_ERR "\n MMCHS_PSTATE      for mmc5 = %x  ", omap_readl( 0x480D5224 ));
-	printk(KERN_ERR "\n MMCHS_HCTL        for mmc5 = %x  ", omap_readl( 0x480D5228 ));
-	printk(KERN_ERR "\n MMCHS_SYSCTL      for mmc5 = %x  ", omap_readl( 0x480D522C ));
-	printk(KERN_ERR "\n MMCHS_STAT        for mmc5 = %x  ", omap_readl( 0x480D5230));
-	printk(KERN_ERR "\n MMCHS_IE          for mmc5 = %x  ", omap_readl( 0x480D5234 ));
-	printk(KERN_ERR "\n MMCHS_ISE         for mmc5 = %x  ", omap_readl( 0x480D5238 ));
-	printk(KERN_ERR "\n MMCHS_AC12        for mmc5 = %x  ", omap_readl( 0x480D523C ));
-	printk(KERN_ERR "\n MMCHS_CAPA        for mmc5 = %x  ", omap_readl( 0x480D5240 ));
-	printk(KERN_ERR "\n MMCHS_CUR_CAPA    for mmc5 = %x  ", omap_readl( 0x480D5248 ));
-	printk(KERN_ERR "\n MMCHS_FE          for mmc5 = %x  ", omap_readl( 0x480D5250 ));
-	printk(KERN_ERR "\n MMCHS_REV         for mmc5 = %x\n", omap_readl( 0x480D52FC ));
-
-	printk("\n start padconfiguration");
-	printk(KERN_ERR "WLAN_IRQ:          0x4A100078=%x\n",   omap_readl( 0x4A100078 ));
-	printk(KERN_ERR "WLAN_EN:           0x4A10007C=%x\n",   omap_readl( 0x4A10007C ));
-	printk(KERN_ERR "SDIO_CLK+SDIO_CMD: 0x4A100148=%x\n",   omap_readl( 0x4A100148 ));
-	printk(KERN_ERR "SDIO_D0+SDIO_D1:   0x4A10014C=%x\n",   omap_readl( 0x4A10014C ));
-	printk(KERN_ERR "SDIO_D2+D3:        0x4A100150=%x\n",   omap_readl( 0x4A100150 ));
-}
-
 
 int sdioAdapt_ConnectBus (void *        fCbFunc,
                           void *        hCbArg,
@@ -202,29 +214,19 @@ int sdioAdapt_ConnectBus (void *        fCbFunc,
   
     /* Send commands sequence: 0, 5, 3, 7 */
     PERR("sdioAdapt_ConnectBus: Send commands sequence: 0, 5, 3, 7\n");
-
 	/* according to p. 3601 */
 	iStatus = sdioDrv_ExecuteCmd (SD_IO_GO_IDLE_STATE, 0, MMC_RSP_NONE, &uByte, sizeof(uByte));
-
-	PERR1("\nAfter SD_IO_GO_IDLE_STATE, RSP_NONE=%d \n", iStatus );
+    PERR1("After SD_IO_GO_IDLE_STATE, iStatus=%d \n", iStatus );
 	if (iStatus) { return iStatus; }
-
-	iStatus = sdioDrv_ExecuteCmd (SDIO_CMD5, TRY1_VDD_VOLTAGE_WINDOW, MMC_RSP_R4, &uByte, sizeof(uByte));
-    PERR1("\nAfter VDD_VOLTAGE_WINDOW, RSP_R4=%d \n", iStatus );
-
+	iStatus = sdioDrv_ExecuteCmd (SDIO_CMD5, VDD_VOLTAGE_WINDOW, MMC_RSP_R4, &uByte, sizeof(uByte));
+    PERR1("After VDD_VOLTAGE_WINDOW, iStatus=%d \n", iStatus );
 	if (iStatus) { return iStatus; }
 	iStatus = sdioDrv_ExecuteCmd (SD_IO_SEND_RELATIVE_ADDR, 0, MMC_RSP_R6, &uLong, sizeof(uLong));
-    PERR1("\n After SD_IO_SEND_RELATIVE_ADDR, RSP_R6=%d \n", iStatus );
+    PERR1("After SD_IO_SEND_RELATIVE_ADDR, iStatus=%d \n", iStatus );
 	if (iStatus) { return iStatus; }
-
-	PERR1("\n SD_IO_SEND_RELATIVE_ADDR returned: uLong=%lu \n", uLong );
-
-	iStatus = sdioDrv_ExecuteCmd (SD_IO_SELECT_CARD, 0x10000, MMC_RSP_R6, &uByte, sizeof(uByte));
-    PERR1("\nAfter SD_IO_SELECT_CARD, RSP_R6=%d \n", iStatus );
+	iStatus = sdioDrv_ExecuteCmd (SD_IO_SELECT_CARD, uLong, MMC_RSP_R6, &uByte, sizeof(uByte));
+    PERR1("After SD_IO_SELECT_CARD, iStatus=%d \n", iStatus );
 	if (iStatus) { return iStatus; }
-
-
-
 
     /* NOTE:
      * =====
@@ -236,16 +238,38 @@ int sdioAdapt_ConnectBus (void *        fCbFunc,
      * 4) If the byte read in step 2 is different than the written byte repeat the sequence
      */
 
+#ifdef TNETW1283
+#ifdef SDIO_HIGH_SPEED
+    PERR("sdioAdapt_ConnectBus: Set HIGH_SPEED bit on register 0x13\n");
+    /* CCCR 13 bit EHS(1) */
+    iStatus = sdioDrv_ReadSyncBytes (TXN_FUNC_ID_CTRL, 0x13, &uByte, 1, 1);
+    PERR2("After r 0x%x, iStatus=%d \n", uByte, iStatus );
+    if (iStatus) { return iStatus; }
+    
+    uByte |= 0x2; /* set bit #1 EHS */
+    iStatus = sdioDrv_WriteSyncBytes (TXN_FUNC_ID_CTRL, 0x13, &uByte, 1, 1);
+    PERR2("After w 0x%x, iStatus=%d \n", uByte, iStatus );
+    if (iStatus) { return iStatus; }
+
+    iStatus = sdioDrv_ReadSyncBytes (TXN_FUNC_ID_CTRL, 0x13, &uByte, 1, 1);
+    PERR2("After r 0x%x, iStatus=%d \n", uByte, iStatus );
+    if (iStatus) { return iStatus; }
+    
+    PERR1("After CCCR 0x13, uByte=%d \n", (int)uByte );
+#endif
+#endif
 
     /* set device side bus width to 4 bit (for 1 bit write 0x80 instead of 0x82) */
     do
     {
-        PERR("sdioAdapt_ConnectBus: Set bus width to %x bit on register 0xd2\n", (unsigned int)uByte);
+        PERR("sdioAdapt_ConnectBus: Set bus width to 4 bit on register 0x7\n");
         uByte = SDIO_BITS_CODE;
         iStatus = sdioDrv_WriteSyncBytes (TXN_FUNC_ID_CTRL, CCCR_BUS_INTERFACE_CONTOROL, &uByte, 1, 1);
+        PERR2("After w 0x%x, iStatus=%d \n", uByte, iStatus );
         if (iStatus) { return iStatus; }
 
-		iStatus = sdioDrv_ReadSyncBytes (TXN_FUNC_ID_CTRL, CCCR_BUS_INTERFACE_CONTOROL, &uByte, 1, 1);
+        iStatus = sdioDrv_ReadSyncBytes (TXN_FUNC_ID_CTRL, CCCR_BUS_INTERFACE_CONTOROL, &uByte, 1, 1);
+        PERR2("After r 0x%x, iStatus=%d \n", uByte, iStatus );
         if (iStatus) { return iStatus; }
         
 #ifdef TNETW1283
@@ -259,28 +283,50 @@ int sdioAdapt_ConnectBus (void *        fCbFunc,
 
     } while ((uByte != SDIO_BITS_CODE) && (uCount < MAX_RETRIES));
 
-    PERR2("After CCCR_BUS_INTERFACE_CONTOROL, uCount=%lu, value = 0x%x\n", uCount,  uByte);
+    PERR2("After CCCR_BUS_INTERFACE_CONTOROL, uCount=%d, value = 0x%x\n", (int)uCount,  (unsigned int)uByte);
 
     uCount = 0;
 
     /* allow function 2 */
     do
     {
-		uByte = 4;
+        uByte = 4;
         iStatus = sdioDrv_WriteSyncBytes (TXN_FUNC_ID_CTRL, CCCR_IO_ENABLE, &uByte, 1, 1);
         if (iStatus) { return iStatus; }
 
-		uByte = 0;
-		iStatus = sdioDrv_ReadSyncBytes (TXN_FUNC_ID_CTRL, CCCR_IO_ENABLE, &uByte, 1, 1);
-        if (iStatus) { 
-				PERR2("BUG BUG BUG to READ from CCCR_IO_ENABLE value = 0x%x\n", (unsigned int)uByte);
-				return iStatus; }
+        iStatus = sdioDrv_ReadSyncBytes (TXN_FUNC_ID_CTRL, CCCR_IO_ENABLE, &uByte, 1, 1);
+        if (iStatus) { return iStatus; }
+        
+        iStatus = sdioDrv_WriteSync (TXN_FUNC_ID_CTRL, 0xC8, &uLong, 2, 1, 1);
+        if (iStatus) { return iStatus; }
 
-		uCount++;
+        uCount++;
+
     } while ((uByte != 4) && (uCount < MAX_RETRIES));
 
     PERR2("After CCCR_IO_ENABLE, uCount=%d, value = 0x%x\n", (int)uCount,  (unsigned int)uByte);
 
+
+#ifdef TNETW1283
+#ifdef FPGA_IO_READY_POLLING
+    /* poll register 3 for WLAN ready till value is 4 */
+    uCount = 0;
+    do
+    {
+        uByte = 0;
+
+        iStatus = sdioDrv_ReadSyncBytes (TXN_FUNC_ID_CTRL, CCCR_IO_READY, &uByte, 1, 1);
+        if (iStatus) { return iStatus; }
+        
+        uCount++;
+        udelay(2000);
+
+    } while ((uByte != 4) && (uCount < 100000000 /*MAX_RETRIES*/));
+
+    PERR2("After CCCR_IO_READY, uCount=%d, value = 0x%x\n", (int)uCount,  (unsigned int)uByte);
+
+#endif
+#endif
 
 #ifdef SDIO_IN_BAND_INTERRUPT
 
@@ -310,16 +356,16 @@ int sdioAdapt_ConnectBus (void *        fCbFunc,
 #endif
 
     uCount = 0;
+    
     do
     {
         uLong = uBlkSize;
-		PERR1("sdioAdapt_ConnectBus: Before sdioDrv_WriteSync to FN0_FBR2_REG_108, uLong=%lu\n", uLong);
-		iStatus = sdioDrv_WriteSync (TXN_FUNC_ID_CTRL, FN0_FBR2_REG_108, &uLong, 2, 1, 1);
-        PERR1("After w FN0_FBR2_REG_108, uLong=%lu, iStatus=%d \n", uLong, iStatus );
+        iStatus = sdioDrv_WriteSync (TXN_FUNC_ID_CTRL, FN0_FBR2_REG_108, &uLong, 2, 1, 1);
+        PERR1("After w FN0_FBR2_REG_108, uLong=%d \n", (int)uLong );
         if (iStatus) { return iStatus; }
 
         iStatus = sdioDrv_ReadSync (TXN_FUNC_ID_CTRL, FN0_FBR2_REG_108, &uLong, 2, 1, 1);
-        PERR1("After r FN0_FBR2_REG_108, uLong=%lu, iStatus=%d \n", uLong, iStatus);
+        PERR1("After r FN0_FBR2_REG_108, uLong=%d \n", (int)uLong );
         if (iStatus) { return iStatus; }
         
 #ifdef TNETW1283
@@ -341,6 +387,7 @@ int sdioAdapt_ConnectBus (void *        fCbFunc,
         /* Failed to write CMD52_WRITE to function 0 */
         return (int)uCount;
     }
+
 	return iStatus;
 }
 
@@ -349,8 +396,8 @@ int sdioAdapt_ConnectBus_0537only (void *        fCbFunc,
                           unsigned int  uBlkSizeShift,
                           unsigned int  uSdioThreadPriority)
 {
-	unsigned char  uByte=0;
-    unsigned long  uLong=0;
+	unsigned char  uByte;
+    unsigned long  uLong;
     //unsigned long  uCount = 0;
     unsigned int   uBlkSize = 1 << uBlkSizeShift;
 	int            iStatus;
@@ -372,13 +419,13 @@ int sdioAdapt_ConnectBus_0537only (void *        fCbFunc,
 	iStatus = sdioDrv_ExecuteCmd (SD_IO_GO_IDLE_STATE, 0, MMC_RSP_NONE, &uByte, sizeof(uByte));
     PERR1("After SD_IO_GO_IDLE_STATE, iStatus=%d \n", iStatus );
 	if (iStatus) { return iStatus; }
-	iStatus = sdioDrv_ExecuteCmd (SDIO_CMD5, TRY1_VDD_VOLTAGE_WINDOW, MMC_RSP_R4, &uByte, sizeof(uByte));
+	iStatus = sdioDrv_ExecuteCmd (SDIO_CMD5, VDD_VOLTAGE_WINDOW, MMC_RSP_R4, &uByte, sizeof(uByte));
     PERR1("After VDD_VOLTAGE_WINDOW, iStatus=%d \n", iStatus );
 	if (iStatus) { return iStatus; }
 	iStatus = sdioDrv_ExecuteCmd (SD_IO_SEND_RELATIVE_ADDR, 0, MMC_RSP_R6, &uLong, sizeof(uLong));
     PERR1("After SD_IO_SEND_RELATIVE_ADDR, iStatus=%d \n", iStatus );
 	if (iStatus) { return iStatus; }
-    iStatus = sdioDrv_ExecuteCmd (SD_IO_SELECT_CARD, 0x10000, MMC_RSP_R6, &uByte, sizeof(uByte));
+	iStatus = sdioDrv_ExecuteCmd (SD_IO_SELECT_CARD, uLong, MMC_RSP_R6, &uByte, sizeof(uByte));
     PERR1("After SD_IO_SELECT_CARD, iStatus=%d \n", iStatus );
 	if (iStatus) { return iStatus; }
 
@@ -465,37 +512,43 @@ inline int set_partition(int clientID,
 /*--------------------------------------------------------------------------------------*/
 
 
-static int OMAP_TNETW_Power(int power_on)
+static int OMAP3430_TNETW_Power(int power_on)
 
 {
-  printk("%s: (-%s-)\n", __FUNCTION__, power_on ? "ON" : "OFF");
-  
+  printk("OMAP3430_TNETW_Power(-%s-)\n", power_on ? "ON" : "OFF");
+
+  omap_set_gpio_direction(PMENA_GPIO, TESTDRV_GPIO_OUTPUT);
+
   if (power_on)
   {
-	  gpio_set_value(PMENA_GPIO, 1);
+    omap_set_gpio_dataout(PMENA_GPIO, 1);
   }
   else
   {
-	  gpio_set_value(PMENA_GPIO, 0);
+    omap_set_gpio_dataout(PMENA_GPIO, 0);
   }
 
   return 0;
     
-} /* OMAP_TNETW_Power() */
+} /* OMAP3430_TNETW_Power() */
 
 /*--------------------------------------------------------------------------------------*/
 
-static int OMAP_TNETW_HardReset(void)
+static int OMAP3430_TNETW_HardReset(void)
 {
-	printk("%s: start\n",__FUNCTION__);
-	OMAP_TNETW_Power(0);
-	mdelay(50);
-	OMAP_TNETW_Power(1);
-	mdelay(50);
-	printk("%s: end.\n",__FUNCTION__);
-  return 0;
+  int err;
 
-}
+    /* Turn power OFF*/
+  if ((err = OMAP3430_TNETW_Power(0)) == 0)
+  {
+    mdelay(50);
+    /* Turn power ON*/
+    err = OMAP3430_TNETW_Power(1);
+    mdelay(50);
+  }
+  return err;
+
+} /* OMAP3430_TNETW_HardReset() */
 
 
 /*--------------------------------------------------------------------------------------*/
@@ -510,7 +563,7 @@ static void pad_config(unsigned long pad_addr, u32 andmask, u32 ormask)
 
 	addr = (u32 *) ioremap(pad_addr, 4);
 	if (!addr) {
-		printk(KERN_ERR "OMAP_pad_config: ioremap failed with addr %lx\n", pad_addr);
+		printk(KERN_ERR "OMAP3430_pad_config: ioremap failed with addr %lx\n", pad_addr);
 		return;
 	}
 
@@ -524,21 +577,55 @@ static void pad_config(unsigned long pad_addr, u32 andmask, u32 ormask)
 
 int hPlatform_Wlan_Hardware_Init(void)
 {
-	/*WLAN_IRQ - 53*/
-	/* Should set (x is don't change):  xxxx xxx1 xxx0 0011 xxxx xxxx xxxx xxxx */
-    pad_config( 0x4A100078, 0xFFECFFFF, 0x00030000);
-    /*WLAN_EN - 54*/
-   /* Should set (x is don't change):  xxxx xxxx xxxx xxxx xxxx xxxx xxx0 1x11 */
-	pad_config(0x4A10007C, 0xFFFFFFEF, 0x0000000B);
-	/* Should set (x is don't change):  xxxx xxx1 xxx1 1000 xxxx xxxx xxx0 0000 */
-    /*SDIO_CLK + SDIO_CMD*/
-	pad_config(0x4A100148, 0xFFF8FFE0, 0x01180000);
-	/* SDIO_D0 + SDIO_D1*/
-	/* Should set (x is don't change):  xxxx xxxx xxx1 1000 xxxx xxxx xxx1 1000 */
-    pad_config(0x4A10014C, 0xFFF8FFF8, 0x00180018);
-    /* SDIO_D2 / D3*/
-	/* Should set (x is don't change):  xxxx xxxx xxx1 1000 xxxx xxxx xxx1 1000 */
-    pad_config(0x4A100150, 0xFFF8FFF8, 0x00180018);
+    /* choose gpio 157, pull up */
+        /* Setting MUX Mode 4 , Pull bits 0 */
+	/* Should set (x is don't change):	xxxx xxxx xxxx xxxx xxxx xxxx xxx1 1000 */
+	pad_config( 0x4800218C, 0xFFF0FFFF, 0x00040000);
+
+#ifdef EXPANSION_BOARD_MCS8
+	/* choose gpio 158, pull up, activated */
+        /* Setting MUX Mode 4 , Pull bits 3 */
+        /* Should set (x is don't change):  xxxx xxxx xxxx xxxx xxxx xxxx xxx1 1100 */
+	pad_config(CONTROL_PADCONF_MCBSP1_CLKX, 0xFFF0FFFF, 0x011C0000);
+#else
+	/* choose gpio 162, pull up, activated */
+        /* Setting MUX Mode 4 , Pull bits 3 */
+        /* Should set (x is don't change):  xxxx xxxx xxxx xxxx xxxx xxxx xxx1 1100 */
+	pad_config(CONTROL_PADCONF_MCBSP1_CLKX, 0xFFFFFFF0, 0x0000011C);
+#endif
+
+        /*
+	  * set pull up on all SDIO lines
+          * Setting MUX Mode of 0, and pull bits to 3
+          */
+
+
+#ifdef EXPANSION_BOARD_MCS8_ASSAF_MMC3_CMD
+	/* set for mmc2_cmd - second half of the padconf register
+	  * Should set (x is don't change):  xxxx xxxx xxx1 1000 xxxx xxxx xxxx xxxx */
+	pad_config(0x480025D8, 0xFEE0FFFF, 0x001A0000);
+	pad_config(CONTROL_PADCONF_MMC3_CLK, 0xFFFFFFE0,0x0000011A);
+#else
+        /* set for mmc2_cmd - second half of the padconf register
+	  * Should set (x is don't change):  xxxx xxxx xxx1 1000 xxxx xxxx xxxx xxxx */
+	pad_config(CONTROL_PADCONF_MMC3_CMD, 0xFFFFFFF0, 0x0000011B);
+	pad_config(CONTROL_PADCONF_MMC3_CLK, 0xFFF0FFE0,0x001C011A);
+#endif
+
+	/* set for mmc3_dat0 and dat1 - both parts of the padconf register
+          * Should set (x is don't change):  xxxx xxxx xxx1 1000 xxxx xxxx xxx1 1000 */
+	pad_config(CONTROL_PADCONF_MMC3_DAT0, 0xFFF0FFF0, 0x011A011A);
+
+	pad_config(CONTROL_PADCONF_MMC3_DAT2, 0xFFFFFFF0, 0x0000011A);
+
+	pad_config(CONTROL_PADCONF_MMC3_DAT3, 0xFFF0FFFF, 0x011A0000);
+
+	#define CONTROL_PADCONF_MMC2_DAT4       0x48002164    /* set AE4 to mmc2_dat4  set AH3 to mmc2_dat5 */
+	pad_config(CONTROL_PADCONF_MMC2_DAT4, 0xFFF0FFF0, 0x00180018);
+
+	#define CONTROL_PADCONF_MMC2_DAT6       0x48002168    /* set AF3 to mmc2_dat6  set AE3 to mmc2_dat7 */
+	pad_config(CONTROL_PADCONF_MMC2_DAT6, 0xFFF0FFF0, 0x00180018);
+
 	return 0;
 }
 
@@ -653,8 +740,7 @@ static int sync_write_test(int number_of_transactions, int block_len)
 	int i;
 	int ret = 0;
 	for(i=0;i<number_of_transactions;i++)
-	{	
-		printk("sync_write_test: i=%d\n", i);
+	{
 	    ret = sdioDrv_WriteSync(TXN_FUNC_ID_WLAN, SDIO_TEST_FIRST_VALID_DMA_ADDR, write_buf_array[i%SDIO_TEST_R_W_BUFS_NUM], block_len, 1, 1);
         if(ret)
 		{
@@ -694,7 +780,6 @@ static int async_write_test(int number_of_transactions, int block_len)
 	int ret = 0;
 	for(i=0;i<number_of_transactions;i++)
 	{
-		printk("async_write_test: i=%d\n", i);
 		ret = sdio_test_write_async(SDIO_TEST_FIRST_VALID_DMA_ADDR, write_buf_array[i%SDIO_TEST_R_W_BUFS_NUM], block_len);
 		if(ret){
 			return -ENODEV;
@@ -712,7 +797,6 @@ static int sync_read_test(int number_of_transactions, int block_len)
 	int i;
 	int ret = 0;
 	for(i=0;i<number_of_transactions;i++){
-		printk("sync_read_test: i=%d\n", i);
 		ret = sdioDrv_ReadSync(TXN_FUNC_ID_WLAN, SDIO_TEST_FIRST_VALID_DMA_ADDR,read_buf_array[i%SDIO_TEST_R_W_BUFS_NUM], block_len, 1, 1);
 		if(ret){
 			return -ENODEV;
@@ -752,7 +836,6 @@ static int async_read_test(int number_of_transaction, int block_len)
 	int ret = 0;
 	for(i=0;i<number_of_transaction;i++)
 	{
-		printk("async_read_test: i=%d\n", i);
 		ret = sdio_test_read_async(SDIO_TEST_FIRST_VALID_DMA_ADDR, read_buf_array[i%SDIO_TEST_R_W_BUFS_NUM], block_len);
 		if(ret)
 		{
@@ -1234,12 +1317,10 @@ static void sdio_test_read(const char* buffer, unsigned long base, SdioSyncMode_
 
 	if (SyncMode == SdioSync)
 	{
-		printk("%s: %d - I'm trying to read in Sync", __FUNCTION__,__LINE__);
 		quiet = sdioDrv_ReadSync(TXN_FUNC_ID_WLAN, addr, buf, length, 1, 1);
 	}
 	else
 	{
-		printk("%s: %d - I'm trying to read in A-sync", __FUNCTION__,__LINE__);
 		quiet = sdioDrv_ReadAsync(TXN_FUNC_ID_WLAN, addr, buf, length, eBlockMode, 1, 1);
 	}
 
@@ -1380,10 +1461,9 @@ static int sdio_test_e(const char* buffer, char e_cmd, SdioSyncMode_e SyncMode, 
 
 			break;
 	}
-	return ret;
+    
 } /* sdio_test_e() */
 
-#if 0
 /*
  * omap accesss
  */
@@ -1397,18 +1477,17 @@ static void sdio_access_omap(const char* buffer, char omap_cmd, SdioSyncMode_e S
         case 'r':
             sscanf(buffer, "%X", (unsigned int *)&addr);
             value = omap_readl(addr);
-            printk("sdio_access_omap: read omap register addr 0x%u = 0x%x\n", (uint)addr, (uint)value);
+            printk("sdio_access_omap: read omap register addr 0x%x = 0x%x\n", addr, value);
             break;
 
         case 'w':
             sscanf(buffer, "%X %X", (unsigned int *)&addr, (unsigned int *)&value);
-            printk("sdio_access_omap: write omap register addr 0x%x = 0x%x\n", (uint)addr, (uint)value);
-            omap_writel(value, addr);
+            printk("sdio_access_omap: write omap register addr 0x%x = 0x%x\n", addr, value);
+            value = omap_writel(value, addr);
             break;
 
         case 'c':
-            value = omap_readl(MMCHS_SYSCONFIG);
-
+            value = omap_readl(0x480AD010);
             sscanf(buffer, "%d", (unsigned int *)&param);
             if (param == 0) /* not continueus clock - set AUTOIDLE bit 0 */
             {
@@ -1420,27 +1499,26 @@ static void sdio_access_omap(const char* buffer, char omap_cmd, SdioSyncMode_e S
                 printk("sdio_access_omap: continueus clock - clear AUTOIDLE bit 0 in SYSCONFIG register\n");
                 value &= ~1;
             }
-            printk("sdio_access_omap: write omap register SYSCONFIG addr 0x%x = 0x%x\n", (uint)addr, (uint)value);
-            omap_writel(value, addr);
+            printk("sdio_access_omap: write omap register SYSCONFIG addr 0x%x = 0x%x\n", addr, value);
+            value = omap_writel(value, addr);
             break;
 
         case 'g':
             sscanf(buffer, "%d %d", (unsigned int *)&value, (unsigned int *)&param);
-            printk("sdio_access_omap: set GPIO line %d, value %d\n", (int)value, (int)param);
-			if (gpio_request(value, NULL) != 0) 
-            
+            printk("sdio_access_omap: set GPIO line %d, value %d\n", value, param);
+	        if (omap_request_gpio(value) != 0) 
 	        {
-                printk("sdio_access_omap: ERROR on gpio_request %d\n", (int)value);
-		        return;
+                printk("sdio_access_omap: ERROR on omap_request_gpio %d\n", value);
+		        return -1;
 	        };
-			gpio_direction_output(value, TESTDRV_GPIO_INITIAL_VALUE_FOR_OUTPUT);
-			gpio_set_value(value, param);
-            gpio_free(value);
+	        omap_set_gpio_direction(value, GPIO_DIR_OUTPUT);
+            omap_set_gpio_dataout(value, param);
+	        omap_free_gpio(value);
             break;
 
         case 'd':
             sscanf(buffer, "%d", (unsigned int *)&value);
-            printk("sdio_access_omap: delay %d msec\n", (int)value);
+            printk("sdio_access_omap: delay %d msec\n", value);
             mdelay(value);
             break;
 
@@ -1448,9 +1526,9 @@ static void sdio_access_omap(const char* buffer, char omap_cmd, SdioSyncMode_e S
             printk("sdio_access_omap: cmd not supported\n");
 			break;
 	}
-	return;
+
 } /* sdio_access_omap() */
-#endif
+
 /*--------------------------------------------------------------------------------------*/
 static void sdio_test_write_byte(const char* buffer, unsigned int base)
 {
@@ -1498,7 +1576,9 @@ static void sdio_test_reset(void)
     int err;
 
 	disable_irq (TNETW_IRQ);
-	err = OMAP_TNETW_HardReset(); 
+	printk("OMAP3430_TNETW_HardReset start\n");
+	err = OMAP3430_TNETW_HardReset(); 
+	printk("OMAP3430_TNETW_HardReset - %s\n", err ? "FAIL" : "SUCCESS");
 	enable_irq (TNETW_IRQ);
 
 	return;
@@ -1546,14 +1626,8 @@ static void  sdio_test_init(void)
 	int                 ChipID = 0, status;
     unsigned long       base;
     char                *cmd;
-	int 				rc=0;
 
-	rc = sdioAdapt_ConnectBus (sdio_test_CB, NULL, 9, 90);
-	if (rc != 0) {
-		printk("sdio_test_init ERROR: rc =%d\n", rc);
-
-		return;
-	}
+	sdioAdapt_ConnectBus (sdio_test_CB, NULL, 9, 90);
 
 	/* Set Registers Partition */
 	printk("In sdio_test_init: going to perform set_partition. mem size = 0x%X, mem addr =  0x%X, reg size = 0x%X, reg addr = 0x%X\n",mem_partition_size,TESTDRV_CODE_RAM_PART_START_ADDR,reg_partition_size,TESTDRV_REG_PART_START_ADDR);
@@ -1567,9 +1641,19 @@ static void  sdio_test_init(void)
 	sdioDrv_ReadSyncBytes(TXN_FUNC_ID_WLAN, 0x16800 + 0x5676, (unsigned char *)&(ChipID)+2, 1, 0);
 	sdioDrv_ReadSyncBytes(TXN_FUNC_ID_WLAN, 0x16800 + 0x5677, (unsigned char *)&(ChipID)+3, 1, 0);
 
-    printk("Ya Hoo we just Read device ID via ReadByte: 0x%x\n", ChipID);
+    printk("Read device ID via ReadByte: 0x%x\n", ChipID);
 
-#if 0 /*Benzy: Generate Interrupt*/
+    /* for 1273 only init sequence in order to get access to the memory */
+    {
+        unsigned long base;
+        char   *cmd = "wr 6040 3";
+
+        base = sdio_test_get_base(cmd[1]);
+        sdio_test_write(&cmd[2], base, SdioSync, SDIO_BLOCK_NONE); 
+        cmd = "wr 6100 4";
+        sdio_test_write(&cmd[2], base, SdioSync, SDIO_BLOCK_NONE); 
+    }
+	
 	/* HI_CFG - host interrupt active high */
 	cmd = "wr 808 b8";
 	base = sdio_test_get_base(cmd[1]);
@@ -1577,38 +1661,6 @@ static void  sdio_test_init(void)
 	/* HINT_MASK - unmask all */
 	cmd = "wr 4dc FFFFFFFE";
 	sdio_test_write(&cmd[2], base, SdioSync, SDIO_BLOCK_NONE); 
-#endif
-#ifdef TNETW1283
-#ifdef SDIO_HIGH_SPEED
-	{
-		int            		iStatus;
-		unsigned char  		uByte;
-
-		uByte = 0;
-		PERR("sdioAdapt_ConnectBus: Set HIGH_SPEED bit on register 0x13\n");
-		/* CCCR 13 bit EHS(1) */
-		iStatus = sdioDrv_ReadSyncBytes (TXN_FUNC_ID_CTRL, 0xc0, &uByte, 1, 1);
-		PERR2("After r 0x%x, iStatus=%d \n", uByte, iStatus );
-		if (iStatus) { return; }
-	
-		uByte |= 0x1; /* set bit #1 EHS */
-		iStatus = sdioDrv_WriteSyncBytes (TXN_FUNC_ID_CTRL, 0xc0, &uByte, 1, 1);
-		PERR2("After w 0x%x, iStatus=%d \n", uByte, iStatus );
-		if (iStatus) { return; }
-	
-		iStatus = sdioDrv_ReadSyncBytes (TXN_FUNC_ID_CTRL, 0xc0, &uByte, 1, 1);
-		PERR2("After r 0x%x, iStatus=%d \n", uByte, iStatus );
-		if (iStatus) { return; }
-	
-		PERR1("After CCCR 0xc0, uByte=%d \n", (int)uByte );
-	
-		/*enable High speed on OMAP side*/
-		OMAP_HSMMC_WRITE( HCTL, OMAP_HSMMC_READ(HCTL) | 0x4);
-	
-		host_set_default_sdio_clk(1); /*2=24Mhz 96==1Mhz 240 = 400KHz*/
-	}
-#endif
-#endif
 
 } /* sdio_test_init() */
 
@@ -2483,7 +2535,7 @@ static int sdio_test_write_proc(struct file *file,
     unsigned long base;
     int j;
 	SdioSyncMode_e SyncMode;
-    ESdioBlockMode eBlockMode = SDIO_BLOCK_NONE;
+    ESdioBlockMode eBlockMode;
 	
 	if (buffer[2] == 'a' || buffer[2] == 'A')
 	{
@@ -2522,8 +2574,10 @@ static int sdio_test_write_proc(struct file *file,
              */
             divider = (divider << 6) | 5;
 
-            /* write to omap SYSCTL register */
-            omap_writel( divider, MMCHS_SYSCTL);
+            /* write to 3430 SYSCTL register */
+            omap_writel( divider, 0x480b412c);
+            //new 2430:__raw_writel(divider, IO_ADDRESS(OMAP_HSMMC2_BASE) + 0x012C);
+			//old 2430: OMAP_HSMMC_WRITE(SYSCTL, divider); 
         }
         break;
     case 'f':
@@ -2602,7 +2656,7 @@ static int sdio_test_write_proc(struct file *file,
 	case 'r':
 	case 'R':
 		base = sdio_test_get_base(buffer[1]);
-		sdio_test_read(&buffer[j], base, SdioSync, SDIO_BLOCK_NONE); 
+		sdio_test_read(&buffer[j], base, SyncMode, eBlockMode); 
 		break;
 
 	case 'w':
@@ -2616,15 +2670,9 @@ static int sdio_test_write_proc(struct file *file,
 		sdio_test_e(&buffer[j], buffer[1], SyncMode, eBlockMode); 
 		break;
 
-#if 0 
     case 'o':
 	case 'O':
 		sdio_access_omap(&buffer[j], buffer[1], SyncMode, eBlockMode); 
-		break;
-#endif
-	case 'o':
-	case 'O':
-		dumpreg();
 		break;
 
 	case 'q':
@@ -2654,6 +2702,7 @@ static int sdio_test_write_proc(struct file *file,
 		case 'C':
 			do_test_sync(TESTDRV_COMPARE_TEST);
 			break;
+
 		case 'f':
 		case 'F':
 			do_test_sync(TESTDRV_FUNC0_TEST);
@@ -2702,8 +2751,6 @@ static int sdio_test_write_proc(struct file *file,
 
 	case 'y':
 	case 'Y':
-           printk(KERN_ERR "\n MMCHS_SYSCONFIG   for mmc5 = %x  ", omap_readl( 0x4A100148 ));
-
 		sdio_test_init_connect_bus();
 		break;
 
@@ -2842,7 +2889,7 @@ static int sdio_test_read_proc(char *page, char **start, off_t off, int count, i
 
 /*--------------------------------------------------------------------------------------*/
 
-static irqreturn_t tiwlan_interrupt (int irq, void *not_used)
+static irqreturn_t tiwlan_interrupt (int irq, void *not_used, struct pt_regs *cpu_regs)
 {
     unsigned long base;
     char   *cmd = "wr 4f0 1";
@@ -2875,31 +2922,35 @@ static int  __init sdio_test_module_init(void)
 	mmc_api_file->data       = NULL;
 	mmc_api_file->read_proc  = (read_proc_t*)sdio_test_read_proc;
 	mmc_api_file->write_proc = (write_proc_t*)sdio_test_write_proc;
-	err = hPlatform_Wlan_Hardware_Init(); 
+	mmc_api_file->owner      = THIS_MODULE;
 
-	if (gpio_request(PMENA_GPIO, NULL) != 0) 	{
-	  printk(KERN_ERR "%s:%s FAILED to do to get gpio_request(PMENA_GPIO)\n",__FILE__,__FUNCTION__);
+	if (omap_request_gpio(PMENA_GPIO) != 0) 
+	{
+	  printk(KERN_ERR "%s:OMAP3430_TNETW_Power() omap_request_gpio FAILED\n",__FILE__);
 	  return -EINVAL;
 	}
-	gpio_direction_output(PMENA_GPIO, 0);
- 
-	if (gpio_request(IRQ_GPIO, NULL) != 0) 
-	{
-		printk(KERN_ERR "%s:%s FAILED to do to get gpio_request(IRQ_GPIO)\n",__FILE__,__FUNCTION__);
-		return -EINVAL;
-	};
-    gpio_direction_input(IRQ_GPIO);
+	printk("hPlatform_Wlan_Hardware_Init start\n");
+	err = hPlatform_Wlan_Hardware_Init(); 
+	printk("hPlatform_Wlan_Hardware_Init - %s\n", err ? "FAIL" : "SUCCESS");
 
 	sdio_test_reset();
+	printk("sdio_test_module_init: SDIO Test Reset OK\n");
+
 	memset(&g_sdio,0,sizeof(g_sdio));
 	sema_init(&g_sdio.sem, 0);
-    
+	if (omap_request_gpio(IRQ_GPIO) != 0) 
+    {
+	    printk(KERN_ERR "sdio_test_module_init() omap_request_gpio() FAILED !!\n");
+		return -EINVAL;
+	};
+	omap_set_gpio_direction(IRQ_GPIO, GPIO_DIR_INPUT);
+	/*	set_irq_type (TESTDRV_TIWLAN_OMAP2430_IRQ, OMAP_GPIO_FALLING_EDGE); */
+    /*  omap_set_gpio_edge_ctrl(IRQ_GPIO, OMAP_GPIO_FALLING_EDGE); */
 	if (request_irq (TNETW_IRQ, tiwlan_interrupt, IRQF_TRIGGER_FALLING, TESTDRV_MODULE_NAME, &g_sdio))
 	{
 	    printk("sdio_test_module_init() Failed to register interrupt handler!!\n");
 	}
 
-	simulate_prob();
 	printk("sdio_test_module_init: OK\n");
 
 	return init_buffers();
@@ -2921,8 +2972,8 @@ static void __exit sdio_test_module_exit(void)
 		kfree(read_buf);
 	}
 	free_irq(TNETW_IRQ, &g_sdio);
-	gpio_free(IRQ_GPIO);
-	gpio_free(PMENA_GPIO);
+	omap_free_gpio(IRQ_GPIO);
+	omap_free_gpio(PMENA_GPIO);
 	remove_proc_entry("sdio_test", NULL);
 
 } /* sdio_test_exit() */
@@ -2930,7 +2981,7 @@ static void __exit sdio_test_module_exit(void)
 /*--------------------------------------------------------------------------------------*/
 
 MODULE_AUTHOR("Texas Instruments");
-MODULE_DESCRIPTION("OMAP MMC Test");
+MODULE_DESCRIPTION("OMAP3430 MMC Test");
 MODULE_LICENSE("GPL");
 
 module_init(sdio_test_module_init);
