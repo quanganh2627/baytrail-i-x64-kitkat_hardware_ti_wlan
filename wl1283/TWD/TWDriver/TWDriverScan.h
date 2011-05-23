@@ -74,7 +74,7 @@ This file is included by the TWDriver.h , it should not be included apart. !!!!!
 #define SCAN_INITIATOR_GUI                                  2
 
 /* The following parameters are used in driver_ti for periodic scan*/
-#define PERIODIC_SCAN_MAX_SSID_NUM      					5
+#define PERIODIC_SCAN_MAX_SSID_NUM      					8
 #define PERIODIC_SCAN_MAX_INTERVAL_NUM  					16
 #define PERIODIC_SCAN_MAX_CHANNEL_NUM   					37 /* G-14 + A-23 */
 #define PERIODIC_SCAN_RSSI_THRESHOLD                        SME_SCAN_RSSI_THRESHOLD_DEF_NUM

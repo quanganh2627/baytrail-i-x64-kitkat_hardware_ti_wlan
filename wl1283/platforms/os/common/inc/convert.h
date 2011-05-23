@@ -141,6 +141,7 @@ typedef ESlotTime                           slotTime_e;
 typedef TRxDataFilterRequest                TIWLAN_DATA_FILTER_REQUEST;
 typedef TCuCommon_RxDataFilteringStatistics TIWLAN_DATA_FILTER_STATISTICS;
 typedef TScanParams                         scan_Params_t;
+typedef TPeriodicScanParams                 scan_PeriodicParams_t;
 typedef TScanNormalChannelEntry             scan_normalChannelEntry_t;
 typedef EScanEtCondition                    scan_ETCondition_e;
 typedef TScanSpsChannelEntry                scan_SPSChannelEntry_t;
