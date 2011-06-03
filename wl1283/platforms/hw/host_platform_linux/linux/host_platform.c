@@ -65,6 +65,9 @@ static int (*wifi_suspend_cb)(TI_HANDLE) = NULL;
 static int (*wifi_resume_cb)(TI_HANDLE) = NULL;
 static TI_HANDLE wifi_susres_ctx;
 
+#ifdef CONFIG_HAS_WAKELOCK
+static struct wake_lock wl_wifi_up; /* Wifi up wakelock */
+#endif
 
 static unsigned char charFF[4];
 static int wifi_probe(struct platform_device *pdev)
@@ -103,6 +106,11 @@ static int wifi_probe(struct platform_device *pdev)
 
 	complete(&wifi_ready);
 
+#ifdef CONFIG_HAS_WAKELOCK
+	wake_lock_init(&wl_wifi_up, WAKE_LOCK_SUSPEND, "wifi_up");
+	wake_lock(&wl_wifi_up);
+#endif
+
 	return 0;
 
 request_gpio_failed:
@@ -122,6 +130,12 @@ static int wifi_remove(struct platform_device *pdev)
 		printk(KERN_INFO "TIWLAN: Release GPIO %d\n", gpio);
 		gpio_free(gpio);
 	}
+
+#ifdef CONFIG_HAS_WAKELOCK
+	wake_unlock(&wl_wifi_up);
+	wake_lock_destroy(&wl_wifi_up);
+#endif
+
 	return 0;
 }
 
