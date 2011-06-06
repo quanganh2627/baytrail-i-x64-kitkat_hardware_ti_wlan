@@ -379,6 +379,8 @@ void smeSm_ConnectSuccess (TI_HANDLE hSme)
 
     pSme->uScanCount = 0;
 
+    sme_CleanSitesSelectionFlags(hSme);
+
     /* connection succedded to the connection candidate - start AP connection */
     if (BSS_INFRASTRUCTURE == pSme->pCandidate->bssType)
     {
@@ -444,6 +446,8 @@ void smeSm_DisconnectDone (TI_HANDLE hSme)
     TSme        *pSme = (TSme*)hSme;
     OS_802_11_DISASSOCIATE_REASON_T	    tEventReason;
 
+    sme_CleanSitesSelectionFlags(hSme);
+
     if (TI_FALSE == pSme->bReselect)
     {
         /* send an event notifying the disassocation */
@@ -500,6 +504,8 @@ void smeSm_StopConnect (TI_HANDLE hSme)
 {
     TSme        *pSme = (TSme*)hSme;
     TI_STATUS   tStatus;
+
+    sme_CleanSitesSelectionFlags(hSme);
 
     tStatus = conn_stop (pSme->hConn, DISCONNECT_DE_AUTH, STATUS_UNSPECIFIED,
                          TI_TRUE, sme_ReportConnStatus, hSme);

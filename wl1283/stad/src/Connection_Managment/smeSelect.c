@@ -250,6 +250,31 @@ TSiteEntry *sme_Select (TI_HANDLE hSme)
     return NULL;
 }
 
+/**
+* \fn     sme_CleanSitesSelectionFlags
+ * \brief  Clears all sites' bConsideredForSelect flags
+ *
+ * This function is called after the current connection process is finished, in order to
+ *     let the sites be selected in the next connection request.
+ *
+ * \param  hSme - handle to the SME object
+ * \return void
+ * \sa
+ */
+void sme_CleanSitesSelectionFlags(TI_HANDLE hSme)
+{
+    TSme        *pSme = (TSme *)hSme;
+    TSiteEntry  *pCurrentSite = NULL;
+
+    pCurrentSite = scanResultTable_GetFirst(pSme->hScanResultTable);
+
+    while (pCurrentSite != NULL)
+    {
+        pCurrentSite->bConsideredForSelect = TI_FALSE;
+        pCurrentSite = scanResultTable_GetNext (pSme->hScanResultTable);
+    }
+}
+
 /** 
  * \fn     sme_SelectSsidMatch
  * \brief  Check if a site SSID matches the desired SSID for selection

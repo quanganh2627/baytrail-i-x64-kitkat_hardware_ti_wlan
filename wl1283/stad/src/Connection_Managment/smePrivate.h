@@ -100,6 +100,6 @@ typedef struct
 } TSme;
 
 TSiteEntry *sme_Select (TI_HANDLE hSme);
-
+void sme_CleanSitesSelectionFlags(TI_HANDLE hSme);
 
 #endif /* __SME_PRIVATE_H__ */
