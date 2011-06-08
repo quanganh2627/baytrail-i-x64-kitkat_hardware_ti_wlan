@@ -446,11 +446,36 @@ static const struct sdio_device_id tiwl12xx_devices[] = {
 };
 MODULE_DEVICE_TABLE(sdio, tiwl12xx_devices);
 
+#ifdef CONFIG_SUSPEND
+
+int sdio_tiwlan_suspend(struct device *dev)
+{
+	return 0;
+}
+
+int sdio_tiwlan_resume(struct device *dev)
+{
+	return 0;
+}
+
+#else /* CONFIG_SUSPEND */
+#define sdio_tiwlan_suspend NULL
+#define sdio_tiwlan_resume  NULL
+#endif /* CONFIG_SUSPEND */
+
+const struct dev_pm_ops sdio_tiwlan_pmops = {
+	.suspend = sdio_tiwlan_suspend,
+	.resume = sdio_tiwlan_resume,
+};
+
 static struct sdio_driver tiwlan_sdio_drv = {
     .probe          = tiwlan_sdio_probe,
     .remove         = tiwlan_sdio_remove,
     .name           = "sdio_tiwlan",
     .id_table       = tiwl12xx_devices,
+    .drv = {
+		.pm     = &sdio_tiwlan_pmops,
+     },
 };
 
 static int __init sdioDrv_init(void)
