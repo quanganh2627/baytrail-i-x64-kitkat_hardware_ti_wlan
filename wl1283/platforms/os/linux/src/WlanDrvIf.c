@@ -1081,6 +1081,13 @@ static int wlanDrvIf_Suspend(TI_HANDLE hWlanDrvIf)
 	TPwrState     *pPwrState  = (TPwrState*) pWlanDrvIf->tCommon.hPwrState;
 	TI_STATUS      rc         = TI_OK;
 
+	disable_irq(pWlanDrvIf->irq);
+
+	if (work_pending(&pWlanDrvIf->tWork)) {
+		enable_irq(pWlanDrvIf->irq);
+		return -1;
+	}
+
 	pWlanDrvIf->bSuspendInProgress = TI_TRUE;
 
 	/*
@@ -1150,9 +1157,9 @@ static int wlanDrvIf_Suspend(TI_HANDLE hWlanDrvIf)
 	if (rc != TI_OK)
 	{
 		pWlanDrvIf->bSuspendInProgress = TI_FALSE;
-
 		os_WakeLockTimeoutEnable(pWlanDrvIf);
 		os_WakeLockTimeout(pWlanDrvIf);
+		enable_irq(pWlanDrvIf->irq);
 	}
 
 	/* on error, kernel will retry to suspend until it succeeds */
@@ -1179,6 +1186,8 @@ static int wlanDrvIf_Resume(TI_HANDLE hWlanDrvIf)
 	}
 
 	pWlanDrvIf->bSuspendInProgress = TI_FALSE;
+
+	enable_irq(pWlanDrvIf->irq);
 
 	return rc == TI_OK ? 0 : -1;
 }
