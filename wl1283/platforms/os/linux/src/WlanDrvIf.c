@@ -98,6 +98,13 @@ int wlanDrvIf_LoadFiles (TWlanDrvIfObj *drv, TLoaderFilesData *pInitFiles);
 static int wlanDrvIf_Suspend(TI_HANDLE hWlanDrvIf);
 static int wlanDrvIf_Resume(TI_HANDLE hWlanDrvIf);
 
+int wlanDrvIf_Suspended();
+
+int wlanDrvIf_Suspended()
+{
+		return pDrvStaticHandle->bSuspendInProgress;
+}
+
 
 /* linux/irq.h declarations */ 
 extern void disable_irq(unsigned int);

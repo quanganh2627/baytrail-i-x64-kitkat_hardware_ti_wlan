@@ -46,6 +46,7 @@
 #include "context.h"
 #include "timer.h"
 
+#include <linux/kernel.h>
 
 #define EXPIRY_QUE_SIZE  QUE_UNLIMITED_SIZE
 
@@ -78,6 +79,7 @@ typedef struct
 } TTimerInfo;	
 
 
+extern int wlanDrvIf_Suspended();
 
 
 /** 
@@ -528,7 +530,13 @@ void tmr_GetExpiry (TI_HANDLE hTimerInfo)
         return;
     }
 
-    /* Enter critical section */
+    if (wlanDrvIf_Suspended())
+    {
+        printk (KERN_ERR "### tmr_GetExpiry(): ERROR - suspending !\n");
+        return;
+    }
+
+   /* Enter critical section */
     context_EnterCriticalSection (pTimerModule->hContext);
 
     /* 
@@ -580,6 +588,12 @@ void tmr_HandleExpiry (TI_HANDLE hTimerModule)
     if (!pTimerModule)
     {
         WLAN_OS_REPORT (("tmr_HandleExpiry(): ERROR - NULL timer!\n"));
+        return;
+    }
+
+    if (wlanDrvIf_Suspended())
+    {
+        printk (KERN_ERR "### tmr_HandleExpiry(): ERROR - suspending !\n");
         return;
     }
 
