@@ -69,7 +69,6 @@ static TI_HANDLE wifi_susres_ctx;
 static struct wake_lock wl_wifi_up; /* Wifi up wakelock */
 #endif
 
-static unsigned char charFF[4];
 static int wifi_probe(struct platform_device *pdev)
 {
 	int i, ret = 0;
@@ -236,35 +235,6 @@ int hPlatform_DevicePowerOn (void)
 	/* let the mmc core finish enumeration + initialization before we continue */
 	printk(KERN_INFO "%s: waiting for completion\n", __func__);
 	wait_for_completion(&sdio_ready);
-
-	sdioDrv_ClaimHost(SDIO_WLAN_FUNC);
-	sdioDrv_EnableFunction(SDIO_WLAN_FUNC);
-	memset(charFF,0xFF,4);
-	sdioDrv_WriteSync(SDIO_WLAN_FUNC,  0, charFF, 4, 1, 0);
-	sdioDrv_DisableFunction(SDIO_WLAN_FUNC);
-	sdioDrv_ReleaseHost(SDIO_WLAN_FUNC);
-
-	init_completion(&sdio_ready);
-	sdioDrv_DetectChange();
-	wifi_control_data->set_power(0);
-	mdelay(500);
-
-	wifi_control_data->set_power(1);
-	/* New Power Up Sequence */
-	mdelay(15);
-	wifi_control_data->set_power(0);
-	mdelay(1);
-	wifi_control_data->set_power(1);
-	/* Should not be changed, 50 msec cause failures */
-	mdelay(100);
-
-	if(wifi_control_data->set_reset)
-		wifi_control_data->set_reset(0);
-
-	/* let the mmc core finish enumeration + initialization before we continue */
-	printk(KERN_INFO "%s: waiting for completion\n", __func__);
-	wait_for_completion(&sdio_ready);
-	
 	sdioDrv_ClaimHost(SDIO_WLAN_FUNC);
 
 	return 0;
