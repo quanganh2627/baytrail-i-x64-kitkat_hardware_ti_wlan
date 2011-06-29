@@ -1289,8 +1289,9 @@ TI_STATUS scanCncn_VerifyChannelsWithRegDomain (TI_HANDLE hScanCncn, UScanParams
             TRACE1(pScanCncn->hReport, REPORT_SEVERITY_ERROR, "scanCncn_VerifyChannelsWithRegDomain: uChannelNum = %d > MAX_NUMBER_OF_CHANNELS_PER_SCAN\n", uChannelNum);
             return TI_NOK;
         }
-        if (((puScanParams->tOneShotScanParams.band == RADIO_BAND_5_0_GHZ) && (TI_TRUE == bForceAPassive)) ||
-            ((puScanParams->tOneShotScanParams.band == RADIO_BAND_2_4_GHZ) && (TI_TRUE == bForceBGPassive)))
+        if ( ((puScanParams->tOneShotScanParams.band == RADIO_BAND_5_0_GHZ) && (TI_TRUE == bForceAPassive)) ||
+            ((puScanParams->tOneShotScanParams.band == RADIO_BAND_2_4_GHZ) && (TI_TRUE == bForceBGPassive)) ||
+            ((puScanParams->tOneShotScanParams.band == RADIO_BAND_DUAL) && ((TI_TRUE == bForceBGPassive) || (TI_TRUE == bForceAPassive)) ) )
         {
             puScanParams->tOneShotScanParams.scanType = PASSIVE_SCANNING;
         }
@@ -1329,7 +1330,8 @@ TI_STATUS scanCncn_VerifyChannelsWithRegDomain (TI_HANDLE hScanCncn, UScanParams
     
                 if ((puScanParams->tPeriodicScanParams.tChannels[ i ].eScanType == SCAN_TYPE_NORMAL_PASSIVE) ||
                 ((pParam->content.channelCapabilityReq.band == RADIO_BAND_5_0_GHZ) && (TI_TRUE == bForceAPassive)) ||
-                ((pParam->content.channelCapabilityReq.band == RADIO_BAND_2_4_GHZ) && (TI_TRUE == bForceBGPassive)))
+                ((pParam->content.channelCapabilityReq.band == RADIO_BAND_2_4_GHZ) && (TI_TRUE == bForceBGPassive)) ||
+                ((puScanParams->tOneShotScanParams.band == RADIO_BAND_DUAL) && ((TI_TRUE == bForceBGPassive) || (TI_TRUE == bForceAPassive)) ) )
                 {
                     pParam->content.channelCapabilityReq.scanOption = PASSIVE_SCANNING;
                 }
