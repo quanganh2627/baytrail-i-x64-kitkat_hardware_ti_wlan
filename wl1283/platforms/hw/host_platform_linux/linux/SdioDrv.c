@@ -320,6 +320,33 @@ int sdioDrv_SetBlockSize(unsigned int uFunc, unsigned int blksz)
 	return sdio_set_block_size(tiwlan_func[uFunc], blksz);
 }
 
+static int sdioDrv_polling_locked;
+static DECLARE_WAIT_QUEUE_HEAD(sdioDrv_waitunlockpoll);
+
+void sdioDrv_block_polling()
+{
+	while (sdioDrv_polling_locked) {
+		DECLARE_WAITQUEUE(wait, current);
+
+		add_wait_queue(&sdioDrv_waitunlockpoll, &wait);
+
+		set_current_state(TASK_INTERRUPTIBLE);
+		schedule();
+		set_current_state(TASK_RUNNING);
+		remove_wait_queue(&sdioDrv_waitunlockpoll, &wait);
+	}
+}
+void sdioDrv_set_polling_lock()
+{
+	sdioDrv_polling_locked = 1;
+}
+
+void sdioDrv_set_polling_lock_release()
+{
+	sdioDrv_polling_locked = 0;
+	wake_up_interruptible(&sdioDrv_waitunlockpoll);
+}
+
 void sdioDrv_ClaimHost(unsigned int uFunc)
 {
 	if (g_drv.sdio_host_claim_ref)
@@ -331,7 +358,9 @@ void sdioDrv_ClaimHost(unsigned int uFunc)
 
 	g_drv.sdio_host_claim_ref = 1;
 
-        sdio_claim_host(tiwlan_func[uFunc]);
+	sdioDrv_block_polling();
+
+	sdio_claim_host(tiwlan_func[uFunc]);
 }
 
 void sdioDrv_ReleaseHost(unsigned int uFunc)
@@ -347,6 +376,27 @@ void sdioDrv_ReleaseHost(unsigned int uFunc)
 
     sdio_release_host(tiwlan_func[uFunc]);
 }
+
+int tiwlan_sdio_pm_notify(struct notifier_block *notify_block,
+					unsigned long mode, void *unused)
+{
+	switch (mode) {
+	case PM_HIBERNATION_PREPARE:
+	case PM_SUSPEND_PREPARE:
+		pr_info("sdioDrv_set_polling_lock\n");
+		sdioDrv_set_polling_lock();
+		break;
+
+	case PM_POST_SUSPEND:
+	case PM_POST_HIBERNATION:
+		pr_info("sdioDrv_set_polling_lock_release\n");
+		sdioDrv_set_polling_lock_release();
+
+	}
+
+	return 0;
+}
+
 
 static int tiwlan_sdio_probe(struct sdio_func *func, const struct sdio_device_id *id)
 {
@@ -366,6 +416,8 @@ static int tiwlan_sdio_probe(struct sdio_func *func, const struct sdio_device_id
 	tiwlan_func[SDIO_WLAN_FUNC] = func;
 	tiwlan_func[SDIO_CTRL_FUNC] = func;
 	g_mmc_host_controller       = func->card->host;
+
+	g_mmc_host_controller->pm_notify.notifier_call = tiwlan_sdio_pm_notify;
 
         // memset(charFF,0xFF,16);
 	// sdioDrv_WriteSync(SDIO_CTRL_FUNC, 0, charFF, 16, 1, 0);
