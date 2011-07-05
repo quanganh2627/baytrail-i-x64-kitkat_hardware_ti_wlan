@@ -6,7 +6,7 @@ CHAABI_ROOT = hardware/intel/PRIVATE/chaabi
 
 ifeq ($(BUILD_WITH_CHAABI_SUPPORT),true)
 LOCAL_C_INCLUDES = \
-	$(CHAABI_ROOT)/Lib/inc
+	$(TARGET_OUT_HEADERS)/chaabi
 endif
 
 LOCAL_SRC_FILES:= \
