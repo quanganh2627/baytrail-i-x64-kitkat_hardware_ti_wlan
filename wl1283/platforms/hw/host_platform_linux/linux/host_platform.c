@@ -232,7 +232,10 @@ int hPlatform_DevicePowerOn (void)
 
 	/* let the mmc core finish enumeration + initialization before we continue */
 	printk(KERN_INFO "%s: waiting for completion\n", __func__);
-	wait_for_completion(&sdio_ready);
+	if (wait_for_completion_timeout(&sdio_ready, msecs_to_jiffies(2000)) == 0) {
+		printk(KERN_ERR "TIWLAN %s: Timeout waiting SDIO, giving up..\n", __func__);
+		return -1;
+	}
 	sdioDrv_ClaimHost(SDIO_WLAN_FUNC);
 
 	return 0;

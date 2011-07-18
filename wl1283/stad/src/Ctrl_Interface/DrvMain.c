@@ -1452,10 +1452,12 @@ static void drvMain_Sm (TI_HANDLE hDrvMain, ESmEvent eEvent)
 
             if(eStatus == TI_OK ) 
             {
-			
-                hPlatform_DevicePowerOn ();
                 pDrvMain->tFileInfo.eFileType = FILE_TYPE_NVS;
                 eStatus = wlanDrvIf_GetFile (hOs, &pDrvMain->tFileInfo);
+                /* The first place to try powering on: result is checked */
+                if(hPlatform_DevicePowerOn() != 0) {
+                    eStatus = TI_NOK;
+                }
             }
         }
         break;
