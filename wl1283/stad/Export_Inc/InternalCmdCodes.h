@@ -173,19 +173,11 @@ typedef enum
     REGULATORY_DOMAIN_GET_BAND_BY_REG_CLASS_PARAM       =           GET_BIT | REGULATORY_DOMAIN_MODULE_PARAM | 0x20,
     REGULATORY_DOMAIN_GET_CHANNELS_BY_REG_CLASS_PARAM   =           GET_BIT | REGULATORY_DOMAIN_MODULE_PARAM | 0x21,
     REGULATORY_DOMAIN_GET_REG_CLASS_BY_BAND_AND_CHANNEL =           GET_BIT | REGULATORY_DOMAIN_MODULE_PARAM | 0x22,
+    REGULATORY_DOMAIN_SUPPORTED_CHANNELS_ON_BAND        =           GET_BIT | REGULATORY_DOMAIN_MODULE_PARAM | 0x23,
+    REGULATORY_DOMAIN_GET_CHANNEL_CAPABILITY                =           GET_BIT | REGULATORY_DOMAIN_MODULE_PARAM | 0x24,
         
     /* measurement section */
      
-#ifdef XCC_MODULE_INCLUDED
-    /* XCC */    
-    XCC_ROGUE_AP_DETECTED                               = SET_BIT           | XCC_MANAGER_MODULE_PARAM | 0x02,
-    XCC_REPORT_ROGUE_APS                                = SET_BIT           | XCC_MANAGER_MODULE_PARAM | 0x03,
-    XCC_AUTH_SUCCESS                                    = SET_BIT           | XCC_MANAGER_MODULE_PARAM | 0x04,
-    XCC_CCKM_REQUEST                                    = SET_BIT           | XCC_MANAGER_MODULE_PARAM | 0x05,
-    XCC_CCKM_RESULT                                 = SET_BIT           | XCC_MANAGER_MODULE_PARAM | 0x06,
-    XCC_ENABLED                                     = SET_BIT | GET_BIT | XCC_MANAGER_MODULE_PARAM | 0x07,
-    XCC_CURRENT_AP_SUPPORTED_VERSION                =           GET_BIT | XCC_MANAGER_MODULE_PARAM | 0x08,
-#endif
 
     /* Roaming manager */
     

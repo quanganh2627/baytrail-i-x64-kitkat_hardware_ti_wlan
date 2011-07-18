@@ -405,7 +405,7 @@ void cmdBld_debugPrintPeriodicScanParams (TI_HANDLE hCmdBld, ConnScanParameters_
                                            pCommand->numOfActive[ 0 ]);
     TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "5.0 GHz Channels:\n");
     TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "-----------------\n");
-    TRACE3(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "Number of passive channels: %d, number of DFS channels: %d, number of active channels: %d\n", pCommand->numOfPassive[ 1 ], pCommand->numOfDfs, pCommand->numOfActive[ 2 ]);
+    TRACE3(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "Number of passive channels: %d, number of DFS channels: %d, number of active channels: %d\n", pCommand->numOfPassive[ 1 ], pCommand->numOfDfs, pCommand->numOfActive[ 1 ]);
     cmdBld_debugPrintPeriodicScanChannles (hCmdBld, &(pCommand->channelList[ CONN_SCAN_MAX_CHANNELS_BG ]),
                                            pCommand->numOfPassive[ 1 ] + 
                                            pCommand->numOfActive[ 1 ] +
@@ -858,7 +858,7 @@ TI_STATUS cmdBld_CmdTemplate (TI_HANDLE hCmdBld, TSetTemplate *pTemplateParams, 
 
     case ARP_RSP_TEMPLATE:
 		CMD_BLD_MARK_INIT_SEQUENCE_CMD_AS_VALID(hCmdBld, __CMD_ARP_RSP_JOIN);
-		eType = TEMPLATE_ARP_RSP;
+		eType = TEMPLATE_ARP;
         pTemplate = &(DB_TEMP(hCmdBld).ArpRsp); 
         break;
 

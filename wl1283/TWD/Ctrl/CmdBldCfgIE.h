@@ -83,6 +83,7 @@ TI_STATUS cmdBld_CfgIeGenFwCmd                  (TI_HANDLE hCmdBld, TI_UINT8  *p
 TI_STATUS cmdBld_CfgIeHostIfCfgBitmap           (TI_HANDLE hCmdBld, TI_UINT32 uHostIfCfgBitmap, void *fCb, TI_HANDLE hCb);
 TI_STATUS cmdBld_CfgIeCtsProtection            	(TI_HANDLE hCmdBld, TI_UINT8 uCtsToSelf, void *fCb, TI_HANDLE hCb);
 TI_STATUS cmdBld_CfgIeBcnBrcOptions            	(TI_HANDLE hCmdBld, TPowerMgmtConfig *pPMConfig, void *fCb, TI_HANDLE hCb);
+TI_STATUS cmdBld_CfgIeEnableBroadcasts (TI_HANDLE hCmdBld, TI_UINT8 disableBroadcasts, void *fCb, TI_HANDLE hCb);
 TI_STATUS cmdBld_CfgIePsWmm                    	(TI_HANDLE hCmdBld, TI_BOOL bEnableWA, void *fCb, TI_HANDLE hCb);
 TI_STATUS cmdBld_CfgIeRssiSnrTrigger           	(TI_HANDLE hCmdBld, RssiSnrTriggerCfg_t *pTriggerParam, void *fCb, TI_HANDLE hCb);
 TI_STATUS cmdBld_CfgIeRssiSnrWeights           	(TI_HANDLE hCmdBld, RssiSnrAverageWeights_t *pWeightsParam, void *fCb, TI_HANDLE hCb);

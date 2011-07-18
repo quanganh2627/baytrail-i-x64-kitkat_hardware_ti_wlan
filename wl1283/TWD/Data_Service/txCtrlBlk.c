@@ -127,7 +127,7 @@ TI_STATUS txCtrlBlk_Init (TI_HANDLE hTxCtrlBlk, TI_HANDLE hReport, TI_HANDLE hCo
 {
     TTxCtrlBlkObj *pTxCtrlBlk = (TTxCtrlBlkObj *)hTxCtrlBlk;
     TTxnStruct    *pTxn;
-    TI_UINT8       entry;
+	TI_UINT32       entry;
 
     pTxCtrlBlk->hReport  = hReport;
     pTxCtrlBlk->hContext = hContext;

@@ -253,14 +253,14 @@ TSiteEntry *sme_Select (TI_HANDLE hSme)
 /**
 * \fn     sme_CleanSitesSelectionFlags
  * \brief  Clears all sites' bConsideredForSelect flags
- *
+ * 
  * This function is called after the current connection process is finished, in order to
  *     let the sites be selected in the next connection request.
- *
+ * 
  * \param  hSme - handle to the SME object
  * \return void
- * \sa
- */
+ * \sa     
+ */ 
 void sme_CleanSitesSelectionFlags(TI_HANDLE hSme)
 {
     TSme        *pSme = (TSme *)hSme;

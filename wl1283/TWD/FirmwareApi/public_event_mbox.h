@@ -108,8 +108,11 @@ typedef enum
 
     PERIODIC_SCAN_COMPLETE_EVENT_ID          = BIT_28,
     PERIODIC_SCAN_REPORT_EVENT_ID            = BIT_29,
-
+#ifdef HOST_CONTROL_RX_BA_SESSION
+    BA_SESSION_RX_CONSTRAINT                 = BIT_30,
+#else
     BA_SESSION_TEAR_DOWN_EVENT_ID	         = BIT_30,
+#endif
 
     EVENT_MBOX_ALL_EVENT_ID                  = MAX_POSITIVE32
 } EventMBoxId_e;
@@ -145,19 +148,27 @@ typedef enum
 {
     TEST1_DBG_EVENT_ID = 0,
     TEST2_DBG_EVENT_ID = 0x11,
-    LAST_DBG_EVENT_ID= 0xff
+    LAST_DBG_EVENT_ID= MAX_POSITIVE8
 }dbgEventId_enum;
 
+typedef enum
+{
+    RX_BA_SESSION_NOT_ALLOWED   = 0,
+    RX_BA_SESSION_ALLOWED       = 1,
+    RX_BA_SESSION_NUM_OF_STATES = MAX_POSITIVE8
+}RxBaSessionState_enum;
 #ifdef HOST_COMPILE
 typedef uint8 ScheduledScanReportStatus_e;
 typedef uint8 ChannelSwitchReportStatus_e;
 typedef uint8 EventsPowerSave_e;
 typedef uint8 dbgEventId_e;
+typedef uint8 RxBaSessionState_e;
 #else
 typedef ScheduledScanReportStatus_enum ScheduledScanReportStatus_e;
 typedef ChannelSwitchReportStatus_enum ChannelSwitchReportStatus_e;
 typedef EventsPowerSave_enum EventsPowerSave_e;
 typedef dbgEventId_enum dbgEventId_e;
+typedef RxBaSessionState_enum RxBaSessionState_e;
 #endif
 
 
@@ -180,6 +191,23 @@ typedef struct
     uint32      scheduledScanStatus;   /* [0-7] scan completed status, [8-23] Attended Channels map, [24-31] reserved. */
 } scanCompleteResults_t;
 
+
+#ifdef HOST_CONTROL_RX_BA_SESSION
+//BA_SESSION_RX_CONSTRAINT struct 
+
+typedef struct
+{
+    uint8                   roleId;    /* Bitmap – Each bit set represents the Role ID for which this constraint is set.
+                                          Range: 0 – FF, FF means ANY role */
+    uint8                   hLid;      /* Bitmap – Each bit set represents the Link ID for which this constraint is set
+                                          Not applicable if Role ID is set to ANY role (FF)
+                                          Range: 0 – FFFF, FFFF means ANY link in that role */
+    RxBaSessionState_e      state;     /* RX BA constraint value. Values: ALLOWED / DISALLOWED */
+    uint8                   padding;
+
+} BaSessionRxConstraint_t;
+
+#endif
 /*************************************************************************
 
   The Event Mailbox structure in memory 
@@ -224,10 +252,21 @@ typedef struct EventMailBox_t
     uint8  psStatus;                        /* refer to EventsPowerSave_enum.*/
                                             /* [PS_REPORT_EVENT_ID].*/
 
+#ifdef HOST_CONTROL_RX_BA_SESSION
+    uint8  hlidRemoved;                     /* HLID of the removed station*/
     
+    uint16 stationsAgingStatus;             /* A bitmap of the stations (by HLID) which have aged */
 
+    uint16 stationTxRetryExceeded;          /* A bitmap of stations (by HLID) which have max Tx retry exceeded  */
+    
+    BaSessionRxConstraint_t BaSessionRxConstraint; /*contains the role/link on whom to 
+                                                   enable/disable Rx BA session */
+    
+    uint8  padding[20];                     /* for alignment to 32 bits boundry*/
+
+#else
     uint8  padding[29];                     /* for alignment to 32 bits boundry*/
-
+#endif
     
 } EventMailBox_t;
 

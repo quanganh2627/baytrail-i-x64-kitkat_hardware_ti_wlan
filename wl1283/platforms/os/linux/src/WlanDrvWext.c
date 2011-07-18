@@ -146,9 +146,6 @@ static struct iw_handler_def tWextIf = {
 /* Initialite WEXT support - Register callbacks in kernel */
 void wlanDrvWext_Init (struct net_device *dev)
 {
-#ifdef  HOST_PLATFORM_OMAP2430
-   	dev->get_wireless_stats = wlanDrvWext_GetWirelessStats;
-#endif
 	dev->wireless_handlers = &tWextIf;
 
 }
@@ -346,7 +343,8 @@ int wlanDrvWext_Handler (struct net_device *dev,
      {
          TI_UINT16 ie_length = ((union iwreq_data *)iw_req)->data.length;
          TI_UINT8 *ie_content = ((union iwreq_data *)iw_req)->data.pointer;
-         if (ie_length == 0) {
+
+         if ((ie_length == 0) && (ie_content == NULL)) {
                  /* Do nothing, deleting the IE */
          } else if ((ie_content != NULL) && (ie_length <= RSN_MAX_GENERIC_IE_LENGTH) && (ie_length > 0)) { 
                  /* One IE cannot be larger than RSN_MAX_GENERIC_IE_LENGTH bytes */

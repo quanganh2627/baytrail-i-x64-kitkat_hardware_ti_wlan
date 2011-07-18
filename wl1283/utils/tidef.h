@@ -438,13 +438,6 @@ typedef TI_UINT32                   TI_BOOL;
  */
 typedef TI_UINT32                   TI_STATUS;
 /**
- * \typedef TMacAddr
- * \brief MAC Address Type
- * \n
- * A buffer (size of Standart MAC Address Length in bytes) which holds a MAC address
- */
-typedef TI_UINT8                    TMacAddr [MAC_ADDR_LEN];
-/**
  * \typedef TIpAddr
  * \brief IP V4 Address Type
  * \n

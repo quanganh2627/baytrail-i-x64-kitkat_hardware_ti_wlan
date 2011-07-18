@@ -1737,6 +1737,7 @@ static TI_STATUS hwInit_FinalizeDownloadSm (TI_HANDLE hHwInit)
             if (pHwInit->uFinLoop >= FIN_LOOP)
             {
                 TRACE0(pHwInit->hReport, REPORT_SEVERITY_ERROR , "Timeout waiting for the hardware to complete initialization\n");
+				pHwInit->uFinStage = 0;
 
                 pHwInit->DownloadStatus = TXN_STATUS_ERROR;
                 EXCEPT (pHwInit, TXN_STATUS_ERROR);

@@ -125,6 +125,9 @@ typedef struct _currBSS_t
     triggerDesc_t aTriggersDesc[MAX_NUM_OF_RSSI_SNR_TRIGGERS]; /* static table to be used for trigger event registration*/
     TI_UINT8	  RoamingOperationalMode;                      /* 0 - manual , 1 - Auto */
 
+    TI_UINT8	uEventsBitMask;			/**< Saved as current state upon suspend, and enables return to this state at resume */
+    TI_BOOL		bEventMaskChanged;		/**< Defines whether the mask has changed on suspend */
+
 
     TI_BOOL     bRRMEnabled;
 

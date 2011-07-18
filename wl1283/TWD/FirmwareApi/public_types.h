@@ -332,8 +332,39 @@ typedef ETxRateClassId TxRateIndex_t;
 #define TNETW1251_CHIP_ID_PG1_2	        0x07030101
 #define TNETW1273_CHIP_ID_PG1_0	        0x04030101
 #define TNETW1273_CHIP_ID_PG1_1	        0x04030111 
+#define TNETW1283_CHIP_ID_PG1_0	        0x05030101 
+#define TNETW1283_CHIP_ID_PG1_1	        0x05030111 
 
 #define CHECK_CHIP_ID(chipId) (CHIP_ID_B == chipId)
+
+#ifdef TNETW1273
+
+typedef enum
+{
+    PG_VERSION_2_0 = 1 , //fuse data value for PG 2 
+    PG_VERSION_2_1 = 2 ,   
+    PG_VERSION_3_0 = 3,
+    PG_VERSION_3_1 = 7,
+    PG_VERSION_3_2 = 11,
+    PG_VERSION_3_3 = 15
+} PGVersion_e;
+
+#define IsPGVersionGreaterThanPG2()(gPGInfo > PG_VERSION_2_1)
+#endif
+
+#ifdef TNETW1283
+
+typedef enum
+{
+    PG_VERSION_2_1 = 2 , 
+    PG_VERSION_2_21 = 6,
+    PG_VERSION_3 = 3
+} PGVersion_e;
+
+#endif
+
+
+
 
 /******************************************************************************
 Enable bits for SOC1251 PG1.2

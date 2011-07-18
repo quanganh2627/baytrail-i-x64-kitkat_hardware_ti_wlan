@@ -1569,7 +1569,7 @@ static TI_STATUS __cmd_arp_rsp (TI_HANDLE hCmdBld)
    return cmdBld_CmdIeConfigureTemplateFrame (hCmdBld, 
                                                    NULL, 
                                                    DB_WLAN(hCmdBld).ArpRspTemplateSize,
-                                                   TEMPLATE_ARP_RSP,
+                                                   TEMPLATE_ARP,
                                                    0,
                                                    (void *)cmdBld_ConfigSeq,
                                                    hCmdBld);
@@ -1586,7 +1586,7 @@ static TI_STATUS __cmd_arp_rsp_join (TI_HANDLE hCmdBld)
         return cmdBld_CmdIeConfigureTemplateFrame (hCmdBld, 
                                                    &(DB_TEMP(hCmdBld).ArpRsp), 
                                                    DB_TEMP(hCmdBld).ArpRsp.Size,
-                                                   TEMPLATE_ARP_RSP,
+                                                   TEMPLATE_ARP,
                                                    0,
                                                    (void *)cmdBld_ConfigSeq,
                                                    hCmdBld);

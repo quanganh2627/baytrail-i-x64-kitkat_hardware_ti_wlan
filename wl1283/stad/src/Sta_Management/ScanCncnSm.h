@@ -69,7 +69,7 @@ typedef struct
     TI_BOOL                 bScanCompletePending; /* TRUE if scan complete event is received
                                                     before all results, for periodic scan */
     TI_BOOL                 bInRequest;
-    TI_BOOL                 bSuspended;           /* whether this client was suspended and should be resumed */
+    TI_BOOL                 bSuspended;           /* true from the moment client starts suspending, until it finishes resuming */
     
     TScanPrivateSMFunction  fScrRequest;
     TScanPrivateSMFunction  fScrRelease;
@@ -90,7 +90,7 @@ typedef struct
 	TI_BOOL					bScanRejectedOn2_4;
     TI_BOOL                 bCurrentlyRunning; /* Required since two scans can run at the same time,
                                                 * If one is periodic and one is one-shot */
-
+    EScanResultTag 			eScanTag;
 } TScanCncnClient;
 
 typedef enum
@@ -119,7 +119,7 @@ void        scanCncnSm_Init                 (TI_HANDLE hScanCncnClient, TStadHan
 											 TScanPrivateSMFunction fScrRequest,
                                              TScanPrivateSMFunction fScrRelease, TScanPrivateSMFunction fStartScan, 
                                              TScanPrivateSMFunction fStopScan, TScanPrivateSMFunction fRecovery, 
-                                             TI_INT8* pScanSmName);
+                                             TI_INT8* pScanSmName, EScanResultTag eScanTag);
 void        scanCncnSm_Destroy              (TI_HANDLE hScanCncnClient);
 void        scanCncnSmApp1Shot_ScrRequest      (TI_HANDLE hScanCncnClient);
 void        scanCncnSmApp1Shot_ScrRelease      (TI_HANDLE hScanCncnClient);
@@ -133,6 +133,7 @@ void        scanCncnSmDrvP_ScrRequest       (TI_HANDLE hScanCncnClient);
 void        scanCncnSmDrvP_ScrRelease       (TI_HANDLE hScanCncnClient);
 void        scanCncnSmDrvP_StartScan        (TI_HANDLE hScanCncnClient);
 void        scanCncnSmDrvP_StopScan         (TI_HANDLE hScanCncnClient);
+void        scanCncnSmDrvP_Recovery         (TI_HANDLE hScanCncnClient);
 void        scanCncnSmCont1Shot_ScrRequest     (TI_HANDLE hScanCncnClient);
 void        scanCncnSmCont1Shot_ScrRelease     (TI_HANDLE hScanCncnClient);
 void        scanCncnSmCont1Shot_StartScan      (TI_HANDLE hScanCncnClient);

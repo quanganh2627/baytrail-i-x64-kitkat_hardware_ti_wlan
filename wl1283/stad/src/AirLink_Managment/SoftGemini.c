@@ -560,8 +560,8 @@ void SoftGemini_printParams(TI_HANDLE hSoftGemini)
     WLAN_OS_REPORT(("[36]: coexWlanActiveMaxBtAclBr = %d (msec)\n", SoftGeminiParam->coexParams[SOFT_GEMINI_WLAN_ACTIVE_MAX_BT_ACL_BR]));
     WLAN_OS_REPORT(("[37]: coexHv3AutoEnlargePassiveScanWindowPercent = %d (%)\n", SoftGeminiParam->coexParams[SOFT_GEMINI_PASSIVE_SCAN_DURATION_FACTOR_HV3]));
     WLAN_OS_REPORT(("[38]: coexA2DPAutoEnlargePassiveScanWindowPercent = %d (%) \n", SoftGeminiParam->coexParams[SOFT_GEMINI_PASSIVE_SCAN_DURATION_FACTOR_A2DP]));
-    WLAN_OS_REPORT(("[39]: coexPassiveScanA2dpBtTime  = %d (msec)\n", SoftGeminiParam->coexParams[SOFT_GEMINI_PASSIVE_SCAN_A2DP_BT_TIME]));
-    WLAN_OS_REPORT(("[40]: coexPassiveScanA2dpWlanTime = %d (msec)\n", SoftGeminiParam->coexParams[SOFT_GEMINI_PASSIVE_SCAN_A2DP_WLAN_TIME]));
+    WLAN_OS_REPORT(("[39]: coexPassiveScanA2dpBtTime  = %d (msec)\n", SoftGeminiParam->coexParams[SOFT_GEMINI_PASSIVE_SCAN_BT_TIME]));
+    WLAN_OS_REPORT(("[40]: coexPassiveScanA2dpWlanTime = %d (msec)\n", SoftGeminiParam->coexParams[SOFT_GEMINI_PASSIVE_SCAN_WLAN_TIME]));
 	WLAN_OS_REPORT(("[41]: CoexHv3MaxServed = %d \n", SoftGeminiParam->coexParams[SOFT_GEMINI_HV3_MAX_SERVED]));
 	WLAN_OS_REPORT(("[42]: coexDhcpTime = %d (msec)\n", SoftGeminiParam->coexParams[SOFT_GEMINI_DHCP_TIME]));
 	WLAN_OS_REPORT(("[43]: coexA2dpAutoScanEnlargedScanWinodowPercent = %d (%)\n", SoftGeminiParam->coexParams[SOFT_GEMINI_ACTIVE_SCAN_DURATION_FACTOR_A2DP]));

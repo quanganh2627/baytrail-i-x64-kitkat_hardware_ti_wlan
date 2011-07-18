@@ -44,16 +44,18 @@
 #include <linux/completion.h>
 #include <linux/netdevice.h>
 #include <linux/workqueue.h>
+//#include <mach/gpio.h>
+#ifdef CONFIG_HAS_WAKELOCK
+#include <linux/wakelock.h>
+#endif
 #include "tidef.h"
 #include "WlanDrvCommon.h"
 #include "paramOut.h"
 #include "DrvMain.h"
 #include "windows_types.h"
-#ifdef CONFIG_HAS_WAKELOCK
-#include <linux/wakelock.h>
-#endif
 
 #define TIWLAN_DRV_NAME    "tiwlan"
+#define DRIVERWQ_NAME      "tiwlan_wq"
 #define TIWLAN_DRV_IF_NAME TIWLAN_DRV_NAME"%d"
 
 
@@ -102,9 +104,8 @@ typedef struct
     TWlanDrvIfCommon         tCommon;   /* The driver object common part */
 
     int                      irq;       /* The OS IRQ handle */
-    int                      irq_wake;  /* IRQ wake flag */
 	unsigned long 			 irq_flags; /* The IRQ flags */
-    struct workqueue_struct *pWorkQueue;/* The OS work queue */
+    struct workqueue_struct *tiwlan_wq; /* Work Queue */
     struct work_struct       tWork;     /* The OS work handle. */
     spinlock_t               lock;      /* The OS spinlock handle. */
     unsigned long            flags;     /* For saving the cpu flags during spinlock */

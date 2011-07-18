@@ -907,24 +907,24 @@ TI_STATUS cmdBld_CmdIeApDiscovery (TI_HANDLE hCmdBld, TApDiscoveryParams *pApDis
 
     for(i=0; i < pApDiscoveryParams->channelListBandBG.uActualNumOfChannels; i++)
     {
-        pCmd->channelParamsBandBG[i].channel = pApDiscoveryParams->channelListBandBG.channelList[i];
-        pCmd->channelParamsBandBG[i].txPowerAttenuation = pApDiscoveryParams->channelListBandBG.txPowerDbm[i];
-        pCmd->channelParamsBandBG[i].padding = 0;
+        pCmd->channelBG[i].channel = pApDiscoveryParams->channelListBandBG.channelList[i];
+        pCmd->channelBG[i].txPowerAttenuation = pApDiscoveryParams->channelListBandBG.txPowerDbm[i];
+        pCmd->channelBG[i].padding = 0;
 
         TRACE3(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, "cmdBld_CmdIeApDiscovery: BG Channel[%d]=%d , txpower = %d \n",
-               i, pCmd->channelParamsBandBG[i].channel, pCmd->channelParamsBandBG[i].txPowerAttenuation);
+               i, pCmd->channelBG[i].channel, pCmd->channelBG[i].txPowerAttenuation);
 
     }
 
     for(i=0; i < pApDiscoveryParams->channelListBandA.uActualNumOfChannels; i++)
     {
-        pCmd->channelParamsBandA[i].channel = pApDiscoveryParams->channelListBandA.channelList[i];
-        pCmd->channelParamsBandA[i].txPowerAttenuation = pApDiscoveryParams->channelListBandA.txPowerDbm[i];
-        pCmd->channelParamsBandA[i].padding = 0;
+        pCmd->channelA[i].channel = pApDiscoveryParams->channelListBandA.channelList[i];
+        pCmd->channelA[i].txPowerAttenuation = pApDiscoveryParams->channelListBandA.txPowerDbm[i];
+        pCmd->channelA[i].padding = 0;
 
 
         TRACE3(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, "cmdBld_CmdIeApDiscovery: A Channel[%d]=%d, txpower = %d \n" ,
-               i, pCmd->channelParamsBandA[i].channel, pCmd->channelParamsBandA[i].txPowerAttenuation);
+               i, pCmd->channelA[i].channel, pCmd->channelA[i].txPowerAttenuation);
     }
 
     pCmd->numOfChannelsBandBG = pApDiscoveryParams->channelListBandBG.uActualNumOfChannels;
@@ -1156,6 +1156,10 @@ TI_STATUS cmdBld_CmdIeTest (TI_HANDLE hCmdBld, void *fCb, TI_HANDLE hCb, TTestCm
 		case TEST_CMD_RX_PLT_ENTER:
 		case TEST_CMD_RX_PLT_EXIT:
 			paramLength = 0;
+			break;
+
+        case TEST_CMD_INTERNAL_FW_TEST_AUTOMATION:
+            paramLength = sizeof(TInternalTestAutomation);
 			break;
 
         case TEST_CMD_SET_NVS_VERSION:

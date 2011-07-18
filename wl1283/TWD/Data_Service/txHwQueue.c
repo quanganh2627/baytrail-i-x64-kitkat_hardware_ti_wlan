@@ -340,7 +340,7 @@ ETxHwQueStatus txHwQueue_AllocResources (TI_HANDLE hTxHwQueue, TTxCtrlBlk *pTxCt
 
     uTotalLength = pTxCtrlBlk->tTxDescriptor.length + 20 + MAX_HEADER_SIZE - ETHERNET_HDR_LEN;
 #ifdef TNETW1283
-    if (pTxHwQueue->uHostIfCfgBitmap & HOST_IF_CFG_BITMAP_TX_PAD_TO_SDIO_BLK)
+    if (pTxHwQueue->uHostIfCfgBitmap & HOST_IF_CFG_BITMAP_TX_PAD_SDIO)
     {
         TI_UINT32 uBlockMask = ((1 << pTxHwQueue->uSdioBlkSizeShift) - 1);
         uTotalLength = (uTotalLength + uBlockMask) & (~uBlockMask);

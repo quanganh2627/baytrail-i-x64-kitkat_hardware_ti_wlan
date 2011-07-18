@@ -28,9 +28,9 @@ TXN         := $(DK_ROOT)/Txn
 FW ?= 1283
 
 #
-# Compile with XCC support or not
+# Compile with kkk support or not
 #
-XCC ?= n
+kkk ?= n
 
 
 #
@@ -71,6 +71,8 @@ FPGA ?= n
 #
 TI_TRACE_BUFFER ?= n
 
+SDIO_TYPE ?= standard
+
 ##
 ##
 ## Driver Compilation Directives
@@ -88,12 +90,16 @@ endif
 ifeq "$(HOST_PLATFORM)" "zoom1"
 	DK_DEFINES += -D HOST_PLATFORM_ZOOM1
 endif
+ifeq "$(HOST_PLATFORM)" "standard_bus"
+	DK_DEFINES += -D STANDARD_BUS
+endif
 ifeq "$(HOST_PLATFORM)" "sdc4430"	
 	DK_DEFINES += -D HOST_PLATFORM_SDC4430
 endif
 
-ifeq ($(XCC),y)
-    DK_DEFINES += -D XCC_MODULE_INCLUDED
+
+ifeq ($(kkk),y)
+    DK_DEFINES += -D kkk_MODULE_INCLUDED
 endif
 
 ifeq ($(GEM),y)
@@ -102,6 +108,10 @@ endif
 
 ifeq ($(INTR),n)
     DK_DEFINES += -D PRIODIC_INTERRUPT
+endif    
+
+ifeq ($(ENABLE_TRACES),y)
+    EXTRA_CFLAGS += -D ENABLE_TRACES
 endif    
 
 ifeq ($(DEBUG),y)
@@ -131,6 +141,13 @@ endif
 # WPS Support
 DK_DEFINES += -D SUPPL_WPS_SUPPORT
 
+# FixMe:
+# Flag to support level based interrupt in OMAP
+# till the ISR issue is resolved
+ifeq ($(OMAP_LEVEL_INT),y)
+DK_DEFINES += -D OMAP_LEVEL_INT
+endif
+
 ##
 ##
 ## Platform Compilation Directives
@@ -140,18 +157,14 @@ DK_DEFINES += -D SUPPL_WPS_SUPPORT
 #
 # Bus Driver
 #
-ifeq ($(WSPI),y)
-    BUS_DRV = spi
-    BUS_DRV_REMOVE = sdio
-    BUS_DRIVER_MODULE = spi.ko
-    PFORM_DEFINES += -D WSPI
+ifeq ($(HOST_PLATFORM),sdc4430)
+	BUS_DRV = standard_sdio
 else
-    BUS_DRV = standard_sdio
-    BUS_DRV_REMOVE = spi
-    BUS_DRV = standard_sdio
+    BUS_DRV = sdio
+endif
+
     BUS_DRV_REMOVE = spi
     BUS_DRIVER_MODULE = sdio.ko
-endif
 
 ifeq ($(INFO),y)
     PFORM_DEFINES += -D OS_INFO_MESSAGES
@@ -182,6 +195,10 @@ endif
 
 ifeq ($(USE_IRQ_ACTIVE_HIGH),y)
     PFORM_DEFINES += -D USE_IRQ_ACTIVE_HIGH
+endif
+
+ifeq ($(SUPPL), WPA)
+DK_DEFINES += -D SUPPL_WPS_SUPPORT
 endif
 
 ##

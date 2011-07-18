@@ -83,6 +83,9 @@ TI_STATUS eventMbox_ReplaceEvent	(TI_HANDLE hEventMbox,
                                      TI_HANDLE  *pPrevHndl);                                
 TI_STATUS eventMbox_UnMaskEvent		(TI_HANDLE hEventMbox, TI_UINT32 EvID, void *fCb, TI_HANDLE hCb);
 TI_STATUS eventMbox_MaskEvent		(TI_HANDLE hEventMbox, TI_UINT32 EvID, void *fCb, TI_HANDLE hCb);
+TI_STATUS eventMbox_UnMaskEvents	(TI_HANDLE hEventMbox, TI_UINT32 EvIDs[], TI_UINT32 uNumEvents, void* fCb, TI_HANDLE hCb);
+TI_STATUS eventMbox_MaskEvents		(TI_HANDLE hEventMbox, TI_UINT32 EvIDs[], TI_UINT32 uNumEvents, void* fCb, TI_HANDLE hCb);
+TI_UINT32 eventMbox_GetEventsMask	(TI_HANDLE hEventMbox);
 ETxnStatus      eventMbox_Handle		   	(TI_HANDLE hEventMbox, FwStatus_t *pFwStatus);
 #ifdef TI_DBG
 TI_STATUS eventMbox_Print           (TI_HANDLE hEventMbox);

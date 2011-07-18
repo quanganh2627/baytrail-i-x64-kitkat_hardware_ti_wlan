@@ -4,6 +4,10 @@
 ## Application Make Flags
 ##
 ##
+#
+# Adds R&D and Testing scirpts to package
+#
+ADDONS ?= y
 
 #
 # Statically link the CU
@@ -21,12 +25,9 @@ BUILD_SUPPL ?= n
 SUPPL ?= ANDROID
 
 #
-# XCC
+# kkk
 # 
-XCC ?= n
-#ifeq ($(XCC),y)
-#	SUPPL = DEVICESCAPE
-#endif
+kkk ?= n
 
 #
 # FW
@@ -39,11 +40,6 @@ FW ?= 1283
 FULL_ASYNC ?= n
 
 #
-# Build bmtrace performance tool
-# 
-BMTRACE ?= n
-
-#
 # Full Async Mode
 # 
 USE_IRQ_ACTIVE_HIGH ?= n
@@ -53,15 +49,38 @@ USE_IRQ_ACTIVE_HIGH ?= n
 #
 TEST ?= n
 
-#
-# Eth Support
-#
-ETH_SUPPORT ?= n
+ETH_SUPPORT ?=y
 
+BUILD_LOGGER ?= y
 #
-# Debug
+# SDIO External kernel module
 #
-DEBUG ?= y
+SDIO_KERNEL_MODULE ?= n
+
+# The default Cross compile for the WLAN driver 
+CROSS_COMPILE ?= arm-eabi-
+
+# The default Cross compile for the WLAN apps 
+CROSS_COMPILE_USER_SPACE ?= arm-none-linux-gnueabi-
+
+# By default, the WLAN apps will not be built
+USE_ANDROID_APPS_ONLY ?= y
+
+
+# This var defines the PRINTF_ROLLBACK flag 
+ENABLE_TRACES ?= y
+
+#if users asks to use Android apps only, do not build the supplicant
+ifeq ($(USE_ANDROID_APPS_ONLY),y)
+	override BUILD_SUPPL = n
+	override SUPPL = ANDROID
+endif
+
+ifeq ($(HOST_PLATFORM),sdc4430)
+OMAP_LEVEL_INT = y
+else
+OMAP_LEVEL_INT = n
+endif
 
 ##
 ##

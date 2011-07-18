@@ -278,10 +278,12 @@ static TI_STATUS rsnWait_to_connected(void *pData)
     currBSS_updateConnectedState(pConn->hCurrBss, TI_TRUE, BSS_INDEPENDENT);
 
     WLAN_OS_REPORT(("************ NEW CONNECTION ************\n"));
+#ifdef TI_DBG    
     siteMgr_printPrimarySiteDesc(pConn->hSiteMgr);
+#endif
     WLAN_OS_REPORT(("****************************************\n"));
-
-	sme_ReportConnStatus(((conn_t *)pData)->hSmeSm, STATUS_SUCCESSFUL, 0);
+    
+    sme_ReportConnStatus(((conn_t *)pData)->hSmeSm, STATUS_SUCCESSFUL, 0);
 
     return TI_OK;
 }
@@ -294,6 +296,10 @@ static TI_STATUS selfw_merge_rsnw(void *pData)
 	os_printf("IBSS selfw_merge_rsnw!!!!!!!!!!\n");
 
 	tmr_StopTimer (pConn->hConnTimer);
+
+     /* Set templates to FW */
+    siteMgr_SetConnTemplates (pConn->hSiteMgr);	
+	
 	siteMgr_join(pConn->hSiteMgr);
 
     param.paramType = RX_DATA_PORT_STATUS_PARAM;
@@ -314,6 +320,9 @@ static TI_STATUS rsnw_merge_rsnw(void *pData)
 
 	os_printf("IBSS rsnw_merge_rsnw!!!!!!!!!!\n");
 
+     /* Set templates to FW */
+    siteMgr_SetConnTemplates (pConn->hSiteMgr);
+
 	siteMgr_join(pConn->hSiteMgr);
 
 	return TI_OK;
@@ -325,6 +334,10 @@ static TI_STATUS conn_merge_conn(void *pData)
     conn_t *pConn=(conn_t *)pData;
 
 	os_printf("IBSS conn_merge_conn!!!!!!!!!!\n");
+
+
+	 /* Set templates to FW */
+    siteMgr_SetConnTemplates (pConn->hSiteMgr);
 
 	siteMgr_join(pConn->hSiteMgr);
 
@@ -519,6 +532,9 @@ static TI_STATUS idle_to_selfWait (void *pData)
 	conn_t    *pConn = (conn_t *)pData;
     TI_UINT16  randomTime;
 
+     /* Set templates to FW */
+    siteMgr_SetConnTemplates (pConn->hSiteMgr);
+	
     siteMgr_join (pConn->hSiteMgr);
 
     /* get a randomTime that is constructed of the lower 13 bits ot the system time to 
@@ -556,6 +572,11 @@ static TI_STATUS idle_to_rsnWait(void *pData)
 {
     paramInfo_t param;
 
+    conn_t *pConn = (conn_t *)pData;
+
+     /* Set templates to FW */
+    siteMgr_SetConnTemplates (pConn->hSiteMgr);
+	
     siteMgr_join(((conn_t *)pData)->hSiteMgr);
 
     param.paramType = RX_DATA_PORT_STATUS_PARAM;

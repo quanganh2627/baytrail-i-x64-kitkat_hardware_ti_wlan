@@ -59,10 +59,6 @@
 #include "apConn.h"
 #include "smeApi.h"
 
-#ifdef XCC_MODULE_INCLUDED
-#include "XCCMngr.h"
-#include "XCCRMMngr.h"
-#endif
 
 
 /**
@@ -172,9 +168,6 @@ void mlme_init (TStadHandlesList *pStadHandles)
 	pHandle->hStaCap           = pStadHandles->hStaCap;
 	pHandle->hSme			   = pStadHandles->hSme;
 	pHandle->hTimer            = pStadHandles->hTimer;
-#ifdef XCC_MODULE_INCLUDED
-    pHandle->hXCCMngr          = pStadHandles->hXCCMngr;
-#endif
 
     /*
     debug info
@@ -745,6 +738,7 @@ TI_STATUS mlme_assocRequestMsgBuild(mlme_t *pCtx, TI_UINT8* reqBuf, TI_UINT32* r
     pRequest += len;
     *reqLen += len;
 
+
 	/* Checking if the station supports Spectrum Management (802.11h) */
     param.paramType = REGULATORY_DOMAIN_MANAGEMENT_CAPABILITY_ENABLED_PARAM;
     status = regulatoryDomain_getParam(pCtx->hRegulatoryDomain,&param);
@@ -755,7 +749,7 @@ TI_STATUS mlme_assocRequestMsgBuild(mlme_t *pCtx, TI_UINT8* reqBuf, TI_UINT32* r
     status =  siteMgr_getParam(pCtx->hSiteMgr,&param);
     if (status == TI_OK &&
     		spectrumManagementEnabled &&
-    		param.content.siteMgrSiteCapability & (DOT11_SPECTRUM_MANAGEMENT != 0))
+    		(param.content.siteMgrSiteCapability & DOT11_SPECTRUM_MANAGEMENT) != 0)
     {
          /* insert Power capability element */
          status = mlme_assocPowerCapabilityBuild(pCtx, pRequest, &len);
@@ -769,43 +763,6 @@ TI_STATUS mlme_assocRequestMsgBuild(mlme_t *pCtx, TI_UINT8* reqBuf, TI_UINT32* r
     }
 
 
-#ifdef XCC_MODULE_INCLUDED
-    status = rsn_getXCCExtendedInfoElement(pCtx->hRsn, pRequest, (TI_UINT8*)&len);
-    if (status != TI_OK)
-    {
-        return TI_NOK;
-    }
-    pRequest += len;
-    *reqLen += len;
-
-    if (pCtx->reAssoc)
-    {   /* insert CCKM information element only in reassoc */
-        status = XCCMngr_getCckmInfoElement(pCtx->hXCCMngr, pRequest, (TI_UINT8*)&len);
-
-        if (status != TI_OK)
-        {
-            return TI_NOK;
-        }
-        pRequest += len;
-        *reqLen += len;
-    }
-    status = XCCMngr_getXCCVersionInfoElement(pCtx->hXCCMngr, pRequest, (TI_UINT8*)&len);
-    if (status != TI_OK)
-    {
-        return TI_NOK;
-    }
-    pRequest += len;
-    *reqLen += len;
-
-    /* Insert Radio Mngt Capability IE */
-    status = measurementMgr_radioMngtCapabilityBuild(pCtx->hMeasurementMgr, pRequest, (TI_UINT8*)&len);
-    if (status != TI_OK)
-    {
-        return TI_NOK;
-    }
-    pRequest += len;
-    *reqLen += len;
-#endif
 
      /* Get Simple-Config state */
     param.paramType = SITE_MGR_SIMPLE_CONFIG_MODE;
@@ -837,7 +794,7 @@ TI_STATUS mlme_assocRequestMsgBuild(mlme_t *pCtx, TI_UINT8* reqBuf, TI_UINT32* r
 
     {
 
-        eCipherSuite = param.content.rsnEncryptionStatus;
+        eCipherSuite = param.content.tRsnEncryptionStatus.eRsnEncrPairwise;
 
     }
 
@@ -936,10 +893,10 @@ TI_STATUS mlme_assocCapBuild(mlme_t *pCtx, TI_UINT16 *cap)
     /* Privacy */
     param.paramType = RSN_ENCRYPTION_STATUS_PARAM;
     status =  rsn_getParam(pCtx->hRsn, &param);
-    rsnEncryption = param.content.rsnEncryptionStatus;
+    rsnEncryption = param.content.tRsnEncryptionStatus.eRsnEncrPairwise;
     if (status == TI_OK)
     {
-        if (param.content.rsnEncryptionStatus != TWD_CIPHER_NONE)
+        if (param.content.tRsnEncryptionStatus.eRsnEncrPairwise != TWD_CIPHER_NONE)
         {
             *cap |= DOT11_CAPS_PRIVACY;
         }
@@ -1239,8 +1196,8 @@ TI_STATUS mlme_assocPowerCapabilityBuild(mlme_t *pCtx, TI_UINT8 *pPowerCapabilit
 
     if (status == TI_OK)
     {
-        pDot11PowerCapability->minTxPower = param.content.powerCapability.minTxPower;
-        pDot11PowerCapability->maxTxPower = param.content.powerCapability.maxTxPower;
+        pDot11PowerCapability->minTxPower = POWER_CAPABILITY_MIN_TX_LEVEL;
+        pDot11PowerCapability->maxTxPower = POWER_CAPABILITY_MAX_TX_LEVEL;
         *powerCapabilityLen = pDot11PowerCapability->hdr[1] + sizeof(dot11_eleHdr_t);
     }
     else
@@ -1341,19 +1298,16 @@ TI_STATUS mlme_authRecv(TI_HANDLE hMlme, mlmeFrameInfo_t *pFrame)
 	if ((pMlme == NULL) || (pFrame->subType != AUTH) || (pMlme->authInfo.authType == AUTH_LEGACY_NONE))
 		return TI_NOK;
 
-	if (pFrame->content.auth.authAlgo != pMlme->authInfo.authType)
+	if (pFrame->content.auth.authAlgo != pMlme->authInfo.authType &&
+	    /*
+	     * If we asked for shared, the failure response can come back as open
+	     * Note this code assumes we try shared first.
+	     */
+	    !(pFrame->content.auth.status != STATUS_SUCCESSFUL &&
+	    pFrame->content.auth.authAlgo == AUTH_LEGACY_OPEN_SYSTEM &&
+	    pMlme->authInfo.authType == AUTH_LEGACY_SHARED_KEY &&
+	    pMlme->legacyAuthType == RSN_AUTH_AUTO_SWITCH))
 	{
-		/* In case the AP is using open algorithm and we are
-		   trying to connect with shared algorithm, change
-		   it to open*/
-		if ((pFrame->content.auth.authAlgo == AUTH_LEGACY_OPEN_SYSTEM)
-		    && (pMlme->authInfo.authType == AUTH_LEGACY_SHARED_KEY)) {
-			TRACE1(pMlme->hReport, REPORT_SEVERITY_INFORMATION,
-				"mlme_authRecv Changing authAlgo to: ",
-				AUTH_LEGACY_OPEN_SYSTEM);
-			pMlme->authInfo.authType = AUTH_LEGACY_OPEN_SYSTEM;
-		}
-
 		return TI_NOK;
 	}
 
@@ -1451,9 +1405,9 @@ TI_STATUS mlme_assocRecv(TI_HANDLE hMlme, mlmeFrameInfo_t *pFrame)
         }
 
 
-        /* update siteMgr with capabilities and whether we are connected to Cisco AP */
+        /* update siteMgr with capabilities and whether we are connected to AP */
         siteMgr_assocReport(pMlme->hSiteMgr,
-                            pFrame->content.assocRsp.capabilities, pFrame->content.assocRsp.ciscoIEPresent);
+                            pFrame->content.assocRsp.capabilities, pFrame->content.assocRsp.cIEPresent);
 
         /* update QoS Manager - it the QOS active protocol is NONE, or no WME IE present, it will return TI_OK */
         /* if configured by AP, update MSDU lifetime */

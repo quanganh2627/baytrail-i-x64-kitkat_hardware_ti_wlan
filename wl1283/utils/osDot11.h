@@ -43,6 +43,7 @@
 
 #include "tidef.h"
 #include "tiQosTypes.h"
+#include "public_radio.h"
 
 
 #define	OS_STATUS_MEDIA_SPECIFIC_INDICATION	((NDIS_STATUS)0x40010012L)

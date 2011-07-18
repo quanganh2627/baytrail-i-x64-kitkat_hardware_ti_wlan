@@ -32,10 +32,16 @@
 /************/
 #include "cu_osapi.h"
 #include "oserr.h"
+#include <sys/socket.h>
+
 #include <linux/if.h>
 #include <linux/rtnetlink.h>
 #include <linux/wireless.h>
 #include <string.h>
+
+#ifndef ANDROID
+#include <stdlib.h>
+#endif
 
 #include "STADExternalIf.h"
 #include "ParsEvent.h"

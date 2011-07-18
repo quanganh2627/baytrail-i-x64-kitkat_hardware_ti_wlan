@@ -143,6 +143,7 @@ typedef struct
                                               Zero length marks last used buffer, or MAX_XFER_BUFS of all are used. */
     TI_UINT8*    aBuf[MAX_XFER_BUFS];      /* Host data buffers to be written to or read from the device */
     TI_UINT8     aWspiPad[WSPI_PAD_LEN_READ]; /* Padding used by WSPI bus driver for its header or fixed-busy bytes */
+    TI_UINT16    uPaddingSize;
 } TTxnStruct; 
 
 /* Parameters for all bus types configuration in ConnectBus process */

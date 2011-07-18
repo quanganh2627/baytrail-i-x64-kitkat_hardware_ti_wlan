@@ -1209,6 +1209,33 @@ TI_STATUS TWD_EnableEvent (TI_HANDLE hTWD, TI_UINT32 event)
     return eventMbox_UnMaskEvent (pTWD->hEventMbox, event, NULL, NULL);
 }
 
+TI_STATUS TWD_DisableEvents (TI_HANDLE hTWD, TI_UINT32 uEvents[], TI_UINT32 uNumEvents)
+{
+    TTwd  *pTWD = (TTwd *)hTWD;
+
+    TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_EnableEvents: called\n");
+
+    return eventMbox_MaskEvents (pTWD->hEventMbox, uEvents, uNumEvents, NULL, NULL);
+}
+
+TI_STATUS TWD_EnableEvents (TI_HANDLE hTWD, TI_UINT32 uEvents[], TI_UINT32 uNumEvents)
+{
+    TTwd  *pTWD = (TTwd *)hTWD;
+
+    TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_EnableEvents: called\n");
+
+    return eventMbox_UnMaskEvents (pTWD->hEventMbox, uEvents, uNumEvents, NULL, NULL);
+}
+
+TI_UINT32 TWD_GetEventMboxBitmask (TI_HANDLE hTWD)
+{
+    TTwd  *pTWD = (TTwd *)hTWD;
+
+    TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_GetEventMboxBitmask: called\n");
+
+    return eventMbox_GetEventsMask(pTWD->hEventMbox);
+}
+
 void TWD_StopComplete (TI_HANDLE hTWD)
 {
     TTwd  *pTWD = (TTwd *)hTWD;
@@ -1374,6 +1401,20 @@ TI_STATUS TWD_Scan (TI_HANDLE       hTWD,
     TTwd *pTWD = (TTwd *)hTWD;
 
     TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_Scan: called\n");
+	/* Open for scan dbg
+	{
+		int i = 0
+		TRACE1(pTWD->hReport, REPORT_SEVERITY_INFORMATION,"TWD_Scan: desiredSsid = %s",pScanParams->desiredSsid);
+		TRACE1(pTWD->hReport, REPORT_SEVERITY_INFORMATION ,"TWD_Scan: scanType = %d",pScanParams->scanType);
+		TRACE1(pTWD->hReport, REPORT_SEVERITY_INFORMATION ,"TWD_Scan: band = %d",pScanParams->band);
+		TRACE1(pTWD->hReport, REPORT_SEVERITY_INFORMATION ,"TWD_Scan: numOfChannels = %d",pScanParams->numOfChannels);
+		TRACE1(pTWD->hReport, REPORT_SEVERITY_INFORMATION ,"TWD_Scan: eScanClient = %d",pScanParams->eScanClient);
+	
+		for (i = 0;i < pScanParams->numOfChannels;i++) {
+			TRACE1(pTWD->hReport, REPORT_SEVERITY_INFORMATION ,"TWD_Scan: scan on channel = %d",pScanParams->channelEntry[i].normalChannelEntry.channel);
+		}
+	}
+	*/
 
     if ( SCAN_TYPE_SPS == pScanParams->scanType )
     {

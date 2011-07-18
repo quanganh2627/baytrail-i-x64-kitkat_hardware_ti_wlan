@@ -54,7 +54,7 @@
 #include "measurementMgr.h"
 #include "PowerMgr_API.h"
 #include "WlanDrvIf.h"
-
+#include "connApi.h"
 #include "pwrState.h"
 
 /*****************************************************************************
@@ -133,6 +133,7 @@ void pwrState_Init (TStadHandlesList *pStadHandles)
 	pPwrState->hPowerMgr		= pStadHandles->hPowerMgr;
 	pPwrState->hTimer			= pStadHandles->hTimer;
 	pPwrState->hTWD				= pStadHandles->hTWD;
+    pPwrState->hConn            = pStadHandles->hConn;
 
 	pPwrState->tCurrentTransition.hCompleteTimer = tmr_CreateTimer(pPwrState->hTimer);
 	pPwrState->hDozeTimer = tmr_CreateTimer(pPwrState->hTimer);
@@ -149,7 +150,7 @@ TI_STATUS pwrState_SetDefaults (TI_HANDLE hPwrState, TPwrStateInitParams *pInitP
 	tCfg.eSuspendType = pInitParams->eSuspendType;
 	tCfg.uSuspendNDTIM = pInitParams->uSuspendNDTIM;
 	tCfg.eStandbyNextState = pInitParams->eStandbyNextState;
-	tCfg.eSuspendFilterUsage = pInitParams->eSuspendFilterUsage;
+	tCfg.uSuspendFilterUsage = pInitParams->uSuspendFilterUsage;
 	tCfg.tSuspendRxFilterValue = pInitParams->tSuspendRxFilterValue;
 	tCfg.uDozeTimeout = pInitParams->uDozeTimeout;
 	tCfg.tTwdSuspendConfig.uCmdMboxTimeout = pInitParams->uCmdTimeout;
@@ -218,7 +219,7 @@ TI_STATUS pwrState_SetParam (TI_HANDLE hPwrState, paramInfo_t *pParam)
 	{
 		/* prepare new configuration */
 		TPwrStateCfg tCfg = pPwrState->tConfig;
-		tCfg.eSuspendFilterUsage = pParam->content.pwrStateSuspendFilterUsage;
+		tCfg.uSuspendFilterUsage = pParam->content.pwrStateSuspendFilterUsage;
 
 		rc = pwrState_ConfigSuspend(pPwrState, tCfg);
 		break;
@@ -316,12 +317,6 @@ static TI_STATUS validateConfig(TI_HANDLE hPwrState, TPwrStateCfg tConfig)
 		 (tConfig.eStandbyNextState == PWRSTATE_STNDBY_NEXT_STATE_RESERVED2) )
 	{
 		TRACE1(this->hReport, REPORT_SEVERITY_WARNING, "invalid eStandbyNextState (%d)", tConfig.eStandbyNextState);
-		return TI_NOK;
-	}
-
-	if (tConfig.eSuspendFilterUsage >= PWRSTATE_FILTER_USAGE_LAST)
-	{
-		TRACE1(this->hReport, REPORT_SEVERITY_WARNING, "invalid eSuspendFilterUsage (%d)", tConfig.eSuspendFilterUsage);
 		return TI_NOK;
 	}
 
@@ -541,6 +536,10 @@ static TI_STATUS state_Off(TI_HANDLE hPwrState, EPwrStateSmEvent eEvent)
 		if (TI_NOK == rc)
 		{
 			this->fCurrentState = state_Off;
+		}
+        else
+		{
+		    conn_setPowerStateModeOn(this->hConn, TI_TRUE);
 		}
 
 		break;
@@ -766,6 +765,8 @@ static TI_STATUS state_FullOn(TI_HANDLE hPwrState, EPwrStateSmEvent eEvent)
 		/* stop scan and move to Sleep, and then Off state */
 
 		TWD_PrepareSuspend(this->hTWD, &this->tConfig.tTwdSuspendConfig);
+
+        conn_setPowerStateModeOn(this->hConn, TI_FALSE);
 
 		this->fCurrentState = state_WaitScanStopDueToSleepOff;
 		this->tCurrentTransition.bContinueToOff = TI_TRUE;

@@ -74,10 +74,6 @@
 #include "SoftGeminiApi.h"
 #include "RxQueue_api.h"
 
-#ifdef XCC_MODULE_INCLUDED
-#include "XCCMngr.h"
-#include "XCCTSMngr.h"
-#endif
 
 /* Local functions prototypes */
 
@@ -310,7 +306,11 @@ static TI_STATUS ScrWait_to_JoinWait(void *pData)
     if (status != TI_OK)
     {
        TRACE0(pConn->hReport, REPORT_SEVERITY_ERROR, "Join command has failed!\n");
+       return status;
     }
+
+    tmr_StartTimer(pConn->hJoinTimer, conn_timeoutJoinCmplt, pConn, CONN_JOIN_CMPLT_TIMEOUT_MSEC, TI_FALSE);
+
     return status;
 }
 
@@ -321,11 +321,16 @@ static TI_STATUS JoinWait_to_mlmeWait(void *pData)
     paramInfo_t *pParam;
     conn_t *pConn = (conn_t *)pData;
 
+	/* Set templates to FW */
+	siteMgr_SetConnTemplates (pConn->hSiteMgr);
+
     pParam = (paramInfo_t *)os_memoryAlloc(pConn->hOs, sizeof(paramInfo_t));
     if (!pParam)
     {
         return TI_NOK;
     }
+
+	
 
     /* Set the BA session policies to the FW */
     qosMngr_SetBaPolicies(pConn->hQosMngr);
@@ -409,9 +414,6 @@ static TI_STATUS mlmeWait_to_WaitDisconnect(void *pData)
     /* FW will send the disconn frame according to disConnType */ 
     TWD_CmdFwDisconnect (pConn->hTWD, pConn->disConnType, pConn->disConnReasonToAP); 
 
-#ifdef XCC_MODULE_INCLUDED
-    XCCMngr_updateIappInformation(pConn->hXCCMngr, XCC_DISASSOC);
-#endif
     os_memoryFree(pConn->hOs, pParam, sizeof(paramInfo_t));
     return TI_OK;
 }
@@ -665,9 +667,6 @@ static TI_STATUS configHW_to_connected(void *pData)
     /* Update TxMgmtQueue SM to open Tx path to all packets. */
     txMgmtQ_SetConnState (((conn_t *)pData)->hTxMgmtQ, TX_CONN_STATE_OPEN);
 
-#ifdef XCC_MODULE_INCLUDED
-    XCCMngr_updateIappInformation(pConn->hXCCMngr, XCC_ASSOC_OK);
-#endif
 
     /* Start keep alive process */
     siteMgr_start(pConn->hSiteMgr);
@@ -881,9 +880,6 @@ static TI_STATUS prepare_send_disconnect(void *pData)
     txCtrlParams_setEapolEncryptionStatus(pConn->hTxCtrl, DEF_EAPOL_ENCRYPTION_STATUS);
     qosMngr_disconnect (pConn->hQosMngr, TI_TRUE);
 
-#ifdef XCC_MODULE_INCLUDED
-    measurementMgr_disableTsMetrics(pConn->hMeasurementMgr, MAX_NUM_OF_AC);
-#endif
 
     /* Start the disconnect complete time out timer. 
        Disconect Complete event, which stops the timer. */
@@ -892,9 +888,7 @@ static TI_STATUS prepare_send_disconnect(void *pData)
     /* FW will send the disconn frame according to disConnType */ 
     TWD_CmdFwDisconnect (pConn->hTWD, pConn->disConnType, pConn->disConnReasonToAP); 
 
-#ifdef XCC_MODULE_INCLUDED
-    XCCMngr_updateIappInformation(pConn->hXCCMngr, XCC_DISASSOC);
-#endif
+	pConn->smContext.disAssocEventReason = STATUS_UNSPECIFIED;
 
     return TI_OK;
 }
@@ -971,9 +965,6 @@ static TI_STATUS connect_to_ScrWait(void *pData)
             pParam->paramType = REGULATORY_DOMAIN_DISCONNECT_PARAM;
             regulatoryDomain_setParam(pConn->hRegulatoryDomain, pParam);
 
-#ifdef XCC_MODULE_INCLUDED
-            XCCMngr_updateIappInformation(pConn->hXCCMngr, XCC_DISASSOC);
-#endif
         /* Must be called AFTER mlme_stop. since De-Auth packet should be sent with the
             supported rates, and stopModules clears all rates. */
             stopModules(pConn, TI_FALSE);
@@ -1023,7 +1014,9 @@ TI_STATUS connInfra_JoinCmpltNotification(TI_HANDLE hconn)
     
     TRACE0(pConn->hReport, REPORT_SEVERITY_INFORMATION, "connInfra_JoinCmpltNotification: has been called\n");
 
-   if (pConn->currentConnType == CONNECTION_INFRA ) {
+    if (pConn->currentConnType == CONNECTION_INFRA)
+    {
+        tmr_StopTimer(pConn->hJoinTimer);
        conn_infraSMEvent(&pConn->state, CONN_INFRA_JOIN_CMD_CMPLT, pConn);
    }
 

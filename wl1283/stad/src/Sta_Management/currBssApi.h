@@ -66,6 +66,8 @@
 TI_STATUS currBss_registerBssLossEvent(TI_HANDLE hCurrBSS,TI_UINT32  uNumOfBeacons, TI_UINT16 uClientID);
 TI_STATUS currBss_registerTxRetryEvent(TI_HANDLE hCurrBSS,TI_UINT8   uMaxTxRetryThreshold, TI_UINT16 uClientID);
 TI_INT8 currBSS_RegisterTriggerEvent (TI_HANDLE hCurrBSS, TI_UINT8 triggerID,TI_UINT16 clientID, void* fCB, TI_HANDLE hCB);
+TI_STATUS currBss_Suspend				(TI_HANDLE hCurrBSS, TI_UINT32 uSuspendFilterUsage);
+TI_STATUS currBss_Resume				(TI_HANDLE hCurrBSS);
 TI_STATUS currBSS_setParam(TI_HANDLE hCurrBSS, paramInfo_t *pParam);
 TI_STATUS currBSS_getParam(TI_HANDLE hCurrBSS, paramInfo_t *pParam);
 

@@ -51,7 +51,7 @@
 #include "SdioDrv.h"
 #include "bmtrace_api.h"
 static unsigned char *pDmaBufAddr = 0;
- 
+static int bNeedReset = 0;
 int g_ssd_debug_level=4;
 
 /************************************************************************
@@ -255,5 +255,8 @@ ETxnStatus sdioAdapt_TransactBytes (unsigned int  uFuncId,
 }
 
 
-
+void sdioAdapt_PrepareResume(void)
+{
+    bNeedReset = 1;
+}
 

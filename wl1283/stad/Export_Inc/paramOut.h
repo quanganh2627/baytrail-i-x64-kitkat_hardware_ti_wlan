@@ -51,11 +51,7 @@
 #include "scanMngrTypes.h"
 #include "pwrState_Types.h"
 
-#ifdef XCC_MODULE_INCLUDED
-#include "paramOutXCC.h"
-#else
-#define   XCC_PARAM_FIELDS
-#endif
+#define   kkk_PARAM_FIELDS
 
 #include "InternalCmdCodes.h"
 #include "commonTypes.h"
@@ -88,7 +84,7 @@
 #define VAL_PACKET_BURSTING			106
 #define VAL_MIXED_MODE				107
 #define VAL_PRIVACY_MODE			108
-#define VAL_XCC_SECURITY			109
+#define VAL_kkk_SECURITY			109
 #define VAL_DEFAULT_KEY_ID			110
 #define VAL_AP_SUPPORT_CHANELS 		111
 
@@ -361,6 +357,12 @@ typedef struct
     TI_UINT32 thresholdCrossDirection;       /* direction of crossing */
 } trafficIntensityThresholdCross_t;
 
+typedef struct
+{
+    TCountry* pCountry;
+    ERadioBand band;
+}TCountyIe;
+
 /************************************/
 /*      QOS edcf params             */
 /************************************/
@@ -526,6 +528,20 @@ typedef struct
 
 typedef struct
 {
+    TI_BOOL    channelValidityPassive; /*TI_TRUE-valid, TI_FALSE-invalid */
+    TI_BOOL    channelValidityActive; /*TI_TRUE-valid, TI_FALSE-invalid */
+    TI_BOOL    bChanneInCountryIe;
+
+    TI_UINT8   uMaxTxPowerDomain;     /*
+                                      * Holds ONLY the default limitation (Application)
+                                      * or according to 11d country code IE
+                                      * Updated on init phase or upon receiving new country code IE
+                                      */
+    TI_UINT32  timestamp;
+}   channelCapabilityParam_t;
+
+typedef struct
+{
     TI_UINT32   uChannel;
     ERadioBand  eBand;
     TI_BOOL     bDfsChannel;
@@ -666,7 +682,7 @@ typedef struct
         TI_UINT32               			rsnWPAPromoteFlags;
         TI_UINT32               			rsnWPAMixedModeSupport;
         TI_UINT32               			rsnAuthState; /* supp_1XStates */
-        ECipherSuite            			rsnEncryptionStatus;
+        TrsnEncryptionStatus            	tRsnEncryptionStatus;
         TI_UINT8                			rsnHwEncDecrEnable; /* 0- disable, 1- enable*/
         TSecurityKeys          				*pRsnKey;
         TI_UINT8                   			rsnDefaultKeyID;
@@ -738,6 +754,7 @@ typedef struct
         /* regulatory Domain section */
         regulatoryDomainParam_t 			regulatoryDomainParam;
         TI_UINT8                   			channel;
+		TCountyIe                           countryIe_t;
         TCountry*              				pCountry;
         TI_UINT8*               			pCountryString;
         TI_BOOL                    			spectrumManagementEnabled;
@@ -751,6 +768,7 @@ typedef struct
 																	to effect the transmit power*/
         TpowerLevelTable_t		     		powerLevelTable;
         channelValidity_t					channelValidity;
+		channelCapabilityParam_t            channelCapability;
         channelCapabilityRet_t				channelCapabilityRet;
         channelCapabilityReq_t				channelCapabilityReq;
         supportedChannels_t					supportedChannels;
@@ -774,6 +792,7 @@ typedef struct
         TI_UINT32							measurementEnableDisableStatus;
         TI_UINT16							measurementTrafficThreshold;
         TI_UINT16							measurementMaxDuration;
+		TI_UINT32							measurementMinTimeBetweenReqInSec;
         TInterrogateCmdCbParams 			interogateCmdCBParams;
 
 
@@ -782,8 +801,8 @@ typedef struct
         TI_UINT32							SoftGeminiParamArray[NUM_OF_CONFIG_PARAMS_IN_SG];
         TI_UINT32							CoexActivityParamArray[NUM_OF_COEX_ACTIVITY_PARAMS_IN_SG];
 
-        /* case XCC MODULE INCLUDED */
-        XCC_PARAM_FIELDS
+        /* case kkk MODULE INCLUDED */
+        kkk_PARAM_FIELDS
 
         /* Application Config Parameters Manager */
         TAssocReqBuffer						assocReqBuffer;
@@ -870,7 +889,7 @@ typedef struct
         EPwrStateSuspendType                pwrStateSuspendType;
         TI_UINT32                           pwrStateSuspendNDTIM;
         EPwrStateStndbyNextState            pwrStateStandbyNextState;
-        EPwrStateFilterUsage                pwrStateSuspendFilterUsage;
+        TI_UINT32                           pwrStateSuspendFilterUsage;
         TRxDataFilterRequest                pwrStateSuspendRxFilterValue;
         EPwrStateSmEvent                    pwrStateDbgEvent;
         TI_BOOL                             pwrStateDbgIsSuspend;
@@ -881,6 +900,7 @@ typedef struct
         RateMangeReadParams_t               RateMngParams;
 
         TIpAddr    StationIP;
+        TI_UINT8							powerMgrNdtim;
 
     } content;
 } paramInfo_t;
@@ -976,6 +996,7 @@ typedef struct
     TMacAddr        tDesiredBssid;
     ScanBssType_e   eDesiredBssType;
     EConnectMode    eConnectMode;
+    TI_BOOL         bProbeBeforeConnect;
 } TSmeModifiedInitParams;
 
 typedef struct
@@ -1086,28 +1107,13 @@ typedef struct
     scanControlTable_t          desiredScanControlTable;/* for 5 and 2.4 Ghz*/
 } regulatoryDomainInitParams_t;
 
-#ifdef XCC_MODULE_INCLUDED
-typedef enum
-{
-    XCC_MODE_DISABLED,
-    XCC_MODE_ENABLED,
-    XCC_MODE_STANDBY
-} XCCMngr_mode_t;
-
-typedef struct
-{
-    XCCMngr_mode_t  XCCEnabled;
-} XCCMngrParams_t;
-#endif
 
 /* Measurement module init parameters */
 typedef struct
 {
     TI_UINT16              trafficIntensityThreshold;
     TI_UINT16              maxDurationOnNonServingChannel;
-#ifdef XCC_MODULE_INCLUDED
-    XCCMngr_mode_t      XCCEnabled;
-#endif
+	TI_UINT32			   measurementMinTimeBetweenReqInSec;
     TI_BOOL             rrmEnabled;
 } measurementInitParams_t;
 
@@ -1187,6 +1193,7 @@ typedef struct
     TI_UINT32       uSraThreshold;
     TI_INT32        nRssiThreshold;
     TI_UINT32       numberOfNoScanCompleteToRecovery;
+	TI_BOOL			bEnablePassivBActive;
 } TScanCncnInitParams;
 
 typedef struct
@@ -1225,7 +1232,7 @@ typedef struct
 	EPwrStateSuspendType     eSuspendType;
 	TI_UINT32                uSuspendNDTIM;
 	EPwrStateStndbyNextState eStandbyNextState;
-	EPwrStateFilterUsage     eSuspendFilterUsage;
+	TI_UINT32                uSuspendFilterUsage;
 	TRxDataFilterRequest     tSuspendRxFilterValue;
 	TI_UINT32				 uDozeTimeout;
 	TI_UINT32				 uCmdTimeout;
@@ -1248,9 +1255,6 @@ typedef struct
     SoftGeminiInitParams_t          SoftGeminiInitParams;
     QosMngrInitParams_t             qosMngrInitParams;
     clsfrParams_t                   clsfrParams;
-#ifdef XCC_MODULE_INCLUDED
-    XCCMngrParams_t                 XCCMngrParams;
-#endif
     SwitchChannelInitParams_t		SwitchChannelInitParams;
     healthMonitorInitParams_t		healthMonitorInitParams;
     apConnParams_t                  apConnParams;

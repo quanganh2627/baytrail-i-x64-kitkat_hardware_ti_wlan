@@ -51,7 +51,7 @@
 
 
 static TI_STATUS scanCncnSm_Scan (TI_HANDLE hScanCncnClient, TScanParams *pScanParams,
-								  EScanResultTag eScanTag, TI_BOOL bHighPriority,
+								  TI_BOOL bHighPriority,
 								  TI_BOOL bForceScan, TCmdResponseCb fResponseCb,
 								  TI_HANDLE hResponseC);
 
@@ -140,7 +140,7 @@ void scanCncnSmApp1Shot_StartScan (TI_HANDLE hScanCncnClient)
 
     /* request the scan */
 	tStatus = scanCncnSm_Scan (hScanCncnClient, &(pScanCncnClient->uScanParams.tOneShotScanParams),
-							   SCAN_RESULT_TAG_APPLICATION_ONE_SHOT, TI_FALSE, TI_FALSE, NULL, NULL);
+							   TI_FALSE, TI_FALSE, NULL, NULL);
 
     if (TI_OK != tStatus)
     {
@@ -325,7 +325,7 @@ void scanCncnSmDrvP_ScrRequest (TI_HANDLE hScanCncnClient)
                                                  SCR_RESOURCE_PERIODIC_SCAN, &eScrPendReason ) )
     {
     case SCR_CRS_PEND:
-        TRACE1(pScanCncnClient->hReport, REPORT_SEVERITY_INFORMATION , "scanCncnSmAppP_ScrRequest: SCR pending, pend reason: %d.\n", eScrPendReason);
+        TRACE1(pScanCncnClient->hReport, REPORT_SEVERITY_INFORMATION , "scanCncnSmDrvP_ScrRequest: SCR pending, pend reason: %d.\n", eScrPendReason);
         
         /* check the pending reason */
         if (SCR_PR_OTHER_CLIENT_ABORTING != eScrPendReason)
@@ -342,12 +342,12 @@ void scanCncnSmDrvP_ScrRequest (TI_HANDLE hScanCncnClient)
 
     case SCR_CRS_RUN:
         /* send a run event to the SM */
-        TRACE0(pScanCncnClient->hReport, REPORT_SEVERITY_INFORMATION , "scanCncnSmAppP_ScrRequest: SCR acquired.\n");
+        TRACE0(pScanCncnClient->hReport, REPORT_SEVERITY_INFORMATION , "scanCncnSmDrvP_ScrRequest: SCR acquired.\n");
         genSM_Event (pScanCncnClient->hGenSM, SCAN_CNCN_SM_EVENT_RUN, hScanCncnClient);
         break;
 
     default:
-        TRACE1(pScanCncnClient->hReport, REPORT_SEVERITY_ERROR , "scanCncnSmAppP_ScrRequest: SCR returned unrecognized status: %d\n", eScrReplyStatus);
+        TRACE1(pScanCncnClient->hReport, REPORT_SEVERITY_ERROR , "scanCncnSmDrvP_ScrRequest: SCR returned unrecognized status: %d\n", eScrReplyStatus);
         /* Send a reject event to recover from this error */
         pScanCncnClient->eScanResult = SCAN_CRS_SCAN_FAILED;
         genSM_Event (pScanCncnClient->hGenSM, SCAN_CNCN_SM_EVENT_REJECT, hScanCncnClient);
@@ -427,6 +427,21 @@ void scanCncnSmDrvP_StopScan (TI_HANDLE hScanCncnClient)
         TRACE1(pScanCncnClient->hReport, REPORT_SEVERITY_ERROR , "scanCncnSmDrvP_StopScan: status %d from TWD_StopPeriodicScan, sending scan complete to SM\n", status);
         genSM_Event (pScanCncnClient->hGenSM, SCAN_CNCN_SM_EVENT_SCAN_COMPLETE, hScanCncnClient);
     }
+}
+
+void scanCncnSmDrvP_Recovery(TI_HANDLE hScanCncnClient)
+{
+    TScanCncnClient *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
+
+    TRACE0(pScanCncnClient->hReport, REPORT_SEVERITY_INFORMATION , "scanCncnSmDrvP_Recovery: SM  received reject event\n");
+
+    /* Call the recovery specific function */
+
+    /* release the SCR */
+    pScanCncnClient->fScrRelease (hScanCncnClient);
+
+    TRACE0(pScanCncnClient->hReport, REPORT_SEVERITY_INFORMATION , "smeSm_Start: changing SCR group to APP scan\n");
+    scr_setGroup (pScanCncnClient->hSCR, SCR_GID_APP_SCAN);
 }
 
 /*
@@ -511,7 +526,7 @@ void scanCncnSmCont1Shot_StartScan (TI_HANDLE hScanCncnClient)
 
     /* request the scan */
 	status = scanCncnSm_Scan (hScanCncnClient, &(pScanCncnClient->uScanParams.tOneShotScanParams),
-							  SCAN_RESULT_TAG_CONTINUOUS, TI_FALSE, TI_FALSE, NULL, NULL);
+							  TI_FALSE, TI_FALSE, NULL, NULL);
                            
     if (TI_OK != status)
     {
@@ -640,7 +655,7 @@ void scanCncnSmImmed1Shot_StartScan (TI_HANDLE hScanCncnClient)
 
 	/* request the scan */
     status = scanCncnSm_Scan (hScanCncnClient, &(pScanCncnClient->uScanParams.tOneShotScanParams),
-							  SCAN_RESULT_TAG_IMMEDIATE, !bPsRequired, TI_TRUE,  NULL, NULL); 
+							  !bPsRequired, TI_TRUE,  NULL, NULL);
 
     /* call the scan SRV start scan */
     if (TI_OK != status)
@@ -704,7 +719,7 @@ void scanCncnSm_NoOp (TI_HANDLE hScanCncnClient)
  * \return None
  */ 
 static TI_STATUS scanCncnSm_Scan (TI_HANDLE hScanCncnClient, TScanParams *pScanParams,
-								  EScanResultTag eScanTag, TI_BOOL bHighPriority,
+								  TI_BOOL bHighPriority,
 								  TI_BOOL bForceScan, TCmdResponseCb fResponseCb, TI_HANDLE hResponseC)
 {
     TScanCncnClient *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
@@ -712,19 +727,19 @@ static TI_STATUS scanCncnSm_Scan (TI_HANDLE hScanCncnClient, TScanParams *pScanP
     TI_STATUS       tStatus;
 
 
-    pScanCncn->eLatestScanTag = eScanTag;
+
 	pScanCncn->eLatestScanType = pScanParams->scanType;
 	pScanCncn->bScanCompleteFlag = TI_TRUE;
 
      tmr_StartTimer (pScanCncnClient->hScanClientGuardTimer,
                     scanCncn_TimerExpired,
-                    (TI_HANDLE)pScanCncn,
+                    (TI_HANDLE)pScanCncnClient,
                     SCAN_GUARD_TIME_MS, 
                     TI_FALSE);
 
 
     /* call the TWD start scan */
-    tStatus = TWD_Scan (pScanCncnClient->hTWD, pScanParams, eScanTag, bHighPriority,
+    tStatus = TWD_Scan (pScanCncnClient->hTWD, pScanParams, pScanCncnClient->eScanTag, bHighPriority,
 						bForceScan, fResponseCb, hResponseC);
 
 	if (TI_OK != tStatus)

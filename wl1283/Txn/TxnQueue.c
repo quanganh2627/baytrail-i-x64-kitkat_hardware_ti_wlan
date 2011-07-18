@@ -508,6 +508,10 @@ static void txnQ_TxnDoneCb (TI_HANDLE hTxnQ, void *hTxn)
         /* Call function CB for current Txn with restart indication */
         TXN_PARAM_SET_STATUS(pTxn, TXN_PARAM_STATUS_RECOVERY);
         pTxnQ->aFuncInfo[uFuncId].fTxnQueueDoneCb (pTxnQ->aFuncInfo[uFuncId].hCbHandle, pTxn);
+		context_EnterCriticalSection (pTxnQ->hContext);
+        /* Indicate that no transaction is currently processed in the bus-driver */
+		pTxnQ->pCurrTxn = NULL;
+		context_LeaveCriticalSection (pTxnQ->hContext);
     }
 
     /* In the normal case (no restart), enqueue completed transaction in TxnDone queue */
@@ -521,11 +525,10 @@ static void txnQ_TxnDoneCb (TI_HANDLE hTxnQ, void *hTxn)
         {
             TRACE3(pTxnQ->hReport, REPORT_SEVERITY_ERROR, "txnQ_TxnDoneCb(): Enqueue failed, pTxn=0x%x, HwAddr=0x%x, Len0=%d\n", pTxn, pTxn->uHwAddr, pTxn->aLen[0]);
         }
+        /* Indicate that no transaction is currently processed in the bus-driver */
+		pTxnQ->pCurrTxn = NULL;
         context_LeaveCriticalSection (pTxnQ->hContext);
     }
-
-    /* Indicate that no transaction is currently processed in the bus-driver */
-    pTxnQ->pCurrTxn = NULL;
 
     /* Send queued transactions as possible (TRUE indicates we are in external context) */
     txnQ_RunScheduler (pTxnQ, NULL); 
@@ -629,12 +632,14 @@ static ETxnStatus txnQ_Scheduler (TTxnQObj *pTxnQ, TTxnStruct *pInputTxn)
     eInputTxnStatus = TXN_STATUS_PENDING;  
 
     /* if a previous transaction is in progress, return PENDING */
+	context_EnterCriticalSection (pTxnQ->hContext);
     if (pTxnQ->pCurrTxn)
     {
+		context_LeaveCriticalSection (pTxnQ->hContext);
         TRACE1(pTxnQ->hReport, REPORT_SEVERITY_INFORMATION, "txnQ_Scheduler(): pCurrTxn isn't null (0x%x) so exit\n", pTxnQ->pCurrTxn);
         return TXN_STATUS_PENDING;
     }
-
+	context_LeaveCriticalSection (pTxnQ->hContext);
     /* Loop while transactions are available and can be sent to bus driver */
     while (1)
     {
@@ -644,15 +649,15 @@ static ETxnStatus txnQ_Scheduler (TTxnQObj *pTxnQ, TTxnStruct *pInputTxn)
         /* Get next enabled transaction by priority. If none, exit loop. */
         context_EnterCriticalSection (pTxnQ->hContext);
         pSelectedTxn = txnQ_SelectTxn (pTxnQ);
-        context_LeaveCriticalSection (pTxnQ->hContext);
         if (pSelectedTxn == NULL)
         {
+			context_LeaveCriticalSection (pTxnQ->hContext); 
             break;
         }
 
         /* Save transaction in case it will be async (to indicate that the bus driver is busy) */
         pTxnQ->pCurrTxn = pSelectedTxn;
-
+		context_LeaveCriticalSection (pTxnQ->hContext); 
         /* Send selected transaction to bus driver */
         eStatus = busDrv_Transact (pTxnQ->hBusDrv, pSelectedTxn);
 
@@ -667,8 +672,9 @@ static ETxnStatus txnQ_Scheduler (TTxnQObj *pTxnQ, TTxnStruct *pInputTxn)
         /* If transaction completed */
         if (eStatus != TXN_STATUS_PENDING)
         {
+			context_EnterCriticalSection (pTxnQ->hContext);
             pTxnQ->pCurrTxn = NULL;
-
+			context_LeaveCriticalSection (pTxnQ->hContext);
             /* If it's not the input transaction, enqueue it in TxnDone queue */
             if (pSelectedTxn != pInputTxn)
             {

@@ -76,7 +76,7 @@ This file is included by the TWDriver.h , it should not be included apart. !!!!!
 /* The following parameters are used in driver_ti for periodic scan*/
 #define PERIODIC_SCAN_MAX_SSID_NUM      					8
 #define PERIODIC_SCAN_MAX_INTERVAL_NUM  					16
-#define PERIODIC_SCAN_MAX_CHANNEL_NUM   					37 /* G-14 + A-23 */
+#define PERIODIC_SCAN_MAX_CHANNEL_NUM   					38 /* G-14 + A-23 */
 #define PERIODIC_SCAN_RSSI_THRESHOLD                        SME_SCAN_RSSI_THRESHOLD_DEF_NUM
 #define PERIODIC_SCAN_PROBE_REQUEST_NUM                     SME_SCAN_PROBE_REQ_DEF
 #define PERIODIC_SCAN_FRAME_NUM_REPORT_THRESHODL            1
@@ -86,7 +86,7 @@ This file is included by the TWDriver.h , it should not be included apart. !!!!!
 #define PERIODIC_SCAN_MIN_5_CHANNEL_DWELL_TIME_MS           SME_SCAN_MIN_DWELL_MIN       
 #define PERIODIC_SCAN_MAX_5_CHANNEL_DWELL_TIME_MS           20
 #define PERIODIC_SCAN_BASE_INTERVAL_MS                      500
-#define PERIODIC_SCAN_CHANNELS_ARRAY_A_BAND                 {36,40,44,48,52,56,60,64,100,104,108,112,116,120,124,128,132,136,140,149,153,157,161}
+#define PERIODIC_SCAN_CHANNELS_ARRAY_A_BAND                 {36,40,44,48,52,56,60,64,100,104,108,112,116,120,124,128,132,136,140,149,153,157,161,165}
 
  /*
  ***********************************************************************

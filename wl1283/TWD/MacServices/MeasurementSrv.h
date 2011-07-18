@@ -52,7 +52,7 @@
  */
 /* Time in milliseconds to receive a command complete for measure start / stop from the FW */
 #define MSR_FW_GUARD_TIME_START   5000 
-#define MSR_FW_GUARD_TIME_STOP    100 
+#define MSR_FW_GUARD_TIME_STOP    1000 
 #define DEF_SAMPLE_INTERVAL             (100)   /* expressed in microsec */
 #define NOISE_HISTOGRAM_THRESHOLD           100
 /* Get param callback flags  */

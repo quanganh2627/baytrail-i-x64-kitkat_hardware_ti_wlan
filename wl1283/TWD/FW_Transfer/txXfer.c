@@ -142,7 +142,7 @@ TI_STATUS txXfer_Init (TI_HANDLE hTxXfer, TI_HANDLE hReport, TI_HANDLE hTwIf)
 {
     TTxXferObj *pTxXfer = (TTxXferObj *)hTxXfer;
     TTxnStruct *pTxn;
-    TI_UINT8    i;
+    TI_UINT32    i;
 
     pTxXfer->hReport = hReport;
     pTxXfer->hTwIf   = hTwIf;

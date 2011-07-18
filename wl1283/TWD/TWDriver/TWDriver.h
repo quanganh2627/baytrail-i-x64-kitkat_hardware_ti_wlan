@@ -118,6 +118,9 @@
  * --------------------------------------------------------------
  */
 
+#define TI_MAX_INT32     0x7FFFFFFF
+#define TI_MIN_INT32     0x80000000
+
 /* Ini File Version */
 #define INI_FILE_VERSION_DEF 0
 #define INI_FILE_VERSION_MIN 0
@@ -244,7 +247,7 @@
 #define TWD_MAX_TX_MSDU_LIFETIME_DEF    512
 
 #define TWD_MAX_RX_MSDU_LIFETIME_MIN    0
-#define TWD_MAX_RX_MSDU_LIFETIME_MAX    0xFFFFFFFF
+#define TWD_MAX_RX_MSDU_LIFETIME_MAX    TI_MAX_INT32
 #define TWD_MAX_RX_MSDU_LIFETIME_DEF    512000
 
 
@@ -273,12 +276,12 @@
  * Host I/f configuration
  */
 #ifdef TNETW1283 
-#define TWD_HOST_IF_CFG_BITMAP_DEF      (HOST_IF_CFG_BITMAP_RX_FIFO_ENABLE | HOST_IF_CFG_BITMAP_TX_PAD_TO_SDIO_BLK)
+#define TWD_HOST_IF_CFG_BITMAP_DEF      (HOST_IF_CFG_BITMAP_RX_FIFO_ENABLE | HOST_IF_CFG_BITMAP_TX_PAD_SDIO)
 #else
 #define TWD_HOST_IF_CFG_BITMAP_DEF      1
 #endif
 #define TWD_HOST_IF_CFG_BITMAP_MIN      0
-#define TWD_HOST_IF_CFG_BITMAP_MAX      0xffffffff
+#define TWD_HOST_IF_CFG_BITMAP_MAX      TI_MAX_INT32
 
 /*
  * Tx and Rx interrupts pacing (threshold in packets, timeouts in milliseconds)
@@ -319,6 +322,9 @@
 #define MAX_TX_POWER					250
 #define MIN_TX_POWER					0
 #define DEF_TX_POWER					205
+
+#define POWER_CAPABILITY_MIN_TX_LEVEL	8
+#define POWER_CAPABILITY_MAX_TX_LEVEL	20
 
 
 #define MIN_DEFAULT_KEY_ID              0
@@ -372,7 +378,7 @@
 /* Tx packet Control-Block flags bit-mask. */
 #define TX_CTRL_FLAG_XFER_DONE_ISSUED      0x0001  /* Xfer-Done already issued to upper driver   - for WHA. */
 #define TX_CTRL_FLAG_TX_COMPLETE_ISSUED    0x0002  /* Tx-Complete already issued to upper driver - for WHA. */
-#define TX_CTRL_FLAG_LINK_TEST             0x0004  /* XCC link test packet */
+#define TX_CTRL_FLAG_LINK_TEST             0x0004  /* kkk link test packet */
 #define TX_CTRL_FLAG_SENT_TO_FW            0x0008  /* Set after the packet is allowed to be sent to FW (by TxHwQueue) */
 #define TX_CTRL_FLAG_PKT_IN_RAW_BUF        0x0010  /* The input packet is in a raw buffer (as opposed to OS packet) */
 #define TX_CTRL_FLAG_MULTICAST             0x0020  /* A multicast ethernet packet */
@@ -473,7 +479,7 @@
 
 #define  DSSS_CCK_MODE         					1
 
-#define MCS_HIGHEST_SUPPORTED_RECEPTION_DATA_RATE_IN_MBIT_S 0x48
+#define MCS_HIGHEST_SUPPORTED_RECEPTION_DATA_RATE_IN_MBIT_S (0x48 >> 2)
 
 #define IMPLICIT_TXBF_REC_CAPABLE             	1
 #define TRANSMIT_STAGGERED_SOUNDING_CAPABLE   	1
@@ -626,22 +632,20 @@ typedef enum
     /*	0x19	*/  TWD_ENABLE_POWER_MANAGEMENT_AUTO_CONFIG_PARAM_ID,	/**< */
     /*	0x1A	*/  TWD_SG_ENABLE_PARAM_ID,							/**< */
     /*	0x1B	*/  TWD_SG_CONFIG_PARAM_ID,							/**< */
-#ifdef XCC_MODULE_INCLUDED
-    /*	0x1C	*/  TWD_RSN_XCC_SW_ENC_ENABLE_PARAM_ID,				/**< */
-    /*	0x1D	*/  TWD_RSN_XCC_MIC_FIELD_ENABLE_PARAM_ID,			/**< */
-#endif /* XCC_MODULE_INCLUDED*/
-    /*	0x1E	*/  TWD_TX_OP_LIMIT_PARAM_ID,						/**< */
-    /*	0x1F	*/  TWD_NOISE_HISTOGRAM_PARAM_ID,					/**< */
-    /*	0x20	*/  TWD_TSF_DTIM_MIB_PARAM_ID,						/**< */
-    /*	0x21	*/  TWD_REVISION_PARAM_ID,							/**< */
-    /*	0x22	*/  TWD_CURRENT_CHANNEL_PARAM_ID,					/**< */
-    /*	0x23	*/	TWD_RADIO_TEST_PARAM_ID,						/**< */
-    /*	0x24	*/	TWD_RSSI_LEVEL_PARAM_ID,						/**< */
-    /*	0x25	*/	TWD_SNR_RATIO_PARAM_ID,							/**< */
-    /*	0x26	*/	TWD_COEX_ACTIVITY_PARAM_ID,	    				/**< */
-    /*	0x27	*/	TWD_FM_COEX_PARAM_ID,	    				    /**< */
-    /*	0x28	*/	TWD_DCO_ITRIM_PARAMS_ID,    				    /**< */
-    /*	0x29	*/	TWD_SDIO_VALIDATION_PARAMS_ID,    				/**< */
+/*	0x1C	*/  TWD_TX_OP_LIMIT_PARAM_ID,						/**< */
+/*	0x1D	*/  TWD_NOISE_HISTOGRAM_PARAM_ID,					/**< */
+/*	0x1E	*/  TWD_TSF_DTIM_MIB_PARAM_ID,						/**< */
+/*	0x1F	*/  TWD_REVISION_PARAM_ID,							/**< */
+/*	0x20	*/  TWD_CURRENT_CHANNEL_PARAM_ID,					/**< */
+/*	0x21	*/	TWD_RADIO_TEST_PARAM_ID,						/**< */
+/*	0x22	*/	TWD_RSSI_LEVEL_PARAM_ID,						/**< */
+/*	0x23	*/	TWD_SNR_RATIO_PARAM_ID,							/**< */
+/*	0x24	*/	TWD_COEX_ACTIVITY_PARAM_ID,	    				/**< */
+/*	0x25	*/	TWD_FM_COEX_PARAM_ID,	    				    /**< */
+/*	0x26	*/	TWD_DCO_ITRIM_PARAMS_ID,    				    /**< */
+/*	0x27	*/	TWD_SDIO_VALIDATION_PARAMS_ID,    				/**< */
+/*	0x28	*/  TWD_RSN_kkk_SW_ENC_ENABLE_PARAM_ID,				/**< */
+/*	0x29	*/  TWD_RSN_kkk_MIC_FIELD_ENABLE_PARAM_ID,			/**< */
 
     /* must be last!!! */
     /*	0x30    */	TWD_LAST_PARAM_ID								/**< */
@@ -821,7 +825,7 @@ typedef enum
     /*	1	*/  KEY_WEP,		/**< */
     /*	2	*/  KEY_TKIP,		/**< */
     /*	3	*/  KEY_AES,		/**< */
-    /*	4	*/  KEY_XCC,    	/**< */
+    /*	4	*/  KEY_kkk,    	/**< */
 #ifdef GEM_SUPPORTED
     /*  5   */  KEY_DUMMY,
     /*  6   */  KEY_GEM
@@ -947,7 +951,7 @@ typedef enum
     /*	3	*/	TWD_CIPHER_AES_WRAP,    		/**< AES WRAP cipher suite  */
     /*	4	*/	TWD_CIPHER_AES_CCMP,    		/**< AES CCMP cipher suite  */
     /*	5	*/	TWD_CIPHER_WEP104,      		/**< WEP-104 cipher suite 	*/
-    /*	6	*/	TWD_CIPHER_CKIP,        		/**< CKIP cipher suite      */
+    /*	6	*/	TWD_CIPHER_jjj,        		/**< jjj cipher suite      */
 #ifdef GEM_SUPPORTED
     /*	7	*/	TWD_CIPHER_GEM,         		/**< GEM cipher suite       */
 #endif
@@ -1518,6 +1522,20 @@ typedef struct
     TI_UINT32		uCrcCalc;			/**< Current Calculated CRC  */
 } TFileInfo;
 
+/** \struct TrsnEncryptionStatus
+ * \brief rsn information
+ *
+ * \par Description
+ * Contains cipher type of both group and pairwise
+ * \sa
+ */
+typedef struct
+{
+	ECipherSuite    eRsnEncrPairwise;
+	ECipherSuite    eRsnEncrGroup;
+}TrsnEncryptionStatus;
+
+
 /** \struct T80211Header
  * \brief 802.11 MAC header
  *
@@ -1996,7 +2014,7 @@ typedef struct
 														* 0 - ACTIVE, 1 - PASSIVE
 														*/
     TI_UINT8               numOfProbRqst;	/**< This field indicates the number of probe requests to send per channel, when active scan is specified
-														* Note: for XCC measurement this value should be set to 1
+														* Note: for kkk measurement this value should be set to 1
 														*/
     EHwRateBitFiled        txdRateSetBandA;		/**< This EHwBitRate format field specifies the rate and modulation to transmit the probe request when
 														* an active scan is specifie */
@@ -2505,10 +2523,6 @@ typedef union
     TQueueTrafficParams                 *pQueueTrafficParams;			/**< */
 
     /* Security related parameters */
-#ifdef XCC_MODULE_INCLUDED
-    TI_BOOL                             rsnXCCSwEncFlag;				/**< */
-    TI_BOOL                             rsnXCCMicFieldFlag;				/**< */
-#endif
     ECipherSuite                        rsnEncryptionStatus;			/**< */
     TI_UINT8                            rsnHwEncDecrEnable; 			/**< 0- disable, 1- enable */
     TSecurityKeys                       *pRsnKey;						/**< */
@@ -3527,6 +3541,47 @@ TI_STATUS TWD_DisableEvent (TI_HANDLE hTWD, TI_UINT32 event);
  * \sa
  */
 TI_STATUS TWD_EnableEvent (TI_HANDLE hTWD, TI_UINT32 event);
+
+/** @ingroup Control
+ * \brief Enable events
+ *
+ * \param  hTWD         - TWD module object handle
+ * \param  uEvents      - Events' IDs
+ * \return TI_OK on success or TI_NOK on failure
+ *
+ * \par Description
+ * Enable FW events
+ *
+ * \sa
+ */
+TI_STATUS TWD_EnableEvents (TI_HANDLE hTWD, TI_UINT32 uEvents[], TI_UINT32 uNumEvents);
+
+/** @ingroup Control
+ * \brief Disable events
+ *
+ * \param  hTWD         - TWD module object handle
+ * \param  uEvents      - Events' IDs
+ * \return TI_OK on success or TI_NOK on failure
+ *
+ * \par Description
+ * Disable FW events
+ *
+ * \sa
+ */
+TI_STATUS TWD_DisableEvents (TI_HANDLE hTWD, TI_UINT32 uEvents[], TI_UINT32 uNumEvents);
+
+/** @ingroup Control
+ * \brief Get events bitmask
+ *
+ * \param  hTWD         - TWD module object handle
+ *
+ * \par Description
+ * Get events bitmask from eventMbox
+ *
+ * \sa
+ */
+TI_UINT32 TWD_GetEventMboxBitmask (TI_HANDLE hTWD);
+
 /** @ingroup Control
  * \brief Convert RSSI to RX Level
  *
@@ -4093,6 +4148,21 @@ TI_STATUS TWD_CfgBeaconFilterOpt (TI_HANDLE hTWD, TI_UINT8 uBeaconFilteringStatu
  * \sa
  */
 TI_STATUS TWD_CfgBeaconFilterTable (TI_HANDLE hTWD, TI_UINT8 uNumOfIe, TI_UINT8 *pIeTable, TI_UINT8 uIeTableSize);
+
+/** @ingroup Power_Management
+ * \brief  Configure Enable Broadcasts
+ *
+ * \param  hTWD     			- TWD module object handle
+ * \param  disableBroadcasts   	- bitmask to determine whether to disnable broadcasts RX or not
+  * \return TI_OK on success or TI_NOK on failure
+ *
+ * \par Description
+ * Configure Broadcasts Rx Enable to the FW
+ *
+ * \sa
+ */
+TI_STATUS TWD_CfgEnableBroadcasts (TI_HANDLE hTWD, TI_UINT8 disableBroadcasts);
+
 /** @ingroup Power_Management
  * \brief  Configure Wake Up Condition
  *

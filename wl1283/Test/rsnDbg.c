@@ -45,9 +45,6 @@
 #include "report.h"
 #include "paramOut.h"
 #include "rsnDbg.h"
-#ifdef XCC_MODULE_INCLUDED
-#include "XCCMngr.h"
-#endif
 
 void printRsnDbgFunctions(void);
 void printRogueApTable(TI_HANDLE hRogueAp);
@@ -93,8 +90,8 @@ void rsnDebugFunction(TI_HANDLE hRsn, TI_UINT32 funcType, void *pParam)
 		value = *(TI_UINT32*)pParam;
 
 		param.paramType = RSN_ENCRYPTION_STATUS_PARAM;
-		param.content.rsnEncryptionStatus = (ECipherSuite)value;
-
+        param.content.tRsnEncryptionStatus.eRsnEncrPairwise = (ECipherSuite)value;
+        
 		rsn_setParam(hRsn, &param);
 		break;
 	
@@ -122,6 +119,7 @@ void rsnDebugFunction(TI_HANDLE hRsn, TI_UINT32 funcType, void *pParam)
 
 		/* Get PMKID list */
 		rsn_getParam(hRsn, pRsnParam);
+		WLAN_OS_REPORT(("RSN:  Get PMKID cache.  Number of entries  = %d \n", pRsnParam->content.rsnPMKIDList.Length));
 		break;
 
 	case DBG_RSN_RESET_PMKID_CACHE:
@@ -129,11 +127,6 @@ void rsnDebugFunction(TI_HANDLE hRsn, TI_UINT32 funcType, void *pParam)
 		rsn_resetPMKIDList(hRsn);
 
 		break;
-#ifdef XCC_MODULE_INCLUDED
-    case DBG_RSN_PRINT_ROGUE_AP_TABLE:
-        printRogueApTable(((XCCMngr_t*)((rsn_t*)hRsn)->hXCCMngr)->hRogueAp);
-        break;
-#endif
 
     case DBG_RSN_SET_PORT_STATUS:
         WLAN_OS_REPORT(("Setting PORT STATUS to open\n"));

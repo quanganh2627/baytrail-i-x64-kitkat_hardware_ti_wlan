@@ -38,6 +38,8 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include <linux/wireless.h>
+#include <stdlib.h>
+
 #include "cu_osapi.h"
 #include "oserr.h"
 #include "TWDriver.h"
@@ -94,9 +96,11 @@ typedef struct IpcEvent_Child_t
 VOID g_tester_send_event(U8 event_index);
 /* local fucntions */
 /*******************/
-static VOID IpcEvent_SendMessageToChild(IpcEvent_t* pIpcEvent, PS8 msg)
+static S32 IpcEvent_SendMessageToChild(IpcEvent_t* pIpcEvent, PS8 msg)
 {
-    write(pIpcEvent->pipe_to_child, msg, os_strlen(msg));    
+	S32 ret;
+    ret = write(pIpcEvent->pipe_to_child, msg, os_strlen(msg));
+    return ret;
 }
 
 static S32 IpcEvent_Sockets_Open(VOID)
@@ -214,8 +218,8 @@ static VOID IpcEvent_PrintEvent(IpcEvent_Child_t* pIpcEventChild, U32 EventId, T
             case IPC_EVENT_AUTH_SUCC:
                 os_error_printf(CU_MSG_ERROR, (PS8)"IpcEvent_PrintEvent - received IPC_EVENT_AUTH_SUCC\n");
                 break;
-            case IPC_EVENT_CCKM_START:
-                os_error_printf(CU_MSG_ERROR, (PS8)"IpcEvent_PrintEvent - received IPC_EVENT_CCKM_START\n");
+            case IPC_EVENT_iii_START:
+                os_error_printf(CU_MSG_ERROR, (PS8)"IpcEvent_PrintEvent - received IPC_EVENT_iii_START\n");
                 break;
             case IPC_EVENT_EAPOL:
                 os_error_printf(CU_MSG_ERROR, (PS8)"IpcEvent_PrintEvent - received IPC_EVENT_EAPOL\n");
@@ -347,10 +351,6 @@ static VOID IpcEvent_wext_event_wireless(IpcEvent_Child_t* pIpcEventChild, PS8 d
                 } 
                 else 
                 {
-#ifdef XCC_MODULE_INCLUDED
-                    /* Send a signal to the udhcpc application to trigger the renew request */
-                    system("killall -SIGUSR1 udhcpc"); 
-#endif
                     EventId=IPC_EVENT_ASSOCIATED;
                     IpcEvent_PrintEvent(pIpcEventChild, EventId, NULL,0);
                 }
@@ -581,7 +581,8 @@ static VOID IpcEvent_Child(IpcEvent_Child_t* pIpcEventChild)
 /*************/
 THandle IpcEvent_Create(VOID)
 {   
-    IpcEvent_t* pIpcEvent = (IpcEvent_t*)os_MemoryCAlloc(sizeof(IpcEvent_t), sizeof(U8));
+	S32 ret;
+	IpcEvent_t* pIpcEvent = (IpcEvent_t*)os_MemoryCAlloc(sizeof(IpcEvent_t), sizeof(U8));
     if(pIpcEvent == NULL)
     {
         os_error_printf(CU_MSG_ERROR, (PS8)"ERROR - IpcEvent_Create - cant allocate control block\n");
@@ -592,14 +593,21 @@ THandle IpcEvent_Create(VOID)
     pIpcEvent->p_shared_memory = mmap(0, sizeof(IpcEvent_Shared_Memory_t), PROT_READ | PROT_WRITE, MAP_ANON | MAP_SHARED, -1, 0);
     if ( pIpcEvent->p_shared_memory == ((PVOID)-1)) 
     {
+
         os_error_printf(CU_MSG_ERROR, (PS8)"ERROR - IpcEvent_Create - cant allocate shared memory\n");
         IpcEvent_Destroy(pIpcEvent);
         return NULL;
     }
 
     /* create a pipe */
-    pipe(pIpcEvent->p_shared_memory->pipe_fields);
+    ret = pipe(pIpcEvent->p_shared_memory->pipe_fields);
+    if (0 != ret)
+    {
+    	ret = munmap(0, sizeof(IpcEvent_Shared_Memory_t));
+    	IpcEvent_Destroy(pIpcEvent);
+        return NULL;
 
+    }
     /* set the event mask to all disabled */
     pIpcEvent->p_shared_memory->event_mask = 0;
 
@@ -690,8 +698,6 @@ S32 IpcEvent_UpdateDebugLevel(THandle hIpcEvent, S32 debug_level)
     IpcEvent_t* pIpcEvent = (IpcEvent_t*)hIpcEvent;
 
     pIpcEvent->p_shared_memory->content.debug_level = debug_level;
-    IpcEvent_SendMessageToChild(pIpcEvent, (PS8)IPC_EVENT_MSG_UPDATE_DEBUG_LEVEL);
-
-    return OK;
+    return IpcEvent_SendMessageToChild(pIpcEvent, (PS8)IPC_EVENT_MSG_UPDATE_DEBUG_LEVEL);
 }
 

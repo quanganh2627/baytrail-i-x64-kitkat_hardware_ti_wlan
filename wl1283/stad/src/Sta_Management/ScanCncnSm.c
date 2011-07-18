@@ -44,6 +44,14 @@
 #include "ScanCncnSm.h"
 #include "report.h"
 
+/* time period [ms] to wait for Scan Complete event when stopping scan (during suspend)
+ *
+ * Note that when the driver suspends, it stops all its scan clients. So this
+ * period should be short enough so all clients can be stopped within _under_
+ * 3 seconds (the time before the kernel fails the suspend process with a
+ * "DPM Timeout" kernel-panic). */
+#define STOPSCAN_GUARD_TIME_MS	500
+
 /* state machine action functions */
 static void scanCncnSm_RequestScr       (TI_HANDLE hScanCncnClient);
 static void scanCncnSm_StartScan        (TI_HANDLE hScanCncnClient);
@@ -170,13 +178,14 @@ TI_HANDLE scanCncnSm_Create (TI_HANDLE hOS)
  * \param  fStopScan - SM specific scan stop finction
  * \param  fRecovery - SM specific recovery handling function
  * \param  pScanSmName - state machine name
+ * \param  eScanTag - tag identifying this client
  * \return None
  * \sa     scanCncnSm_Cretae 
  */ 
 void scanCncnSm_Init (TI_HANDLE hScanCncnClient, TStadHandlesList *pStadHandles,
                       TScanPrivateSMFunction fScrRequest,
                       TScanPrivateSMFunction fScrRelease, TScanPrivateSMFunction fStartScan, 
-                      TScanPrivateSMFunction fStopScan, TScanPrivateSMFunction fRecovery, TI_INT8* pScanSmName)
+                      TScanPrivateSMFunction fStopScan, TScanPrivateSMFunction fRecovery, TI_INT8* pScanSmName, EScanResultTag eScanTag)
 {
     TScanCncnClient *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
 
@@ -200,6 +209,7 @@ void scanCncnSm_Init (TI_HANDLE hScanCncnClient, TStadHandlesList *pStadHandles,
 
     pScanCncnClient->bCurrentlyRunning = TI_FALSE;
     pScanCncnClient->bSuspended = TI_FALSE;
+    pScanCncnClient->eScanTag = eScanTag;
 
     pScanCncnClient->hScanClientGuardTimer = NULL;
 
@@ -300,6 +310,19 @@ void scanCncnSm_StopScan (TI_HANDLE hScanCncnClient)
 
     TRACE0(pScanCncnClient->hReport, REPORT_SEVERITY_INFORMATION , "scanCncnSm_StopScan: SM  is attempting to stop scan\n");
 
+    /* if driver is suspending, hurry up */
+	if (pScanCncnClient->bSuspended)
+    {
+    	/* shorten the timer to guard the stop process - must hurry up when
+    	 * suspending (to avoid DPM Timeout) */
+    	tmr_StopTimer(pScanCncnClient->hScanClientGuardTimer);
+    	tmr_StartTimer (pScanCncnClient->hScanClientGuardTimer,
+    			scanCncn_StopScanTimeoutExpired,
+    			pScanCncnClient,
+    			STOPSCAN_GUARD_TIME_MS,
+    			TI_FALSE);
+    }
+
     /* call the scan SRV stop scan */
     pScanCncnClient->fStopScan (hScanCncnClient);
 }
@@ -342,6 +365,9 @@ void scanCncnSm_ScanComplete (TI_HANDLE hScanCncnClient)
  */ 
 void scanCncnSm_Nop (TI_HANDLE hScanCncnClient)
 {
+    TScanCncnClient *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
+
+    TRACE0(pScanCncnClient->hReport, REPORT_SEVERITY_WARNING , "scanCncnSm_Nop: nop event for current state\n");
 }
 
 /** 

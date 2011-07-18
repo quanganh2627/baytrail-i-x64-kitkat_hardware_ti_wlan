@@ -108,8 +108,8 @@ int sdioDrv_WriteSyncBytes (unsigned int  uFunc,
                             unsigned int  uLen, 
                             unsigned int  bMore);
 #ifndef SDIO_KERNEL_MODULE
-//int  sdioDrv_init(void);
-//void  sdioDrv_exit(void);
+int  sdioDrv_init(void);
+void  sdioDrv_exit(void);
 #endif
 
 int sdioDrv_EnableFunction(unsigned int uFunc);
@@ -121,6 +121,6 @@ void sdioDrv_Register_Notification(void (*notify_sdio_ready)(void));
 void sdioDrv_ReleaseHost(unsigned int uFunc);
 void sdioDrv_ClaimHost(unsigned int uFunc);
 void sdioDrv_DetectChange(void);
-
+int sdioDrv_Reset_Comm(void);
 
 #endif/* _OMAP3430_SDIODRV_H */

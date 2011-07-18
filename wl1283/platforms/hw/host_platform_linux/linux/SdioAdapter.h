@@ -144,6 +144,11 @@ ETxnStatus sdioAdapt_TransactBytes (unsigned int  uFuncId,
                                     unsigned int  bDirection,
                                     unsigned int  bMore);
 
-
+/**
+ * \brief   notify the SDIO adapter the wlan is starting to resume
+ *
+ * \note    called before the wlan driver sends any transaction over the sdio
+ */
+void sdioAdapt_PrepareResume(void);
 
 #endif /*__SDIO_ADAPT_API_H__*/

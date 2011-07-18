@@ -325,9 +325,8 @@ static TI_STATUS cmdQueue_SM (TI_HANDLE hCmdQueue, ECmdQueueSmEvents eCmdQueueEv
                                 }
                                 else
                                 {
-                                    WLAN_OS_REPORT(("cmdQueue_SM: ** ERROR **  Mbox status error %d, set bErrorFlag !!!!!\n", cmdStatus));
-                                    TRACE1(pCmdQueue->hReport, REPORT_SEVERITY_ERROR, "cmdQueue_SM: ** ERROR **  Mbox status error %d, set bErrorFlag !!!!!\n", cmdStatus);
-                                    pCmdQueue->bErrorFlag = TI_TRUE;
+                                    WLAN_OS_REPORT(("cmdQueue_SM: ** ERROR **  Mbox status error %d, Not set bErrorFlag !!!!!\n", cmdStatus));
+                                    TRACE1(pCmdQueue->hReport, REPORT_SEVERITY_ERROR, "cmdQueue_SM: ** ERROR **  Mbox status error %d, Not set bErrorFlag !!!!!\n", cmdStatus);
                                 }
                             }
                             else

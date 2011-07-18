@@ -125,10 +125,11 @@ TI_STATUS scanCncnApp_SetParam (TI_HANDLE hScanCncn, paramInfo_t *pParam)
             {
                 TRACE0(pScanCncn->hReport, REPORT_SEVERITY_INFORMATION, "Stopping running periodical scan"
                                                                         "in order to start a new one from the same client.\n");
-                os_memoryCopy(pScanCncn->hOS, &pScanCncn->tPendingPeriodicScanParams, &pParam, 
-                              sizeof(paramInfo_t));
+				os_memoryCopy(pScanCncn->hOS, &(pScanCncn->tPendingPeriodicScanParams), pParam->content.pPeriodicScanParams,sizeof(TPeriodicScanParams));
+
                 pScanCncn->bPendingPeriodicScan = TI_TRUE;
                 scanCncn_StopPeriodicScan (hScanCncn, SCAN_SCC_APP_PERIODIC);
+				break;
             }
             else
             {
@@ -338,21 +339,6 @@ void scanCncnApp_PeriodicScanResultCB (TI_HANDLE hScanCncn, EScanCncnResultStatu
 
     scanClient = pScanCncn->pScanClients[ SCAN_SCC_APP_PERIODIC ]->uScanParams.tPeriodicScanParams.eScanClient;
 
-    if (pScanCncn->bPendingPeriodicScan) 
-    {
-        TI_STATUS status = scanCncnApp_SetParam(hScanCncn, &pScanCncn->tPendingPeriodicScanParams);
-        if (status != TI_OK) 
-        {
-            TRACE3(pScanCncn->hReport, REPORT_SEVERITY_ERROR, 
-                   "scanCncnApp_PeriodicScanResultCB - Unable to launch pending periodical scan"
-                   "from external client: %d, status = %d, ParamType = 0x%x\n", 
-                   scanClient, status, pScanCncn->tPendingPeriodicScanParams.paramType);
-        }
-        pScanCncn->bPendingPeriodicScan = TI_FALSE;
-        return;
-    }
-    
-
     scanCncnApp_ScanResultCB(hScanCncn, status, frameInfo, SPSStatus, scanClient, SCAN_SCC_APP_PERIODIC);
 }
 
@@ -415,16 +401,42 @@ void scanCncnApp_ScanResultCB (TI_HANDLE hScanCncn, EScanCncnResultStatus status
 
             /* mark that scan is no longer running */
             pScanCncn->pScanClients[eScanCncnClient]->bCurrentlyRunning = TI_FALSE;
+            
+			if (pClient)
+			{
+				scanCncn_ClientStopped(pScanCncn, eScanCncnClient);
+			}
+            if (pScanCncn->bPendingPeriodicScan)
+		    {
+
+		        /* set periodic scan as running app scan client */
+		        pScanCncn->pScanClients[SCAN_SCC_APP_PERIODIC]->bCurrentlyRunning = TI_TRUE;
+
+		         /* Perform aging process before the scan */
+		         scanResultTable_PerformAging(pScanCncn->hScanResultTable);
+
+		         if (SCAN_CRS_SCAN_RUNNING !=
+		             scanCncn_StartPeriodicScan (hScanCncn, SCAN_SCC_APP_PERIODIC, &(pScanCncn->tPendingPeriodicScanParams)))
+		         {
+		             TRACE0(pScanCncn->hReport, REPORT_SEVERITY_CONSOLE , "Scan was not started. Verify scan parametrs or SME mode.\n");
+		             WLAN_OS_REPORT (("Scan was not started. Verify scan parametrs or SME mode\n"));
+
+		             /* Scan was not started successfully, mark that no app scan is running */
+		             pScanCncn->pScanClients[SCAN_SCC_APP_PERIODIC]->bCurrentlyRunning = TI_FALSE;
+
+		         }
+		         pScanCncn->bPendingPeriodicScan = TI_FALSE;
+		    }
+            else
+		    {
             /* 
              * The scan was finished, send a scan complete event to the user
              * (regardless of why the scan was completed)
              */
-			EvHandlerSendEvent (pScanCncn->hEvHandler, IPC_EVENT_SCAN_COMPLETE, (TI_UINT8 *)&eExternalScanClient, sizeof(TI_UINT32));
 
-			if (pClient)
-			{
-				scanCncn_ClientStopped(pScanCncn, pClient);
-			}
+			EvHandlerSendEvent (pScanCncn->hEvHandler, IPC_EVENT_SCAN_COMPLETE, (TI_UINT8 *)&eExternalScanClient, sizeof(TI_UINT32));
+		    }
+
         }
         break;
 
@@ -439,7 +451,7 @@ void scanCncnApp_ScanResultCB (TI_HANDLE hScanCncn, EScanCncnResultStatus status
 			pClient = pScanCncn->pScanClients[eScanCncnClient];
 			if (pClient)
 			{
-				scanCncn_ClientStopped(pScanCncn, pClient);
+				scanCncn_ClientStopped(pScanCncn, eScanCncnClient);
 			}
         }
         else
@@ -455,15 +467,39 @@ void scanCncnApp_ScanResultCB (TI_HANDLE hScanCncn, EScanCncnResultStatus status
 
             /* mark that scan is no longer running */
             pScanCncn->pScanClients[eScanCncnClient]->bCurrentlyRunning = TI_FALSE;
+            
+			if (pClient)
+			{
+				scanCncn_ClientStopped(pScanCncn, eScanCncnClient);
+			}
+
+            if (pScanCncn->bPendingPeriodicScan)
+            {
+                /* set periodic scan as running app scan client */
+                 pScanCncn->pScanClients[SCAN_SCC_APP_PERIODIC]->bCurrentlyRunning = TI_TRUE;
+
+                 /* Perform aging process before the scan */
+                 scanResultTable_PerformAging(pScanCncn->hScanResultTable);
+
+                 if (SCAN_CRS_SCAN_RUNNING !=
+                     scanCncn_StartPeriodicScan (hScanCncn, SCAN_SCC_APP_PERIODIC, &(pScanCncn->tPendingPeriodicScanParams)))
+                 {
+                     TRACE0(pScanCncn->hReport, REPORT_SEVERITY_CONSOLE , "Scan was not started. Verify scan parametrs or SME mode.\n");
+                     WLAN_OS_REPORT (("Scan was not started. Verify scan parametrs or SME mode\n"));
+
+                     /* Scan was not started successfully, mark that no app scan is running */
+                     pScanCncn->pScanClients[SCAN_SCC_APP_PERIODIC]->bCurrentlyRunning = TI_FALSE;
+
+                 }
+                 pScanCncn->bPendingPeriodicScan = TI_FALSE;
+            }
+            else
+            {
             /* 
              * The scan was finished, send a scan complete event to the user
              * (regardless of why the scan was completed)
              */
             EvHandlerSendEvent (pScanCncn->hEvHandler, IPC_EVENT_SCAN_COMPLETE, (TI_UINT8 *)&eExternalScanClient, sizeof(TI_UINT32));
-
-			if (pClient)
-			{
-				scanCncn_ClientStopped(pScanCncn, pClient);
 			}
         }
         break;
@@ -481,6 +517,12 @@ void scanCncnApp_ScanResultCB (TI_HANDLE hScanCncn, EScanCncnResultStatus status
         {
             /* send a scan complete event to the OS scan SM. It will stabliza the table when needed */
             genSM_Event (pScanCncn->hOSScanSm, SCAN_CNCN_OS_SM_EVENT_SCAN_COMPLETE, hScanCncn);
+			pClient = pScanCncn->pScanClients[eScanCncnClient];
+			if (pClient)
+			{
+				scanCncn_ClientStopped(pScanCncn, eScanCncnClient);
+			}
+
         }
         else
         {
@@ -504,7 +546,7 @@ void scanCncnApp_ScanResultCB (TI_HANDLE hScanCncn, EScanCncnResultStatus status
 
 			if (pClient)
 			{
-				scanCncn_ClientStopped(pScanCncn, pClient);
+				scanCncn_ClientStopped(pScanCncn, eScanCncnClient);
 			}
         }
         break;

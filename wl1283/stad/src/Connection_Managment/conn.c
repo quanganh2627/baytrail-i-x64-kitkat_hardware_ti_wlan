@@ -161,7 +161,7 @@ void conn_init (TStadHandlesList *pStadHandles)
 	pConn->hMeasurementMgr	= pStadHandles->hMeasurementMgr;
 	pConn->hTrafficMonitor  = pStadHandles->hTrafficMon;
 	pConn->hScr				= pStadHandles->hSCR;
-	pConn->hXCCMngr			= pStadHandles->hXCCMngr;
+	pConn->hkkkMngr			= pStadHandles->hkkkMngr;
 	pConn->hQosMngr			= pStadHandles->hQosMngr;
 	pConn->hTWD		        = pStadHandles->hTWD;
     pConn->hScanCncn        = pStadHandles->hScanCncn;
@@ -186,12 +186,21 @@ TI_STATUS conn_SetDefaults (TI_HANDLE 	hConn, connInitParams_t		*pConnInitParams
     pConn->timeout			   = pConnInitParams->connSelfTimeout;
 	pConn->connType			   = CONN_TYPE_FIRST_CONN;
     pConn->ibssDisconnectCount = 0;
+    pConn->bPowerStateModeOn   = TI_TRUE;
 
 	/* allocate OS timer memory */
     pConn->hConnTimer = tmr_CreateTimer (pConn->hTimer);
 	if (pConn->hConnTimer == NULL)
 	{
         TRACE0(pConn->hReport, REPORT_SEVERITY_ERROR, "conn_SetDefaults(): Failed to create hConnTimer!\n");
+		release_module (pConn);
+		return TI_NOK;
+	}
+	
+	pConn->hJoinTimer = tmr_CreateTimer (pConn->hTimer);
+	if (pConn->hJoinTimer == NULL)
+	{
+        TRACE0(pConn->hReport, REPORT_SEVERITY_ERROR, "conn_SetDefaults(): Failed to create hJoinTimer!\n");
 		release_module (pConn);
 		return TI_NOK;
 	}
@@ -482,11 +491,13 @@ TI_STATUS conn_reportMlmeStatus(TI_HANDLE			hConn,
 	{
         TRACE0(pConn->hReport, REPORT_SEVERITY_CONSOLE,"-------------------------------------\n");
         TRACE0(pConn->hReport, REPORT_SEVERITY_CONSOLE,"               CONN LOST             \n");
+		TRACE3(pConn->hReport, REPORT_SEVERITY_CONSOLE,"%s: DisConnect status = %d, Assoc status = %d", __FUNCTION__,status, uStatusCode);
         TRACE0(pConn->hReport, REPORT_SEVERITY_CONSOLE,"-------------------------------------\n");
 
 #ifdef REPORT_LOG
 		WLAN_OS_REPORT(("-------------------------------------\n"));
 		WLAN_OS_REPORT(("               CONN LOST             \n"));
+		WLAN_OS_REPORT(("%s: DisConnect status = %d, Assoc status = %d",__FUNCTION__, status, uStatusCode));
 		WLAN_OS_REPORT(("-------------------------------------\n"));
 #else
 		os_printf("%s: *** CONN LOST ***\n", __func__);
@@ -533,11 +544,13 @@ TI_STATUS conn_ReportApConnStatus(TI_HANDLE	hConn, mgmtStatus_e status, TI_UINT1
 
     TRACE0(pConn->hReport, REPORT_SEVERITY_CONSOLE,"-------------------------------------\n");
     TRACE0(pConn->hReport, REPORT_SEVERITY_CONSOLE,"               CONN LOST             \n");
+	TRACE3(pConn->hReport, REPORT_SEVERITY_CONSOLE,"%s: DisConnect status = %d, Assoc status = %d", __FUNCTION__,status, uStatusCode);
     TRACE0(pConn->hReport, REPORT_SEVERITY_CONSOLE,"-------------------------------------\n");
 
 #ifdef REPORT_LOG
     WLAN_OS_REPORT(("-------------------------------------\n"));
     WLAN_OS_REPORT(("               CONN LOST             \n"));
+	WLAN_OS_REPORT(("%s: DisConnect status = %d, Assoc status = %d",__FUNCTION__, status, uStatusCode));
     WLAN_OS_REPORT(("-------------------------------------\n"));
 #else
     os_printf("%s: *** CONN LOST ***\n", __func__);
@@ -647,7 +660,7 @@ void conn_timeout (TI_HANDLE hConn, TI_BOOL bTwdInitOccured)
 	case CONNECTION_INFRA:
 		conn_infraSMEvent(&pConn->state, CONN_INFRA_DISCONN_COMPLETE, (TI_HANDLE) pConn);
         /* Initiate recovery only if not already occured. */
-        if (!bTwdInitOccured) 
+        if (!bTwdInitOccured && pConn->bPowerStateModeOn)
         {
 		healthMonitor_sendFailureEvent(pConn->hHealthMonitor, DISCONNECT_TIMEOUT);
         }
@@ -660,6 +673,41 @@ void conn_timeout (TI_HANDLE hConn, TI_BOOL bTwdInitOccured)
 	return;
 }
 
+/***********************************************************************
+ *                        conn_timoutJoinCmplt
+ ***********************************************************************
+DESCRIPTION:	Called by the OS abstraction layer when the conn timer expired waiting for join complete command
+				This function triggers a recovery
+
+INPUT:      hConn	-	Connection handle.
+            bTwdInitOccured -   Indicates if TWDriver recovery occured since timer started
+
+OUTPUT:
+
+RETURN:     Nothing
+
+************************************************************************/
+void conn_timeoutJoinCmplt(TI_HANDLE hConn, TI_BOOL bTwdInitOccured)
+{
+    conn_t *pConn = (conn_t *) hConn;
+
+    switch (pConn->currentConnType)
+    {
+    case CONNECTION_INFRA:
+        TRACE1(pConn->hReport, REPORT_SEVERITY_ERROR, "conn_timoutJoinCmplt: Driver did not get join complete event after %d msec, disconnecting\n", CONN_JOIN_CMPLT_TIMEOUT_MSEC);
+        /* Initiate recovery only if not already occurred. */
+        conn_infraSMEvent(&pConn->state, CONN_INFRA_DISCONNECT, (TI_HANDLE) pConn);
+        break;
+
+    case CONNECTION_IBSS:
+    case CONNECTION_SELF:
+    case CONNECTION_NONE:
+        TRACE1(pConn->hReport, REPORT_SEVERITY_WARNING, "conn_timoutJoinCmplt: recevied unexpected timout, conn type %d\n", pConn->connType);
+        break;
+    }
+
+    return;
+}
 /***********************************************************************
  *                        conn_selfTimeout
  ***********************************************************************
@@ -749,6 +797,12 @@ static void release_module(conn_t *pConn)
 		tmr_DestroyTimer (pConn->hConnTimer);
     }
 
+	if (pConn->hJoinTimer)
+	{
+		tmr_DestroyTimer (pConn->hJoinTimer);
+	}
+
+
 	os_memoryFree(pConn->hOs, pConn, sizeof(conn_t));
 }
 
@@ -774,6 +828,14 @@ static void conn_DisconnectComplete (conn_t *pConn, TI_UINT8  *data, TI_UINT8   
 	}
 }
 
+
+void conn_setPowerStateModeOn(TI_HANDLE hConn, TI_BOOL powerStateModeOn)
+{
+    conn_t *pConn = (conn_t*)hConn;
+
+    pConn->bPowerStateModeOn = powerStateModeOn;
+
+}
 
 #ifdef REPORT_LOG
 /**

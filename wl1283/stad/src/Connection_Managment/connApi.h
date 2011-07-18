@@ -110,6 +110,7 @@ TI_STATUS conn_stop (TI_HANDLE               hConn,
 				     TI_HANDLE				connStatCbObj );
 
 void conn_timeout (TI_HANDLE hConn, TI_BOOL bTwdInitOccured);
+void conn_timeoutJoinCmplt(TI_HANDLE hConn, TI_BOOL bTwdInitOccured);
 void conn_selfTimeout (TI_HANDLE hConn, TI_BOOL bTwdInitOccured);
 
 TI_STATUS conn_ibssStaJoined (TI_HANDLE hConn);
@@ -125,6 +126,8 @@ TI_STATUS conn_ReportApConnStatus(TI_HANDLE hConn,
 
 TI_STATUS conn_reportRsnStatus(TI_HANDLE hConn, 
                                mgmtStatus_e status);
+
+void conn_setPowerStateModeOn(TI_HANDLE hConn, TI_BOOL powerStateModeOn);
 
 #ifdef REPORT_LOG
 void conn_ibssPrintStatistics (TI_HANDLE hConn);

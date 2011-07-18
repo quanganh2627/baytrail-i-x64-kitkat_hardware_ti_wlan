@@ -285,6 +285,8 @@ TI_STATUS currBSS_SetDefaults (TI_HANDLE hCurrBSS, TCurrBssInitParams *pInitPara
     pCurrBSS->bUseSGParams = TI_FALSE;
     pCurrBSS->uDefaultKeepAlivePeriod = pInitParams->uNullDataKeepAlivePeriod; 
 
+    /* Suspend/resume parameters */
+    pCurrBSS->bEventMaskChanged = TI_FALSE;
 
     /* register the static callbacks */
     TWD_RegisterEvent(pCurrBSS->hTWD,TWD_OWN_EVENT_RSSI_SNR_TRIGGER_0,(void*) currBSS_RssiSnrTrigger0, pCurrBSS); 
@@ -944,7 +946,7 @@ void currBSS_updateConnectedState(TI_HANDLE hCurrBSS, TI_BOOL isConnected, ScanB
 
             /*
              * only configure the null-data keepa-live message if the interval is valid
-             * (either the default interval or the one from teh XCC IE)
+             * (either the default interval or the one from teh kkk IE)
              */
             if (0 != uKeepAlivePreiod)
             {
@@ -1321,7 +1323,59 @@ TI_INT8 currBSS_RegisterTriggerEvent (TI_HANDLE hCurrBSS, TI_UINT8 triggerID,TI_
 }
 
 
+TI_STATUS currBss_Suspend(TI_HANDLE hCurrBSS, TI_UINT32 uSuspendFilterUsage)
+{
+	currBSS_t   *pCurrBSS = (currBSS_t *)hCurrBSS;
+	TI_UINT32	uEventIDs[TRIGGER_EVENT_MAX];
+	TI_UINT32	uIndex;
 
+	/* Check if need to disable RSSI triggers */
+	if (uSuspendFilterUsage & PWRSTATE_FILTER_USAGE_DISABLE_ROAMINTG_TRIGGERS)
+	{
+		/* Save current event masking of RSSI triggers (only 8 LSBs) */
+		pCurrBSS->uEventsBitMask = (TI_UINT8)TWD_GetEventMboxBitmask(pCurrBSS->hTWD);
+
+		/* Mask all 8 RSSI triggers */
+		for (uIndex = 0; uIndex < TRIGGER_EVENT_MAX; uIndex++)
+		{
+			uEventIDs[uIndex] = uIndex; /* RSSI trigger events have IDs 0-7 */
+		}
+
+		if (TI_OK != TWD_DisableEvents(pCurrBSS->hTWD, uEventIDs, TRIGGER_EVENT_MAX))
+		{
+			return TI_NOK;
+		}
+		pCurrBSS->bEventMaskChanged = TI_TRUE;
+	}
+	return TI_OK;
+}
+
+TI_STATUS currBss_Resume(TI_HANDLE hCurrBSS)
+{
+	currBSS_t   *pCurrBSS 	= (currBSS_t *)hCurrBSS;
+	TI_UINT32	uMask 		= 1;
+	TI_UINT32	uEventId, uNumEvents = 0, uEvents[TRIGGER_EVENT_MAX];
+
+	if (pCurrBSS->bEventMaskChanged)
+	{
+		/* Return mask to previous state */
+		for(uEventId = 0; uEventId < TRIGGER_EVENT_MAX; uEventId++)
+		{
+			if (!(pCurrBSS->uEventsBitMask & uMask)) /* Needs to be enabled (unmasked)*/
+			{
+				uEvents[uNumEvents] = uEventId;
+				uNumEvents++;
+			}
+			uMask <<= 1;
+		}
+		if (TI_OK != TWD_EnableEvents(pCurrBSS->hTWD, uEvents, uNumEvents))
+		{
+			return TI_NOK;
+		}
+		pCurrBSS->bEventMaskChanged = TI_FALSE;
+	}
+	return TI_OK;
+}
 
 /** 
  * \fn     currBss_HandleTriggerEvent 

@@ -43,7 +43,6 @@
 #ifndef PUBLIC_COMMANDS_H
 #define PUBLIC_COMMANDS_H
 
-
 #include "public_types.h"
 #include "public_radio.h"
 
@@ -67,6 +66,7 @@ typedef enum
     CMD_TEST            = 23,
 
     CMD_NOISE_HIST      = 28,
+    CMD_QUIET_ELEMENT_SET_STATE = 29,
 
     CMD_LNA_CONTROL     = 32,	/* Obsolete */
     CMD_SET_BCN_MODE    = 33,
@@ -472,19 +472,16 @@ typedef struct
 {
 
     uint32        scanMinDuration;    /* For active scans, this field specifies the */
-    /* minimum amount of time, in time units (TUs), */
+                                      /* minimum amount of time, in micro second, */
     /* to wait for a frame on a channel. This */
-    /* parameter is not used for passive scans. The*/
-    /*  value can range from 0 to 65535 TUs */
-    /* (67.1 seconds). */
+                                      /* parameter is not used for passive scans.*/
 
     uint32        scanMaxDuration;    /* For active scans, this field specifies the */
-    /* maximum amount of time, in time units (TUs), */
+                                      /* maximum amount of time, in micro second, */
     /* to wait for a probe response on a channel.*/
     /* For passive scans, this field specifies the */
-    /* amount of time, in time units (TUs), to listen*/
-    /* on a channel. The value can range from 0 to */
-    /* 65535 TUs (67.1 seconds). */
+                                      /* amount of time, in micro second, to listen*/
+                                      /* on a channel.*/
 
 
     uint32        bssIdL;             /* 32 LSBits of BSSID of the AP to scan for. */
@@ -918,9 +915,8 @@ typedef enum
     TEMPLATE_PROBE_REQ_5, /*for firmware internal use only*/
     TEMPLATE_BAR, /*for firmware internal use only*/
     TEMPLATE_CTS, /* For CTS-to-self (FastCTS) mechanism for BT/WLAN coexistence (SoftGemini). */
-    TEMPLATE_ARP_RSP, /* Template for Automatic ARP reply by FW */
+	TEMPLATE_ARP, /* Template for Automatic ARP reply by FW */
     TEMPLATE_LINK_MEASUREMENT_REPORT, /* Template for RRM (802.11k) link measurement report */
-
     MAX_NUM_OF_TEMPLATES = 0xff
 } TemplateType_enum;
 
@@ -1187,10 +1183,9 @@ typedef struct
 
     ID:       CMD_AP_DISCOVERY
     Desc:     This command instructs the WiLink device to perform an AP discovery
-              measurement on a multiple channels channel. This command can only be issued after
+              measurement on a set of channels. This command can only be issued after 
               a measurement process has been started by the WiLink device as a result
-              of a previous Measurement command. The Measurement command specifies the
-              channel on which the AP discovery is performed. Once the "AP discovery"
+              of a previous Measurement command. Once the "AP discovery" 
               measurement is completed either by a STOP_AP_DISCOVERY command or when
               the duration has expired, it will send an "AP discovery complete event"
               to the host.
@@ -1215,8 +1210,8 @@ typedef struct
 {
     BasicScanParameters_t         basicScanParams;
     BasicScanChannelParameters_t  channelParamsBandGeneral;
-    ApDiscoveryChannelParmeters_t channelParamsBandBG[SCAN_MAX_NUM_OF_CHANNELS];
-    ApDiscoveryChannelParmeters_t channelParamsBandA[SCAN_MAX_NUM_OF_CHANNELS];
+    ApDiscoveryChannelParmeters_t channelBG[SCAN_MAX_NUM_OF_CHANNELS];
+	ApDiscoveryChannelParmeters_t channelA[SCAN_MAX_NUM_OF_CHANNELS];
     EHwRateBitFiled               txdRateSetBG;
     EHwRateBitFiled               txdRateSetA;
     uint8                         numOfChannelsBandBG;
@@ -1238,6 +1233,20 @@ typedef struct
 
 /******************************************************************************
 
+ ID:       CMD_QUIET_ELEMENT_SET_STATE
+    Desc:     This command instructs the WiLink to Enable/Disable QE module 
+    Params:   QESetState_e see below.
+
+******************************************************************************/
+typedef enum
+{	
+        QUIET_ELEMENT_SET_DISABLED,
+        QUIET_ELEMENT_SET_ENABLE
+
+} QuietElementSetState_e;
+
+
+/******************************************************************************
     ID:       CMD_SPS_SCAN
     Desc:     This command instructs the WiLink to perform a scheduled passive
               scan for BSS/IBSSs. The WiLink monitors the specified channel(s)
@@ -1390,7 +1399,7 @@ typedef ScanSsidFilterType_enum ScanSsidFilterType_e;
 
 #define CONN_SCAN_MAX_CHANNELS_BG  14
 #define CONN_SCAN_MAX_CHANNELS_J    4
-#define CONN_SCAN_MAX_CHANNELS_A   23
+#define CONN_SCAN_MAX_CHANNELS_A   24
 #define CONN_SCAN_MAX_CHANNELS_ALL_BANDS        ((CONN_SCAN_MAX_CHANNELS_BG) + (CONN_SCAN_MAX_CHANNELS_A) + (CONN_SCAN_MAX_CHANNELS_J))
 #define CONN_SCAN_MAX_NUM_OF_CYCLES_INTERVALS   (16)        /* Maximum number of configured inter-cycle intervals */
 

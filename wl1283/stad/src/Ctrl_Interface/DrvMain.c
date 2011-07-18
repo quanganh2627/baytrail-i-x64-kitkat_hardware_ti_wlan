@@ -66,9 +66,6 @@
 #include "scanMngrApi.h"
 #include "regulatoryDomainApi.h"
 #include "measurementMgrApi.h"
-#ifdef XCC_MODULE_INCLUDED
-#include "XCCMngr.h"
-#endif
 #include "TxnQueue.h"
 #include "TWDriver.h"
 #include "debug.h"
@@ -142,6 +139,7 @@ typedef struct
     TStadHandlesList  tStadHandles; /* All STAD modules handles (distributed in driver init process) */
     TI_UINT16         uIniFileVersion; /* Compatibility version of the ini file */
 	TI_BOOL           bRecovery;    /* Indicates if we are during recovery process */
+	TI_BOOL			  bRecoveryInInitStage; /* Indicates if the recovery triggered from init failure */
 	TI_UINT32         uNumOfRecoveryAttempts;    /* Indicates if we are during recovery process */
 	ESmState          eSmState;     /* The DrvMain SM state. */
 	ESmEvent          ePendingEvent;/* A pending event issued when the SM is busy */
@@ -432,16 +430,7 @@ TI_STATUS drvMain_Create (TI_HANDLE  hOs,
         return TI_NOK;
     }
 
-#ifdef XCC_MODULE_INCLUDED
-    pDrvMain->tStadHandles.hXCCMngr = XCCMngr_create (hOs);
-    if (pDrvMain->tStadHandles.hXCCMngr == NULL)
-    {
-        drvMain_Destroy (pDrvMain);
-        return TI_NOK;
-    }
-#else
-    pDrvMain->tStadHandles.hXCCMngr = NULL;
-#endif
+    pDrvMain->tStadHandles.hkkkMngr = NULL;
 
     pDrvMain->tStadHandles.hRoamingMngr = roamingMngr_create (hOs);
     if (pDrvMain->tStadHandles.hRoamingMngr == NULL)
@@ -682,12 +671,6 @@ TI_STATUS drvMain_Destroy (TI_HANDLE  hDrvMain)
         SoftGemini_destroy (pDrvMain->tStadHandles.hSoftGemini);
     }
 
-#ifdef XCC_MODULE_INCLUDED
-    if (pDrvMain->tStadHandles.hXCCMngr != NULL)
-    {
-        XCCMngr_unload (pDrvMain->tStadHandles.hXCCMngr);
-    }
-#endif
 
     if (pDrvMain->tStadHandles.hRoamingMngr != NULL)
     {
@@ -819,11 +802,7 @@ static void drvMain_Init (TI_HANDLE hDrvMain)
     scr_init (pModules);
     conn_init (pModules);
     ctrlData_init (pModules,
-                 #ifdef XCC_MODULE_INCLUDED
-                   XCCMngr_LinkTestRetriesUpdate, pModules->hXCCMngr);
-                 #else
                    NULL, NULL);
-                 #endif                 
     siteMgr_init (pModules);
     regulatoryDomain_init (pModules);
     scanCncn_Init (pModules);
@@ -837,9 +816,6 @@ static void drvMain_Init (TI_HANDLE hDrvMain)
     sme_Init (pModules);
     rsn_init (pModules);
     measurementMgr_init (pModules);
-#ifdef XCC_MODULE_INCLUDED
-    XCCMngr_init (pModules);
-#endif
     scanMngr_init (pModules);
     currBSS_init (pModules); 
     apConn_init (pModules);
@@ -912,9 +888,6 @@ static TI_STATUS drvMain_SetDefaults (TI_HANDLE hDrvMain, TI_UINT8 *pBuf, TI_UIN
     sme_SetDefaults (pDrvMain->tStadHandles.hSme, &pInitTable->tSmeModifiedInitParams, &pInitTable->tSmeInitParams);
     rsn_SetDefaults (pDrvMain->tStadHandles.hRsn, &pInitTable->rsnInitParams);
     measurementMgr_SetDefaults (pDrvMain->tStadHandles.hMeasurementMgr, &pInitTable->measurementInitParams);
-#ifdef XCC_MODULE_INCLUDED
-    XCCMngr_SetDefaults (pDrvMain->tStadHandles.hXCCMngr, &pInitTable->XCCMngrParams);
-#endif /*XCC_MODULE_INCLUDED*/
     apConn_SetDefaults (pDrvMain->tStadHandles.hAPConnection, &pInitTable->apConnParams);
     qosMngr_SetDefaults (pDrvMain->tStadHandles.hQosMngr, &pInitTable->qosMngrInitParams);
     switchChannel_SetDefaults (pDrvMain->tStadHandles.hSwitchChannel, &pInitTable->SwitchChannelInitParams);
@@ -1055,6 +1028,7 @@ static void drvMain_InitLocals (TDrvMain *pDrvMain)
     pDrvMain->eSmState              = SM_STATE_IDLE;
     pDrvMain->uPendingEventsCount   = 0;
 	pDrvMain->bRecovery             = TI_FALSE; 
+	pDrvMain->bRecoveryInInitStage	= TI_FALSE;
 	pDrvMain->uNumOfRecoveryAttempts = 0;
 
     /* Platform specific HW preparations */
@@ -1583,6 +1557,10 @@ static void drvMain_Sm (TI_HANDLE hDrvMain, ESmEvent eEvent)
             	invokeCallback(pDrvMain->fFwInitDoneCb, pDrvMain->hFwInitDoneCb);
             }
 
+#ifdef OMAP_LEVEL_INT
+            os_enableIrq(hOs);
+#endif
+
             TWD_EnableInterrupts(pDrvMain->tStadHandles.hTWD);
           #ifdef PRIODIC_INTERRUPT
             /* Start periodic interrupts. It means that every period of time the FwEvent SM will be called */
@@ -1590,6 +1568,10 @@ static void drvMain_Sm (TI_HANDLE hDrvMain, ESmEvent eEvent)
           #endif
             eStatus = drvMain_ConfigFw (hDrvMain);
         }
+		else
+		{
+			pDrvMain->bRecoveryInInitStage = TI_TRUE;
+		}
         break;
     case SM_STATE_FW_CONFIG:
         /* 
@@ -1606,14 +1588,25 @@ static void drvMain_Sm (TI_HANDLE hDrvMain, ESmEvent eEvent)
         if (eEvent == SM_EVENT_FW_CONFIG_COMPLETE) 
         {
             pDrvMain->eSmState = SM_STATE_OPERATIONAL;
+			/* set the driver to operational mode */
+			tmr_UpdateDriverState (pDrvMain->tStadHandles.hTimer, TI_TRUE);
             if (pDrvMain->bRecovery) 
 			{
+				wlanDrvIf_UpdateDriverState (hOs, DRV_STATE_RUNNING);
 				pDrvMain->uNumOfRecoveryAttempts = 0;
 				drvMain_RecoveryNotify (pDrvMain);
 				pDrvMain->bRecovery = TI_FALSE;
+                if (pDrvMain->bRecoveryInInitStage) {
+					
+					invokeCallback(pDrvMain->fFwInitDoneCb, pDrvMain->hFwInitDoneCb);
+					pDrvMain->bRecoveryInInitStage = TI_FALSE;
+				}
+			}
+            else 
+            {
+            	invokeCallback(pDrvMain->fFwInitDoneCb, pDrvMain->hFwInitDoneCb);
 			}
 
-            tmr_UpdateDriverState (pDrvMain->tStadHandles.hTimer, TI_TRUE);
             drvMain_EnableActivities (pDrvMain);
 
             invokeCallback(pDrvMain->fModuleStartedCb, pDrvMain->hModuleStartedCb);
@@ -1718,9 +1711,25 @@ static void drvMain_Sm (TI_HANDLE hDrvMain, ESmEvent eEvent)
             pDrvMain->eSmState = SM_STATE_STOPPING;
 			eStatus = drvMain_StopActivities (pDrvMain);
 		}
+		else if (eEvent == SM_EVENT_STOP_COMPLETE)
+		{
+			/* in case we need to call to recovery */
+			healthMonitor_sendFailureEvent (pDrvMain->tStadHandles.hHealthMonitor, HW_AWAKE_FAILURE);
+		}
         break;
     case SM_STATE_FAILED:
         /* Nothing to do except waiting for Destroy */
+		if (eEvent == SM_EVENT_RECOVERY)
+		{
+			hPlatform_DevicePowerOff ();
+            if (pDrvMain->bRecovery) 
+            {
+                hPlatform_DevicePowerOn ();
+                pDrvMain->eSmState = SM_STATE_WAIT_NVS_FILE;
+                pDrvMain->tFileInfo.eFileType = FILE_TYPE_NVS;
+                eStatus = wlanDrvIf_GetFile (hOs, &pDrvMain->tFileInfo);
+            }
+		}
         break;
  default:
         TRACE2(pDrvMain->tStadHandles.hReport, REPORT_SEVERITY_ERROR , "drvMain_Sm: Unknown state, eEvent=%u at state=%u\n", eEvent, pDrvMain->eSmState);

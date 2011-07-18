@@ -698,6 +698,36 @@ TI_STATUS cmdBld_CfgIeBcnBrcOptions (TI_HANDLE hCmdBld, TPowerMgmtConfig *pPMCon
 
 
 /****************************************************************************
+ *                      cmdBld_CfgIeEnableBroadcasts()
+ ****************************************************************************
+ * DESCRIPTION: Configure the FW whether to enable or disable Broadcasts and
+ *              Multicasts Rx when Host is in Suspend
+ *
+ * INPUTS:
+ *
+ * OUTPUT:  None
+ *
+ * RETURNS: TI_OK or TI_NOK
+ ****************************************************************************/
+TI_STATUS cmdBld_CfgIeEnableBroadcasts (TI_HANDLE hCmdBld, TI_UINT8 disableBroadcasts, void *fCb, TI_HANDLE hCb)
+{
+    TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
+    ACXDisableBroadcasts_t ACXDisableBroadcasts;
+    ACXDisableBroadcasts_t *pCfg = &ACXDisableBroadcasts;
+
+    pCfg->broadcastDisable = disableBroadcasts;
+
+    TRACE1(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, "cmdBld_CfgIeEnableBroadcasts: disableBroadcasts=0x%x\n", disableBroadcasts);
+
+    /* Set information element header */
+    pCfg->EleHdr.id = ACX_DISABLE_BROADCASTS;
+    pCfg->EleHdr.len = sizeof(*pCfg) - sizeof(EleHdrStruct);
+
+    return cmdQueue_SendCommand (pCmdBld->hCmdQueue, CMD_CONFIGURE, pCfg, sizeof(*pCfg), fCb, hCb, NULL);
+}
+
+
+/****************************************************************************
  *                      cmdBld_CfgIeFeatureConfig()
                                     ACXBeaconAndBroadcastOptions_t* pWlanElm_BcnBrcOptions,
  ****************************************************************************

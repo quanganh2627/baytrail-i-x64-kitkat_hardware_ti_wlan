@@ -58,14 +58,15 @@ static void printBinDump(TI_UINT8* buf, TI_UINT32 len)
 	static char* nibbleToStr[] = {"0000", "0001", "0010", "0011", "0100", "0101", "0110", "0111",
 			                      "1000", "1001", "1010", "1011", "1100", "1101", "1110", "1111",};
 	TI_UINT32 offset = 0;
-	TI_UINT8  nibble;
+	TI_UINT8  nibble = 0;
+	
 
 	for (offset = 0; offset < len; offset++)
 	{
 		nibble = (buf[offset] & 0xF0) >> 4;
 		WLAN_OS_REPORT((nibbleToStr[nibble]));
 		WLAN_OS_REPORT((" "));
-
+		
 		nibble = (buf[offset] & 0x0F);
 		WLAN_OS_REPORT((nibbleToStr[nibble]));
 		WLAN_OS_REPORT((" "));
@@ -90,7 +91,7 @@ static void pwrState_dbgPrintObject(TI_HANDLE hPwrState)
 	WLAN_OS_REPORT(("  eSuspendType = %d\n", this->tConfig.eSuspendType));
 	WLAN_OS_REPORT(("  uSuspendNDTIM = %d\n", this->tConfig.uSuspendNDTIM));
 	WLAN_OS_REPORT(("  eStandbyNextState = %d\n", this->tConfig.eStandbyNextState));
-	WLAN_OS_REPORT(("  eSuspendFilterUsage = 0x%x\n", this->tConfig.eSuspendFilterUsage));
+	WLAN_OS_REPORT(("  uSuspendFilterUsage = 0x%x\n", this->tConfig.uSuspendFilterUsage));
 	WLAN_OS_REPORT(("  uDozeTimeout = %d\n", this->tConfig.uDozeTimeout));
 
 	WLAN_OS_REPORT(("  tSuspendRxFilterValue = {.offset=%d, .mask=", this->tConfig.tSuspendRxFilterValue.offset));

@@ -81,7 +81,7 @@ typedef struct
     TScanCncnClient         *pScanClients[ SCAN_SCC_NUM_OF_CLIENTS ];
 
     /* Pending periodic scan params*/
-    paramInfo_t             tPendingPeriodicScanParams;
+    TPeriodicScanParams     tPendingPeriodicScanParams;
     TI_BOOL                 bPendingPeriodicScan;
 
     /* SG Flags */
@@ -105,7 +105,6 @@ typedef struct
 	TI_UINT32           	numOfConsTimerExpiry;
 	TI_BOOL             	bScanCompleteFlag;
     
-	EScanResultTag 			eLatestScanTag;
 	EScanType               eLatestScanType;
 	
 

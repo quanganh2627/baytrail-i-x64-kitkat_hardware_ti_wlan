@@ -802,6 +802,7 @@ static void runSchedulerOnPriorityList(TTxDataQ   *pTxDataQ, TI_UINT32 uSchList,
             /* Requeue the packet in a critical section */
             context_EnterCriticalSection (pTxDataQ->hContext);
             eQueStatus = que_Requeue (pTxDataQ->aQueues[uQueId], (TI_HANDLE)pPktCtrlBlk);
+			context_LeaveCriticalSection (pTxDataQ->hContext);
             if (eQueStatus != TI_OK) {
                 /* If the packet can't be queued drop it */
                 /* Note: may happen only if this thread was preempted between the   
@@ -811,7 +812,6 @@ static void runSchedulerOnPriorityList(TTxDataQ   *pTxDataQ, TI_UINT32 uSchList,
                 pTxDataQ->aQueueCounters[uQueId].uDroppedPacket++;
 #endif /* TI_DBG */
             }
-            context_LeaveCriticalSection (pTxDataQ->hContext);
 
 #ifdef TI_DBG
             pTxDataQ->aQueueCounters[uQueId].uRequeuePacket++;

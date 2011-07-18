@@ -371,6 +371,7 @@ NDIS_STRING STRDisableSsidPending           = NDIS_STRING_CONST( "DisableSsidPen
 /*-----------------------------------*/
 /*   SME Init Params                 */
 /*-----------------------------------*/
+NDIS_STRING STRSmeProbeBeforeConnect        = NDIS_STRING_CONST( "SmeProbeBeforeConnect");
 NDIS_STRING STRSmeRadioOn                   = NDIS_STRING_CONST( "RadioOn" );
 NDIS_STRING STRSmeConnectMode               = NDIS_STRING_CONST( "SmeConnectMode" );
 NDIS_STRING STRSmeScanRssiThreshold         = NDIS_STRING_CONST( "SmeScanRssiThreshold" );
@@ -383,6 +384,10 @@ NDIS_STRING STRSmeScanIntervals             = NDIS_STRING_CONST( "SmeScanInterva
 NDIS_STRING STRSmeScanGChannels             = NDIS_STRING_CONST( "SmeScanGChannelList" );
 NDIS_STRING STRSmeScanAChannels             = NDIS_STRING_CONST( "SmeScanAChannelList" );
 
+/*-----------------------------------*/
+/*  External & Internal Init Params  */
+/*-----------------------------------*/
+NDIS_STRING STRRSNExternalMode              = NDIS_STRING_CONST( "RSNExternalMode" );
 
 /*-----------------------------------*/
 /*  Roaming & Scanning  Init Params  */
@@ -657,15 +662,10 @@ NDIS_STRING STRReAuthActiveTimeout				= NDIS_STRING_CONST( "ReAuthActiveTimeout"
 -----------------------------*/
 NDIS_STRING STRMeasurTrafficThreshold           = NDIS_STRING_CONST( "MeasurTrafficThreshold" );
 NDIS_STRING STRMeasurMaxDurationOnNonServingChannel = NDIS_STRING_CONST( "MeasurMaxDurationOnNonServingChannel" );
+NDIS_STRING STRMeasurMeasurementMinTimeBetweenReq = NDIS_STRING_CONST( "MeasurementMinTimeBetweenReq" );
 
-/*---------------------------
-      XCC Manager parameters
------------------------------*/
-#ifdef XCC_MODULE_INCLUDED
-NDIS_STRING STRXCCModeEnabled                   = NDIS_STRING_CONST( "XCCModeEnabled" );
-#endif
 
-NDIS_STRING STRXCCTestIgnoreDeAuth0             = NDIS_STRING_CONST( "XCCTestRogeAP" );
+NDIS_STRING STRkkkTestIgnoreDeAuth0             = NDIS_STRING_CONST( "kkkTestRogeAP" );
 
 /*-----------------------------------*/
 /*   EEPROM-less support             */
@@ -701,6 +701,7 @@ NDIS_STRING STRScanCncnRssiThreshold             = NDIS_STRING_CONST( "ScanCncnR
 
 NDIS_STRING STRNumOfNoScanCompleteToRecovery     = NDIS_STRING_CONST( "NumberOfNoScanCompleteToRecovery" );
 NDIS_STRING STRSplitScanTimeOut                  = NDIS_STRING_CONST( "SplitScanTimeOut" );
+NDIS_STRING STREnablePassivBActive               = NDIS_STRING_CONST( "EnablePassivBActive" );
 
 NDIS_STRING STRParseWSCInBeacons      = NDIS_STRING_CONST( "ParseWSCInBeacons" );
 
@@ -919,9 +920,9 @@ static void parse_filter_request(TRxDataFilterRequest* request, TI_UINT8 offset,
 void regReadIntegerParameter (
                  TWlanDrvIfObjPtr       pAdapter,
                  PNDIS_STRING           pParameterName,
-                 TI_UINT32              defaultValue,
-                 TI_UINT32              minValue,
-                 TI_UINT32              maxValue,
+                 TI_INT32               defaultValue,
+                 TI_INT32               minValue,
+                 TI_INT32               maxValue,
                  TI_UINT8               parameterSize,
                  TI_UINT8*              pParameter);
 
@@ -1939,10 +1940,16 @@ regFillInitTable(
 /*                              SME Initialization Parameters                           */
 /*                          ====================================                        */
 
+    regReadIntegerParameter(pAdapter, &STRSmeProbeBeforeConnect,
+                            TI_FALSE, TI_FALSE, TI_TRUE,
+                            sizeof p->tSmeModifiedInitParams.bProbeBeforeConnect,
+                            (TI_UINT8*)&p->tSmeModifiedInitParams.bProbeBeforeConnect);
+
     regReadIntegerParameter(pAdapter, &STRSmeRadioOn,
                             TI_TRUE, TI_FALSE, TI_TRUE,
                             sizeof p->tSmeModifiedInitParams.bRadioOn,
                             (TI_UINT8*)&p->tSmeModifiedInitParams.bRadioOn);
+
     regReadIntegerParameter(pAdapter, &STRSmeConnectMode,
                             CONNECT_MODE_AUTO, CONNECT_MODE_AUTO, CONNECT_MODE_MANUAL,
                             sizeof p->tSmeModifiedInitParams.eConnectMode,
@@ -2093,6 +2100,7 @@ regFillInitTable(
         }
 
         p->tSmeInitParams.uChannelNum = uSmeGChannelsCount;
+        os_memoryFree(pAdapter, uSmeTempList, SME_SCAN_CHANNELS_LIST_G_STRING_MAX_SIZE);
     }
     regReadIntegerParameter(pAdapter, &STRdot11AuthenticationMode,
 							   RSN_AUTH_SUITE_DEF, RSN_AUTH_SUITE_MIN, RSN_AUTH_SUITE_MAX,
@@ -2321,13 +2329,13 @@ regFillInitTable(
 
     regReadIntegerParameter(pAdapter, &STRBThWlanCoexPassiveScanA2dpBtTime,
                             SOFT_GEMINI_PASSIVE_SCAN_A2DP_BT_TIME_DEF, SOFT_GEMINI_PASSIVE_SCAN_A2DP_BT_TIME_MIN, SOFT_GEMINI_PASSIVE_SCAN_A2DP_BT_TIME_MAX,
-                            sizeof p->SoftGeminiInitParams.coexParams[SOFT_GEMINI_PASSIVE_SCAN_A2DP_BT_TIME],
-                            (TI_UINT8*)&p->SoftGeminiInitParams.coexParams[SOFT_GEMINI_PASSIVE_SCAN_A2DP_BT_TIME]);
+                            sizeof p->SoftGeminiInitParams.coexParams[SOFT_GEMINI_PASSIVE_SCAN_BT_TIME],
+                            (TI_UINT8*)&p->SoftGeminiInitParams.coexParams[SOFT_GEMINI_PASSIVE_SCAN_BT_TIME]);
 
     regReadIntegerParameter(pAdapter, &STRBThWlanCoexPassiveScanA2dpWlanTime,
                             SOFT_GEMINI_PASSIVE_SCAN_A2DP_WLAN_TIME_DEF, SOFT_GEMINI_PASSIVE_SCAN_A2DP_WLAN_TIME_MIN, SOFT_GEMINI_PASSIVE_SCAN_A2DP_WLAN_TIME_MAX,
-                            sizeof p->SoftGeminiInitParams.coexParams[SOFT_GEMINI_PASSIVE_SCAN_A2DP_WLAN_TIME],
-                            (TI_UINT8*)&p->SoftGeminiInitParams.coexParams[SOFT_GEMINI_PASSIVE_SCAN_A2DP_WLAN_TIME]);
+                            sizeof p->SoftGeminiInitParams.coexParams[SOFT_GEMINI_PASSIVE_SCAN_WLAN_TIME],
+                            (TI_UINT8*)&p->SoftGeminiInitParams.coexParams[SOFT_GEMINI_PASSIVE_SCAN_WLAN_TIME]);
 
 	regReadIntegerParameter(pAdapter, &STRBThWlancoexDhcpTime,
 							SOFT_GEMINI_DHCP_TIME_DEF, SOFT_GEMINI_DHCP_TIME_MIN, SOFT_GEMINI_DHCP_TIME_MAX,
@@ -3971,6 +3979,11 @@ regReadIntegerParameter(pAdapter, &STRSettings,
                             sizeof p->measurementInitParams.maxDurationOnNonServingChannel,
                             (TI_UINT8*)&p->measurementInitParams.maxDurationOnNonServingChannel);
 
+	regReadIntegerParameter(pAdapter, &STRMeasurMeasurementMinTimeBetweenReq,
+                            MEASUREMENT_MIN_TIME_BET_REQ_DEF, MEASUREMENT_MIN_TIME_BET_REQ_MIN, MEASUREMENT_MIN_TIME_BET_REQ_MAX,
+                            sizeof p->measurementInitParams.measurementMinTimeBetweenReqInSec,
+                            (TI_UINT8*)&p->measurementInitParams.measurementMinTimeBetweenReqInSec);
+
 
     regReadIntegerParameter(pAdapter, &STRRRMEnabled,
                         STA_CAPABILITY_RRM_ENABLED_DEF, STA_CAPABILITY_RRM_ENABLED_MIN, STA_CAPABILITY_RRM_ENABLED_MAX,
@@ -3979,22 +3992,11 @@ regReadIntegerParameter(pAdapter, &STRSettings,
 
 
     /*---------------------------
-          XCC Manager parameters
+          kkk Manager parameters
     -----------------------------*/
-#ifdef XCC_MODULE_INCLUDED
 
-    regReadIntegerParameter(pAdapter, &STRXCCModeEnabled,
-                            XCC_MNGR_ENABLE_DEF, XCC_MNGR_ENABLE_MIN, XCC_MNGR_ENABLE_MAX,
-                            sizeof p->XCCMngrParams.XCCEnabled,
-                            (TI_UINT8*)&p->XCCMngrParams.XCCEnabled);
-
-
-    p->measurementInitParams.XCCEnabled = p->XCCMngrParams.XCCEnabled;
-
-#endif
-
-    regReadIntegerParameter(pAdapter, &STRXCCTestIgnoreDeAuth0,
-                            XCC_TEST_IGNORE_DEAUTH_0_DEF, XCC_TEST_IGNORE_DEAUTH_0_MIN, XCC_TEST_IGNORE_DEAUTH_0_MAX,
+    regReadIntegerParameter(pAdapter, &STRkkkTestIgnoreDeAuth0,
+                            kkk_TEST_IGNORE_DEAUTH_0_DEF, kkk_TEST_IGNORE_DEAUTH_0_MIN, kkk_TEST_IGNORE_DEAUTH_0_MAX,
                             sizeof p->apConnParams.ignoreDeauthReason0,
                             (TI_UINT8*)&p->apConnParams.ignoreDeauthReason0);
 
@@ -4031,7 +4033,15 @@ regReadIntegerParameter(pAdapter, &STRSettings,
 /*fource FragThreshold to be even value (round it down)MR WLAN00003501*/
     p->twdInitParams.tGeneral.halCtrlFragThreshold &= 0xFFFE;
 
+/*-----------------------------------
+    External & Internal Init Params  
+-------------------------------------*/
 
+    /* External mode enabled */
+    regReadIntegerParameter(pAdapter, &STRRSNExternalMode,
+                            1, 0, 1,   /* default is enabled */
+                            sizeof (p->rsnInitParams.bRsnExternalMode),
+                            (TI_UINT8*)&(p->rsnInitParams.bRsnExternalMode) );
 
 
 
@@ -4065,7 +4075,7 @@ regReadIntegerParameter(pAdapter, &STRSettings,
 
     /* disconnect timeout recovery enabled */
     regReadIntegerParameter(pAdapter, &STRRecoveryEnabledDisconnectTimeout,
-                            0, 0, 1,   /* default is disabled */
+                            1, 0, 1,   /* default is disabled */
                             sizeof (p->healthMonitorInitParams.recoveryTriggerEnabled[ DISCONNECT_TIMEOUT ]),
                             (TI_UINT8*)&(p->healthMonitorInitParams.recoveryTriggerEnabled[ DISCONNECT_TIMEOUT ]) );
 
@@ -4161,6 +4171,14 @@ regReadIntegerParameter(pAdapter, &STRSettings,
                             sizeof p->tScanCncnInitParams.numberOfNoScanCompleteToRecovery,
                             (TI_UINT8*)&(p->tScanCncnInitParams.numberOfNoScanCompleteToRecovery) );
 
+	regReadIntegerParameter(pAdapter, &STREnablePassivBActive,
+							SCAN_CNCN_ENABLE_PASSIVE_BEFORE_ACTIVE_DEF,
+							SCAN_CNCN_ENABLE_PASSIVE_BEFORE_ACTIVE_MIN,
+							SCAN_CNCN_ENABLE_PASSIVE_BEFORE_ACTIVE_MAX,
+							sizeof p->tScanCncnInitParams.bEnablePassivBActive,
+							(TI_UINT8*)&(p->tScanCncnInitParams.bEnablePassivBActive) );
+
+    
 	regReadIntegerParameter(pAdapter, &STRSplitScanTimeOut,
 							SCAN_CNCN_SPLIT_SCAN_TIME_OUT_DEF,
 							SCAN_CNCN_SPLIT_SCAN_TIME_OUT_MIN,
@@ -5007,16 +5025,16 @@ Return Value:
 void regReadIntegerParameter (
                  TWlanDrvIfObjPtr       pAdapter,
                  PNDIS_STRING           pParameterName,
-                 TI_UINT32                  defaultValue,
-                 TI_UINT32                  minValue,
-                 TI_UINT32                  maxValue,
+                 TI_INT32                  defaultValue,
+                 TI_INT32                  minValue,
+                 TI_INT32                  maxValue,
                  TI_UINT8                  parameterSize,
                  TI_UINT8*                 pParameter
                  )
 {
     PNDIS_CONFIGURATION_PARAMETER   RetValue;
     NDIS_STATUS                     Status;
-    TI_UINT32                           value;
+    TI_INT32                        value;
 
     NdisReadConfiguration(&Status, &RetValue,
                           pAdapter->ConfigHandle, pParameterName,
@@ -6151,8 +6169,8 @@ static TI_STATUS readPwrStateParams(TWlanDrvIfObjPtr pAdapter, TInitTable *pInit
 			PWRSTATE_FILTER_USAGE_NONE,
 			0,
 			PWRSTATE_FILTER_USAGE_LAST-1,
-			sizeof pInitTable->tPwrStateInitParams.eSuspendFilterUsage,
-			(TI_UINT8*)&pInitTable->tPwrStateInitParams.eSuspendFilterUsage);
+			sizeof pInitTable->tPwrStateInitParams.uSuspendFilterUsage,
+			(TI_UINT8*)&pInitTable->tPwrStateInitParams.uSuspendFilterUsage);
 
 	{
 		TI_UINT32 filterOffset = 0;

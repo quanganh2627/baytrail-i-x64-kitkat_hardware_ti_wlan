@@ -75,7 +75,7 @@ TI_BOOL      measurementMgr_dot11hIsTypeValid(TI_HANDLE hMeasurementMgr,
                                               EMeasurementType type, 
                                               EMeasurementScanMode scanMode);
 
-
+TI_STATUS measurementMgr_dot11hBuildReport(TI_HANDLE hMeasurementMgr, MeasurementRequest_t request, TMeasurementTypeReply * reply);
 
 TI_STATUS measurementMgr_dot11hSendReportAndCleanObject(TI_HANDLE hMeasurementMgr);
 

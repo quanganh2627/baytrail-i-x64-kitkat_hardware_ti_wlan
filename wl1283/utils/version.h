@@ -45,15 +45,15 @@
 
 #include "TWDriver.h"
 
-#define MCP_WL7_VERSION_STR "MCP-WL_2.5.0.10"
+#define MCP_WL7_VERSION_STR "MCP-WL_2.5.4.0"
 
-#define SW_VERSION_STR      "MCP-WiLink_Driver_2.5.3.0.18"
+#define SW_VERSION_STR      "MCP-WiLink_Driver_2.5.5.0.19"
 /*
 based on WiLink 6.1.0.0.144
 */
 
-#define SW_RELEASE_MONTH    01
-#define SW_RELEASE_DAY      26
+#define SW_RELEASE_MONTH    06
+#define SW_RELEASE_DAY      13
 
 /*
 Navilink version.  Navilink/inc/version.h

@@ -52,7 +52,6 @@
 #include "DrvMain.h"
 #include "pwrState.h"
 
-
 static OS_802_11_DISASSOCIATE_REASON_E eDisassocConvertTable[ MGMT_STATUS_MAX_NUM +1] = 
 {
     OS_DISASSOC_STATUS_UNSPECIFIED,
@@ -90,6 +89,8 @@ static void smeSm_NopAction (TI_HANDLE hSme);
 static void smeSm_CheckStartConditions (TI_HANDLE hSme);
 
 static TI_STATUS sme_StartScan (TI_HANDLE hSme);
+static TI_STATUS sme_StartScanBeforeConnect(TI_HANDLE hSme);
+
 static void sme_updateScanCycles (TI_HANDLE hSme,
                                   TI_BOOL bDEnabled,
                                   TI_BOOL bCountryValid,
@@ -247,6 +248,12 @@ void smeSm_PreConnect (TI_HANDLE hSme)
 
     /* set the connection mode with which this connection attempt is starting */
     pSme->eLastConnectMode = pSme->eConnectMode;
+
+     /* If manual mode, clear the bConnectRequired flag */
+    if (CONNECT_MODE_MANUAL == pSme->eConnectMode)
+    {
+    	pSme->bConnectRequired = TI_FALSE;
+    }
  
     /* mark that no authentication/assocaition was yet sent */
     pSme->bAuthSent = TI_FALSE;
@@ -255,8 +262,22 @@ void smeSm_PreConnect (TI_HANDLE hSme)
     pSme->pCandidate = sme_Select (hSme);
     if (NULL != pSme->pCandidate)
     {
+    	if (pSme->bProbeBeforeConnect)
+    	{
+    		TRACE0(pSme->hReport, REPORT_SEVERITY_INFORMATION , "smeSm_PreConnect: changing SCR group to DRV scan\n");
+    		scr_setGroup (pSme->hScr, SCR_GID_DRV_SCAN);
+    		/* Due to bug with some APs send a probe request to candidate AP before association */
+    		if (TI_OK != sme_StartScanBeforeConnect(hSme))
+    		{
+    			TRACE0(pSme->hReport, REPORT_SEVERITY_ERROR , "smeSm_PreConnect: unable to start scan before connection, will proceed without scan\n");
+    			sme_SmEvent (pSme->hSmeSm, SME_SM_EVENT_CONNECT, hSme);
+    		}
+    	}
+    	else
+    	{
         /* candidate is available - attempt connection */
         sme_SmEvent (pSme->hSmeSm, SME_SM_EVENT_CONNECT, hSme);
+    }
     }
     /* no candidate */
     else
@@ -465,6 +486,14 @@ void smeSm_DisconnectDone (TI_HANDLE hSme)
     }
 
     siteMgr_disSelectSite (pSme->hSiteMgr);
+
+    {
+    	TI_UINT8  broadcastMacAddr[MAC_ADDR_LEN] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+
+    	/* clear the desired BSSID */
+    	MAC_COPY (pSme->tBssid, broadcastMacAddr);
+    	pSme->uScanCount = 0;
+    }
 
     /* notify the pwrState module */
     pwrState_SmeDisconnected(pSme->hPwrState);
@@ -698,12 +727,6 @@ TI_STATUS sme_StartScan (TI_HANDLE hSme)
             pSme->tScanParams.uSsidNum = 1;
             pSme->tScanParams.uSsidListFilterEnabled = 1;
 
-#ifdef XCC_MODULE_INCLUDED
-            pSme->tScanParams.uSsidListFilterEnabled = (TI_UINT8)TI_FALSE;
-            pSme->tScanParams.uSsidNum = 2;
-            pSme->tScanParams.tDesiredSsid[ 1 ].tSsid.len = 0;
-            pSme->tScanParams.tDesiredSsid[ 1 ].eVisability =  SCAN_SSID_VISABILITY_PUBLIC;
-#endif
 
         }
     }
@@ -961,3 +984,70 @@ void sme_CalculateCyclesNumber (TI_HANDLE hSme, TI_UINT32 uTotalTimeMs)
     }
 }
 
+TI_STATUS sme_StartScanBeforeConnect(TI_HANDLE hSme)
+{
+	TSme *pSme = (TSme*)hSme;
+	TI_STATUS status = TI_OK;
+	EScanCncnResultStatus tStatus;
+	TPeriodicScanParams	*pScanParams;
+	TSiteEntry *pCandidate = pSme->pCandidate;
+
+	paramInfo_t     *pParam;
+
+	pParam = (paramInfo_t *)os_memoryAlloc(pSme->hOS, sizeof(paramInfo_t));
+	if (pParam == NULL)
+	{
+		return TI_NOK;
+	}
+
+    pScanParams = (TPeriodicScanParams *)os_memoryAlloc(pSme->hOS, sizeof(TPeriodicScanParams));
+    if (pScanParams == NULL)
+	{
+		return TI_NOK;
+	}
+
+	os_memoryZero(pSme->hOS, (void*)pScanParams, sizeof(TPeriodicScanParams));
+
+	pScanParams->tChannels[0].eBand = pCandidate->eBand;
+	pScanParams->tChannels[0].uChannel = pCandidate->channel;
+	pScanParams->tChannels[0].uMaxDwellTimeMs = pSme->tInitParams.uMaxScanDuration;
+	pScanParams->tChannels[0].uMinDwellTimeMs = pSme->tInitParams.uMinScanDuration;
+
+	/* get the max TX power allowed for this channel */
+	pParam->paramType = REGULATORY_DOMAIN_GET_SCAN_CAPABILITIES;
+	pParam->content.channelCapabilityReq.band = pCandidate->eBand;;
+	pParam->content.channelCapabilityReq.channelNum = pCandidate->channel;
+	pParam->content.channelCapabilityReq.scanOption = ACTIVE_SCANNING;
+	regulatoryDomain_getParam(pSme->hRegDomain, pParam);
+
+	pScanParams->tChannels[0].uTxPowerLevelDbm = pParam->content.channelCapabilityRet.maxTxPowerDbm;
+
+	pScanParams->tChannels[0].eScanType = SCAN_TYPE_NORMAL_ACTIVE;
+
+	pScanParams->uChannelNum = 1;
+    /* now, fill global parameters */
+    pScanParams->uProbeRequestNum = 2;
+    pScanParams->iRssiThreshold = pSme->tInitParams.iRssiThreshold;
+    pScanParams->iSnrThreshold = pSme->tInitParams.iSnrThreshold;
+    pScanParams->bTerminateOnReport = TI_TRUE;
+    pScanParams->uFrameCountReportThreshold = 1;
+
+    pScanParams->eBssType = BSS_INFRASTRUCTURE;
+    pScanParams->tDesiredSsid[0].eVisability = SCAN_SSID_VISABILITY_HIDDEN;
+    os_memoryCopy (pSme->hOS, &(pScanParams->tDesiredSsid[ 0 ].tSsid), &(pCandidate->ssid), sizeof (TSsid));
+    pScanParams->uSsidNum = 1;
+    pScanParams->uSsidListFilterEnabled = 1;
+    pScanParams->uCycleNum = 1;
+
+    pScanParams->eScanClient = SCAN_SCC_DRIVER;
+
+    /* start the scan */
+    tStatus = scanCncn_StartPeriodicScan (pSme->hScanCncn, SCAN_SCC_DRIVER, pScanParams);
+    if (SCAN_CRS_SCAN_RUNNING != tStatus)
+    {
+        TRACE1(pSme->hReport, REPORT_SEVERITY_ERROR , "sme_StartScanBeforeConnect: scan concentrator returned status %d\n", tStatus);
+        return TI_NOK;
+    }
+
+	return status;
+}

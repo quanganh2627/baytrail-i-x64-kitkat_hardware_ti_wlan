@@ -55,12 +55,12 @@
 #define SCAN_OID_DEFAULT_PROBE_REQUEST_RATE_A                       RATE_MASK_UNSPECIFIED  /* Let the FW select */
 #define SCAN_OID_DEFAULT_PROBE_REQUEST_NUMBER_G                     3
 #define SCAN_OID_DEFAULT_PROBE_REQUEST_NUMBER_A                     3
-#define SCAN_OID_DEFAULT_MAX_DWELL_TIME_PASSIVE_G                   100000
-#define SCAN_OID_DEFAULT_MAX_DWELL_TIME_PASSIVE_A                   100000
+#define SCAN_OID_DEFAULT_MAX_DWELL_TIME_PASSIVE_G                   105000
+#define SCAN_OID_DEFAULT_MAX_DWELL_TIME_PASSIVE_A                   105000
 #define SCAN_OID_DEFAULT_MAX_DWELL_TIME_ACTIVE_G                    60000
 #define SCAN_OID_DEFAULT_MAX_DWELL_TIME_ACTIVE_A                    60000
-#define SCAN_OID_DEFAULT_MIN_DWELL_TIME_PASSIVE_G                   100000
-#define SCAN_OID_DEFAULT_MIN_DWELL_TIME_PASSIVE_A                   100000
+#define SCAN_OID_DEFAULT_MIN_DWELL_TIME_PASSIVE_G                   105000
+#define SCAN_OID_DEFAULT_MIN_DWELL_TIME_PASSIVE_A                   105000
 #define SCAN_OID_DEFAULT_MIN_DWELL_TIME_ACTIVE_G                    30000
 #define SCAN_OID_DEFAULT_MIN_DWELL_TIME_ACTIVE_A                    30000
 #define SCAN_OID_DEFAULT_EARLY_TERMINATION_EVENT_PASSIVE_G          0 /*SCAN_ET_COND_BEACON*/
@@ -75,7 +75,9 @@
 #define SCAN_OID_DEFAULT_EARLY_TERMINATION_COUNT_ACTIVE_A           4
 
 static void scanCncnOsSm_ActionStartGScan (TI_HANDLE hScanCncn);
-static void scanCncnOsSm_ActionStartAScan (TI_HANDLE hScanCncn);
+static void scanCncnOsSm_ActionStartAScanActive (TI_HANDLE hScanCncn);
+static void scanCncnOsSm_ActionStartAScanPassive (TI_HANDLE hScanCncn);
+static void scanCncnOsSm_ActionStartAScan (TI_HANDLE hScanCncn, TI_BOOL bAllowedChannels);
 static void scanCncnOsSm_ActionCompleteScan (TI_HANDLE hScanCncn);
 static void scanCncnOsSm_ActionUnexpected (TI_HANDLE hScanCncn);
 TI_UINT32   scanCncnOsSm_FillAllAvailableChannels (TI_HANDLE hScanCncn, ERadioBand eBand, EScanType eScanType,
@@ -83,24 +85,33 @@ TI_UINT32   scanCncnOsSm_FillAllAvailableChannels (TI_HANDLE hScanCncn, ERadioBa
                                                    TI_UINT32 uMinChannelTime, EScanEtCondition eETCondition,
                                                    TI_UINT8 uETFrameNumber);
 
+static TI_UINT32 FillABandChannels(TI_HANDLE hScanCncn, TScanChannelEntry *pChannelArray,
+                                 TI_BOOL bAllowedChannels);
+
 
 static TGenSM_actionCell tSmMatrix[ SCAN_CNCN_OS_SM_NUMBER_OF_STATES ][ SCAN_CNCN_OS_SM_NUMBER_OF_EVENTS ] = 
     {
         { /* SCAN_CNCN_OS_SM_STATE_IDLE */
             { SCAN_CNCN_OS_SM_STATE_SCAN_ON_G,  scanCncnOsSm_ActionStartGScan },    /* SCAN_CNCN_OS_SM_EVENT_START_SCAN */
             { SCAN_CNCN_OS_SM_STATE_IDLE,       scanCncnOsSm_ActionUnexpected },    /* SCAN_CNCN_OS_SM_EVENT_SCAN_COMPLETE */
-			{ SCAN_CNCN_OS_SM_STATE_IDLE,		scanCncnOsSm_ActionUnexpected },
+			{ SCAN_CNCN_OS_SM_STATE_IDLE,		scanCncnOsSm_ActionUnexpected },    /* SCAN_CNCN_OS_SM_EVENT_STOP_SCAN */
         },
         { /* SCAN_CNCN_OS_SM_STATE_SCAN_ON_G */
             { SCAN_CNCN_OS_SM_STATE_SCAN_ON_G,  scanCncnOsSm_ActionUnexpected },    /* SCAN_CNCN_OS_SM_EVENT_START_SCAN */
-            { SCAN_CNCN_OS_SM_STATE_SCAN_ON_A,  scanCncnOsSm_ActionStartAScan },    /* SCAN_CNCN_OS_SM_EVENT_SCAN_COMPLETE */
-			{ SCAN_CNCN_OS_SM_STATE_IDLE,		scanCncnOsSm_ActionCompleteScan },
+            { SCAN_CNCN_OS_SM_STATE_SCAN_ON_A_PASSIVE,  scanCncnOsSm_ActionStartAScanActive },    /* SCAN_CNCN_OS_SM_EVENT_SCAN_COMPLETE */
+			{ SCAN_CNCN_OS_SM_STATE_IDLE,		        scanCncnOsSm_ActionCompleteScan },  /* SCAN_CNCN_OS_SM_EVENT_STOP_SCAN */
         },
-        { /* SCAN_CNCN_OS_SM_STATE_SCAN_ON_A */
-            { SCAN_CNCN_OS_SM_STATE_SCAN_ON_A,  scanCncnOsSm_ActionUnexpected },    /* SCAN_CNCN_OS_SM_EVENT_START_SCAN */
+        { /* SCAN_CNCN_OS_SM_STATE_SCAN_ON_A_PASSIVE */
+            { SCAN_CNCN_OS_SM_STATE_SCAN_ON_A_PASSIVE,  scanCncnOsSm_ActionUnexpected },    /* SCAN_CNCN_OS_SM_EVENT_START_SCAN */
+            { SCAN_CNCN_OS_SM_STATE_SCAN_ON_A_ACTIVE,   scanCncnOsSm_ActionStartAScanPassive },  /* SCAN_CNCN_OS_SM_EVENT_SCAN_COMPLETE */
+            { SCAN_CNCN_OS_SM_STATE_IDLE,               scanCncnOsSm_ActionCompleteScan },  /* SCAN_CNCN_OS_SM_EVENT_STOP_SCAN */
+        },
+        { /* SCAN_CNCN_OS_SM_STATE_SCAN_ON_A_ACTIVE */
+            { SCAN_CNCN_OS_SM_STATE_SCAN_ON_A_ACTIVE,  scanCncnOsSm_ActionUnexpected },    /* SCAN_CNCN_OS_SM_EVENT_START_SCAN */
             { SCAN_CNCN_OS_SM_STATE_IDLE,       scanCncnOsSm_ActionCompleteScan },  /* SCAN_CNCN_OS_SM_EVENT_SCAN_COMPLETE */
-            { SCAN_CNCN_OS_SM_STATE_IDLE,       scanCncnOsSm_ActionCompleteScan },  /* SCAN_CNCN_OS_SM_EVENT_SCAN_COMPLETE */
+            { SCAN_CNCN_OS_SM_STATE_IDLE,              scanCncnOsSm_ActionCompleteScan },  /* SCAN_CNCN_OS_SM_EVENT_STOP_SCAN */
         }
+
     };
 
 static TI_INT8  *uStateDescription[] = 
@@ -272,6 +283,31 @@ void scanCncnOsSm_ActionStartGScan (TI_HANDLE hScanCncn)
     }
 }
 
+void scanCncnOsSm_ActionStartAScanPassive (TI_HANDLE hScanCncn)
+{
+    TScanCncn       *pScanCncn = (TScanCncn*)hScanCncn;
+    scanCncnOsSm_ActionStartAScan(hScanCncn, TI_FALSE);
+    TRACE0(pScanCncn->hReport, REPORT_SEVERITY_INFORMATION, "scanCncnOsSm_ActionStartAScanPassive: starting Passive Scan\n");
+}
+
+void scanCncnOsSm_ActionStartAScanActive (TI_HANDLE hScanCncn)
+{
+    TScanCncn       *pScanCncn = (TScanCncn*)hScanCncn;
+
+    /* If the application set the scan to passive, no active scan should be done */
+    if (SCAN_TYPE_TRIGGERED_PASSIVE == pScanCncn->tOsScanParams.scanType ||
+        SCAN_TYPE_NORMAL_PASSIVE == pScanCncn->tOsScanParams.scanType )
+    {
+        TRACE0(pScanCncn->hReport, REPORT_SEVERITY_INFORMATION,"scanCncnOsSm_ActionStartAScanActive: application set scanType to passive, skip active scan\n");
+        genSM_Event (pScanCncn->hOSScanSm, SCAN_CNCN_OS_SM_EVENT_SCAN_COMPLETE, hScanCncn);
+    }
+    else
+    {
+        TRACE0(pScanCncn->hReport, REPORT_SEVERITY_INFORMATION,"scanCncnOsSm_ActionStartAScanActive: starting Active Scan\n");
+        scanCncnOsSm_ActionStartAScan(hScanCncn, TI_TRUE);
+    }
+}
+
 /** 
  * \fn     scanCncnOsSm_ActionStartAScan
  * \brief  Scan concentartor OS state machine start scan on A action function
@@ -282,12 +318,13 @@ void scanCncnOsSm_ActionStartGScan (TI_HANDLE hScanCncn)
  * \param  hScanCncn - handle to the scan concentartor object
  * \return None
  */ 
-void scanCncnOsSm_ActionStartAScan (TI_HANDLE hScanCncn)
+void scanCncnOsSm_ActionStartAScan (TI_HANDLE hScanCncn, TI_BOOL bAllowedChannels)
 {
     TScanCncn       *pScanCncn = (TScanCncn*)hScanCncn;
     paramInfo_t     tParam;
     TI_UINT32       uValidChannelsCount;
     TI_BOOL         bRegulatoryDomainEnabled;
+    EScanType       scanType;
 
     /* if the STA is not configured for G band or dual band, send a scan complete event to the SM */
     tParam.paramType = SITE_MGR_DESIRED_DOT11_MODE_PARAM;
@@ -313,22 +350,22 @@ void scanCncnOsSm_ActionStartAScan (TI_HANDLE hScanCncn)
     tParam.content.eRadioBand = RADIO_BAND_5_0_GHZ;
     regulatoryDomain_getParam (pScanCncn->hRegulatoryDomain, &tParam);
 
-    /* scan type is passive if 802.11d is enabled and country IE was not yet found, active otherwise */
-    if (((TI_TRUE == bRegulatoryDomainEnabled) &&
-        (TI_FALSE == tParam.content.bIsCountryFound)) ||
-        SCAN_TYPE_TRIGGERED_PASSIVE == pScanCncn->tOsScanParams.scanType ||
-        SCAN_TYPE_NORMAL_PASSIVE == pScanCncn->tOsScanParams.scanType)
-    {
-        pScanCncn->tOsScanParams.scanType = SCAN_TYPE_NORMAL_PASSIVE;
-    }
-    /* All paramters in the func are hard coded, due to that we set to active if not passive */
-	else
-    {
-        pScanCncn->tOsScanParams.scanType = SCAN_TYPE_NORMAL_ACTIVE;
-        /* also set number and rate of probe requests */
-        pScanCncn->tOsScanParams.probeReqNumber = SCAN_OID_DEFAULT_PROBE_REQUEST_NUMBER_A;
-        pScanCncn->tOsScanParams.probeRequestRate = (ERateMask)SCAN_OID_DEFAULT_PROBE_REQUEST_RATE_A;
-    }
+    /* Store the scanType */
+    scanType = pScanCncn->tOsScanParams.scanType;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     /* add supported channels on A */
     if (SCAN_TYPE_NORMAL_PASSIVE == pScanCncn->tOsScanParams.scanType )
@@ -342,13 +379,15 @@ void scanCncnOsSm_ActionStartAScan (TI_HANDLE hScanCncn)
     }
     else
     {
-        uValidChannelsCount = scanCncnOsSm_FillAllAvailableChannels (hScanCncn, RADIO_BAND_5_0_GHZ,
-                                       SCAN_TYPE_NORMAL_ACTIVE, &(pScanCncn->tOsScanParams.channelEntry[0]),
-                                       SCAN_OID_DEFAULT_MAX_DWELL_TIME_ACTIVE_A,
-                                       SCAN_OID_DEFAULT_MIN_DWELL_TIME_ACTIVE_A,
-                                       SCAN_OID_DEFAULT_EARLY_TERMINATION_EVENT_ACTIVE_A,
-                                       SCAN_OID_DEFAULT_EARLY_TERMINATION_COUNT_ACTIVE_A );
+        uValidChannelsCount = FillABandChannels(hScanCncn, &(pScanCncn->tOsScanParams.channelEntry[0]),bAllowedChannels);
+        if (bAllowedChannels == TI_FALSE)
+        {
+            /* If scanning for the disallowed channels change the scanType to passive and set it back
+             * after the scan started */
+            pScanCncn->tOsScanParams.scanType = SCAN_TYPE_NORMAL_PASSIVE;
+        }
     }
+
     pScanCncn->tOsScanParams.numOfChannels = uValidChannelsCount;
 
     /* check that some channels are available */
@@ -358,6 +397,9 @@ void scanCncnOsSm_ActionStartAScan (TI_HANDLE hScanCncn)
 
        /* send command to scan concentrator APP SM */
         eResult = scanCncn_Start1ShotScan (hScanCncn, SCAN_SCC_APP_ONE_SHOT, &(pScanCncn->tOsScanParams));
+
+        /* set back the original scan type */
+        pScanCncn->tOsScanParams.scanType = scanType;
 
         /* if scan failed, send scan complete event to the SM */
         if (SCAN_CRS_SCAN_RUNNING != eResult)
@@ -492,8 +534,8 @@ TI_UINT32 scanCncnOsSm_FillAllAvailableChannels (TI_HANDLE hScanCncn, ERadioBand
             pChannelArray[ uValidChannelsCnt ].normalChannelEntry.maxChannelDwellTime = uMaxDwellTime;
             pChannelArray[ uValidChannelsCnt ].normalChannelEntry.earlyTerminationEvent = eETCondition;
             pChannelArray[ uValidChannelsCnt ].normalChannelEntry.ETMaxNumOfAPframes = uETFrameNumber;
-            pChannelArray[ uValidChannelsCnt ].normalChannelEntry.txPowerDbm  = 205;
-                /*tParam.content.channelCapabilityRet.maxTxPowerDbm;*/
+            pChannelArray[ uValidChannelsCnt ].normalChannelEntry.txPowerDbm  = tParam.content.channelCapabilityRet.maxTxPowerDbm;
+
 
             /* Fill broadcast BSSID */
             for (j = 0; j < 6; j++)
@@ -507,6 +549,82 @@ TI_UINT32 scanCncnOsSm_FillAllAvailableChannels (TI_HANDLE hScanCncn, ERadioBand
     /* return the number of channels that are actually allowed for the requested scan type on the requested band */
     return uValidChannelsCnt;
 }
+
+TI_UINT32 FillABandChannels(TI_HANDLE hScanCncn, TScanChannelEntry *pChannelArray,
+                                 TI_BOOL bAllowedChannels)
+{
+
+    TI_UINT32 uMaxDwellTime = SCAN_OID_DEFAULT_MAX_DWELL_TIME_ACTIVE_A;
+    TI_UINT32 uMinDwellTime = SCAN_OID_DEFAULT_MIN_DWELL_TIME_ACTIVE_A;
+    EScanEtCondition eETCondition = SCAN_OID_DEFAULT_EARLY_TERMINATION_EVENT_ACTIVE_A;
+    TI_UINT8 uETFrameNumber = SCAN_OID_DEFAULT_EARLY_TERMINATION_COUNT_ACTIVE_A;
+
+
+    TScanCncn       *pScanCncn = (TScanCncn*)hScanCncn;
+    TI_UINT32       index, sizeOfList, uValidChannelsCnt = 0;
+    channelCapability_t *channelList;
+    paramInfo_t*     pParam = (paramInfo_t *)os_memoryAlloc(pScanCncn->hOS, sizeof(paramInfo_t));;
+
+    if (bAllowedChannels == TI_FALSE)
+    {
+        uMaxDwellTime = SCAN_OID_DEFAULT_MAX_DWELL_TIME_PASSIVE_A;
+        uMinDwellTime = SCAN_OID_DEFAULT_MIN_DWELL_TIME_PASSIVE_A;
+        eETCondition = SCAN_OID_DEFAULT_EARLY_TERMINATION_EVENT_PASSIVE_A;
+        uETFrameNumber = SCAN_OID_DEFAULT_EARLY_TERMINATION_COUNT_PASSIVE_A;
+    }
+
+    if (pParam == NULL)
+    {
+        TRACE0(pScanCncn->hReport, REPORT_SEVERITY_ERROR, "FillABandDisallowedChannels: Failed to allocate memory!!");
+        return 0;
+    }
+
+    /* get the numnber of supported channels for this band */
+    pParam->paramType = REGULATORY_DOMAIN_SUPPORTED_CHANNELS_ON_BAND;
+    pParam->content.eRadioBand = RADIO_BAND_5_0_GHZ;
+    regulatoryDomain_getParam (pScanCncn->hRegulatoryDomain, pParam);
+    sizeOfList = pParam->content.supportedChannels.sizeOfList;
+    channelList = (channelCapability_t*)pParam->content.supportedChannels.listOfChannels;
+
+    /* add default values to channels allowed for the requested scan type and band */
+    for (index = 0; index < sizeOfList; index++)
+    {
+        pParam->paramType = REGULATORY_DOMAIN_GET_SCAN_CAPABILITIES;
+        pParam->content.channelCapabilityReq.band = RADIO_BAND_5_0_GHZ;
+        pParam->content.channelCapabilityReq.channelNum = index + A_5G_BAND_MIN_CHANNEL;
+        pParam->content.channelCapabilityReq.scanOption = ACTIVE_SCANNING;
+        regulatoryDomain_getParam(pScanCncn->hRegulatoryDomain, pParam);
+
+        if ( (bAllowedChannels == TI_TRUE &&  pParam->content.channelCapabilityRet.channelValidity == TI_TRUE)
+                ||
+             (bAllowedChannels == TI_FALSE && pParam->content.channelCapabilityRet.channelValidity == TI_FALSE &&
+                channelList[index].channelValidityPassive == TI_TRUE))
+        {
+            /* add the channel ID */
+            TRACE3(pScanCncn->hReport, REPORT_SEVERITY_INFORMATION, "FillABandChannels: bAllowedChannels = %d, channelValidity = %d, channel = %d\n",
+                    bAllowedChannels, pParam->content.channelCapabilityRet.channelValidity,
+                    index + A_5G_BAND_MIN_CHANNEL);
+            pChannelArray[ uValidChannelsCnt ].normalChannelEntry.channel = index + A_5G_BAND_MIN_CHANNEL;
+
+            /* add other default parameters */
+            pChannelArray[ uValidChannelsCnt ].normalChannelEntry.minChannelDwellTime = uMinDwellTime;
+            pChannelArray[ uValidChannelsCnt ].normalChannelEntry.maxChannelDwellTime = uMaxDwellTime;
+            pChannelArray[ uValidChannelsCnt ].normalChannelEntry.earlyTerminationEvent = eETCondition;
+            pChannelArray[ uValidChannelsCnt ].normalChannelEntry.ETMaxNumOfAPframes = uETFrameNumber;
+            pChannelArray[ uValidChannelsCnt ].normalChannelEntry.txPowerDbm  =
+                    channelList->uMaxTxPowerDomain;
+            os_memorySet(pScanCncn->hOS, pChannelArray[ uValidChannelsCnt ].normalChannelEntry.bssId, 0xff, MAC_ADDR_LEN);
+
+            uValidChannelsCnt++;
+        }
+    }
+    TRACE2(pScanCncn->hReport, REPORT_SEVERITY_INFORMATION, "FillABandChannels: bAllowedChannels = %d, uValidChannelsCnt = %d\n", bAllowedChannels, uValidChannelsCnt);
+
+    return uValidChannelsCnt;
+
+}
+
+
 
 /** 
  * \fn     Function declaration 
@@ -536,4 +654,5 @@ void scanCncnOsSm_ActionUnexpected (TI_HANDLE hScanCncn)
 
     TRACE0(pScanCncn->hReport, REPORT_SEVERITY_ERROR , "scanCncnOsSm_ActionUnexpected: Unexpeted action for current state\n");
 }
+
 

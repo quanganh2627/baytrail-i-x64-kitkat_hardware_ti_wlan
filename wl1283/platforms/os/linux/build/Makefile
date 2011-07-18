@@ -9,6 +9,8 @@
 NO_ARCH_STRCMP ?= y
 NO_USERMODE_WORKAROUND ?= n
 MEM_ALLOC_TRACE ?= n
+SDIO_KERNEL_MODULE ?= y
+HS_SDIO ?= y
 
 ##
 ##
@@ -37,7 +39,6 @@ endif
 # List of linux OS files needed to be compiled
 #
 OS_SRCS = \
-	$(DK_ROOT)/external_drivers/sdc4430/Linux/standard_sdio/SdioDrv.c \
     $(DK_ROOT)/platforms/os/linux/src/WlanDrvIf.c \
     $(DK_ROOT)/platforms/hw/host_platform_$(HOST_PLATFORM)/linux/standard_sdio/host_platform.c \
     $(DK_ROOT)/platforms/os/linux/src/osapi.c \
@@ -57,22 +58,24 @@ ifeq ($(NO_ARCH_STRCMP),y)
     OS_SRCS += $(DK_ROOT)/platforms/os/linux/src/string.c 
 endif
 
-OS_INCS = $(DK_ROOT)/platforms/os/linux/inc $(DK_ROOT)/platforms/os/linux/src $(DK_ROOT)/platforms/os/common/inc $(DK_ROOT)/platforms/hw/host_platform_$(HOST_PLATFORM)/linux 
-OS_INCS += $(DK_ROOT)/stad/src/core/EvHandler $(DK_ROOT)/Test $(DK_ROOT)/platforms/hw/host_platform_$(HOST_PLATFORM)/linux/standard_sdio
+OS_INCS = $(DK_ROOT)/platforms/os/linux/inc $(DK_ROOT)/platforms/os/linux/src $(DK_ROOT)/platforms/os/common/inc
+OS_INCS += $(DK_ROOT)/stad/src/core/EvHandler $(DK_ROOT)/Test $(DK_ROOT)/platforms/hw/host_platform_$(HOST_PLATFORM)/linux/$(SDIO_TYPE)_sdio
+OS_INCS += $(KERNEL_DIR)/include
+OS_INCS += $(DK_ROOT)/external_drivers/$(HOST_PLATFORM)/Linux/$(SDIO_TYPE)_sdio
+OS_INCS += $(EXT_DRV)/$(HOST_PLATFORM)/Linux/$(SDIO_TYPE)_sdio
 
-ifeq ($(WSPI),y)
-    OS_SRCS += $(DK_ROOT)/platforms/hw/host_platform_$(HOST_PLATFORM)/linux/WspiAdapter.c 
-	OS_INCS += $(EXT_DRV)/$(HOST_PLATFORM)/Linux/spi
+ifeq ($(SDIO_TYPE),standard)
+    EXTRA_CFLAGS += -D CONFIG_MMC_EMBEDDED_SDIO
+else
+    EXTRA_CFLAGS += -D PROPRIETARY_SDIO
 endif
 
-ifeq ($(WSPI),n)
-    OS_SRCS += $(DK_ROOT)/platforms/hw/host_platform_$(HOST_PLATFORM)/linux/standard_sdio/SdioAdapter.c 
-	OS_INCS += $(EXT_DRV)/$(HOST_PLATFORM)/Linux/standard_sdio
-endif
+OS_SRCS += $(DK_ROOT)/platforms/hw/host_platform_$(HOST_PLATFORM)/linux/$(SDIO_TYPE)_sdio/SdioAdapter.c
 
 OS_OBJS = $(patsubst %.c, %.o, $(OS_SRCS))
 
-#
+SDIO_OBJ = $(EXT_DRV)/$(HOST_PLATFORM)/Linux/$(SDIO_TYPE)_sdio/SdioDrv.o
+
 # OS include paths required for compilation.
 # 
 
@@ -105,8 +108,9 @@ ifeq ($(MEM_ALLOC_TRACE),y)
     EXTRA_CFLAGS += -D TI_MEM_ALLOC_TRACE
 endif
 
-
-
+ifeq ($(HS_SDIO),y)
+    EXTRA_CFLAGS += -D HS_SDIO
+endif
 
 
 ##
@@ -166,7 +170,7 @@ all: .depend $(OUTPUT_DIR) $(OUTPUT_FILE)
 #
 .PHONY: help
 help:
-	@echo Default Compilation:	PLATFORM=$(PLATFORM) DEBUG=$(DEBUG) INTR=$(INTR) WSPI=$(WSPI) XCC=$(XCC) EXTRA CFLAGS: $(EXTRA_CFLAGS)
+	@echo Default Compilation:	PLATFORM=$(PLATFORM) DEBUG=$(DEBUG) INTR=$(INTR) WSPI=$(WSPI) kkk=$(kkk) EXTRA CFLAGS: $(EXTRA_CFLAGS)
 
 
 #

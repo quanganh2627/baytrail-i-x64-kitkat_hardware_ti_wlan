@@ -257,6 +257,23 @@ TI_STATUS cmdBld_CfgBcnBrcOptions (TI_HANDLE hCmdBld, TPowerMgmtConfig *pPMConfi
     return cmdBld_CfgIeBcnBrcOptions (hCmdBld, pPMConfig, fCb, hCb);
 }
 
+/****************************************************************************
+ *                      cmdBld_CfgEnableBroadcasts()
+ ****************************************************************************
+ * DESCRIPTION: Configure the FW whether to enable or disable Broadcasts and
+ *              Multicasts Rx when Host is in Suspend
+ *
+ * INPUTS: None
+ *
+ * OUTPUT:  None
+ *
+ * RETURNS: TI_OK or TI_NOK
+ ****************************************************************************/
+TI_STATUS cmdBld_CfgEnableBroadcasts (TI_HANDLE hCmdBld, TI_UINT8 disableBroadcasts, void *fCb, TI_HANDLE hCb)
+{
+    return cmdBld_CfgIeEnableBroadcasts (hCmdBld, disableBroadcasts, fCb, hCb);
+}
+
 
 /****************************************************************************
  *                      cmdBld_CfgWakeUpCondition()
@@ -1037,10 +1054,10 @@ TI_STATUS cmdBld_CfgSecureMode (TI_HANDLE hCmdBld, ECipherSuite eSecurMode, void
         /* set the new tSecurity mode*/
         pCmdBld->tSecurity.eSecurityMode = eSecurMode;
 
-        /* disable defrag, duplicate detection on TNETW+XCC on chip level*/
+        /* disable defrag, duplicate detection on TNETW+kkk on chip level*/
         /* YV- to add fragmentation control (if there is- artur ?)*/
         return cmdBld_CfgRxMsduFormat (hCmdBld, 
-                                       pCmdBld->tSecurity.eSecurityMode != TWD_CIPHER_CKIP,
+                                       pCmdBld->tSecurity.eSecurityMode != TWD_CIPHER_jjj,
                                        fCb,
                                        hCb);
     }

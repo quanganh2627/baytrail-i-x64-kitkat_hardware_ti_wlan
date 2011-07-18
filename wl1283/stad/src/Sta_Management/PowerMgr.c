@@ -62,6 +62,8 @@
 #include "CmdBld.h"
 #include "healthMonitor.h"
 #include "DataCtrl_Api.h"
+#include "currBssApi.h"
+
 
 
 /*****************************************************************************
@@ -103,6 +105,8 @@ static TI_STATUS	powerMgrSetPsMode (TI_HANDLE hPowerMgr, E80211PsMode psMode, TI
 									   TPowerSaveResponseCb fCb);
 static PowerMgr_PowerMode_e powerMgrGetHighestPriority(TI_HANDLE hPowerMgr);
 static TI_STATUS	updatePowerAuthority(TI_HANDLE hPowerMgr);
+static void powerMgr_UnregisterTrafficIntensityEvents (TI_HANDLE hPowerMgr);
+static void powerMgr_RegisterTrafficIntensityEvents (TI_HANDLE hPowerMgr);
 
 /*****************************************************************************
  **         Public Function prototypes                                      **
@@ -206,6 +210,7 @@ void PowerMgr_init (TStadHandlesList *pStadHandles)
     pPowerMgr->hTimer           	= pStadHandles->hTimer;
 	pPowerMgr->hQosMngr			    = pStadHandles->hQosMngr;
 	pPowerMgr->hRxData              = pStadHandles->hRxData;
+	pPowerMgr->hCurrBss				= pStadHandles->hCurrBss;
     pPowerMgr->psEnable         	= TI_FALSE;
 	pPowerMgr->psCurrentMode		= POWER_SAVE_OFF;
 	pPowerMgr->psLastRequest		= POWER_SAVE_OFF;
@@ -762,16 +767,58 @@ TI_STATUS powerMgr_setParam(TI_HANDLE thePowerMgrHandle,
     case POWER_MGR_POWER_LEVEL_DOZE_MODE:
         PowerMgr_setDozeModeInAuto(thePowerMgrHandle,theParamP->content.powerMngDozeMode);
         if (pPowerMgr->betEnable)
-        PowerMgrConfigBetToFw(thePowerMgrHandle, pPowerMgr->betEnable );
+        {  
+            PowerMgrConfigBetToFw(thePowerMgrHandle, pPowerMgr->betEnable );
+        }
         break;
 
     case POWER_MGR_KEEP_ALIVE_ENA_DIS:
     case POWER_MGR_KEEP_ALIVE_ADD_REM:
         return powerMgrKL_setParam (pPowerMgr->hPowerMgrKeepAlive, theParamP);
-    
 
+    case POWER_MGR_NDTIM_PARAM:
+    	pPowerMgr->dtimListenInterval = theParamP->content.powerMgrNdtim;
+
+    	/* reconfigure the fw with new parameter (if in Long Doze mode) */
+    	if (pPowerMgr->lastPowerModeProfile == POWER_MODE_LONG_DOZE)
+    	{
+    		powerMgrSendMBXWakeUpConditions(pPowerMgr,
+    				pPowerMgr->dtimListenInterval,
+    				(pPowerMgr->dtimListenInterval > 1) ? TNET_WAKE_ON_N_DTIM : TNET_WAKE_ON_DTIM);
+    	}
+
+    	break;
+
+	case POWER_MANAGMENT_TRAFFIC_INTENSITY_THRESHOLD:
+		{
+		OS_802_11_TRAFFIC_INTENSITY_THRESHOLD_PARAMS *localParams = &theParamP->content.ctrlDataTrafficIntensityThresholds;
+	
+		/* If any of the parameters has changed, we need to re-register with the Traffic Monitor */
+		if ((localParams->uHighThreshold != pPowerMgr->autoModeActiveTH) ||
+			(localParams->uLowThreshold != pPowerMgr->autoModeDozeTH) ||
+			(localParams->TestInterval != pPowerMgr->autoModeInterval))
+		{
+
+			pPowerMgr->autoModeActiveTH = localParams->uHighThreshold;
+			pPowerMgr->autoModeDozeTH = localParams->uLowThreshold;
+			pPowerMgr->autoModeInterval = localParams->TestInterval;
+
+            /* Turn off traffic events */
+			powerMgrDisableThresholdsIndications (pPowerMgr);
+
+			/* Unregister current events */
+			powerMgr_UnregisterTrafficIntensityEvents (pPowerMgr);
+				
+			/* And re-register with new thresholds */
+			powerMgr_RegisterTrafficIntensityEvents (pPowerMgr);
+
+			/* Enable events if they were enabled  */
+			powerMgrEnableThresholdsIndications (pPowerMgr);
+		}
+		}
+		break;
     default:
-        TRACE1(pPowerMgr->hReport, REPORT_SEVERITY_ERROR, "PowerMgr_setParam - ERROR - Param is not supported, %d\n\n", theParamP->paramType);
+        TRACE1(pPowerMgr->hReport, REPORT_SEVERITY_ERROR, "PowerMgr_setParam - ERROR - Param is not supported, 0x%x\n\n", theParamP->paramType);
 
         return PARAM_NOT_SUPPORTED;
     }
@@ -815,10 +862,15 @@ TI_STATUS powerMgr_getParam(TI_HANDLE thePowerMgrHandle,
                              theParamP->content.interogateCmdCBParams.hCb,
                              (void*)theParamP->content.interogateCmdCBParams.pCb);
 
+    case POWER_MGR_NDTIM_PARAM:
+        theParamP->content.powerMgrNdtim = pPowerMgr->dtimListenInterval;
+    	break;
 
-
-            
-
+	case POWER_MANAGMENT_TRAFFIC_INTENSITY_THRESHOLD:
+        theParamP->content.ctrlDataTrafficIntensityThresholds.uHighThreshold = pPowerMgr->autoModeActiveTH;
+        theParamP->content.ctrlDataTrafficIntensityThresholds.uLowThreshold = pPowerMgr->autoModeDozeTH;
+        theParamP->content.ctrlDataTrafficIntensityThresholds.TestInterval = pPowerMgr->autoModeInterval;
+        break;
 
     default:
         TRACE1(pPowerMgr->hReport, REPORT_SEVERITY_ERROR, "PowerMgr_getParam - ERROR - Param is not supported, %d\n\n", theParamP->paramType);
@@ -1172,7 +1224,7 @@ static TI_STATUS powerMgrSendMBXWakeUpConditions(TI_HANDLE hPowerMgr,
                                       
     if ( status != TI_OK )
     {
-        TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_ERROR, "powerMgrSendMBXWakeUpConditions - Error in wae up condition IE!\n");
+        TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_ERROR, "powerMgrSendMBXWakeUpConditions - Error in wake up condition IE!\n");
     }
     return status;
 }
@@ -1621,7 +1673,8 @@ static TI_STATUS updatePowerAuthority(TI_HANDLE hPowerMgr)
 TI_STATUS powerMgr_Suspend(TI_HANDLE hPowerMgr, TPwrStateCfg *pConfig, void (*fCb)(TI_HANDLE), TI_HANDLE hCb)
 {
 	PowerMgr_t*  pPowerMgr = (PowerMgr_t*)hPowerMgr;
-	TI_STATUS    rc;
+	TI_STATUS    aStatus	= TI_OK;
+
 
 	if (pConfig == NULL)
 	{
@@ -1639,7 +1692,7 @@ TI_STATUS powerMgr_Suspend(TI_HANDLE hPowerMgr, TPwrStateCfg *pConfig, void (*fC
 	/*
 	 * setup RX Data filters
 	 */
-	if (pConfig->eSuspendFilterUsage == PWRSTATE_FILTER_USAGE_RXFILTER)
+	if (pConfig->uSuspendFilterUsage & PWRSTATE_FILTER_USAGE_RXFILTER)
 	{
 		/* save current config */
 		rxData_GetRxDataFilters(pPowerMgr->hRxData,
@@ -1658,6 +1711,29 @@ TI_STATUS powerMgr_Suspend(TI_HANDLE hPowerMgr, TPwrStateCfg *pConfig, void (*fC
 		pPowerMgr->tPreSuspendConfig.tRxDataFilters.bChanged = TI_FALSE;
 	}
 
+    if (pConfig->uSuspendFilterUsage & PWRSTATE_FILTER_USAGE_DISABLE_BROADCASTS_HW)
+	{
+		/* send disable broadcast command */
+		aStatus = TWD_CfgEnableBroadcasts(pPowerMgr->hTWD, (FILTER_OUT_BROADCAST_IN_FW_LEVEL | FILTER_OUT_BROADCAST_IN_HW_LEVEL));
+	}
+	else if (pConfig->uSuspendFilterUsage & PWRSTATE_FILTER_USAGE_DISABLE_BROADCASTS_FW)
+	{
+		/* send disable broadcast command */
+		aStatus = TWD_CfgEnableBroadcasts(pPowerMgr->hTWD, FILTER_OUT_BROADCAST_IN_FW_LEVEL);
+	}
+	if (aStatus != TI_OK)
+	{
+		TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_ERROR, "powerMgr_Suspend: call TWD_CfgEnableBroadcasts failed\n");
+	}
+
+	aStatus = currBss_Suspend(pPowerMgr->hCurrBss, pConfig->uSuspendFilterUsage);
+
+	if (aStatus != TI_OK)
+	{
+		TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_ERROR, "powerMgr_Suspend: call currBss_Suspend failed\n");
+	}
+
+
 	/*
 	 * setup Long Doze mode
 	 */
@@ -1669,16 +1745,26 @@ TI_STATUS powerMgr_Suspend(TI_HANDLE hPowerMgr, TPwrStateCfg *pConfig, void (*fC
 	pPowerMgr->powerMngModePriority[POWER_MANAGER_PWR_STATE_PRIORITY].priorityEnable = TI_TRUE;
 	pPowerMgr->powerMngModePriority[POWER_MANAGER_PWR_STATE_PRIORITY].powerMode = POWER_MODE_LONG_DOZE;
 	pPowerMgr->dtimListenInterval = pConfig->uSuspendNDTIM;
-	pPowerMgr->desiredPowerModeProfile = POWER_MODE_SHORT_DOZE; /* anything other than POWER_MODE_LONG_DOZE to force PowerMgr_setPowerMode() not to ignore the request */
-	rc = PowerMgr_setPowerMode(pPowerMgr);
 
-	/* notify if completed successfully (skip if pending/failed) */
-	if (rc == TI_OK)
+	/* force the powerMgr not to ignore our request */
+	pPowerMgr->desiredPowerModeProfile = POWER_MODE_SHORT_DOZE;
+	pPowerMgr->psLastRequest = POWER_SAVE_OFF;
+	pPowerMgr->eLastPowerAuth = POWERAUTHO_POLICY_NUM;
+
+	aStatus = PowerMgr_setPowerMode(pPowerMgr);
+
+	/* if PowerMgr_setPowerMode returned TI_OK (instead of TI_PENDING) then we cannot be sure
+	 * the previous commands were completed - the powerMgr might be not fully suspended!
+	 */
+	if (aStatus == TI_OK)
 	{
+	    TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_ERROR, "powerMgr_Suspend: PowerMgr_setPowerMode not pending - powerMgr might be not fully suspended\n");
+
+	    /* still, make sure driver does not starve */
 		invokeCallback(pPowerMgr->fEnteredPsCb, pPowerMgr->hEnteredPsCb);
 	}
 
-	return rc;
+	return aStatus;
 }
 
 /*
@@ -1694,6 +1780,7 @@ TI_STATUS powerMgr_Suspend(TI_HANDLE hPowerMgr, TPwrStateCfg *pConfig, void (*fC
 TI_STATUS powerMgr_Resume(TI_HANDLE hPowerMgr)
 {
 	PowerMgr_t*  pPowerMgr = (PowerMgr_t*)hPowerMgr;
+	TI_STATUS	 aStatus	= TI_OK;
 
 	/*
 	 * restore RX Data filters
@@ -1708,15 +1795,91 @@ TI_STATUS powerMgr_Resume(TI_HANDLE hPowerMgr)
 				pPowerMgr->tPreSuspendConfig.tRxDataFilters.bEnabled);
 	}
 
+    /* send enable broadcast command */
+	aStatus = TWD_CfgEnableBroadcasts(pPowerMgr->hTWD, RECEIVE_ALL_BROADCAST_WHILE_IN_SUSPEND);
+
+	aStatus = currBss_Resume(pPowerMgr->hCurrBss);
+
+	if (aStatus != TI_OK)
+	{
+		TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_ERROR, "powerMgr_Suspend: call currBss_Resume failed\n");
+	}
+
 	/*
 	 * restore PS mode
 	 */
 	pPowerMgr->powerMngModePriority[POWER_MANAGER_PWR_STATE_PRIORITY].priorityEnable = TI_FALSE;
 	pPowerMgr->dtimListenInterval = pPowerMgr->tPreSuspendConfig.dtimListenInterval;
-	PowerMgr_setPowerMode(pPowerMgr);
+	aStatus = PowerMgr_setPowerMode(pPowerMgr);
 
-	return TI_OK;
+	return aStatus;
 }
 
 
+/*-----------------------------------------------------------------------------
+Routine Name: powerMgr_UnregisterTrafficIntensityEvents
+Routine Description: unregisters existing events from traffic monitor
+Arguments:
+Return Value:
+-----------------------------------------------------------------------------*/
+static void powerMgr_UnregisterTrafficIntensityEvents (TI_HANDLE hPowerMgr)
+{
+    PowerMgr_t*  pPowerMgr = (PowerMgr_t*)hPowerMgr;
 
+	TrafficMonitor_UnregEvent (pPowerMgr->hTrafficMonitor,pPowerMgr->passToActiveTMEvent);
+
+	TrafficMonitor_UnregEvent (pPowerMgr->hTrafficMonitor,pPowerMgr->passToDozeTMEvent);
+    
+    TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_INFORMATION, "powerMgr_UnregisterTrafficIntensityEvents: Unregistered events\n");
+
+}
+
+
+static void powerMgr_RegisterTrafficIntensityEvents (TI_HANDLE hPowerMgr)
+{
+	PowerMgr_t*  pPowerMgr = (PowerMgr_t*)hPowerMgr;
+	TI_STATUS	 status;
+	TrafficAlertRegParm_t tmRegParam;
+
+	tmRegParam.Context = pPowerMgr;
+    tmRegParam.Cookie = (TI_UINT32)POWER_MODE_ACTIVE;
+    tmRegParam.TimeIntervalMs = pPowerMgr->autoModeInterval;
+    tmRegParam.Trigger = TRAFF_EDGE;
+    tmRegParam.MonitorType = TX_RX_ALL_802_11_DATA_FRAMES;
+
+    /* Active threshold */
+    tmRegParam.CallBack = PowerMgrTMThresholdCrossCB;
+    tmRegParam.Direction = TRAFF_UP;
+    tmRegParam.Threshold = pPowerMgr->autoModeActiveTH;
+    pPowerMgr->passToActiveTMEvent = TrafficMonitor_RegEvent (pPowerMgr->hTrafficMonitor,
+                                                             &tmRegParam,
+                                                             TI_FALSE);
+    /* Doze threshold */
+    tmRegParam.Direction = TRAFF_DOWN;
+    tmRegParam.Threshold = pPowerMgr->autoModeDozeTH;
+    tmRegParam.Cookie = (TI_UINT32)POWER_MODE_SHORT_DOZE; /* diffrentiation between long / short doze is done at the 
+                                                          CB, according to configuration at time of CB invokation */
+    pPowerMgr->passToDozeTMEvent = TrafficMonitor_RegEvent (pPowerMgr->hTrafficMonitor,
+                                                           &tmRegParam,
+                                                           TI_FALSE);
+
+    if ( (pPowerMgr->passToActiveTMEvent == NULL) ||
+         (pPowerMgr->passToDozeTMEvent == NULL))
+    {
+        TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_INIT, "PowerMgr_init - PowerMgr_init - ERROR registering Auto mode events - ABROTING init!\n");
+        return;
+    }
+
+    /*
+    set the events as resets for one another
+    */
+    status = TrafficMonitor_SetRstCondition (pPowerMgr->hTrafficMonitor,
+                                            pPowerMgr->passToActiveTMEvent,
+                                            pPowerMgr->passToDozeTMEvent,
+                                            TI_TRUE);
+    if ( status != TI_OK )
+    {
+        TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_INIT, "PowerMgr_init - PowerMgr_init - ERROR binding Auto mode events - ABROTING init!\n");
+        return;
+    }
+}

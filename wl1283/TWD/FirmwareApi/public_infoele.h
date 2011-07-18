@@ -75,6 +75,7 @@ typedef enum
     ACX_EVENT_MBOX_MASK         = 0x0026,
     ACX_CONN_MONIT_PARAMS       = 0x002D,
     ACX_CONS_TX_FAILURE         = 0x002F,
+    ACX_DISABLE_BROADCASTS		= 0x0030,
     ACX_BCN_DTIM_OPTIONS        = 0x0031,
     ACX_SG_ENABLE               = 0x0032,
     ACX_SG_CFG                  = 0x0033,
@@ -115,18 +116,26 @@ typedef enum
     ACX_RSSI_SNR_WEIGHTS        = 0x0052,
     ACX_KEEP_ALIVE_MODE         = 0x0053,
     ACX_SET_KEEP_ALIVE_CONFIG   = 0x0054,
+#ifdef HOST_CONTROL_RX_BA_SESSION
+    ACX_BA_SESSION_POLICY_CFG   = 0x0055,
+    ACX_BA_SESSION_RX_SETUP     = 0x0056,
+#else
     ACX_BA_SESSION_RESPONDER_POLICY = 0x0055,
     ACX_BA_SESSION_INITIATOR_POLICY = 0x0056,
+#endif
     ACX_PEER_HT_CAP             = 0x0057,
     ACX_HT_BSS_OPERATION        = 0x0058,
     ACX_COEX_ACTIVITY           = 0x0059,
+    ACX_SET_SMART_REFLEX_DEBUG = 0x005A,
+	ACX_SET_SMART_REFLEX_STATE = 0x005B,
+	ACX_SET_SMART_REFLEX_PARAMS = 0x005F,
     ACX_BURST_MODE				= 0x005C,
 
     ACX_SET_RATE_MAMAGEMENT_PARAMS = 0x005D,
     ACX_GET_RATE_MAMAGEMENT_PARAMS = 0x005E,
 
+	ACX_SET_RATE_ADAPT_PARAMS 	= 0x0060,
     ACX_SET_DCO_ITRIM_PARAMS   = 0x0061,
-
     ACX_GEN_FW_CMD              = 0x0070,
     ACX_HOST_IF_CFG_BITMAP      = 0x0071,
 
@@ -167,8 +176,12 @@ typedef struct
     uint16 len;
 } EleHdrStruct;
 
-#define MAX_NUM_AID     4 /* max number of STAs in IBSS */
 
+#if !defined(NDEBUG)
+#define MAX_NUM_AID     1 /* max number of STAs in IBSS */  
+#else
+#define MAX_NUM_AID     4 /* max number of STAs in IBSS */
+#endif
 
 #ifdef HOST_COMPILE
 #define INFO_ELE_HDR    EleHdrStruct    EleHdr;
@@ -205,6 +218,7 @@ typedef struct
     /* xBeacons (1-255) for NxBeacon*/
     uint8  padding[2];              /* alignment to 32bits boundry   */
 } WakeUpCondition_t;
+
 
 /******************************************************************************
 
@@ -247,7 +261,6 @@ typedef struct
     uint8    rxFreeReq;                 /* minimum required free memory blocks in TX pool*/
 
     uint8    txMin;                     /* minimum required total TX memory blocks in TX pool*/
-
 } ACXConfigMemory_t;
 
 
@@ -666,8 +679,7 @@ typedef struct
 #define BEACON_FILTER_TABLE_MAX_SIZE    ((BEACON_FILTER_TABLE_MAX_IE_NUM * BEACON_FILTER_TABLE_IE_ENTRY_SIZE) + \
                                          (BEACON_FILTER_TABLE_MAX_VENDOR_SPECIFIC_IE_NUM * BEACON_FILTER_TABLE_EXTRA_VENDOR_SPECIFIC_IE_SIZE))
 
-typedef struct ACXBeaconFilterIETableStruct
-{
+typedef struct ACXBeaconFilterIETableStruct {
     INFO_ELE_HDR
     uint8 NumberOfIEs;                          /* The number of IE's in the table*/
     /* 0 - clears the table.*/
@@ -696,8 +708,7 @@ typedef uint8 CoexIp_e;
 typedef CoexIp_enum CoexIp_e;
 #endif
 
-typedef struct ACXCoexActivityIEStruct
-{
+typedef struct ACXCoexActivityIEStruct {
     INFO_ELE_HDR
     CoexIp_e coexIp;         /* 0-BT, 1-WLAN (according to CoexIp_e in FW) */
     uint8  activityId;       /* According to BT/WLAN activity numbering in FW */
@@ -1012,6 +1023,9 @@ typedef struct ClaibrationFailStatistics_t
     uint32 tuneTxPPAFail;
     uint32 tuneTxClpcFail;
     uint32 tuneRxAnaDcFail;
+#ifdef TNETW1283
+    uint32 tuneRxDigDcFail;
+#endif
     uint32 tuneRxIqMmFail;
     uint32 calStateFail;
 } ClaibrationFailStatistics_t;
@@ -1407,8 +1421,7 @@ typedef struct
 #define HOST_IF_CFG_BITMAP_RX_FIFO_ENABLE     0x00000001
 #define HOST_IF_CFG_BITMAP_TX_EXTRA_BLKS_SWAP 0x00000002
 #define HOST_IF_CFG_BITMAP_RX_AGGR_WA_ENABLE  0x00000004
-#define HOST_IF_CFG_BITMAP_TX_PAD_TO_SDIO_BLK 0x00000008
-
+#define HOST_IF_CFG_BITMAP_TX_PAD_SDIO        0x00000008
 
 typedef struct
 {
@@ -1598,6 +1611,38 @@ typedef struct
     uint8  padding[2];       /* alignment to 32bits boundry   */
 } ACXBeaconAndBroadcastOptions_t;
 
+/******************************************************************************
+
+    Name:   ACX_DISABLE_BROADCASTS
+    Type:   Configuration
+    Access: Write Only
+    Length:
+
+******************************************************************************/
+typedef enum
+{
+     RECEIVE_ALL_BROADCAST_WHILE_IN_SUSPEND = 0,
+     FILTER_OUT_BROADCAST_IN_FW_LEVEL       = BIT_0,
+     FILTER_OUT_BROADCAST_IN_HW_LEVEL       = BIT_1,
+     FILTER_OUT_BROADCAST_MAX_SIZE          = MAX_POSITIVE8
+}BroadcastFilterInSuspend_enum;
+
+#ifdef HOST_COMPILE
+typedef uint8 BroadcastFilterInSuspend_e;
+#else
+typedef BroadcastFilterInSuspend_enum BroadcastFilterInSuspend_e;
+#endif
+
+typedef struct
+{
+    INFO_ELE_HDR
+
+    BroadcastFilterInSuspend_e broadcastDisable;  /* defines whether to enable Broadcasts and multicast RX
+	    				             when host is in suspend */
+    uint8   padding[3];
+
+} ACXDisableBroadcasts_t;
+
 
 /******************************************************************************
 
@@ -1624,16 +1669,14 @@ typedef struct
 } ACXBluetoothWlanCoEnableStruct;
 
 
-
-/** \struct TSoftGeminiParams
- * \brief Soft Gemini Parameters
+/* struct TSoftGeminiParams
+ * brief Soft Gemini Parameters
  *
- * \par Description
+ * Description
  * Used for Setting/Printing Soft Gemini Parameters
  *
- * \sa
+ * 
  */
-
 typedef enum
 {
     SOFT_GEMINI_BT_PER_THRESHOLD = 0,
@@ -1675,8 +1718,8 @@ typedef enum
     SOFT_GEMINI_WLAN_ACTIVE_MAX_BT_ACL_BR,
     SOFT_GEMINI_PASSIVE_SCAN_DURATION_FACTOR_HV3,
     SOFT_GEMINI_PASSIVE_SCAN_DURATION_FACTOR_A2DP,
-    SOFT_GEMINI_PASSIVE_SCAN_A2DP_BT_TIME,
-    SOFT_GEMINI_PASSIVE_SCAN_A2DP_WLAN_TIME,
+	SOFT_GEMINI_PASSIVE_SCAN_BT_TIME,
+	SOFT_GEMINI_PASSIVE_SCAN_WLAN_TIME,
     SOFT_GEMINI_HV3_MAX_SERVED,
     SOFT_GEMINI_DHCP_TIME,
     SOFT_GEMINI_ACTIVE_SCAN_DURATION_FACTOR_A2DP,
@@ -1688,6 +1731,7 @@ typedef enum
     SOFT_GEMINI_PARAMS_MAX
 } softGeminiParams;
 
+ 
 typedef struct
 {
     uint32   coexParams[SOFT_GEMINI_PARAMS_MAX];
@@ -1712,6 +1756,7 @@ typedef struct
     INFO_ELE_HDR
 
     TSoftGeminiParams softGeminiParams;
+
 } ACXBluetoothWlanCoParamsStruct;
 
 /******************************************************************************
@@ -1731,9 +1776,7 @@ typedef struct
 
     uint8   enable;                     /* enable(1) / disable(0) the FM Coex feature */
 
-    uint8   swallowPeriod;              /* Swallow period used in COEX PLL swallowing mechanism,
-                                           Range: 0-0xFF,  0xFF = use FW default
-                                        */
+    uint8   swallowPeriod;              /* Swallow period used in COEX PLL swallowing mechanism, range 1-7 */
 
     uint8   nDividerFrefSet1;           /* The N divider used in COEX PLL swallowing mechanism for Fref of 38.4/19.2 Mhz.
                                            Range: 0-0xFF,  0xFF = use FW default
@@ -1960,8 +2003,7 @@ typedef struct
 
 #else
 
-typedef enum
-{
+typedef enum {
     FILTER_DROP = 0,
     FILTER_SIGNAL  ,
     FILTER_FW_HANDLE,
@@ -2171,6 +2213,51 @@ typedef struct
 /*
  * BA sessen interface structure
  */
+
+#ifdef HOST_CONTROL_RX_BA_SESSION
+typedef enum
+{
+    BA_RESPONDER = 0,
+    BA_INITIATOR = 1,
+    BA_NUM_0F_DIRECTIONS = 2,
+    MAX_BA       = MAX_POSITIVE8   
+} BaSessionDirection_e;
+
+typedef struct
+{
+    INFO_ELE_HDR
+        uint8 hLid;                     /* Specifies Link Id, Range 0-31, Not applicable if Role Id is set to ANY. */
+    /* FF means ANY Link Id. For M6.01 this field is irrelevant */ 
+    uint8 uTid;                     /* TID */
+    uint8 state;                    /* SET/CLEAR */
+    uint8 Padding[1];
+    uint16 uWinSize;                /* windows size in num of packet */
+    uint16 uSSN;                    /* BA session starting sequence number.  RANGE 0-FFF */
+    
+} TAxcBASessionRxSetupConfigure;
+
+
+
+typedef struct
+{
+    INFO_ELE_HDR
+    uint8 roleId;                   /* Specifies role Id, Range 0-7, FF means ANY role. For M6.01 this field is irrelevant */ 
+    uint8 hLid;                     /* Specifies Link Id, Range 0-31, Not applicable if Role Id is set to ANY. */
+                                    /* FF means ANY Link Id. For M6.01 this field is irrelevant */ 
+    uint8 uTid;                     /* TID */
+    uint8 uPolicy;                  /* Enable / Disable */
+    uint16 uWinSize;                /* windows size in num of packet */
+    uint16 uInactivityTimeout;      /* as initiator inactivity timeout in time units(TU) of 1024us / 
+                                       as receiver reserved */
+    BaSessionDirection_e BaDirection;  /* Initiator = 0/Responder = 1 */
+    uint8 Padding[3];
+
+} TAxcBaSessionInitiatorResponderPolicy;
+
+
+
+#else //HOST_CONTROL_RX_BA_SESSION
+
 typedef struct
 {
     INFO_ELE_HDR
@@ -2182,6 +2269,7 @@ typedef struct
                                        as receiver reserved */
 } TAxcBaSessionInitiatorResponderPolicy;
 
+#endif
 /******************************************************************************
 
     Name:	ACX_PEER_HT_CAP
@@ -2399,6 +2487,8 @@ typedef rateAdaptParam_enum rateAdaptParam_e;
 
 #define RATE_MGMT_NUM_OF_UC		(2)
 #define RATE_MGMT_NUM_OF_RATES  (13)
+
+/* OLD STRUCTURE - OBSOLETE but kept for backwards compatibility with M3 compliant hosts */
 typedef struct
 {
     INFO_ELE_HDR
@@ -2410,7 +2500,6 @@ typedef struct
     uint16 MaxPer;
     uint8 InverseCuriosityFactor;
     uint8 TxFailLowTh;
-
     uint8 TxFailHighTh;
     uint8 PerAlphaShift;
     uint8 PerAddShift;
@@ -2420,6 +2509,30 @@ typedef struct
     uint8 RateCheckDown;
     uint8 RateRetryPolicy[RATE_MGMT_NUM_OF_RATES];
 } AcxRateMangeParams;
+
+/* NEW STRUCTURE */
+typedef struct
+{
+    INFO_ELE_HDR
+	rateAdaptParam_e paramIndex;
+	uint16 RateRetryScore;
+	uint16 PerAdd;
+	uint16 PerTh1;
+	uint16 PerTh2;
+	uint16 MaxPer;
+	uint8 InverseCuriosityFactor[RATE_MGMT_NUM_OF_UC];
+	uint8 TxFailLowTh;
+    uint8 TxFailHighTh;
+    uint8 PerAlphaShift;
+    uint8 PerAddShift;
+    uint8 PerBeta1Shift;
+    uint8 PerBeta2Shift;
+    uint8 RateCheckUp;
+    uint8 RateCheckDown;
+    uint8 RateRetryPolicy[RATE_MGMT_NUM_OF_RATES];
+	uint8 PerWeightShift[RATE_MGMT_NUM_OF_UC];			// 2 weights, 1 per UC
+	uint8 TpWeightShift[RATE_MGMT_NUM_OF_UC];				// 2 weights, 1 per UC
+}AcxRateAdaptParams;
 
 /******************************************************************************
     Name:   ACX_GET_RATE_MAMAGEMENT_PARAMS
@@ -2440,6 +2553,69 @@ typedef struct
     int32  curveCorrectionStep;
 } AcxRateMangeReadParams;
 
+
+
+/******************************************************************************
+
+    Name:	ACX_SET_SMART_REFLEX_STATE
+    Desc:   Configure smart reflex state (enable/disable).
+    Type:   Configuration
+    Access: Write Only
+    Length: 
+
+******************************************************************************/
+
+typedef struct
+{
+	INFO_ELE_HDR
+    Bool_e  enable;
+    uint8 padding [3];
+}ACXSmartReflexState_t;
+
+
+/******************************************************************************
+
+    Name:	ACX_SET_SMART_REFLEX_DEBUG
+    Desc:   Configure smart reflex mechanism parameters - for debug mode.
+    Type:   Configuration
+    Access: Write Only
+    Length: 
+
+******************************************************************************/
+typedef struct 
+{
+	uint8 len; //maximum length is 14
+	int8 upperLimit;
+	int8 values[14]; //this is the maximum length (in rows) of the error table
+}SmartReflexErrTable_t;
+
+typedef struct
+{
+	INFO_ELE_HDR
+	SmartReflexErrTable_t errorTable; 
+	uint16 senN_P;
+	uint16 senNRN;
+	uint16 senPRN;
+	uint16 senN_P_Gain;
+}ACXSmartReflexDebugParams_t;
+
+
+/******************************************************************************
+
+    Name:	ACX_SET_SMART_REFLEX_PARAMS
+    Desc:   Configure smart reflex mechanism tables - 1 for each FAB.
+			The FW will choose the correct FAB, according to what is burned in the Efuse.
+    Type:   Configuration
+    Access: Write Only
+    Length: 
+
+******************************************************************************/
+
+typedef struct
+{
+	INFO_ELE_HDR
+	SmartReflexErrTable_t errorTable[3]; 
+}ACXSmartReflexConfigParams_t;
 
 /******************************************************************************
 
@@ -2557,4 +2733,3 @@ typedef struct
 
 
 #endif /* PUBLIC_INFOELE_H */
-

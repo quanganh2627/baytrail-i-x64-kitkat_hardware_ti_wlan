@@ -64,7 +64,6 @@
 #define MASK_ACTIVE_ALLOWED 			(0x40) /* bit 6 indiactes the channel is allowed for Active scan */
 #define MASK_FREQ_ALLOWED 				(0x80) /* bit 7 indicates the cahnnel is allowed*/
 
-#define CHANNEL_VALIDITY_TS_THRESHOLD   10000 /* 10 sec */
 
 /* 
 * Small macro to convert Dbm units into Dbm/10 units. This macro is important
@@ -320,7 +319,7 @@ TI_STATUS regulatoryDomain_setParam(TI_HANDLE hRegulatoryDomain,
             TI_BOOL        bBand_2_4;
 
             /* Sanity check */
-            if (NULL == pParam->content.pCountry)
+            if (NULL == pParam->content.countryIe_t.pCountry)
             {   
                 TRACE0(pRegulatoryDomain->hReport, REPORT_SEVERITY_ERROR, "regulatoryDomain_setParam, REGULATORY_DOMAIN_COUNTRY_PARAM is set with NULL pointer");
 
@@ -328,7 +327,7 @@ TI_STATUS regulatoryDomain_setParam(TI_HANDLE hRegulatoryDomain,
             }
             else /* Update country code and supported channels */
             {         
-                bBand_2_4 = siteMgr_isCurrentBand24(pRegulatoryDomain->hSiteMgr);
+                bBand_2_4 = (pParam->content.countryIe_t.band == RADIO_BAND_2_4_GHZ) ? TI_TRUE : TI_FALSE;
 
 			    /* Setting the CountryIE for every Band */
 			    setSupportedChannelsAccording2CountryIe(pRegulatoryDomain, pParam->content.pCountry, bBand_2_4);
@@ -571,6 +570,20 @@ TI_STATUS regulatoryDomain_getParam(TI_HANDLE hRegulatoryDomain,
 		}
 		break;
 
+
+	case REGULATORY_DOMAIN_SUPPORTED_CHANNELS_ON_BAND:
+		if (pParam->content.eRadioBand == RADIO_BAND_2_4_GHZ)
+		{
+			pParam->content.supportedChannels.listOfChannels = (TI_UINT8*)pRegulatoryDomain->supportedChannels_band_2_4;
+			pParam->content.supportedChannels.sizeOfList = NUM_OF_CHANNELS_24;
+		}
+		else if (pParam->content.eRadioBand == RADIO_BAND_5_0_GHZ)
+		{
+			pParam->content.supportedChannels.listOfChannels = (TI_UINT8*)pRegulatoryDomain->supportedChannels_band_5;
+			pParam->content.supportedChannels.sizeOfList = A_5G_BAND_NUM_CHANNELS;
+		}
+		break;
+
 	case REGULATORY_DOMAIN_CURRENT_TX_POWER_IN_DBM_PARAM:
 
             {
@@ -657,11 +670,15 @@ TRACE1(pRegulatoryDomain->hReport, REPORT_SEVERITY_INFORMATION, "regulatoryDomai
 		break;
 
     case REGULATORY_DOMAIN_IS_DFS_CHANNEL:
+		{
+		
+			TI_UINT32 channelIndex = (pParam->content.tDfsChannel.uChannel-A_5G_BAND_MIN_CHANNEL);
 
         if ((pRegulatoryDomain->spectrumManagementEnabled) && /* 802.11h is enabled */
             (RADIO_BAND_5_0_GHZ == pParam->content.tDfsChannel.eBand) && /* band is 5 GHz */
             (pRegulatoryDomain->minDFS_channelNum <= pParam->content.tDfsChannel.uChannel) && /* channel is within DFS range */
-            (pRegulatoryDomain->maxDFS_channelNum >= pParam->content.tDfsChannel.uChannel))
+				(pRegulatoryDomain->maxDFS_channelNum >= pParam->content.tDfsChannel.uChannel) &&
+				((os_timeStampMs(pRegulatoryDomain->hOs)-pRegulatoryDomain->supportedChannels_band_5[channelIndex].timestamp) >=CHANNEL_VALIDITY_TS_THRESHOLD ))
         {
             pParam->content.tDfsChannel.bDfsChannel = TI_TRUE;
         }
@@ -670,6 +687,7 @@ TRACE1(pRegulatoryDomain->hReport, REPORT_SEVERITY_INFORMATION, "regulatoryDomai
             pParam->content.tDfsChannel.bDfsChannel = TI_FALSE;
         }
         break;
+		}
 
     case REGULATORY_DOMAIN_TIME_TO_COUNTRY_EXPIRY:
         /* if a country was found for either band */
@@ -747,6 +765,40 @@ TRACE1(pRegulatoryDomain->hReport, REPORT_SEVERITY_INFORMATION, "regulatoryDomai
             break;
         }
         
+    case REGULATORY_DOMAIN_GET_CHANNEL_CAPABILITY:
+    {
+        TI_UINT16 channelIndex;
+        TI_UINT16 channel = pParam->content.channelValidity.channelNum;
+        channelCapability_t* pSupportedChannel;
+
+        if (pParam->content.channelValidity.band == RADIO_BAND_5_0_GHZ)
+        {
+            channelIndex = (channel-A_5G_BAND_MIN_CHANNEL);
+            if (channelIndex > A_5G_BAND_NUM_CHANNELS)
+            {
+                TRACE1(pRegulatoryDomain->hReport, REPORT_SEVERITY_ERROR, "regulatoryDomain_getParam case REGULATORY_DOMAIN_GET_CHANNEL_CAPABILITY channelIndex = %d\n", channelIndex);
+                return TI_NOK;
+            }
+            pSupportedChannel = &(pRegulatoryDomain->supportedChannels_band_5[channelIndex]);
+        }
+        else
+        {
+            channelIndex = (channel - BG_24G_BAND_MIN_CHANNEL);
+            if (channelIndex > NUM_OF_CHANNELS_24)
+            {
+                TRACE1(pRegulatoryDomain->hReport, REPORT_SEVERITY_ERROR, "regulatoryDomain_getParam case REGULATORY_DOMAIN_GET_CHANNEL_CAPABILITY channelIndex = %d\n", channelIndex);
+                return TI_NOK;
+            }
+            pSupportedChannel = &(pRegulatoryDomain->supportedChannels_band_2_4[channelIndex]);
+        }
+        
+        pParam->content.channelCapability.bChanneInCountryIe = pSupportedChannel->bChanneInCountryIe;
+        pParam->content.channelCapability.channelValidityActive = pSupportedChannel->channelValidityActive;
+        pParam->content.channelCapability.channelValidityPassive = pSupportedChannel->channelValidityPassive;
+        pParam->content.channelCapability.timestamp = pSupportedChannel->timestamp;
+        pParam->content.channelCapability.uMaxTxPowerDomain = pSupportedChannel->uMaxTxPowerDomain;
+        break;
+    }
         
 	default:
 TRACE1(pRegulatoryDomain->hReport, REPORT_SEVERITY_ERROR, "Get param, Params is not supported, %d\n\n", pParam->paramType);
@@ -855,7 +907,13 @@ static TI_STATUS setSupportedChannelsAccording2CountryIe(regulatoryDomain_t *pRe
 		{	/* Do not update new Country IE */
 			if (os_memoryCompare(pRegulatoryDomain->hOs, (void *)&pCountry->countryIE, (void *)&pRegulatoryDomain->country24.countryIE, sizeof(dot11_countryIE_t)))
 			{
-TRACE0(pRegulatoryDomain->hReport, REPORT_SEVERITY_WARNING, "setSupportedChannelsAccording2CountryIe different Country, cur=, new=\n");
+				TRACE6(pRegulatoryDomain->hReport, REPORT_SEVERITY_INFORMATION, "setSupportedChannelsAccording2CountryIe different Country, cur=%c%c%c, new=%c%c%c\n",
+			            pRegulatoryDomain->country24.countryIE.CountryString[0],
+			            pRegulatoryDomain->country24.countryIE.CountryString[1],
+			            pRegulatoryDomain->country24.countryIE.CountryString[2],
+			            pCountry->countryIE.CountryString[0],
+			            pCountry->countryIE.CountryString[1],
+			            pCountry->countryIE.CountryString[2]);
             	return TI_NOK;
             }
             else    /* Same IE - just mark the TS and return TI_OK */
@@ -883,7 +941,13 @@ TRACE0(pRegulatoryDomain->hReport, REPORT_SEVERITY_WARNING, "setSupportedChannel
 		{	/* Do not update new Country IE if the IE is the same*/
 			if (os_memoryCompare(pRegulatoryDomain->hOs, (void *)&pCountry->countryIE, (void *)&pRegulatoryDomain->country5.countryIE, sizeof(dot11_countryIE_t)))
 			{
-TRACE0(pRegulatoryDomain->hReport, REPORT_SEVERITY_WARNING, "setSupportedChannelsAccording2CountryIe different Country, cur=, new=\n");
+				TRACE6(pRegulatoryDomain->hReport, REPORT_SEVERITY_INFORMATION, "setSupportedChannelsAccording2CountryIe different Country, cur=%c%c%c, new=%c%c%c\n",
+				pRegulatoryDomain->country5.countryIE.CountryString[0],
+				pRegulatoryDomain->country5.countryIE.CountryString[1],
+				pRegulatoryDomain->country5.countryIE.CountryString[2],
+				pCountry->countryIE.CountryString[0],
+				pCountry->countryIE.CountryString[1],
+				pCountry->countryIE.CountryString[2]);
             	return TI_NOK;
             }
             else    /* Same IE - just mark the TS and return TI_OK */
@@ -961,6 +1025,7 @@ TRACE1(pRegulatoryDomain->hReport, REPORT_SEVERITY_INFORMATION, "setSupportedCha
 				TI_UINT8 	channelIndex4Band;
 
 				channelIndex4Band = (channelNumber-minChannelNumber);
+				if (channelIndex4Band < numberOfChannels) {
 				pSupportedChannels[channelIndex4Band].bChanneInCountryIe = TI_TRUE;
 				pSupportedChannels[channelIndex4Band].channelValidityPassive = TI_TRUE;
 				pSupportedChannels[channelIndex4Band].channelValidityActive = TI_TRUE;
@@ -970,6 +1035,13 @@ TRACE1(pRegulatoryDomain->hReport, REPORT_SEVERITY_INFORMATION, "setSupportedCha
 					DBM2DBMDIV10(pCountry->countryIE.tripletChannels[tripletChannelIndex].maxTxPowerLevel);
 
 TRACE2(pRegulatoryDomain->hReport, REPORT_SEVERITY_INFORMATION, "channel = %d uMaxTxPowerDomain=%d\n", 										channelNumber, pSupportedChannels[channelIndex4Band].uMaxTxPowerDomain);
+			}
+				else
+				{
+					TRACE2(pRegulatoryDomain->hReport, REPORT_SEVERITY_WARNING,
+						   "setSupportedChannelsAccording2CountryIe index out of bounds=%d numberOfChannels = %d\n",
+						   channelIndex4Band, numberOfChannels);
+				}
 			}
 		}
     }
@@ -1024,16 +1096,18 @@ static TI_BOOL regulatoryDomain_isChannelSupprted(regulatoryDomain_t *pRegulator
 	}
 	if (pRegulatoryDomain->spectrumManagementEnabled 
 		&& (channel >= pRegulatoryDomain->minDFS_channelNum) 
-        && (channel <= pRegulatoryDomain->maxDFS_channelNum)
-		&& ((os_timeStampMs(pRegulatoryDomain->hOs)-pSupportedChannels[channelIndex].timestamp) >=CHANNEL_VALIDITY_TS_THRESHOLD ))
+        && (channel <= pRegulatoryDomain->maxDFS_channelNum))
 	{	/* If 802.11h is enabled, a DFS channel is valid only for 10 sec
 			from the last Beacon/ProbeResponse */
+		if ((os_timeStampMs(pRegulatoryDomain->hOs)-pSupportedChannels[channelIndex].timestamp) >=CHANNEL_VALIDITY_TS_THRESHOLD )
+		{
         pSupportedChannels[channelIndex].channelValidityActive = TI_FALSE;
         TRACE1(pRegulatoryDomain->hReport, REPORT_SEVERITY_INFORMATION, "regulatoryDomain_isChannelSupprted(): CHANNEL_VALIDITY_TS_THRESHOLD !! Disable channel no %d, DFS channel\n", channel );
+		}
 
 	}
 
-	return (pSupportedChannels[channelIndex].channelValidityActive);
+	return (pSupportedChannels[channelIndex].channelValidityActive && pSupportedChannels[channelIndex].channelValidityPassive);
 
 }
 
@@ -1355,6 +1429,17 @@ static void regulatoryDomain_updateChannelsTs(regulatoryDomain_t *pRegulatoryDom
 		return;
 	}
 
+	/* If 11d is not enable check if 11h is enabled and the channel is a DFS channel */
+	if (pRegulatoryDomain->regulatoryDomainEnabled == TI_FALSE)
+	{
+	    if (pRegulatoryDomain->spectrumManagementEnabled == TI_FALSE ||
+	            (pRegulatoryDomain->minDFS_channelNum > channel &&  pRegulatoryDomain->maxDFS_channelNum < channel))
+	    {
+	        TRACE0(pRegulatoryDomain->hReport, REPORT_SEVERITY_INFORMATION, "regulatoryDomain_updateChannelsTs: 11d and 11h are not enabled (or channel is not DFS) no need to proceed\n");
+	        return;
+	    }
+	}
+
 	if ((channel<BG_24G_BAND_MIN_CHANNEL) || (channel>A_5G_BAND_MAX_CHANNEL))
 	{
 		return;
@@ -1377,12 +1462,6 @@ static void regulatoryDomain_updateChannelsTs(regulatoryDomain_t *pRegulatoryDom
 		pSupportedChannels = pRegulatoryDomain->supportedChannels_band_2_4;
 	}
 	
-	if((pSupportedChannels[channelIndex].bChanneInCountryIe == TI_FALSE) && (pRegulatoryDomain->regulatoryDomainEnabled == TI_TRUE))
-  	{
-		TRACE1(pRegulatoryDomain->hReport, REPORT_SEVERITY_WARNING, "regulatoryDomain_updateChannelsTs: channelNum = %d isn't supported at the Country. wll not set to active!\n", channel);
-  		return;
-  	}
-
 	pSupportedChannels[channelIndex].timestamp = os_timeStampMs(pRegulatoryDomain->hOs);
 	pSupportedChannels[channelIndex].channelValidityActive = TI_TRUE;
 
@@ -1526,7 +1605,7 @@ DESCRIPTION: Get the maximum tx power allowed for the given channel.
 				1) User max value
 				2) Domain restriction - 11d country code IE
 				3) 11h power constraint - only on serving channel
-				4) XCC TPC - only on serving channel
+				4) kkk TPC - only on serving channel
 
 RETURN:     Max power in Dbm/10 for the given channel
 
@@ -1561,7 +1640,7 @@ static TI_UINT8 regulatoryDomain_getMaxPowerAllowed(regulatoryDomain_t	*pRegulat
 			uTxPower -= pRegulatoryDomain->uPowerConstraint;
 		}
         
-        /* Take XCC limitation too */
+        /* Take kkk limitation too */
         uTxPower = TI_MIN(uTxPower, pRegulatoryDomain->uExternTxPowerPreferred);
 
 	}
@@ -1673,7 +1752,7 @@ void regDomainPrintValidTables(TI_HANDLE hRegulatoryDomain)
 		}
 		}
 
-	WLAN_OS_REPORT(("11h PowerConstraint = %d, XCC TPC = %d, User  = %d\n", 
+	WLAN_OS_REPORT(("11h PowerConstraint = %d, kkk TPC = %d, User  = %d\n", 
 		pRegulatoryDomain->uPowerConstraint, pRegulatoryDomain->uExternTxPowerPreferred,
 		pRegulatoryDomain->uUserMaxTxPower));
 

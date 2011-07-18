@@ -60,9 +60,8 @@
 static TI_INT32 cmdInterpret_Event(IPC_EV_DATA* pData);
 static int cmdInterpret_setSecurityParams (TI_HANDLE hCmdInterpret);
 static int cmdInterpret_initEvents(TI_HANDLE hCmdInterpret);
-#ifndef XCC_MODULE_INCLUDED
+static int cmdInterpret_SetCipher(int iEncrMode);
 static void sendEventBeaconIe(cmdInterpret_t *pCmdInterpret, paramInfo_t *pParam);
-#endif
 
 #define WEXT_FREQ_CHANNEL_NUM_MAX_VAL	1000
 #define WEXT_FREQ_KHZ_CONVERT			3
@@ -77,17 +76,6 @@ static void sendEventBeaconIe(cmdInterpret_t *pCmdInterpret, paramInfo_t *pParam
 static const char *ieee80211_modes[] = {
     "?", "IEEE 802.11 B", "IEEE 802.11 A", "IEEE 802.11 BG", "IEEE 802.11 ABG"
 };
-#ifdef XCC_MODULE_INCLUDED
-typedef struct
-{
-
-   TI_UINT8        *assocRespBuffer;
-    TI_UINT32       assocRespLen;
-} cckm_assocInformation_t;
-
-#define BEACON_HEADER_FIX_SIZE    12
-#define CCKM_START_EVENT_SIZE     23 /* cckm-start string + timestamp + bssid + null */
-#endif
 
 /* Initialize the CmdInterpreter module */
 TI_HANDLE cmdInterpret_Create (TI_HANDLE hOs)
@@ -695,8 +683,19 @@ int cmdInterpret_convertAndExecute(TI_HANDLE hCmdInterpret, TConfigCommand *cmdO
             i=0;
             if(wrqu->data.flags)
             {
-                for (i=0; i<wrqu->data.flags; i++)
-                    my_current = (OS_802_11_BSSID_EX *) (((char *) my_current) + my_current->Length);
+                /* if application requested an out-of-bounds result, gracefully abort */
+                if (wrqu->data.flags > my_list->NumberOfItems)
+                {
+                    os_printf("application requested scan result %d, but I have only %d - ignoring\n", wrqu->data.flags, my_list->NumberOfItems);
+                    i = my_list->NumberOfItems;
+                }
+                else
+                {
+                    for (i=0; i<wrqu->data.flags; i++)
+                    {
+                        my_current = (OS_802_11_BSSID_EX *) (((char *) my_current) + my_current->Length);
+                    }
+                }
             }
             /* Now send a wireless event per BSSID with "tokens" describing it */
             
@@ -1547,19 +1546,12 @@ static TI_INT32 cmdInterpret_Event(IPC_EV_DATA* pData)
     union iwreq_data wrqu;
     char *memptr;
     int TotalLength,res = TI_OK;
-#ifdef XCC_MODULE_INCLUDED
-    cckm_assocInformation_t cckm_assoc;
-    unsigned char beaconIE[MAX_BEACON_BODY_LENGTH];
-    unsigned char Cckmstart[CCKM_START_EVENT_SIZE * 2];
-    int i,len,n;
-    OS_802_11_BSSID_EX *my_current;
-#endif
     /* indicate to the OS */
     os_IndicateEvent (pCmdInterpret->hOs, pData);
 
     switch (pData->EvParams.uEventType)
     {
-	case IPC_EVENT_ASSOCIATED:
+    case IPC_EVENT_ASSOCIATED:
         {
             paramInfo_t *pParam;
             pParam = (paramInfo_t *)os_memoryAlloc(pCmdInterpret->hOs, sizeof(paramInfo_t));
@@ -1625,64 +1617,8 @@ static TI_INT32 cmdInterpret_Event(IPC_EV_DATA* pData)
                 }
             }
 
-#ifdef XCC_MODULE_INCLUDED
-            /* 
-               the driver must provide BEACON IE for calculate MIC in case of fast roaming 
-               the data is an ASCII NUL terminated string 
-            */
- 
-
-            my_current = os_memoryAlloc (pCmdInterpret->hOs,MAX_BEACON_BODY_LENGTH);
-            if (!my_current)
-            {
-                res = TI_NOK;
-                goto event_end;
-            }
-            pParam->paramType   = SITE_MGR_GET_SELECTED_BSSID_INFO_EX;
-            pParam->content.pSiteMgrSelectedSiteInfo = my_current;
-            pParam->paramLength = MAX_BEACON_BODY_LENGTH;
-            cmdDispatch_GetParam(pCmdInterpret->hCmdDispatch, pParam);
-
-            len = pParam->content.pSiteMgrSelectedSiteInfo->IELength - BEACON_HEADER_FIX_SIZE;
-           
-            n = sprintf(beaconIE, "BEACONIE=");
-            for (i = 0; i < len; i++)
-            {
-              n += sprintf(beaconIE + n, "%02x", pParam->content.pSiteMgrSelectedSiteInfo->IEs[BEACON_HEADER_FIX_SIZE+i] & 0xff);
-            }
-
-            os_memorySet (pCmdInterpret->hOs,&wrqu, 0, sizeof(wrqu));
-            wrqu.data.length = n;
-            wireless_send_event(NETDEV(pCmdInterpret->hOs), IWEVCUSTOM, &wrqu, beaconIE);
-            os_memoryFree(pCmdInterpret->hOs,my_current,MAX_BEACON_BODY_LENGTH);
-
-
-            /*
-              The driver should be sending the Association Resp IEs 
-              This informs the supplicant of the IEs used in the association exchanged which are required to proceed with CCKM. 
-            */  
-
-            
-            pParam->paramType   = MLME_ASSOCIATION_RESP_PARAM;
-            pParam->paramLength = sizeof(TAssocReqBuffer);
-            cmdDispatch_GetParam(pCmdInterpret->hCmdDispatch, pParam);
-
-            cckm_assoc.assocRespLen = pParam->content.assocReqBuffer.bufferSize - ASSOC_RESP_FIXED_DATA_LEN ;
-            cckm_assoc.assocRespBuffer = os_memoryAlloc (pCmdInterpret->hOs, cckm_assoc.assocRespLen);
-
-            if (!cckm_assoc.assocRespBuffer)
-            {
-                res = TI_NOK;
-                goto event_end;
-            }
-            memcpy(cckm_assoc.assocRespBuffer,(pParam->content.assocReqBuffer.buffer)+ASSOC_RESP_FIXED_DATA_LEN,cckm_assoc.assocRespLen);
-            wrqu.data.length = cckm_assoc.assocRespLen;
-            wireless_send_event(NETDEV(pCmdInterpret->hOs), IWEVASSOCRESPIE, &wrqu, (TI_UINT8*)cckm_assoc.assocRespBuffer);
-            os_memoryFree(pCmdInterpret->hOs,cckm_assoc.assocRespBuffer,cckm_assoc.assocRespLen);
-#else
            /* send the supplicant the Beacon Ie of the target AP in case of roaming */
            sendEventBeaconIe(pCmdInterpret,pParam);
-#endif            
            /* Send associated event (containing BSSID of AP) */
 
             os_memorySet (pCmdInterpret->hOs,&wrqu, 0, sizeof(wrqu));
@@ -1796,21 +1732,6 @@ event_end:
         }
 
         break;
-#ifdef XCC_MODULE_INCLUDED
-    case IPC_EVENT_CCKM_START:
-
-        n = sprintf(Cckmstart, "CCKM-Start=");
-        for (i = 0; i < 14; i++)
-        {
-          n += sprintf(Cckmstart + n, "%02x", pData->uBuffer[i] & 0xff);
-        }
-
-        os_memorySet (pCmdInterpret->hOs,&wrqu, 0, sizeof(wrqu));
-        wrqu.data.length = n;
-        wireless_send_event(NETDEV(pCmdInterpret->hOs), IWEVCUSTOM, &wrqu, Cckmstart);
-        
-        break;
-#endif 
     default:
         /* Other event? probably private and does not need interface-specific conversion */
         /* Send as "custom" event */
@@ -1832,7 +1753,7 @@ static int cmdInterpret_setSecurityParams (TI_HANDLE hCmdInterpret)
 {
     cmdInterpret_t *pCmdInterpret = (cmdInterpret_t *)hCmdInterpret;
     paramInfo_t *pParam;
-    int auth_mode, encr_mode;
+    int iAuthMode, iEncrModePairwise, iEncrModeGroup;
     
     /*
         printk ("wpa_version=0x%x auth_alg=0x%x key_mgmt=0x%x "
@@ -1847,64 +1768,69 @@ static int cmdInterpret_setSecurityParams (TI_HANDLE hCmdInterpret)
     if (pCmdInterpret->wai.iw_auth_wpa_version & IW_AUTH_WPA_VERSION_WPA2)
     {
         if (pCmdInterpret->wai.iw_auth_key_mgmt & (IW_AUTH_KEY_MGMT_802_1X | TI_AUTH_KEY_MGMT_WPS))
-            auth_mode = os802_11AuthModeWPA2;
+             iAuthMode = os802_11AuthModeWPA2;
         else
-            auth_mode = os802_11AuthModeWPA2PSK;
+             iAuthMode = os802_11AuthModeWPA2PSK;
     } else if (pCmdInterpret->wai.iw_auth_wpa_version & IW_AUTH_WPA_VERSION_WPA)
     {
         if (pCmdInterpret->wai.iw_auth_key_mgmt & (IW_AUTH_KEY_MGMT_802_1X | TI_AUTH_KEY_MGMT_WPS))
-            auth_mode = os802_11AuthModeWPA;
+            iAuthMode = os802_11AuthModeWPA;
         else if (pCmdInterpret->wai.iw_auth_key_mgmt & IW_AUTH_KEY_MGMT_PSK)
-            auth_mode = os802_11AuthModeWPAPSK;
+            iAuthMode = os802_11AuthModeWPAPSK;
         else
-            auth_mode = os802_11AuthModeWPANone;
+            iAuthMode = os802_11AuthModeWPANone;
     } else if (pCmdInterpret->wai.iw_auth_80211_auth_alg & IW_AUTH_ALG_SHARED_KEY)
     {
         if (pCmdInterpret->wai.iw_auth_80211_auth_alg & IW_AUTH_ALG_OPEN_SYSTEM)
-            auth_mode = os802_11AuthModeAutoSwitch;
+            iAuthMode = os802_11AuthModeAutoSwitch;
         else
-            auth_mode = os802_11AuthModeShared;
+            iAuthMode = os802_11AuthModeShared;
     } else
-        auth_mode = os802_11AuthModeOpen;
+         iAuthMode = os802_11AuthModeOpen;
 
     if (pCmdInterpret->wai.iw_auth_cipher_pairwise & IW_AUTH_CIPHER_CCMP)
-        encr_mode = os802_11Encryption3Enabled;
+        iEncrModePairwise = os802_11Encryption3Enabled;
     else if (pCmdInterpret->wai.iw_auth_cipher_pairwise & IW_AUTH_CIPHER_TKIP)
-        encr_mode = os802_11Encryption2Enabled;
+        iEncrModePairwise = os802_11Encryption2Enabled;
     else if (pCmdInterpret->wai.iw_auth_cipher_pairwise &
              (IW_AUTH_CIPHER_WEP40 | IW_AUTH_CIPHER_WEP104))
-        encr_mode = os802_11Encryption1Enabled;
-    else if (pCmdInterpret->wai.iw_auth_cipher_group & IW_AUTH_CIPHER_CCMP)
-        encr_mode = os802_11Encryption3Enabled;
-    else if (pCmdInterpret->wai.iw_auth_cipher_group & IW_AUTH_CIPHER_TKIP)
-        encr_mode = os802_11Encryption2Enabled;
+        iEncrModePairwise = os802_11Encryption1Enabled;
     else
-        encr_mode = os802_11EncryptionDisabled;
+    	iEncrModePairwise = os802_11EncryptionDisabled;
 
-    switch (encr_mode)
-    {
-    case os802_11WEPDisabled:
-        encr_mode = TWD_CIPHER_NONE;
-        break;
-    case os802_11WEPEnabled:
-        encr_mode = TWD_CIPHER_WEP;
-        break;
-    case os802_11Encryption2Enabled:
-        encr_mode = TWD_CIPHER_TKIP;
-        break;
-    case os802_11Encryption3Enabled:
-        encr_mode = TWD_CIPHER_AES_CCMP;
-        break;
-    default:
-        break;
-    }
+    if (pCmdInterpret->wai.iw_auth_cipher_group & IW_AUTH_CIPHER_CCMP)
+        iEncrModeGroup = os802_11Encryption3Enabled;
+    else if (pCmdInterpret->wai.iw_auth_cipher_group & IW_AUTH_CIPHER_TKIP)
+        iEncrModeGroup = os802_11Encryption2Enabled;
+    else
+        iEncrModeGroup = os802_11EncryptionDisabled;
+
+    iEncrModePairwise = cmdInterpret_SetCipher(iEncrModePairwise);
+    iEncrModeGroup    = cmdInterpret_SetCipher(iEncrModeGroup);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     pParam->paramType = RSN_EXT_AUTHENTICATION_MODE;
-    pParam->content.rsnExtAuthneticationMode = auth_mode;
+    pParam->content.rsnExtAuthneticationMode = iAuthMode;
     cmdDispatch_SetParam ( pCmdInterpret->hCmdDispatch, pParam );
 
     pParam->paramType = RSN_ENCRYPTION_STATUS_PARAM;
-    pParam->content.rsnEncryptionStatus = encr_mode;
+    pParam->content.tRsnEncryptionStatus.eRsnEncrPairwise = iEncrModePairwise;
+    pParam->content.tRsnEncryptionStatus.eRsnEncrGroup    = iEncrModeGroup;
     cmdDispatch_SetParam ( pCmdInterpret->hCmdDispatch, pParam );
 #ifdef SUPPL_WPS_SUPPORT
 	pParam->paramType = SITE_MGR_SIMPLE_CONFIG_MODE;
@@ -1965,7 +1891,29 @@ void *cmdInterpret_GetStat (TI_HANDLE hCmdInterpret)
     return (void *)NULL;
 }
 
-#ifndef XCC_MODULE_INCLUDED
+static int cmdInterpret_SetCipher(int iEncrMode)
+{
+    switch (iEncrMode)
+    {
+    case os802_11WEPDisabled:
+        iEncrMode = TWD_CIPHER_NONE;
+        break;
+    case os802_11WEPEnabled:
+        iEncrMode = TWD_CIPHER_WEP;
+        break;
+    case os802_11Encryption2Enabled:
+        iEncrMode = TWD_CIPHER_TKIP;
+        break;
+    case os802_11Encryption3Enabled:
+        iEncrMode = TWD_CIPHER_AES_CCMP;
+        break;
+    default:
+        break;
+    }
+    return iEncrMode;
+}
+
+
 static void sendEventBeaconIe(cmdInterpret_t *pCmdInterpret, paramInfo_t *pParam)
 {
     TI_UINT8* beaconBuffer;
@@ -2010,4 +1958,3 @@ static void sendEventBeaconIe(cmdInterpret_t *pCmdInterpret, paramInfo_t *pParam
     os_memoryFree(pCmdInterpret->hOs, beaconBuffer, bufferLen + lengthOfString);
 }
 
-#endif

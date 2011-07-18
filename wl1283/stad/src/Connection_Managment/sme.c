@@ -47,7 +47,6 @@
 #include "regulatoryDomainApi.h"
 #include "connApi.h"
 
-
 /** 
  * \fn     sme_Create 
  * \brief  Creates the SME module. Allocates system resources
@@ -152,6 +151,7 @@ void sme_SetDefaults (TI_HANDLE hSme, TSmeModifiedInitParams *pModifiedInitParam
     os_memoryCopy (pSme->hOS, &(pSme->tInitParams), pInitParams, sizeof (TSmeInitParams));
 
     /* initialize SME varaibles */   
+    pSme->bProbeBeforeConnect = pModifiedInitParams->bProbeBeforeConnect;
     pSme->bRadioOn = pModifiedInitParams->bRadioOn;
     pSme->eConnectMode = pModifiedInitParams->eConnectMode;
     if (CONNECT_MODE_AUTO == pSme->eConnectMode)
@@ -640,12 +640,10 @@ void sme_ScanResultCB (TI_HANDLE hSme, EScanCncnResultStatus eStatus,
         {
             if (SSID_TYPE_SPECIFIC == pSme->eSsidType)
             {
-#ifndef XCC_MODULE_INCLUDED
                 if ((pSme->tSsid.len == pFrameInfo->parsedIEs->content.iePacket.pSsid->hdr[ 1 ]) &&
                     (0 == os_memoryCompare (pSme->hOS, (TI_UINT8 *)&(pSme->tSsid.str[ 0 ]),
                                             (TI_UINT8 *)&(pFrameInfo->parsedIEs->content.iePacket.pSsid->serviceSetId[ 0 ]),
                                             pSme->tSsid.len)))
-#endif
                 {
 
                     if (TI_OK != scanResultTable_UpdateEntry (pSme->hScanResultTable, pFrameInfo->bssId, pFrameInfo))
@@ -758,6 +756,25 @@ void sme_ScanResultCB (TI_HANDLE hSme, EScanCncnResultStatus eStatus,
 
            /* a connection candidate is available, send a connect event */
            sme_SmEvent (pSme->hSmeSm, SME_SM_EVENT_CONNECT, hSme);
+        }
+        else /* Manual Mode */
+        {
+        	if (pSme->bProbeBeforeConnect)
+        	{
+        		TRACE0(pSme->hReport, REPORT_SEVERITY_INFORMATION , "smeSm_Start: changing SCR group to APP scan\n");
+        		scr_setGroup (pSme->hScr, SCR_GID_APP_SCAN);
+                    if (eStatus == SCAN_CRS_SCAN_COMPLETE_OK)
+                    {
+        		/* Used as a work around for APs which don't enable to associate without receiving a probe request before Association */
+        		sme_SmEvent (pSme->hSmeSm, SME_SM_EVENT_CONNECT, hSme);
+        	}
+                    else
+                    {
+                        TRACE1(pSme->hReport, REPORT_SEVERITY_WARNING , "sme_ScanResultCB: received scan complete but it was NOT OK eStatus = %d\n", eStatus);
+                        sme_SmEvent (pSme->hSmeSm, SME_SM_EVENT_CONNECT_FAILURE, hSme);
+                    }
+
+                }
         }
         break;        
 

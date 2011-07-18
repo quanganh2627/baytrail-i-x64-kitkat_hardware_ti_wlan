@@ -51,10 +51,17 @@
 #include "tidef.h"
 #include "TI_IPC_Api.h"
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+
+#ifdef _SIMULATE_CONNECT_
+void RsnStartHack(void *hrsn);
+extern void * pRsnTimer;
+extern void *hpriRsn;
+#endif
 
 /** \struct TI_CONNECTION_STATUS
  * \struct *PTI_CONNECTION_STATUS
@@ -531,7 +538,6 @@ void os_protectLock (TI_HANDLE OsContext, TI_HANDLE ProtectContext);
  */
 void os_protectUnlock (TI_HANDLE OsContext, TI_HANDLE ProtectContext);
 
-#define os_profile(hos,fn,par)
 
 /** \brief  Set wake-lock with timeout
  * 
@@ -543,16 +549,6 @@ void os_protectUnlock (TI_HANDLE OsContext, TI_HANDLE ProtectContext);
  */
 int os_WakeLockTimeout (TI_HANDLE OsContext);
 
-/** \brief  Enable following wake-lock with timeout
- * 
- * \param  OsContext - Handle to the OS object
- * \return 1 if lock was enabled, 0 if not
- * 
- * \par Description
- *   Enables prevention of system suspend for 1 sec in next call to os_WakeLockTimeout.
- */
-int os_WakeLockTimeoutEnable (TI_HANDLE OsContext);
-
 /** \brief  Prevent system suspend
  * 
  * \param  OsContext - Handle to the OS object
@@ -561,8 +557,7 @@ int os_WakeLockTimeoutEnable (TI_HANDLE OsContext);
  * \par Description
  *   Called to prevent system from suspend.
  */
-int os_WakeLock (TI_HANDLE OsContext);
-
+int os_wake_lock (TI_HANDLE OsContext);
 /** \brief  Allow system suspend
  * 
  * \param  OsContext - Handle to the OS object
@@ -571,7 +566,29 @@ int os_WakeLock (TI_HANDLE OsContext);
  * \par Description
  *   Called to allow system to suspend.
  */
-int os_WakeUnlock (TI_HANDLE OsContext);
+int os_wake_unlock (TI_HANDLE OsContext);
+/** \brief  Set wake-lock with timeout
+ *
+ * \param  OsContext - Handle to the OS object
+ * \return 1 if lock was enabled, 0 if not
+ *
+ * \par Description
+ *   Prevents system suspend for 1 sec if previously enabled by call to os_WakeLockTimeoutEnable.
+ */
+int os_wake_lock_timeout (TI_HANDLE OsContext);
+
+/** \brief  Enable following wake-lock with timeout
+ *
+ * \param  OsContext - Handle to the OS object
+ * \return 1 if lock was enabled, 0 if not
+ *
+ * \par Description
+ *   Enables prevention of system suspend for 1 sec in next call to os_WakeLockTimeout.
+ */
+int os_wake_lock_timeout_enable (TI_HANDLE OsContext);
+
+#define os_profile(hos,fn,par)
+
 
 
 /** \brief  OS Signaling Object Create

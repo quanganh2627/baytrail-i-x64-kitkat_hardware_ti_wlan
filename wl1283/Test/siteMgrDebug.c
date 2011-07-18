@@ -58,9 +58,6 @@
 #include "conn.h"
 #include "connApi.h"
 
-#ifdef XCC_MODULE_INCLUDED
-#include "XCCMngr.h"
-#endif
 
 
 static void printPrimarySite(siteMgr_t *pSiteMgr);
@@ -122,7 +119,7 @@ void siteMgrDebugFunction (TI_HANDLE         hSiteMgr,
 	case SET_RSN_DESIRED_CIPHER_SUITE_DBG:
 		param.paramType = RSN_ENCRYPTION_STATUS_PARAM;
 		value = *((TI_UINT32 *)pParam);
-		param.content.rsnEncryptionStatus = (ECipherSuite)value;
+		param.content.tRsnEncryptionStatus.eRsnEncrPairwise = (ECipherSuite)value;
 		cmdDispatch_SetParam(pStadHandles->hCmdDispatch, &param); 
 		WLAN_OS_REPORT(("\nSetting RSN_DESIRED_CIPHER_SUITE_PARAM : %d\n", value));
 		break;
@@ -130,7 +127,8 @@ void siteMgrDebugFunction (TI_HANDLE         hSiteMgr,
 	case GET_RSN_DESIRED_CIPHER_SUITE_DBG:
 		param.paramType = RSN_ENCRYPTION_STATUS_PARAM;
 		cmdDispatch_GetParam(pStadHandles->hCmdDispatch, &param);
-		WLAN_OS_REPORT(("\nGetting RSN_DESIRED_CIPHER_SUITE_PARAM: %d\n", param.content.rsnEncryptionStatus));
+		WLAN_OS_REPORT(("\nGetting RSN_DESIRED_CIPHER_SUITE_PARAM: %d\n", param.content.tRsnEncryptionStatus.eRsnEncrPairwise));
+
 		break;
  
 	case SET_RSN_DESIRED_AUTH_TYPE_DBG:
@@ -974,12 +972,12 @@ static void printDesiredParams(siteMgr_t *pSiteMgr, TI_HANDLE hCmdDispatch)
 
 	param.paramType = RSN_ENCRYPTION_STATUS_PARAM;
 	cmdDispatch_GetParam(hCmdDispatch, &param);
-	if (param.content.rsnEncryptionStatus == TWD_CIPHER_NONE)
+	if (param.content.tRsnEncryptionStatus.eRsnEncrPairwise == TWD_CIPHER_NONE)
 		WLAN_OS_REPORT(("WEP 				Off\n"));
-	else if (param.content.rsnEncryptionStatus == TWD_CIPHER_WEP)
+	else if (param.content.tRsnEncryptionStatus.eRsnEncrPairwise == TWD_CIPHER_WEP)
 		WLAN_OS_REPORT(("WEP 				On\n"));
 	else 
-		WLAN_OS_REPORT(("WEP 		Invalid: %d\n", param.content.rsnEncryptionStatus));
+		WLAN_OS_REPORT(("WEP 		Invalid: %d\n", param.content.tRsnEncryptionStatus.eRsnEncrPairwise));
 		
 	WLAN_OS_REPORT(("\n"));
 

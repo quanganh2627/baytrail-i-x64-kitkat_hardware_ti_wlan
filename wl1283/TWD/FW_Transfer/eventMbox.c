@@ -523,39 +523,104 @@ TRACE1(pEventMbox->hReport, REPORT_SEVERITY_ERROR, "eventMbox_ReplaceEvent: inva
 	return TI_OK;
 }
 
+/*
+ * \brief	Un mask a single event
+ *
+ * \param  hEventMbox  	- Handle to EventMbox
+ * \param  EvID 		- ID of event to unmask
+ * \param  fCb 			- CB function
+ * \param  hCb 			- CB handle
+ * \return TI_COMPLETE,TI_PENDING,TI_ERROR
+ *
+ * \par Description
+ * This function is called from the user upon request to unmask an event.
+ * It uses eventMbox_UnMaskEvents as a private case in which only a
+ * single events needs to be unmasked.
+ *
+ * \sa
+ */
+TI_STATUS eventMbox_UnMaskEvent(TI_HANDLE hEventMbox, TI_UINT32 EvID, void* fCb, TI_HANDLE hCb)
+{
+	TI_UINT32 uEvents[1];
+	TI_UINT32 uNumEvents = 1;
+
+	uEvents[0] = EvID;
+	return eventMbox_UnMaskEvents(hEventMbox, uEvents, uNumEvents, fCb, hCb);
+}
 
 /*
- * \brief	Un mask an event
+ * \brief	Mask a single event
+ *
+ * \param  hEventMbox  	- Handle to EventMbox
+ * \param  EvID 		- ID of event to mask
+ * \param  fCb 			- CB function
+ * \param  hCb 			- CB handle
+ * \return TI_COMPLETE,TI_PENDING,TI_ERROR
+ *
+ * \par Description
+ * This function is called from the user upon request to mask an event.
+ * It uses eventMbox_MaskEvents as a private case in which only a
+ * single events needs to be masked.
+ *
+ * \sa
+ */
+TI_STATUS eventMbox_MaskEvent(TI_HANDLE hEventMbox, TI_UINT32 EvID, void* fCb, TI_HANDLE hCb)
+{
+	TI_UINT32 uEvents[1];
+	TI_UINT32 uNumEvents = 1;
+
+	uEvents[0] = EvID;
+	return eventMbox_MaskEvents(hEventMbox, uEvents, uNumEvents, fCb, hCb);
+}
+
+
+/*
+ * \brief	Un mask events
  * 
  * \param  hEventMbox  - Handle to EventMbox
- * \param  EvID - the event ID to un mask
+ * \param  EvIDs 		- Array of IDs of events to mask
  * \param  fCb - CB function
  * \param  hCb - CB handle
  * \return TI_COMPLETE,TI_PENDING,TI_ERROR
  *
  * \par Description
- * This function is called from the user upon request to un mask an event.
+ * This function is called from the user upon request to unmask events.
  * This function change the mask vector in FW but doesn't register for it in the driver and 
  * doesn't set Cb function and Cb Handle in case of un mask event without registered for it an 
  * error will be handling!!!
  * 
  * \sa 
  */
-TI_STATUS eventMbox_UnMaskEvent(TI_HANDLE hEventMbox,TI_UINT32 EvID,void* fCb,TI_HANDLE hCb)
+TI_STATUS eventMbox_UnMaskEvents(TI_HANDLE hEventMbox, TI_UINT32 EvIDs[], TI_UINT32 uNumEvents, void* fCb, TI_HANDLE hCb)
 {
 	TI_UINT32*	pEventMask;
 	TI_STATUS	aStatus;
+	TI_UINT32	uIndex 		 = 0;
     TEventMbox *pEventMbox = (TEventMbox *)hEventMbox;
+
 	pEventMask = (TI_UINT32*)&pEventMbox->iTxnEventMbox.iEventMboxBuf.eventsMask;
 
-    if (EvID >= TWD_OWN_EVENT_ALL)
+    /* Validate number of events for unmasking */
+    if ((uNumEvents == 0) || (uNumEvents > TWD_OWN_EVENT_ALL))
     {
-TRACE1(pEventMbox->hReport, REPORT_SEVERITY_ERROR, "eventMbox_UnMaskEvent : Un mask an Invalid event = 0x%x\n",EvID);
+    	TRACE1(pEventMbox->hReport, REPORT_SEVERITY_ERROR, "eventMbox_UnMaskEvent: Invalid number of "
+    			"events for unmasking: %d\n", uNumEvents);
+    }
+
+    /* Create the bitmask */
+    for (uIndex = 0; uIndex < uNumEvents; uIndex++)
+    {
+        if (EvIDs[uIndex] >= TWD_OWN_EVENT_ALL)
+    {
+        	TRACE1(pEventMbox->hReport, REPORT_SEVERITY_ERROR, "eventMbox_UnMaskEvent: Mask an Invalid "
+        			"event = 0x%x\n",EvIDs[uIndex]);
 		return TXN_STATUS_ERROR;
     }
-TRACE0(pEventMbox->hReport, REPORT_SEVERITY_INFORMATION, "eventMbox_UnMaskEvent : EVENT  is unmasked\n");
+    	*pEventMask &= ~eventTable[EvIDs[uIndex]].bitMask;
+    }
 
-	*pEventMask &= ~eventTable[EvID].bitMask;
+    TRACE1(pEventMbox->hReport, REPORT_SEVERITY_INFORMATION , "eventMbox_UnMaskEvent: Calling cmdBld_CfgEventMask"
+    		"with pEventMask = 0x%X\n", *pEventMask);
 
 	aStatus = cmdBld_CfgEventMask (pEventMbox->hCmdBld, *pEventMask, fCb, hCb);
 	return aStatus;
@@ -563,38 +628,70 @@ TRACE0(pEventMbox->hReport, REPORT_SEVERITY_INFORMATION, "eventMbox_UnMaskEvent 
 
 
 /*
- * \brief	mask an event
+ * \brief	mask events
  *
  * \param  hEventMbox  - Handle to EventMbox
- * \param  EvID - the event ID to un mask
+ * \param  EvIDs[] 		- Array of IDs of events to mask
  * \param  fCb - CB function
  * \param  hCb - CB handle
  * \return TI_COMPLETE,TI_PENDING,TI_ERROR
  * 
  * \par Description
- * This function is called from the user upon request to mask an event.
+ * This function is called from the user upon request to mask events.
+
+
  * This function change the mask vector in FW but doesn't unregister it in the driver. 
  * \sa 
  */
-TI_STATUS eventMbox_MaskEvent(TI_HANDLE hEventMbox,TI_UINT32 EvID,void* fCb,TI_HANDLE hCb)
+TI_STATUS eventMbox_MaskEvents(TI_HANDLE hEventMbox, TI_UINT32 EvIDs[], TI_UINT32 uNumEvents, void* fCb, TI_HANDLE hCb)
 {
 	TI_UINT32*	pEventMask;
 	TI_STATUS	aStatus;
+	TI_UINT32	uIndex 		    = 0;
     TEventMbox *pEventMbox = (TEventMbox *)hEventMbox;
+
 	pEventMask = (TI_UINT32*)&pEventMbox->iTxnEventMbox.iEventMboxBuf.eventsMask;
     
-    if (EvID >= TWD_OWN_EVENT_ALL)
+    /* Validate number of events for masking */
+    if ((uNumEvents == 0) || (uNumEvents > TWD_OWN_EVENT_ALL))
     {
-TRACE1(pEventMbox->hReport, REPORT_SEVERITY_ERROR, "eventMbox_MaskEvent : Mask an Invalid event = 0x%x\n",EvID);
-		return TXN_STATUS_ERROR;
+    	TRACE1(pEventMbox->hReport, REPORT_SEVERITY_ERROR, "eventMbox_MaskEvents: Invalid number of "
+    			"events for masking: %d\n", uNumEvents);
     }
 
-	*pEventMask |= eventTable[EvID].bitMask;
+    /* Create the bitmask */
+    for (uIndex = 0; uIndex < uNumEvents; uIndex++)
+    {
+        if (EvIDs[uIndex] >= TWD_OWN_EVENT_ALL)
+    {
+        	TRACE1(pEventMbox->hReport, REPORT_SEVERITY_ERROR, "eventMbox_MaskEvents: Mask an Invalid "
+        			"event = 0x%x\n",EvIDs[uIndex]);
+		return TXN_STATUS_ERROR;
+    }
+    	*pEventMask |= eventTable[EvIDs[uIndex]].bitMask;
+    }
 
-    TRACE0(pEventMbox->hReport, REPORT_SEVERITY_INFORMATION , "eventMbox_MaskEvent : EVENT  is masked\n");
+    TRACE1(pEventMbox->hReport, REPORT_SEVERITY_INFORMATION , "eventMbox_MaskEvents: Calling cmdBld_CfgEventMask"
+    		"with pEventMask = 0x%X\n", *pEventMask);
 
 	aStatus = cmdBld_CfgEventMask(pEventMbox->hCmdBld,*pEventMask,fCb,hCb);
 	return aStatus;
+}
+
+/*
+ * \brief	get events bitmask
+ *
+ * \param  hEventMbox  - Handle to EventMbox
+ * \return events bitmask
+ *
+ * \par Description
+ * This function returns the events bitmask which is the same as the FW's
+ * \sa
+ */
+TI_UINT32 eventMbox_GetEventsMask(TI_HANDLE hEventMbox)
+{
+	TEventMbox *pEventMbox = (TEventMbox *)hEventMbox;
+	return pEventMbox->iTxnEventMbox.iEventMboxBuf.eventsMask;
 }
 
 

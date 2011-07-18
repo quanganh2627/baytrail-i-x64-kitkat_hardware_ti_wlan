@@ -35,7 +35,11 @@
 
 #include "cu_osapi.h"
 #include "oserr.h"
+
+#ifdef WPA_SUPPLICANT
 #include "wpa_ctrl.h"
+#endif
+
 #include "ipc_wpa.h"
 
 /* defines */

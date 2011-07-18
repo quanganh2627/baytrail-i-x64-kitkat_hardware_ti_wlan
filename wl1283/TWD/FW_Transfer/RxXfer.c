@@ -416,7 +416,7 @@ extern void debug_gpio_set_dataout(void);
 static void rxXfer_ForwardPacket (TRxXfer *pRxXfer, TTxnStruct *pTxn)
 {
     TI_UINT32 uBufNum;
-    RxIfDescriptor_t *pRxInfo  = (RxIfDescriptor_t*)(pTxn->aBuf[0]);
+    RxIfDescriptor_t *pRxInfo;
 #ifdef TI_DBG   /* for packet sanity check */
     TI_UINT16        uLenFromRxInfo;
 #endif
@@ -425,14 +425,14 @@ static void rxXfer_ForwardPacket (TRxXfer *pRxXfer, TTxnStruct *pTxn)
     for (uBufNum = 0; uBufNum < MAX_XFER_BUFS; uBufNum++)
     {
         /* If no more buffers, exit the loop */
-        if (pTxn->aLen[uBufNum] == 0)
+        if (pTxn->aLen[uBufNum] == 0 || pTxn->aBuf[uBufNum] == NULL)
         {
             break;
         }
 
-#ifdef TI_DBG   /* Packet sanity check */
         /* Get length from RxInfo, handle endianess and convert to length in bytes */
         pRxInfo = (RxIfDescriptor_t*)(pTxn->aBuf[uBufNum]);
+#ifdef TI_DBG   /* Packet sanity check */
         uLenFromRxInfo = ENDIAN_HANDLE_WORD(pRxInfo->length) << 2;
 
 #ifdef TNETW1283
@@ -484,6 +484,7 @@ static void rxXfer_ForwardPacket (TRxXfer *pRxXfer, TTxnStruct *pTxn)
 
     /* reset the aBuf field for clean on recovery purpose */
     pTxn->aBuf[0] = 0;
+    pTxn->aLen[0] = 0;
 }
 
 
@@ -633,7 +634,9 @@ static TI_STATUS rxXfer_Handle(TI_HANDLE hRxXfer)
                     if ((uIncrementLen > uRemainder) && (((uIncrementLen-uRemainder) & uBlockMask) < 16))
                     {
                         ADD_DBG_TRACE(22, uIncrementLen, uRemainder);
+#ifdef TI_DBG
                         pRxXfer->uRxFifoWa++;
+#endif
                         bIssueTxn = TI_TRUE;
                         break;
                     }

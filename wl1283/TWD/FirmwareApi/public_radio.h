@@ -57,9 +57,9 @@
 #define PUBLIC_RADIO
 
 #include "public_types.h"
+#define INTERNAL_FW_TEST_AUTOMATION 1
 #define MAC_ADDR_SIZE 6
-/*typedef uint8 TMacAddr[MAC_ADDR_SIZE];*/
-/*defined in tiDefs.h*/
+typedef uint8 TMacAddr[MAC_ADDR_SIZE];
 /************************************************************************/
 /*																		*/	
 /*							Definitions section                         */
@@ -163,7 +163,6 @@ typedef enum RADIO_SUB_BAND_TYPE_ENMT
 }RADIO_SUB_BAND_TYPE_ENM;
 
 #define NUMBER_OF_SUB_BANDS_IN_5G_BAND_E	(LAST_SUB_BANDS_IN_5G_BAND_E - FIRST_SUB_BANDS_IN_5G_BAND_E + 1)	
-
 
 typedef struct
 {
@@ -441,10 +440,7 @@ typedef enum RADIO_CHANNEL_INDEX_ENMT
 
 #define NUMBER_OF_2_4_G_CHANNELS    	(NUMBER_OF_2_4_G_CHANNEL_INDICES_E + 1)
 #define NUMBER_OF_5G_CHANNELS       	(NUMBER_OF_RADIO_CHANNEL_INDEXS_E - NUMBER_OF_2_4_G_CHANNELS)
-#ifdef TNETW1273
-#define HALF_NUMBER_OF_2_4_G_CHANNELS 	(NUMBER_OF_2_4_G_CHANNELS / 2)
-#define HALF_NUMBER_OF_5G_CHANNELS  	((NUMBER_OF_5G_CHANNELS + 1) / 2)
-#endif
+
 #ifdef TNETW1283
 #define NUMBER_OF_2_4G_TX_TRACE_LOSS_CELLS		NUMBER_OF_2_4_G_CHANNELS	
 #define NUMBER_OF_2_4G_TX_IBIAS_RATE_GROUPS_E	(NUMBER_OF_RATE_GROUPS_E + 1) /* addional cell for channel 14 */
@@ -454,9 +450,10 @@ typedef enum RADIO_CHANNEL_INDEX_ENMT
 #define NUMBER_OF_2_4G_TX_TRACE_LOSS_CELLS		1	/* sub-band */
 #define NUMBER_OF_2_4G_TX_IBIAS_RATE_GROUPS_E	NUMBER_OF_RATE_GROUPS_E
 #define NUMBER_OF_5G_TX_TRACE_LOSS_CELLS		NUMBER_OF_SUB_BANDS_IN_5G_BAND_E
-#endif
 #define HALF_NUMBER_OF_2_4_G_CHANNELS 	(NUMBER_OF_2_4_G_CHANNELS / 2)
 #define HALF_NUMBER_OF_5G_CHANNELS  	((NUMBER_OF_5G_CHANNELS + 1) / 2)
+#endif
+
 
 typedef enum RADIO_RATE_GROUPS_ENMT
 {		
@@ -499,44 +496,44 @@ typedef enum
 typedef enum CALIBRATION_COMMANDS_ENMT
 {
 	/* RX */
-	CM_space1_e,
+	CM_space1_e,									/* 0 */									
 	CM_RX_IQ_MM_calibration_e,
 	CM_RX_IQ_MM_correction_upon_channel_change_e,
 	CM_RX_IQ_MM_correction_upon_temperature_change_e,
 	CM_RX_IQ_MM_duplicate_VGA_e,
-	CM_space2_e,
+	CM_space2_e,									/* 5 */
 
 	CM_RX_analog_DC_Correction_calibration_e,
 	CM_RX_DC_AUX_cal_mode_e,
 	CM_RX_DC_AUX_normal_mode_e,
 	CM_space3_e,
 
-	CM_RX_BIP_enter_mode_e,
+	CM_RX_BIP_enter_mode_e,							/* 10 */
 	CM_RX_BIP_perform_e,
 	CM_RX_BIP_exit_mode_e,
 	CM_space4_e,
 
 	/* TX */
 	CM_TX_power_detector_calibration_e,
-	CM_TX_power_detector_buffer_calibration_e,
+	CM_TX_power_detector_buffer_calibration_e,		/* 15 */
 	CM_space5_e,
 
 	CM_TX_LO_Leakage_calibration_e,
 	CM_TX_PPA_Steps_calibration_e,
 	CM_TX_CLPC_calibration_e,
-	CM_TX_IQ_MM_calibration_e,
+	CM_TX_IQ_MM_calibration_e,						/* 20 */
 	CM_TX_BIP_calibration_e,
     /* DRPw */
 	CM_RX_TANK_TUNE_calibration_e,
 /*    CM_PD_BUFF_TUNE_calibration_e,*/
     CM_RX_DAC_TUNE_calibration_e,
     CM_RX_IQMM_TUNE_calibration_e,
-    CM_RX_LPF_TUNE_calibration_e,
+    CM_RX_LPF_TUNE_calibration_e,					/* 25 */
     CM_TX_LPF_TUNE_calibration_e,
     CM_TA_TUNE_calibration_e,
     CM_TX_MIXERFREQ_calibration_e,
     CM_RX_IF2GAIN_calibration_e,
-    CM_RTRIM_calibration_e,
+    CM_RTRIM_calibration_e,							/* 30 */
     CM_RX_LNAGAIN_calibration_e,
 
 	CM_SMART_REFLEX_calibration_e,
@@ -580,6 +577,7 @@ typedef enum CALIBRATIONS_ENMT
 #ifdef TNETW1283
 	RX_DIGITAL_DC_CORRECTION_CALIBRATION_TYPE_E,
 #endif
+	DCO_ITRIM_CALIBRATION_TYPE_E,
 	/* ... */
 /*----------------------------------------------------------*/
 	NUMBER_OF_CALIBRATIONS_E,
@@ -751,10 +749,13 @@ typedef enum
 /*	0x26	*/	TEST_CMD_INI_FILE_RF_EXTENDED_PARAM,
 #endif
 /*  0x27    */  TEST_CMD_SET_NVS_VERSION,
-
+#ifdef	INTERNAL_FW_TEST_AUTOMATION
+/*	0x28	*/  TEST_CMD_INTERNAL_FW_TEST_AUTOMATION,
+#endif
     MAX_TEST_CMD_ID = 0xFF	/* Dummy - must be last!!! (make sure that Enum variables are type of int) */
         
 } TestCmdID_enum;
+
 
 /************************************************************************/
 /* radio test result information struct									*/
@@ -1058,7 +1059,6 @@ typedef enum TXPWR_CFG0__VGA_STEP_ENMT
 
 } TXPWR_CFG0__VGA_STEP_ENM;
 
-
 /******************************************************************************
 
 	Name:	ACX_PLT_NVS_BUFFER_UPDATE 
@@ -1092,6 +1092,7 @@ typedef enum TXPWR_CFG0__VGA_STEP_ENMT
 #define CALIBRATION_POWER_HIGHER_RANGE_FOR_RFMD_V2		19000 // High power range increased to support 19dBm
 #define CALIBRATION_POWER_LOWER_RANGE_V2				(-3000) // Low power range increased to -3dBm
 #define FIRST_PD_CURVE_TO_SET_2_OCTET_V2				(10 * CALIBRATION_STEP_SIZE) /* 10 dBm */
+
 
 #define SIZE_OF_POWER_DETECTOR_TABLE	((((CALIBRATION_POWER_HIGHER_RANGE_V2_1) - (CALIBRATION_POWER_LOWER_RANGE_V2_1))\
 	                                      / (CALIBRATION_STEP_SIZE)) + 1)
@@ -1227,9 +1228,6 @@ typedef enum
 	LAST_RADIO_TYPE_PARAMETERS_INFO = (eNUMBER_RADIO_TYPE_PARAMETERS_INFO - 1)	/* 1 */
 }NVSTypeInfo;
 
-
-
-
 typedef enum
 {
 	eCHANGE_TO_NVS_VERSION_2   = 2,
@@ -1250,8 +1248,6 @@ typedef struct
 	TTestCmdChnageNVSVersion_e		nvsVersionChange;
 	uint8		                    padding;
 }TTestCmdChnageNVSVersion_t;
-
-
 
 
 typedef enum
@@ -1421,6 +1417,18 @@ typedef struct
 	int16					oRadioStatus;
 } RadioRxStatistics;
 
+#ifdef	INTERNAL_FW_TEST_AUTOMATION
+#define MAX_TEST_INDEX	500
+
+typedef struct 
+{
+	int16	oRadioStatus;
+	uint8	TestsList[MAX_TEST_INDEX];
+    uint8 	Padding[2];
+} TInternalTestAutomation;
+#endif
+
+
 /* RX RF gain values */
 typedef enum PHY_RADIO_RX_GAIN_VALUES_ENMT
 {
@@ -1467,19 +1475,19 @@ typedef enum
 /* 2. second is the higher value			*/
 /* 3. 14 parameter of the correction		*/
 #define MAX_SMART_REFLEX_PARAM					(MAX_SMART_REFLEX_FUB_VALUES + SMART_REFLEX_START_ERROR_VALUE_INDEX)
-
-
 #ifdef TNETW1283
 #define MAX_SETTINGS_PARAM						4
 #else
 #define MAX_SETTINGS_PARAM						1
 #endif
 
+
 typedef struct 
 {
 	uint8	RefClk;                                 
 	uint8	SettlingTime;                                                                 
 	uint8	ClockValidOnWakeup; 
+	
 #ifdef TNETW1283
 	uint8	TcxoRefClk;                                 
 	uint8	TcxoSettlingTime;                                                                 
@@ -1493,25 +1501,21 @@ typedef struct
 	uint8	Single_Dual_Band_Solution;  
 	uint8	TXBiPFEMAutoDetect;
 	uint8	TXBiPFEMManufacturer;  
-/*	GeneralSettingsByte	Settings; */
     uint8   GeneralSettings[MAX_SETTINGS_PARAM];
-
     /* smart reflex state*/
     uint8 SRState; 
     /* FUB parameters */
     int8	SRF1[MAX_SMART_REFLEX_PARAM];
     int8	SRF2[MAX_SMART_REFLEX_PARAM];
     int8	SRF3[MAX_SMART_REFLEX_PARAM];
-
-
     /* FUB debug parameters */
     int8	SR_Debug_Table[MAX_SMART_REFLEX_PARAM];
     uint8	SR_SEN_N_P;
     uint8	SR_SEN_N_P_Gain;
     uint8	SR_SEN_NRN;
     uint8	SR_SEN_PRN;
-    uint8	padding[3];
 
+    uint8	padding[3];
 }IniFileGeneralParam;  
 
 typedef enum 
@@ -1529,25 +1533,35 @@ typedef enum
 
 }FEM_TYPE_ENM;
 
+/* New PLL Configuration Algorithm
+ * -------------------------------
+ */
 typedef enum 
 {		
-// old version	eREF_CLK_19_2_E,
-// old version	eREF_CLK_26_E,
-// old version	eREF_CLK_38_4_E,
-// old version	eREF_CLK_52_E,
-// old version	eREF_CLK_XTAL
-CLOCK_CONFIG_19_2_M,      /* 0 */
-	CLOCK_CONFIG_26_M,        /* 1 */
-	CLOCK_CONFIG_38_4_M,      /* 2 */
-	CLOCK_CONFIG_52_M,        /* 3 */
-	CLOCK_CONFIG_38_4_M_XTAL, /* 4 */
-	CLOCK_CONFIG_16_368_M = CLOCK_CONFIG_38_4_M_XTAL, /* 4 */
-  CLOCK_CONFIG_26_M_XTAL,   /* 5 */
-  CLOCK_CONFIG_32_736_M = CLOCK_CONFIG_26_M_XTAL,   /* 5 */
-  CLOCK_CONFIG_16_8_M,      /* 6 */
-  CLOCK_CONFIG_33_6_M       /* 7 */
+	// FREF enumeration
+	FREF_CLOCK_CONFIG_19_2_M,      /* 0 */
+	FREF_CLOCK_CONFIG_26_M,        /* 1 */
+	FREF_CLOCK_CONFIG_38_4_M,      /* 2 */
+	FREF_CLOCK_CONFIG_52_M,        /* 3 */
+	FREF_CLOCK_CONFIG_38_4_M_XTAL, /* 4 */
+	FREF_CLOCK_CONFIG_26_M_XTAL   /* 5 */	
+	
 
 }REF_CLK_ENM;
+
+// TCXO clock enumeration
+typedef enum
+{
+	TCXO_CLOCK_CONFIG_19_2_M,      /* 0 */
+	TCXO_CLOCK_CONFIG_26_M,        /* 1 */
+	TCXO_CLOCK_CONFIG_38_4_M,      /* 2 */
+	TCXO_CLOCK_CONFIG_52_M,        /* 3 */
+	TCXO_CLOCK_CONFIG_16_368_M,	  /* 4 */
+	TCXO_CLOCK_CONFIG_32_736_M,	  /* 5 */
+	TCXO_CLOCK_CONFIG_16_8_M,      /* 6 */
+	TCXO_CLOCK_CONFIG_33_6_M       /* 7 */
+
+}TCXO_CLK_ENM;
 
 typedef enum 
 {		
@@ -1599,12 +1613,15 @@ typedef struct
 	
 	/* SECTION 2: 5G parameters */										 
 	uint8 RxTraceInsertionLoss_5G[NUMBER_OF_SUB_BANDS_IN_5G_BAND_E];																
+
 	uint8 TXTraceLoss_5G[NUMBER_OF_5G_TX_TRACE_LOSS_CELLS];																
+
 	int8  RxRssiAndProcessCompensation_5G[RSSI_AND_PROCESS_COMPENSATION_TABLE_SIZE];									
 
 #ifdef TNETW1283
 	uint8 FemVendorAndOptions;
 #endif
+
 }TStatRadioParams;  
 
 typedef struct 
@@ -1621,18 +1638,12 @@ typedef struct
 	int8    TxPDVsRateOffsets_2_4G[NUMBER_OF_RATE_GROUPS_E];												
 	uint8 TxIbiasTable_2_4G[NUMBER_OF_2_4G_TX_IBIAS_RATE_GROUPS_E];														
 #ifdef TNETW1283
-    /*
-     * “FEMX_TxPDVsChannelOffsets_2_4G”  - 14 byte values
-		“FEMX_TxPDVsTemperature_2_4G” – 2 values
-     *
-     * */
 	int8  TxPDVsChannelOffsets_2_4G[NUMBER_OF_2_4_G_CHANNELS];
 	int8  TxPDVsTemperature_2_4G[PD_VS_TEMPERATURE_RANGES]; //low and high
 #endif
 	uint8   RxFemInsertionLoss_2_4G;
     uint8 	DegradedLowToNormalThr_2_4G;
     uint8 	NormalToDegradedHighThr_2_4G;
-
 
 	/* SECTION 2: 5G parameters */
 	uint16 	TXBiPReferencePDvoltage_5G[NUMBER_OF_SUB_BANDS_IN_5G_BAND_E];
@@ -1646,15 +1657,12 @@ typedef struct
 	int8   	TxIbiasTable_5G[NUMBER_OF_RATE_GROUPS_E];											
 	uint8  	RxFemInsertionLoss_5G[NUMBER_OF_SUB_BANDS_IN_5G_BAND_E];	
 #ifdef TNETW1283
-    /*
-		“FEMX_TxPDVsChannelOffsets_5G”  - 35 byte values. Missing on INI generator. Daniel
-		“FEMX_TxPDVsTemperature_5G” – 14 values. Missing on INI generator.
-    */
 	int8  TxPDVsChannelOffsets_5G[NUMBER_OF_5G_CHANNELS];
 	int8  TxPDVsTemperature_5G[NUMBER_OF_SUB_BANDS_IN_5G_BAND_E * PD_VS_TEMPERATURE_RANGES]; // reference in osRgstry.c, low and high for each sub band
 #endif
     uint8 DegradedLowToNormalThr_5G;
     uint8 NormalToDegradedHighThr_5G;
+ 
 }TDynRadioParams;  
 
 typedef struct 
@@ -1764,6 +1772,10 @@ typedef struct
 		TTestCmdDCOItrimOnOff           DCOitrimFeatureOnOff;
 
 		TTestCmdDebug					testDebug;
+#ifdef	INTERNAL_FW_TEST_AUTOMATION
+		TInternalTestAutomation			InternalTestAutomation;
+#endif
+
     }testCmd_u;
 }TTestCmd;
 
@@ -1850,6 +1862,8 @@ typedef enum PHY_RADIO_VBIAS_MV_ENMT
 
 }PHY_RADIO_VBIAS_MV_ENM;
 
+
+// BU_VERSION_9
 /* Gain monitor values */
 #ifdef TNETW1283
 typedef enum PHY_RADIO_GAIN_MONITOR_TYPES_ENMT
@@ -1866,7 +1880,8 @@ typedef enum PHY_RADIO_GAIN_MONITOR_TYPES_ENMT
 	LAST_GAIN_MONITOR_TYPE_E = (NUMBER_OF_GAIN_MONITOR_TYPES_E - 1)	
 
 }PHY_RADIO_GAIN_MONITOR_TYPES_ENM;
-#elif defined(TNETW1273)
+#else
+#ifdef TNETW1273
 typedef enum PHY_RADIO_GAIN_MONITOR_TYPES_ENMT
 {
 	FIRST_GAIN_MONITOR_TYPE_E,
@@ -1884,6 +1899,7 @@ typedef enum PHY_RADIO_GAIN_MONITOR_TYPES_ENMT
 	LAST_GAIN_MONITOR_TYPE_E = (NUMBER_OF_GAIN_MONITOR_TYPES_E - 1)	
 
 }PHY_RADIO_GAIN_MONITOR_TYPES_ENM;
+#endif
 #endif
 
 
@@ -1930,6 +1946,15 @@ typedef struct
 	RADIO_BAND_TYPE_ENM		currBand;
 }rssiParamSave_t;
 
+typedef enum
+{
+	CMD_FAILURE			= 0,
+	CHANNEL_TUNE_CMD 	= 10,
+	TX_CMD 				= 20,
+	RX_CMD 				= 30,
+	SET_CONSTANTS_CMD 	= 40,
+	SYNC_CMD			= 50
+}TestType;
 
 
 #endif	/* #ifndef PUBLIC_RADIO */

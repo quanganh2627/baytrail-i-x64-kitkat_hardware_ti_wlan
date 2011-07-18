@@ -51,6 +51,8 @@
 #include "regulatoryDomain.h"
 #include "DrvMainModules.h"
 
+#define CHANNEL_VALIDITY_TS_THRESHOLD   10000   /*10 seconds*/
+
 TI_HANDLE regulatoryDomain_create(TI_HANDLE hOs);
 
 void      regulatoryDomain_init (TStadHandlesList *pStadHandles);

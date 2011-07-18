@@ -118,6 +118,8 @@ TI_UINT8 qosMngr_evalSite(TI_HANDLE hQosMngr, TI_BOOL siteAPSDSupport);
 
 TI_STATUS qosMngr_getQosCapabiltyInfeElement(TI_HANDLE  hQosMngr, TI_UINT8 *pQosIe, TI_UINT32 *pLen);
 
+TI_STATUS qosMngr_getTspecInfoElem(TI_HANDLE hQosMngr, TI_UINT8 *pTspecIe, TI_UINT32 *pLen);
+
 TI_STATUS qosMngr_requestAdmission(TI_HANDLE            hQosMngr, 
                                    OS_802_11_QOS_TSPEC_PARAMS *addTspecParams);
 

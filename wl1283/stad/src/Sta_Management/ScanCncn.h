@@ -45,7 +45,19 @@
 #include "scrApi.h"
 #include "mlmeApi.h"
 
-#define SCAN_CNCN_APP_SCAN_TABLE_ENTRIES 64
+#define SCAN_CNCN_APP_SCAN_TABLE_ENTRIES 128
+
+#define SCAN_OID_DEFAULT_MAX_DWELL_TIME_PASSIVE_G                   105000
+#define SCAN_OID_DEFAULT_MAX_DWELL_TIME_PASSIVE_A                   105000
+#define SCAN_OID_DEFAULT_MAX_DWELL_TIME_ACTIVE_G                    60000
+#define SCAN_OID_DEFAULT_MAX_DWELL_TIME_ACTIVE_A                    60000
+#define SCAN_OID_DEFAULT_MIN_DWELL_TIME_PASSIVE_G                   105000
+#define SCAN_OID_DEFAULT_MIN_DWELL_TIME_PASSIVE_A                   105000
+#define SCAN_OID_DEFAULT_MIN_DWELL_TIME_ACTIVE_G                    30000
+#define SCAN_OID_DEFAULT_MIN_DWELL_TIME_ACTIVE_A                    30000
+
+
+
 
 /** \enum EScanCncnClient
  * \brief	Scan Concentrator Client
@@ -151,10 +163,10 @@ void                    scanCncn_SwitchToConnected (TI_HANDLE hScanCncn);
 void                    scanCncn_SwitchToNotConnected (TI_HANDLE hScanCncn);
 void                    scanCncn_SwitchToIBSS (TI_HANDLE hScanCncn);
 void 					scanCncn_TimerExpired (TI_HANDLE hScanCncn, TI_BOOL bTwdInitOccured);
-
+void                    scanCncn_StopScanTimeoutExpired(TI_HANDLE hScanCncn, TI_BOOL bTwdInitOccured);
 TI_STATUS	scanCncn_Resume	(TI_HANDLE hScanCncn);
 TI_STATUS	scanCncn_Suspend(TI_HANDLE hScanCncn);
-void scanCncn_ClientStopped(TI_HANDLE hScanCncn, TI_HANDLE hScanCncnClient);
+void scanCncn_ClientStopped(TI_HANDLE hScanCncn, EScanCncnClient eClient);
 
 /**
  * \brief Starts a one-shot scan operation

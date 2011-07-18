@@ -62,10 +62,6 @@
 #include "apConn.h"
 #include "802_11Defs.h"
 #include "connApi.h"
-#ifdef XCC_MODULE_INCLUDED
-#include "XCCMngr.h"
-#include "admCtrlXCC.h"
-#endif
 #include "TWDriver.h"
 #include "DrvMainModules.h"
 #include "PowerMgr_API.h"
@@ -74,7 +70,7 @@
 #define PMKID_CAND_LIST_MEMBUFF_SIZE  (2*sizeof(TI_UINT32) + (sizeof(OS_802_11_PMKID_CANDIDATE) * PMKID_MAX_NUMBER))
 #define PMKID_MIN_BUFFER_SIZE    2*sizeof(TI_UINT32) + MAC_ADDR_LEN + PMKID_VALUE_SIZE
 #define MAX_WPA2_UNICAST_SUITES     (TWD_CIPHER_WEP104+1)
-#define MAX_WPA2_KEY_MNG_SUITES     (RSN_KEY_MNG_XCC+1)
+#define MAX_WPA2_KEY_MNG_SUITES     (RSN_KEY_MNG_kkk+1)
 
 
 /* Cipher suites for group key sent in RSN IE are: WEP40, WEP104, TKIP, CCCMP */
@@ -88,7 +84,7 @@
 #define WPA2_IE_KEY_MNG_NONE             0
 #define WPA2_IE_KEY_MNG_801_1X           1
 #define WPA2_IE_KEY_MNG_PSK_801_1X       2
-#define WPA2_IE_KEY_MNG_CCKM			 3
+#define WPA2_IE_KEY_MNG_iii			 3
 #define WPA2_IE_KEY_MNG_NA               4
 
 
@@ -183,12 +179,18 @@ TI_STATUS rsn_getPMKIDList (rsn_t * pRsn,OS_802_11_PMKID *pmkidList);
 *
 * \sa rsn_mainSecKeysOnlyStop()
 */
+#ifdef _SIMULATE_CONNECT_
+void *hpriRsn;
+#endif
 TI_HANDLE rsn_create(TI_HANDLE hOs)
 {
     rsn_t  *pRsn;
 
     /* allocate rsniation context memory */
     pRsn = (rsn_t*)os_memoryAlloc (hOs, sizeof(rsn_t));
+#ifdef _SIMULATE_CONNECT_
+    hpriRsn = pRsn;
+#endif
     if (pRsn == NULL)
     {
         return NULL;
@@ -252,86 +254,6 @@ TI_STATUS rsn_unload (TI_HANDLE hRsn)
     return TI_OK;
 }
 
-#ifdef XCC_MODULE_INCLUDED
-
-/**
-*
-* rsn_setNetworkEap  - Set current Network EAP Mode Status.
-*
-* \b Description:
-*
-* Set current Network EAP Mode Status..
-*
-* \b ARGS:
-*
-*  I   - prsn - context \n
-*  I   - networkEap - Network EAP Mode \n
-*
-* \b RETURNS:
-*
-*  TI_OK on success, TI_NOK on failure.
-*
-* \sa
-*/
-TI_STATUS rsn_setNetworkEap(rsn_t *pRsn, OS_XCC_NETWORK_EAP networkEap)
-{
-    if (pRsn==NULL)
-        return TI_NOK;
-
-    if (pRsn->networkEapMode == networkEap)
-    {
-        return TI_OK;
-    }
-    pRsn->networkEapMode = networkEap;
-
-    return TI_OK;
-}
-
-/**
-*
-* rsn_getNetworkEap  - Get current Network EAP Mode Status.
-*
-* \b Description:
-*
-* Get current Network EAP Mode Status.
-*
-* \b ARGS:
-*
-*  I   - pRsn - context \n
-*  I   - networkEap - Network EAP Mode \n
-*
-* \b RETURNS:
-*
-*  TI_OK on success, TI_NOK on failure.
-*
-* \sa
-*/
-TI_STATUS rsn_getNetworkEap(rsn_t *pRsn, OS_XCC_NETWORK_EAP *networkEap)
-{
-
-    if (pRsn==NULL)
-    {
-        return TI_NOK;
-    }
-
-    switch (pRsn->networkEapMode)
-    {
-    case OS_XCC_NETWORK_EAP_OFF:
-        *networkEap = OS_XCC_NETWORK_EAP_OFF;
-        break;
-    case OS_XCC_NETWORK_EAP_ON:
-    case OS_XCC_NETWORK_EAP_ALLOWED:
-    case OS_XCC_NETWORK_EAP_PREFERRED:
-        *networkEap = OS_XCC_NETWORK_EAP_ON;
-        break;
-    default:
-        return TI_NOK;
-/*      break; - unreachable */
-    }
-
-    return TI_OK;
-}
-#endif /* XCC_MODULE_INCLUDED*/
 
 /**
 *
@@ -362,7 +284,7 @@ void rsn_init (TStadHandlesList *pStadHandles)
     pRsn->hSiteMgr  = pStadHandles->hSiteMgr;
     pRsn->hReport   = pStadHandles->hReport;
     pRsn->hOs       = pStadHandles->hOs;
-    pRsn->hXCCMngr  = pStadHandles->hXCCMngr;
+    pRsn->hkkkMngr  = pStadHandles->hkkkMngr;
     pRsn->hEvHandler= pStadHandles->hEvHandler;
     pRsn->hSmeSm    = pStadHandles->hSme;
     pRsn->hAPConn   = pStadHandles->hAPConnection;
@@ -783,11 +705,13 @@ TI_STATUS rsn_SetDefaults (TI_HANDLE hRsn, TRsnInitParams *pInitParam)
     	pRsn->unicastSuite = TWD_CIPHER_NONE;
     }
 
+    pRsn->bRsnExternalMode   = pInitParam->bRsnExternalMode ;
     pRsn->bPairwiseMicFailureFilter = pInitParam->bPairwiseMicFailureFilter;
     pRsn->preAuthSupport     = pInitParam->preAuthSupport;
     pRsn->preAuthTimeout     = pInitParam->preAuthTimeout;
     pRsn->MaxNumOfPMKIDs     = PMKID_MAX_NUMBER;
     pRsn->numberOfPreAuthCandidates = 0;
+	pRsn->bWaitRsnSuccess = TI_FALSE;
 
     /* Create hPreAuthTimerWpa2 timer */
     pRsn->hPreAuthTimerWpa2 = tmr_CreateTimer (pRsn->hTimer);
@@ -817,9 +741,6 @@ TI_STATUS rsn_SetDefaults (TI_HANDLE hRsn, TRsnInitParams *pInitParam)
     	return TI_NOK;
     }
 
-#ifdef XCC_MODULE_INCLUDED
-    pRsn->networkEapMode = OS_XCC_NETWORK_EAP_OFF;
-#endif
 
 	return TI_OK;
 }
@@ -857,6 +778,15 @@ TI_STATUS rsn_start(TI_HANDLE hRsn)
     {
         return TI_NOK;
     }
+
+	pRsn->bWaitRsnSuccess = TI_TRUE;
+    
+    /* If we are running in internal mode i.e. withNo Supplicant , & connection is open then set port status to True */
+    if( (pRsn->bRsnExternalMode == TI_FALSE) && (pRsn->externalAuthMode == RSN_AUTH_OPEN) ) 
+    {
+        rsn_setPortStatus(pRsn, TI_TRUE);
+    }
+
 
     TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "rsn_start ...\n");
 
@@ -896,6 +826,8 @@ TI_STATUS rsn_stop (TI_HANDLE hRsn, TI_BOOL removeKeys)
 
     TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: calling STOP... removeKeys=%d\n", removeKeys);
 
+	pRsn->bWaitRsnSuccess = TI_FALSE;
+
     pRsn->eGroupKeyUpdate = GROUP_KEY_UPDATE_FALSE;
     pRsn->ePairwiseKeyUpdate = PAIRWISE_KEY_UPDATE_FALSE;
 
@@ -904,9 +836,6 @@ TI_STATUS rsn_stop (TI_HANDLE hRsn, TI_BOOL removeKeys)
     /* Stop the pre-authentication timer in case we are disconnecting */
     tmr_StopTimer (pRsn->hPreAuthTimerWpa2);
 
-#ifdef XCC_MODULE_INCLUDED
-	pRsn->networkEapMode = OS_XCC_NETWORK_EAP_OFF;
-#endif
 
 	if (removeKeys)
 	{   /* reset PMKID list if exist */
@@ -977,7 +906,7 @@ TI_STATUS rsn_getParamEncryptionStatus(TI_HANDLE hRsn, ECipherSuite *rsnStatus)
 * \b ARGS:
 *
 *  I   - pRsn - context \n
-*  I   - pExtAuthMode - XCC External Mode Status \n
+*  I   - pExtAuthMode - kkk External Mode Status \n
 *
 * \b RETURNS:
 *
@@ -1027,7 +956,7 @@ TI_STATUS rsn_getParam(TI_HANDLE hRsn, void *param)
     switch (pParam->paramType)
     {
     case RSN_ENCRYPTION_STATUS_PARAM:
-        status = rsn_getCipherSuite (pRsn, &pParam->content.rsnEncryptionStatus);
+        status = rsn_getCipherSuite (pRsn, &pParam->content.tRsnEncryptionStatus.eRsnEncrPairwise);
         break;
 
     case RSN_EXT_AUTHENTICATION_MODE:
@@ -1054,11 +983,6 @@ TI_STATUS rsn_getParam(TI_HANDLE hRsn, void *param)
           break;
 
 
-#ifdef XCC_MODULE_INCLUDED
-    case RSN_XCC_NETWORK_EAP:
-        status = rsn_getNetworkEap (pRsn, &pParam->content.networkEap);
-        break;
-#endif
 
     case RSN_PORT_STATUS_PARAM:
 		TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: Get Port Status\n"  );
@@ -1070,62 +994,6 @@ TI_STATUS rsn_getParam(TI_HANDLE hRsn, void *param)
     }
 
     return status;
-}
-
-
-
-
-/**
-*
-* rsn_setUcastSuite  - Set current unicast cipher suite support.
-*
-* \b Description:
-*
-* Set current unicast cipher suite support.
-*
-* \b ARGS:
-*
-*  I   - pRsn - context \n
-*  I   - suite - cipher suite to work with \n
-*
-* \b RETURNS:
-*
-*  TI_OK on success, TI_NOK on failure.
-*
-* \sa
-*/
-TI_STATUS rsn_setUcastSuite(rsn_t *pRsn, ECipherSuite suite)
-{
-	pRsn->unicastSuite = suite;
-
-	return TI_OK;
-}
-
-
-/**
-*
-* rsn_setBcastSuite  - Set current broadcast cipher suite support.
-*
-* \b Description:
-*
-* Set current broadcast cipher suite support.
-*
-* \b ARGS:
-*
-*  I   - pRsn - context \n
-*  I   - suite - cipher suite to work with \n
-*
-* \b RETURNS:
-*
-*  TI_OK on success, TI_NOK on failure.
-*
-* \sa
-*/
-TI_STATUS rsn_setBcastSuite(rsn_t *pRsn, ECipherSuite suite)
-{
-	pRsn->broadcastSuite = suite;
-
-	return TI_OK;
 }
 
 
@@ -1202,11 +1070,9 @@ TI_STATUS rsn_setParam (TI_HANDLE hRsn, void *param)
 
     case RSN_ENCRYPTION_STATUS_PARAM:
         {
-            TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: Set RSN_ENCRYPTION_STATUS_PARAM rsnEncryptionStatus  %d \n", pParam->content.rsnEncryptionStatus);
+            pRsn->unicastSuite   = pParam->content.tRsnEncryptionStatus.eRsnEncrPairwise;
+            pRsn->broadcastSuite = pParam->content.tRsnEncryptionStatus.eRsnEncrGroup;
 
-            rsn_setUcastSuite (pRsn, pParam->content.rsnEncryptionStatus);
-            rsn_setBcastSuite (pRsn, pParam->content.rsnEncryptionStatus);
-            TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, " status = %d \n", status);
             status = TI_OK;
         }
         break;
@@ -1237,25 +1103,6 @@ TI_STATUS rsn_setParam (TI_HANDLE hRsn, void *param)
         }
         break;
 
-#ifdef XCC_MODULE_INCLUDED
-    case RSN_XCC_NETWORK_EAP:
-        {
-            OS_XCC_NETWORK_EAP      networkEap = 0;
-
-            rsn_getNetworkEap (pRsn, &networkEap);
-            if (networkEap != pParam->content.networkEap)
-            {
-                TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: Set RSN_XCC_NETWORK_EAP networkEap  %d \n", pParam->content.networkEap);
-
-                status = rsn_setNetworkEap (pRsn, pParam->content.networkEap);
-                if (status == TI_OK)
-                {
-                    /*status = RE_SCAN_NEEDED;*/
-                }
-            }
-        }
-        break;
-#endif
     case RSN_MIXED_MODE:
         {
             status = TI_OK;
@@ -1432,6 +1279,8 @@ TI_STATUS rsn_reportStatus (rsn_t *pRsn, TI_STATUS rsnStatus)
         return TI_NOK;
     }
 
+	pRsn->bWaitRsnSuccess = TI_FALSE;
+
     if (rsnStatus == TI_OK)
     {
     	if (pRsn->unicastSuite == TWD_CIPHER_NONE)
@@ -1572,76 +1421,6 @@ TI_STATUS rsn_getInfoElement(TI_HANDLE hRsn, TI_UINT8 *pRsnIe, TI_UINT32 *pRsnIe
 }
 
 
-#ifdef XCC_MODULE_INCLUDED
-/**
-*
-* rsn_getXCCExtendedInfoElement -
-*
-* \b Description:
-*
-* Get the Aironet information element.
-*
-* \b ARGS:
-*
-*  I   - hRsn - Rsn SM context  \n
-*  I/O - pRsnIe - Pointer to the return information element \n
-*  I/O - pRsnIeLen - Pointer to the returned IE's length \n
-*
-* \b RETURNS:
-*
-*  TI_OK if successful, TI_NOK otherwise.
-*
-* \sa
-*/
-TI_STATUS rsn_getXCCExtendedInfoElement(TI_HANDLE hRsn, TI_UINT8 *pRsnIe, TI_UINT8 *pRsnIeLen)
-{
-    rsn_t       *pRsn;
-    TI_STATUS   status;
-
-    if ( (NULL == hRsn) || (NULL == pRsnIe) || (NULL == pRsnIeLen) )
-    {
-        return TI_NOK;
-    }
-
-    pRsn = (rsn_t*)hRsn;
-
-    status = admCtrlXCC_getInfoElement (pRsn, pRsnIe, pRsnIeLen);
-
-    TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "rsn_getXCCExtendedInfoElement pRsnIeLen= %d\n",*pRsnIeLen);
-
-    return status;
-}
-
-
-void rsn_XCCSetSite(rsn_t *pRsn, TRsnData *pRsnData, TI_UINT8 *pAssocIe) {
-	paramInfo_t         *pParam;
-
-	pParam = (paramInfo_t *)os_memoryAlloc(pRsn->hOs, sizeof(paramInfo_t));
-	if (!pParam) {
-		TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "rsn_XCCSetSite: malloc failed!");
-		return;
-	}
-
-	if ((pRsn->externalAuthMode != RSN_EXT_AUTH_MODE_WPA2) &&
-			(pRsn->externalAuthMode != RSN_EXT_AUTH_MODE_WPA))
-    {
-        pParam->paramType = XCC_CCKM_EXISTS;
-        pParam->content.XCCCckmExists  = TI_FALSE;
-        XCCMngr_setParam(pRsn->hXCCMngr, pParam);
-    }
-    else
-    {
-        admCtrlXCC_setExtendedParams(pRsn, pRsnData);
-
-        pParam->paramType = XCC_CCKM_EXISTS;
-        pParam->content.XCCCckmExists  = TI_TRUE;
-        XCCMngr_setParam(pRsn->hXCCMngr, pParam);
-    }
-
-	os_memoryFree(pRsn->hOs, pParam, sizeof(paramInfo_t));
-}
-
-#endif
 
 
 
@@ -1684,15 +1463,15 @@ TI_STATUS rsn_setKey (rsn_t *pRsn, TSecurityKeys *pKey)
 #ifdef GEM_SUPPORTED
 		case KEY_GEM:
 			tTwdParam.content.rsnEncryptionStatus = (ECipherSuite)TWD_CIPHER_GEM;
-			status = rsn_setUcastSuite(pRsn, TWD_CIPHER_GEM);
-			status = rsn_setBcastSuite(pRsn, TWD_CIPHER_GEM);
+			pRsn->unicastSuite   = TWD_CIPHER_GEM;
+			pRsn->broadcastSuite = TWD_CIPHER_GEM;
 			break;
 #endif
 		case KEY_WEP:
 			tTwdParam.content.rsnEncryptionStatus = (ECipherSuite)TWD_CIPHER_WEP;
 			break;
 		case KEY_NULL:
-		case KEY_XCC:
+		case KEY_kkk:
 		default:
 			tTwdParam.content.rsnEncryptionStatus = (ECipherSuite)TWD_CIPHER_NONE;
 			break;
@@ -1722,7 +1501,7 @@ TI_STATUS rsn_setKey (rsn_t *pRsn, TSecurityKeys *pKey)
 #endif
 		case KEY_WEP:
 		case KEY_NULL:
-		case KEY_XCC:
+		case KEY_kkk:
 		default:
 			txCtrlParams_setEncryptionFieldSizes (pRsn->hTxCtrl, 0);
 			break;
@@ -1788,7 +1567,12 @@ TI_STATUS rsn_setKey (rsn_t *pRsn, TSecurityKeys *pKey)
 
 	/* for wpa, encrypt eapols after unicast key is set */
 	if (   ((pRsn->externalAuthMode == RSN_EXT_AUTH_MODE_WPA) ||
-			(pRsn->externalAuthMode == RSN_EXT_AUTH_MODE_WPAPSK)) && !MAC_BROADCAST(pKey->macAddress))
+			(pRsn->externalAuthMode == RSN_EXT_AUTH_MODE_WPAPSK)) && !MAC_BROADCAST(pKey->macAddress) 
+ #ifdef GEM_SUPPORTED
+           && pKey->keyType != KEY_GEM)
+ #else
+        )
+ #endif
 		txCtrlParams_setEapolEncryptionStatus(pRsn->hTxCtrl, TI_TRUE);
 
 	return status;
@@ -1877,10 +1661,6 @@ TI_STATUS rsn_reportAuthFailure(TI_HANDLE hRsn, EAuthStatus authStatus)
 	}
 
 
-#ifdef XCC_MODULE_INCLUDED
-	TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "CALLING rougeAP, status= %d \n",authStatus);
-	status = XCCMngr_rogueApDetected (pRsn->hXCCMngr, authStatus);
-#endif
 	TI_VOIDCAST(pRsn);
 	return status;
 }
@@ -1900,7 +1680,8 @@ TI_STATUS rsn_reportMicFailure(TI_HANDLE hRsn, TI_UINT8 *pType, TI_UINT32 Length
 	failureType = *pType;
 
 	if (((pRsn->unicastSuite == TWD_CIPHER_TKIP) && (failureType == KEY_TKIP_MIC_PAIRWISE)) ||
-			((pRsn->broadcastSuite == TWD_CIPHER_TKIP) && (failureType == KEY_TKIP_MIC_GROUP)))
+			(((pRsn->broadcastSuite == TWD_CIPHER_TKIP)||(pRsn->broadcastSuite == TWD_CIPHER_AES_CCMP))
+					&& (failureType == KEY_TKIP_MIC_GROUP)))
 	{
 		/* check if the MIC failure is group and group key update */
 		/* was performed during the last 3 seconds */
@@ -2212,14 +1993,6 @@ TI_STATUS rsn_parseRsnIe(rsn_t *pRsn, TI_UINT8 *pWpa2Ie, wpa2IeData_t *pWpa2Data
 
      for(i = 0; i < pWpa2Data->KeyMngSuiteCnt; i++)
      {
-#ifdef XCC_MODULE_INCLUDED
-            curKeyMngSuite = admCtrlXCC_parseCckmSuiteVal4Wpa2(pRsn, (TI_UINT8 *)(wpa2Ie->rsnIeData + dataOffset));
-            if (curKeyMngSuite == WPA2_IE_KEY_MNG_CCKM)
-            {  /* CCKM is the maximum AKM */
-                pWpa2Data->KeyMngSuite[i] = curKeyMngSuite;
-            }
-            else
-#endif
             {
                 curKeyMngSuite = rsn_parseSuiteVal(pRsn, (TI_UINT8 *)wpa2Ie->rsnIeData + dataOffset,
                             WPA2_IE_KEY_MNG_PSK_801_1X, WPA2_IE_KEY_MNG_NA);
@@ -2229,7 +2002,7 @@ TI_STATUS rsn_parseRsnIe(rsn_t *pRsn, TI_UINT8 *pWpa2Ie, wpa2IeData_t *pWpa2Data
         TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "Wpa2_IE: authKeyMng %x  \n", curKeyMngSuite);
 
          if ((curKeyMngSuite != WPA2_IE_KEY_MNG_NA) &&
-             (curKeyMngSuite != WPA2_IE_KEY_MNG_CCKM))
+             (curKeyMngSuite != WPA2_IE_KEY_MNG_iii))
          {
              pWpa2Data->KeyMngSuite[i] = curKeyMngSuite;
          }
@@ -2598,7 +2371,7 @@ TI_STATUS rsn_setPortStatus(TI_HANDLE hRsn, TI_BOOL state)
 
     pRsn->bPortStatus = state;
 
-    if (state)
+    if (state && (pRsn->bWaitRsnSuccess == TI_TRUE))
     	rsn_reportStatus( pRsn, TI_OK );
     return TI_OK;
 }

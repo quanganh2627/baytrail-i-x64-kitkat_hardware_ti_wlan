@@ -95,7 +95,8 @@ typedef struct
 	TI_HANDLE                   hEnterPsGuardTimer;             /**< Handle to enter ps no event timer */
     TI_HANDLE                   hPowerMgrKeepAlive;             /**< Handle to the keep-alive sub module */
 	TI_HANDLE					hQosMngr;						/**< Handle to the qos manager moudle*/
-	TI_HANDLE					hRxData;
+	TI_HANDLE					hRxData;						/**< Handle to the rx data moudle 			*/
+	TI_HANDLE					hCurrBss;						/**< Handle to the CurrBss moudle 			*/
 
     PowerMgr_PowerMode_e        desiredPowerModeProfile;        /**< 
                                                                  * The configure power mode to the system in the

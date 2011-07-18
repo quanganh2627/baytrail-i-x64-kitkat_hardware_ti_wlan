@@ -257,7 +257,7 @@ void context_RequestSchedule (TI_HANDLE hContext, TI_UINT32 uClientId)
     pContext->aClientPending[uClientId] = TI_TRUE;
 
     /* Disable system suspend (enabled again after task completion) */
-    os_WakeLock (pContext->hOs);
+    os_wake_lock (pContext->hOs);
 
     /* 
      * If configured to switch context, request driver task scheduling.
@@ -265,7 +265,7 @@ void context_RequestSchedule (TI_HANDLE hContext, TI_UINT32 uClientId)
      */
     if (os_RequestSchedule (pContext->hOs, &bContextSwitchRequired) != TI_OK)
     {
-        os_WakeUnlock (pContext->hOs);
+        os_wake_unlock (pContext->hOs);
     }
     if (!bContextSwitchRequired)
     {
@@ -301,7 +301,7 @@ void context_RequestScheduleWithinWlanThread (TI_HANDLE hContext, TI_UINT32 uCli
     pContext->aClientPending[uClientId] = TI_TRUE;
 
     /* Disable system suspend (enabled again after task completion) */
-    os_WakeUnlock (pContext->hOs);
+    os_wake_unlock (pContext->hOs);
 
 }
 
@@ -387,7 +387,7 @@ void context_EnableClient (TI_HANDLE hContext, TI_UINT32 uClientId)
     if (pContext->aClientPending[uClientId])
     {
         /* Disable system suspend (enabled again after task completion) */
-        os_WakeLock (pContext->hOs);
+        os_wake_lock (pContext->hOs);
 
         /* 
          * If configured to switch context, request driver task scheduling.
@@ -395,7 +395,7 @@ void context_EnableClient (TI_HANDLE hContext, TI_UINT32 uClientId)
          */
         if (os_RequestSchedule (pContext->hOs, &bContextSwitchRequired) != TI_OK)
         {
-            os_WakeUnlock (pContext->hOs);
+            os_wake_unlock (pContext->hOs);
         }
         if (!bContextSwitchRequired)
         {

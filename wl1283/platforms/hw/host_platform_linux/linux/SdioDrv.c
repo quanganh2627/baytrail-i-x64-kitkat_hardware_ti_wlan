@@ -52,6 +52,16 @@ static OMAP3430_sdiodrv_t g_drv;
 static struct sdio_func *tiwlan_func[1 + SDIO_TOTAL_FUNCS];
 struct mmc_host *g_mmc_host_controller = NULL;
 
+
+int sdioDrv_Reset_Comm(void)
+{
+    printk(KERN_DEBUG "TISDIO: resetting\n");
+
+    /* TODO reset sdio comm properties that were erased during suspend */
+
+    return 0;
+}
+
 void sdioDrv_DetectChange(void)
 {
 	printk(KERN_INFO "sdioDrv_DetectChange\n");

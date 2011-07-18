@@ -54,6 +54,7 @@
 #include "scrApi.h"
 
 #define DISCONNECT_TIMEOUT_MSEC      800
+#define CONN_JOIN_CMPLT_TIMEOUT_MSEC 5000
 
 typedef struct
 {
@@ -79,6 +80,7 @@ typedef struct
 	connectionType_e		currentConnType;
 	TI_UINT32				timeout;
 	TI_HANDLE               hConnTimer;         /* This timer is used both by IBSS and BSS */
+	TI_HANDLE				hJoinTimer;
 	fsm_stateMachine_t		*ibss_pFsm;
     fsm_stateMachine_t		*infra_pFsm;
 	EConnType				connType;
@@ -91,6 +93,7 @@ typedef struct
 	TI_BOOL 				scrRequested[ SCR_RESOURCE_NUM_OF_RESOURCES ]; /* wether SCR was requested for the two resources */
     TI_BOOL                 bScrAcquired[ SCR_RESOURCE_NUM_OF_RESOURCES ]; /* wether SCR was acquired for the two resources */
 	TI_UINT32               ibssDisconnectCount;
+    TI_BOOL                 bPowerStateModeOn;
 
     /* Other modules handles */
 	TI_HANDLE				hSiteMgr;
@@ -107,7 +110,7 @@ typedef struct
 	TI_HANDLE				hMeasurementMgr;
 	TI_HANDLE				hScr;
 	TI_HANDLE				hTrafficMonitor;
-	TI_HANDLE				hXCCMngr;
+	TI_HANDLE				hkkkMngr;
     TI_HANDLE               hScanCncn;
 	TI_HANDLE				hCurrBss;
 	TI_HANDLE				hSwitchChannel;

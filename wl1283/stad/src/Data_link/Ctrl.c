@@ -146,11 +146,6 @@ void ctrlData_init (TStadHandlesList *pStadHandles,
     pCtrlData->hStaCap      = pStadHandles->hStaCap;
     pCtrlData->hRsn         = pStadHandles->hRsn;
 
-#ifdef XCC_MODULE_INCLUDED
-	/* Register the link test retries CB */
-	pCtrlData->retriesUpdateCBFunc = retriesUpdateCBFunc;
-	pCtrlData->retriesUpdateCBObj  = retriesUpdateCBObj;
-#endif
     
     TRACE0(pCtrlData->hReport, REPORT_SEVERITY_INIT, ".....Ctrl Data configured successfully ...\n");
 }
@@ -735,7 +730,7 @@ static void selectRateTable(TI_HANDLE hCtrlData, TI_UINT32 rateMask)
         status             = rsn_getParam(pCtrlData->hRsn, &param);
         if(status == TI_OK)
         {
-            eCipherSuite = param.content.rsnEncryptionStatus;
+            eCipherSuite = param.content.tRsnEncryptionStatus.eRsnEncrPairwise;
            
             if(eCipherSuite == TWD_CIPHER_WEP    || 
                eCipherSuite == TWD_CIPHER_TKIP   || 
@@ -744,21 +739,21 @@ static void selectRateTable(TI_HANDLE hCtrlData, TI_UINT32 rateMask)
                 b11nEnable = TI_FALSE;
             }
         }
-    if (b11nEnable == TI_TRUE)
-    {
-        if ((rate == DRV_RATE_MCS_0) |
-            (rate == DRV_RATE_MCS_1) |
-            (rate == DRV_RATE_MCS_2) |
-            (rate == DRV_RATE_MCS_3) |
-            (rate == DRV_RATE_MCS_4) |
-            (rate == DRV_RATE_MCS_5) |
-            (rate == DRV_RATE_MCS_6) |
-            (rate == DRV_RATE_MCS_7))
+        if (b11nEnable == TI_TRUE)
         {
-            pCtrlData->uCurrPolicyEnabledRatesMask = pCtrlData->policyEnabledRatesMaskOfdmN;
+            if ((rate == DRV_RATE_MCS_0) |
+                (rate == DRV_RATE_MCS_1) |
+                (rate == DRV_RATE_MCS_2) |
+                (rate == DRV_RATE_MCS_3) |
+                (rate == DRV_RATE_MCS_4) |
+                (rate == DRV_RATE_MCS_5) |
+                (rate == DRV_RATE_MCS_6) |
+                (rate == DRV_RATE_MCS_7))
+            {
+                pCtrlData->uCurrPolicyEnabledRatesMask = pCtrlData->policyEnabledRatesMaskOfdmN;
+            }
         }
     }
-}
 }
 
 

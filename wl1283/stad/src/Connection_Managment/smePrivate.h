@@ -81,6 +81,8 @@ typedef struct
     ESsidType       eSsidType;
     TSsid           tSsid;
 
+    TI_BOOL         bProbeBeforeConnect;
+
     /* internal state-machine variables */
     TI_BOOL         bConnectRequired;
     TI_BOOL         bRunning;

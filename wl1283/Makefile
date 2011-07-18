@@ -109,8 +109,7 @@ tiwlan_drv-objs += $(STA_MGMT)/PowerMgr.o \
                    $(STA_MGMT)/qosMngr.o \
                    $(STA_MGMT)/trafficAdmControl.o \
                    $(STA_MGMT)/mlme.o \
-                   $(STA_MGMT)/pwrState.o \
-                   $(STA_MGMT)/pwrState_Dbg.o
+                   $(STA_MGMT)/pwrState.o
 
 # stad/src/AirLink_Managment OK
 tiwlan_drv-objs += $(AIRLINK_MGMT)/SwitchChannel.o \
@@ -163,7 +162,8 @@ tiwlan_drv-objs += $(TIAP_TEST)/connDebug.o \
                    $(TIAP_TEST)/smeDebug.o \
                    $(TIAP_TEST)/fwdriverdebug.o \
                    $(TIAP_TEST)/MibDbg.o \
-                   $(TIAP_TEST)/TwIfDebug.o
+                   $(TIAP_TEST)/TwIfDebug.o \
+		   		   $(TIAP_TEST)/pwrState_Dbg.o
 
 # TwD/MacServices OK
 tiwlan_drv-objs += $(TWD_MAC_SERV)/MeasurementSrv.o \
@@ -236,4 +236,4 @@ tiwlan_drv-objs += $(PLAT_LINUX_SRC)/WlanDrvIf.o \
 tiwlan_drv-objs += $(PLAT_HOST_LINUX)/host_platform.o \
                    $(PLAT_HOST_LINUX)/SdioAdapter.o
 
-EXTRA_CFLAGS += -D__LINUX__ -DTI_DBG -DREPORT_LOG -D__BYTE_ORDER_LITTLE_ENDIAN -DHOST_COMPILE -DFW_RUNNING_AS_STA -DTNETW1283 -DGEM_SUPPORTED
+EXTRA_CFLAGS += -D__LINUX__ -DTI_DBG -DREPORT_LOG -D__BYTE_ORDER_LITTLE_ENDIAN -DHOST_COMPILE -DFW_RUNNING_AS_STA -DSDIO_KERNEL_MODULE -DSTANDARD_BUS -DTNETW1283 -DGEM_SUPPORTED

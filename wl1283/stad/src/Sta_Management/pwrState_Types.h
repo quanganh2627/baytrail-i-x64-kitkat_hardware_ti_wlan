@@ -63,6 +63,15 @@
 #define PWRSTATE_CMD_TIMEOUT_MAX	10000
 #define PWRSTATE_CMD_TIMEOUT_DEF	500
 
+/* Filter Usage In Suspend */
+#define PWRSTATE_FILTER_USAGE_MIN	0
+#define PWRSTATE_FILTER_USAGE_MAX	255
+#define PWRSTATE_FILTER_USAGE_DEF	0
+//#define PWRSTATE_FILTER_USAGE_RXFILTER	BIT_0
+#define PWRSTATE_FILTER_USAGE_DISABLE_BROADCASTS_FW	BIT_1
+#define PWRSTATE_FILTER_USAGE_DISABLE_BROADCASTS_HW	BIT_2
+#define PWRSTATE_FILTER_USAGE_DISABLE_ROAMINTG_TRIGGERS		BIT_3
+
 
 /*****************************************************************************
  **         Enumerations                                                    **
@@ -116,6 +125,19 @@ typedef enum
 } EPwrStateSmEvent;
 
 /*
+ * Filter Usage - whether to use filter when suspended
+ */
+typedef enum
+{
+	PWRSTATE_FILTER_USAGE_NONE		= 0,
+	PWRSTATE_FILTER_USAGE_RXFILTER	= 1,
+
+	PWRSTATE_FILTER_USAGE_LAST
+} EPwrStateFilterUsage;
+
+
+
+/*
  * Suspend Type - what to do upon suspend
  */
 typedef enum
@@ -129,16 +151,7 @@ typedef enum
 	PWRSTATE_SUSPEND_LAST
 } EPwrStateSuspendType;
 
-/*
- * Filter Usage - whether to use filter when suspended
- */
-typedef enum
-{
-	PWRSTATE_FILTER_USAGE_NONE		= 0,	/* The RX Filter configuration is not changed upon suspend/resume */
-	PWRSTATE_FILTER_USAGE_RXFILTER	= 1,	/* Upon suspend, replace the RX Filter with the configured one. Upon resume, revert */
 
-	PWRSTATE_FILTER_USAGE_LAST
-} EPwrStateFilterUsage;
 
 /*
  * Standby Next State - what to do upon a Doze event when in Standby state
@@ -171,7 +184,7 @@ typedef struct {
 	/* Additional parameters for LowOn suspend type */
 	TI_UINT32				 uSuspendNDTIM;			/* Number of DTIMs to be used for Long Doze upon suspend. Between PWRSTATE_SUSPEND_NDTIM_MIN and PWRSTATE_SUSPEND_NDTIM_MAX */
 	EPwrStateStndbyNextState eStandbyNextState;		/* Defines what state to move to upon a Doze event when in Standby state (or upon PS enter failure) */
-	EPwrStateFilterUsage	 eSuspendFilterUsage;	/* Defines whether to use filter when suspended */
+	TI_UINT32				 uSuspendFilterUsage;	/* Defines whether to use filter when suspended */
 	TRxDataFilterRequest	 tSuspendRxFilterValue;	/* RxFilter value to use in case of eSuspendRxFilterUsage == PWRSTATE_FILTER_USAGE_RXFILTER */
 
 	TI_UINT32				 uDozeTimeout;			/* time period before declaring the PS enter process failed */
@@ -194,6 +207,7 @@ typedef struct
 	TI_HANDLE   		hTimer;
 	TI_HANDLE			hTWD;
 	TI_HANDLE			hDozeTimer;
+    TI_HANDLE           hConn;
 	FPwrStateSMState	fCurrentState;				/* current state function */
 
 	TPwrStateCfg		tConfig;
