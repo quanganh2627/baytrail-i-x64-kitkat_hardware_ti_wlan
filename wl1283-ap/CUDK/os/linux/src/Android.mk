@@ -16,6 +16,7 @@ WILINK_ROOT = ../../../..
 CUDK_ROOT = $(WILINK_ROOT)/CUDK
 ANDR_TI_SUPP_LIB_DIR = $(WILINK_ROOT)/../../../../external/wpa_supplicant_6
 # TI_SUPP_LIB_DIR = $(WILINK_ROOT)/external_suppl
+WPA_SUPPL_DIR_INCLUDE = $(TARGET_OUT_HEADERS)/wpa_supplicant_6
 
 DK_DEFINES = 
 ifeq ($(WPA_ENTERPRISE), y)
@@ -74,9 +75,8 @@ LOCAL_C_INCLUDES := \
         $(LOCAL_PATH)/$(WILINK_ROOT)/platforms/os/linux/inc \
         $(LOCAL_PATH)/$(WILINK_ROOT)/platforms/os/common/inc \
         $(LOCAL_PATH)/$(WILINK_ROOT)/TWD/FirmwareApi \
-	external/wpa_supplicant_6/wpa_supplicant/src/common \
-        external/wpa_supplicant_6/wpa_supplicant/src/utils \
-        $(LOCAL_PATH)/$(CUDK_ROOT)/configurationutility/inc
+        $(LOCAL_PATH)/$(CUDK_ROOT)/configurationutility/inc \
+        $(WPA_SUPPL_DIR_INCLUDE)
 
 LOCAL_MODULE:=libtiOsLibAP
 LOCAL_MODULE_TAGS := optional

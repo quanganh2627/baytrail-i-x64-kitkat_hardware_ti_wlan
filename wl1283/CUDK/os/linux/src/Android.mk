@@ -20,17 +20,12 @@ endif
 
 ifeq ($(WPA_SUPPLICANT_VERSION),VER_0_5_X)
 WPA_SUPPL_DIR = external/wpa_supplicant
-else
-WPA_SUPPL_DIR = external/wpa_supplicant_6/wpa_supplicant
-endif
 WPA_SUPPL_DIR_INCLUDE = $(WPA_SUPPL_DIR)
+endif
+
 ifeq ($(WPA_SUPPLICANT_VERSION),VER_0_6_X)
-WPA_SUPPL_DIR_INCLUDE += $(WPA_SUPPL_DIR)/src \
-	$(WPA_SUPPL_DIR)/src/common \
-	$(WPA_SUPPL_DIR)/src/drivers \
-	$(WPA_SUPPL_DIR)/src/l2_packet \
-	$(WPA_SUPPL_DIR)/src/utils \
-	$(WPA_SUPPL_DIR)/src/wps
+WPA_SUPPL_DIR = hardware/intel/PRIVATE/tiwl1283_priv/wpa_supplicant
+WPA_SUPPL_DIR_INCLUDE = $(TARGET_OUT_HEADERS)/wpa_supplicant_6
 endif
 
 DK_DEFINES = 
