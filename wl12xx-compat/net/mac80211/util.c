@@ -928,6 +928,12 @@ void ieee80211_send_auth(struct ieee80211_sub_if_data *sdata,
 	ieee80211_tx_skb(sdata, skb);
 }
 
+static inline bool is_11b_bitrate(u16 bitrate)
+{
+	return (bitrate == 10 || bitrate == 20 || bitrate == 55 ||
+		bitrate == 110);
+}
+
 int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
 			     const u8 *ie, size_t ie_len,
 			     enum ieee80211_band band, u32 rate_mask,
@@ -940,15 +946,21 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
 	u8 rates[32];
 	int num_rates;
 	int ext_rates_len;
+	bool is_p2p;
 
 	sband = local->hw.wiphy->bands[band];
 
 	pos = buffer;
 
+	is_p2p = !!cfg80211_find_vendor_ie(WLAN_OUI_WFA, WLAN_OUI_TYPE_WFA_P2P,
+					   ie, ie_len);
+
 	num_rates = 0;
 	for (i = 0; i < sband->n_bitrates; i++) {
 		if ((BIT(i) & rate_mask) == 0)
 			continue; /* skip rate */
+		if (is_p2p && is_11b_bitrate(sband->bitrates[i].bitrate))
+			continue;
 		rates[num_rates++] = (u8) (sband->bitrates[i].bitrate / 5);
 	}
 
@@ -1150,8 +1162,26 @@ int ieee80211_reconfig(struct ieee80211_local *local)
 	struct sta_info *sta;
 	int res;
 
+#ifdef CONFIG_PM
 	if (local->suspended)
 		local->resuming = true;
+
+	if (local->wowlan) {
+		local->wowlan = false;
+		res = drv_resume(local);
+		if (res < 0) {
+			local->resuming = false;
+			return res;
+		}
+		if (res == 0)
+			goto wake_up;
+		WARN_ON(res > 1);
+		/*
+		 * res is 1, which means the driver requested
+		 * to go through a regular reset on wakeup.
+		 */
+	}
+#endif
 
 	/* restart hardware */
 	if (local->open_count) {
@@ -1237,6 +1267,8 @@ int ieee80211_reconfig(struct ieee80211_local *local)
 			changed |= BSS_CHANGED_IBSS;
 			/* fall through */
 		case NL80211_IFTYPE_AP:
+			changed |= BSS_CHANGED_SSID;
+			/* fall through */
 		case NL80211_IFTYPE_MESH_POINT:
 			changed |= BSS_CHANGED_BEACON |
 				   BSS_CHANGED_BEACON_ENABLED;
@@ -1283,6 +1315,7 @@ int ieee80211_reconfig(struct ieee80211_local *local)
 		if (ieee80211_sdata_running(sdata))
 			ieee80211_enable_keys(sdata);
 
+ wake_up:
 	ieee80211_wake_queues_by_reason(hw,
 			IEEE80211_QUEUE_STOP_REASON_SUSPEND);
 
@@ -1315,7 +1348,7 @@ int ieee80211_reconfig(struct ieee80211_local *local)
 		}
 	}
 
-	add_timer(&local->sta_cleanup);
+	mod_timer(&local->sta_cleanup, jiffies + 1);
 
 	mutex_lock(&local->sta_mtx);
 	list_for_each_entry(sta, &local->sta_list, list)

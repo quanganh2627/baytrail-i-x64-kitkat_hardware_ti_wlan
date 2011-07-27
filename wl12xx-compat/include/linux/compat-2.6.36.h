@@ -9,6 +9,7 @@
 #include <pcmcia/cistpl.h>
 #include <pcmcia/ds.h>
 #include <linux/pm_qos_params.h>
+#include <linux/smp_lock.h>
 
 #define kparam_block_sysfs_write(a)
 #define kparam_unblock_sysfs_write(a)
@@ -100,6 +101,29 @@ int no_printk(const char *s, ...) { return 0; }
 #ifndef alloc_workqueue
 #define alloc_workqueue(name, flags, max_active) __create_workqueue(name, flags, max_active, 0)
 #endif
+
+#define EXTPROC	0200000
+#define TIOCPKT_IOCTL		64
+
+static inline void tty_lock(void) __acquires(kernel_lock)
+{
+#ifdef CONFIG_LOCK_KERNEL
+	/* kernel_locked is 1 for !CONFIG_LOCK_KERNEL */
+	WARN_ON(kernel_locked());
+#endif
+	lock_kernel();
+}
+static inline void tty_unlock(void) __releases(kernel_lock)
+{
+	unlock_kernel();
+}
+#define tty_locked()           (kernel_locked())
+
+#define usleep_range(_min, _max)	msleep((_max) / 1000)
+
+#define __rcu
+
+//static inline void pm_wakeup_event(struct device *dev, unsigned int msec) {}
 
 #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,36)) */
 

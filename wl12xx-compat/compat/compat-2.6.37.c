@@ -12,6 +12,7 @@
 #include <linux/netdevice.h>
 #include <net/sock.h>
 #include <linux/nsproxy.h>
+#include <linux/vmalloc.h>
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35)
 static const void *net_current_ns(void)
@@ -333,5 +334,25 @@ void compat_led_classdev_unregister(struct led_classdev *led_cdev)
 	led_classdev_unregister(led_cdev);
 }
 EXPORT_SYMBOL(compat_led_classdev_unregister);
+
+/**
+ *	vzalloc - allocate virtually contiguous memory with zero fill
+ *	@size:	allocation size
+ *	Allocate enough pages to cover @size from the page level
+ *	allocator and map them into contiguous kernel virtual space.
+ *	The memory allocated is set to zero.
+ *
+ *	For tight control over page level allocator and protection flags
+ *	use __vmalloc() instead.
+ */
+void *vzalloc(unsigned long size)
+{
+	void *buf;
+	buf = vmalloc(size);
+	if (buf)
+		memset(buf, 0, size);
+	return buf;
+}
+EXPORT_SYMBOL(vzalloc);
 
 #endif

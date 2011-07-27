@@ -25,7 +25,6 @@
 
 #include <linux/module.h>
 #include <linux/platform_device.h>
-#include <linux/crc7.h>
 #include <linux/spi/spi.h>
 #include <linux/slab.h>
 
@@ -92,7 +91,7 @@ int wl1271_acx_tx_power(struct wl1271 *wl, int power)
 	struct acx_current_tx_power *acx;
 	int ret;
 
-	wl1271_debug(DEBUG_ACX, "acx dot11_cur_tx_pwr");
+	wl1271_debug(DEBUG_ACX, "acx dot11_cur_tx_pwr %d", power);
 
 	if (power < 0 || power > 25)
 		return -EINVAL;
@@ -303,12 +302,19 @@ out:
 	return ret;
 }
 
-int wl1271_acx_rts_threshold(struct wl1271 *wl, u16 rts_threshold)
+int wl1271_acx_rts_threshold(struct wl1271 *wl, u32 rts_threshold)
 {
 	struct acx_rts_threshold *rts;
 	int ret;
 
-	wl1271_debug(DEBUG_ACX, "acx rts threshold");
+	/*
+	 * If the RTS threshold is not configured or out of range, use the
+	 * default value.
+	 */
+	if (rts_threshold > IEEE80211_MAX_RTS_THRESHOLD)
+		rts_threshold = wl->conf.rx.rts_threshold;
+
+	wl1271_debug(DEBUG_ACX, "acx rts threshold: %d", rts_threshold);
 
 	rts = kzalloc(sizeof(*rts), GFP_KERNEL);
 	if (!rts) {
@@ -317,7 +323,7 @@ int wl1271_acx_rts_threshold(struct wl1271 *wl, u16 rts_threshold)
 	}
 
 	rts->role_id = wl->role_id;
-	rts->threshold = cpu_to_le16(rts_threshold);
+	rts->threshold = cpu_to_le16((u16)rts_threshold);
 
 	ret = wl1271_cmd_configure(wl, DOT11_RTS_THRESHOLD, rts, sizeof(*rts));
 	if (ret < 0) {
@@ -535,11 +541,6 @@ int wl1271_acx_sg_cfg(struct wl1271 *wl)
 		ret = -ENOMEM;
 		goto out;
 	}
-
-	if (wl->chip.id == CHIP_ID_1283_PG20)
-		c->params[CONF_SG_BT_LOAD_RATIO] = 50;
-	else
-		c->params[CONF_SG_BT_LOAD_RATIO] = 200;
 
 	/* BT-WLAN coext parameters */
 	for (i = 0; i < CONF_SG_PARAMS_MAX; i++)
@@ -786,10 +787,10 @@ int wl1271_acx_sta_rate_policies(struct wl1271 *wl)
 		goto out;
 	}
 
-
-	/* configure one AP supported rate class */
+	/* configure one AP supported rate class for p2p */
 	acx->rate_policy_idx = cpu_to_le32(ACX_TX_BASIC_RATE_P2P);
-	acx->rate_policy.enabled_rates = cpu_to_le32(CONF_TX_RATE_MASK_BASIC_P2P);
+	acx->rate_policy.enabled_rates =
+				cpu_to_le32(CONF_TX_RATE_MASK_BASIC_P2P);
 	acx->rate_policy.short_retry_limit = c->short_retry_limit;
 	acx->rate_policy.long_retry_limit = c->long_retry_limit;
 	acx->rate_policy.aflags = c->aflags;
@@ -811,7 +812,8 @@ int wl1271_acx_ap_rate_policy(struct wl1271 *wl, struct conf_tx_rate_class *c,
 	struct acx_rate_policy *acx;
 	int ret = 0;
 
-	wl1271_debug(DEBUG_ACX, "acx ap rate policy");
+	wl1271_debug(DEBUG_ACX, "acx ap rate policy %d rates 0x%x",
+		     idx, c->enabled_rates);
 
 	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
 	if (!acx) {
@@ -819,6 +821,7 @@ int wl1271_acx_ap_rate_policy(struct wl1271 *wl, struct conf_tx_rate_class *c,
 		goto out;
 	}
 
+	wl1271_debug(DEBUG_ACX, "idx: %d, rate: 0x%x", idx, c->enabled_rates);
 	acx->rate_policy.enabled_rates = cpu_to_le32(c->enabled_rates);
 	acx->rate_policy.short_retry_limit = c->short_retry_limit;
 	acx->rate_policy.long_retry_limit = c->long_retry_limit;
@@ -907,12 +910,19 @@ out:
 	return ret;
 }
 
-int wl1271_acx_frag_threshold(struct wl1271 *wl, u16 frag_threshold)
+int wl1271_acx_frag_threshold(struct wl1271 *wl, u32 frag_threshold)
 {
 	struct acx_frag_threshold *acx;
 	int ret = 0;
 
-	wl1271_debug(DEBUG_ACX, "acx frag threshold");
+	/*
+	 * If the fragmentation is not configured or out of range, use the
+	 * default value.
+	 */
+	if (frag_threshold > IEEE80211_MAX_FRAG_THRESHOLD)
+		frag_threshold = wl->conf.tx.frag_threshold;
+
+	wl1271_debug(DEBUG_ACX, "acx frag threshold: %d", frag_threshold);
 
 	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
 
@@ -921,7 +931,7 @@ int wl1271_acx_frag_threshold(struct wl1271 *wl, u16 frag_threshold)
 		goto out;
 	}
 
-	acx->frag_threshold = cpu_to_le16(frag_threshold);
+	acx->frag_threshold = cpu_to_le16((u16)frag_threshold);
 	ret = wl1271_cmd_configure(wl, ACX_FRAG_CFG, acx, sizeof(*acx));
 	if (ret < 0) {
 		wl1271_warning("Setting of frag threshold failed: %d", ret);
@@ -947,14 +957,8 @@ int wl1271_acx_tx_config_options(struct wl1271 *wl)
 		goto out;
 	}
 
-	if (wl->chip.id == CHIP_ID_1283_PG20)
-		acx->tx_compl_threshold =
-			cpu_to_le16(wl->conf.tx.wl128x_tx_compl_threshold);
-	else
-		acx->tx_compl_threshold =
-			cpu_to_le16(wl->conf.tx.wl127x_tx_compl_threshold);
-
 	acx->tx_compl_timeout = cpu_to_le16(wl->conf.tx.tx_compl_timeout);
+	acx->tx_compl_threshold = cpu_to_le16(wl->conf.tx.tx_compl_threshold);
 	ret = wl1271_cmd_configure(wl, ACX_TX_CONFIG_OPT, acx, sizeof(*acx));
 	if (ret < 0) {
 		wl1271_warning("Setting of tx options failed: %d", ret);
@@ -995,6 +999,7 @@ int wl1271_acx_mem_cfg(struct wl1271 *wl)
 	mem_conf->tx_free_req = mem->min_req_tx_blocks;
 	mem_conf->rx_free_req = mem->min_req_rx_blocks;
 	mem_conf->tx_min = mem->tx_min;
+	mem_conf->fwlog_blocks = wl->conf.fwlog.mem_blocks;
 
 	ret = wl1271_cmd_configure(wl, ACX_MEM_CFG, mem_conf,
 				   sizeof(*mem_conf));
@@ -1008,7 +1013,7 @@ out:
 	return ret;
 }
 
-int wl1271_acx_host_if_cfg_bitmap(struct wl1271 *wl)
+int wl1271_acx_host_if_cfg_bitmap(struct wl1271 *wl, u32 host_cfg_bitmap)
 {
 	struct wl1271_acx_host_config_bitmap *bitmap_conf;
 	int ret;
@@ -1019,7 +1024,7 @@ int wl1271_acx_host_if_cfg_bitmap(struct wl1271 *wl)
 		goto out;
 	}
 
-	bitmap_conf->host_cfg_bitmap = wl->host_cfg_bitmap;
+	bitmap_conf->host_cfg_bitmap = cpu_to_le32(host_cfg_bitmap);
 
 	ret = wl1271_cmd_configure(wl, ACX_HOST_IF_CFG_BITMAP,
 				   bitmap_conf, sizeof(*bitmap_conf));
@@ -1060,8 +1065,6 @@ int wl1271_acx_init_mem_config(struct wl1271 *wl)
 		le32_to_cpu(wl->target_mem_map->num_tx_mem_blocks);
 	wl1271_debug(DEBUG_TX, "available tx blocks: %d",
 		     wl->tx_blocks_available);
-
-	wl->tx_new_total = wl->tx_blocks_available;
 
 	return 0;
 }
@@ -1319,13 +1322,15 @@ out:
 
 int wl1271_acx_set_ht_capabilities(struct wl1271 *wl,
 				    struct ieee80211_sta_ht_cap *ht_cap,
-				    bool allow_ht_operation)
+				    bool allow_ht_operation, u8 hlid)
 {
 	struct wl1271_acx_ht_capabilities *acx;
 	int ret = 0;
 	u32 ht_capabilites = 0;
 
-	wl1271_debug(DEBUG_ACX, "acx ht capabilities setting");
+	wl1271_debug(DEBUG_ACX, "acx ht capabilities setting "
+		     "sta supp: %d sta cap: %d", ht_cap->ht_supported,
+		     ht_cap->cap);
 
 	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
 	if (!acx) {
@@ -1333,27 +1338,22 @@ int wl1271_acx_set_ht_capabilities(struct wl1271 *wl,
 		goto out;
 	}
 
-	/* Allow HT Operation ? */
-	if (allow_ht_operation) {
-		ht_capabilites =
-			WL1271_ACX_FW_CAP_HT_OPERATION;
-		if (ht_cap->cap & IEEE80211_HT_CAP_GRN_FLD)
-			ht_capabilites |=
-				WL1271_ACX_FW_CAP_GREENFIELD_FRAME_FORMAT;
-		if (ht_cap->cap & IEEE80211_HT_CAP_SGI_20)
-			ht_capabilites |=
-				WL1271_ACX_FW_CAP_SHORT_GI_FOR_20MHZ_PACKETS;
-		if (ht_cap->cap & IEEE80211_HT_CAP_LSIG_TXOP_PROT)
-			ht_capabilites |=
-				WL1271_ACX_FW_CAP_LSIG_TXOP_PROTECTION;
+	if (allow_ht_operation && ht_cap->ht_supported) {
+		/* no need to translate capabilities - use the spec values */
+		ht_capabilites = ht_cap->cap;
+
+		/*
+		 * this bit is not employed by the spec but only by FW to
+		 * indicate peer HT support
+		 */
+		ht_capabilites |= WL12XX_HT_CAP_HT_OPERRATION;
 
 		/* get data from A-MPDU parameters field */
 		acx->ampdu_max_length = ht_cap->ampdu_factor;
 		acx->ampdu_min_spacing = ht_cap->ampdu_density;
 	}
 
-	/* TODO: use param hlid */
-	acx->hlid = wl->sta_hlid;
+	acx->hlid = hlid;
 	acx->ht_capabilites = cpu_to_le32(ht_capabilites);
 
 	ret = wl1271_cmd_configure(wl, ACX_PEER_HT_CAP, acx, sizeof(*acx));
@@ -1403,15 +1403,12 @@ out:
 }
 
 /* Configure BA session initiator/receiver parameters setting in the FW. */
-int wl1271_acx_set_ba_session(struct wl1271 *wl,
-			       enum ieee80211_back_parties direction,
-			       u8 tid_index, u8 policy)
+int wl1271_acx_set_ba_initiator_policy(struct wl1271 *wl)
 {
-#if 0
-	struct wl1271_acx_ba_session_policy *acx;
+	struct wl1271_acx_ba_initiator_policy *acx;
 	int ret;
 
-	wl1271_debug(DEBUG_ACX, "acx ba session setting");
+	wl1271_debug(DEBUG_ACX, "acx ba initiator policy");
 
 	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
 	if (!acx) {
@@ -1419,49 +1416,30 @@ int wl1271_acx_set_ba_session(struct wl1271 *wl,
 		goto out;
 	}
 
-	/* ANY role */
-	acx->role_id = 0xff;
-	acx->tid = tid_index;
-	acx->enable = policy;
-	acx->ba_direction = direction;
-
-	switch (direction) {
-	case WLAN_BACK_INITIATOR:
-		acx->win_size = wl->conf.ht.tx_ba_win_size;
-		acx->inactivity_timeout = wl->conf.ht.inactivity_timeout;
-		break;
-	case WLAN_BACK_RECIPIENT:
-		acx->win_size = RX_BA_WIN_SIZE;
-		acx->inactivity_timeout = 0;
-		break;
-	default:
-		wl1271_error("Incorrect acx command id=%x\n", direction);
-		ret = -EINVAL;
-		goto out;
-	}
+	/* set for the current role */
+	acx->role_id = wl->role_id;
+	acx->tid_bitmap = wl->conf.ht.tx_ba_tid_bitmap;
+	acx->win_size = wl->conf.ht.tx_ba_win_size;
+	acx->inactivity_timeout = wl->conf.ht.inactivity_timeout;
 
 	ret = wl1271_cmd_configure(wl,
 				   ACX_BA_SESSION_INITIATOR_POLICY,
 				   acx,
 				   sizeof(*acx));
 	if (ret < 0) {
-		wl1271_warning("acx ba session init policy failed: %d", ret);
+		wl1271_warning("acx ba initiator policy failed: %d", ret);
 		goto out;
 	}
 
 out:
 	kfree(acx);
 	return ret;
-#endif
-	wl1271_info("11n is currently not supported");
-	return 0;
 }
 
 /* setup BA session receiver setting in the FW. */
-int wl1271_acx_set_ba_receiver_session(struct wl1271 *wl, u8 tid_index, u16 ssn,
-					bool enable)
+int wl1271_acx_set_ba_receiver_session(struct wl1271 *wl, u8 tid_index,
+					 u16 ssn, bool enable, u8 peer_hlid)
 {
-#if 0
 	struct wl1271_acx_ba_receiver_setup *acx;
 	int ret;
 
@@ -1473,14 +1451,13 @@ int wl1271_acx_set_ba_receiver_session(struct wl1271 *wl, u8 tid_index, u16 ssn,
 		goto out;
 	}
 
-	/* Single link for now */
-	acx->link_id = 1;
+	acx->hlid = peer_hlid;
 	acx->tid = tid_index;
 	acx->enable = enable;
-	acx->win_size = 0;
+	acx->win_size = RX_BA_WIN_SIZE;
 	acx->ssn = ssn;
 
-	ret = wl1271_cmd_configure(wl, ACX_BA_SESSION_RESPONDER_POLICY, acx,
+	ret = wl1271_cmd_configure(wl, ACX_BA_SESSION_RX_SETUP, acx,
 				   sizeof(*acx));
 	if (ret < 0) {
 		wl1271_warning("acx ba receiver session failed: %d", ret);
@@ -1490,9 +1467,6 @@ int wl1271_acx_set_ba_receiver_session(struct wl1271 *wl, u8 tid_index, u16 ssn,
 out:
 	kfree(acx);
 	return ret;
-#endif
-	wl1271_info("11n is currently not supported");
-	return 0;
 }
 
 int wl1271_acx_tsf_info(struct wl1271 *wl, u64 *mactime)
@@ -1521,24 +1495,71 @@ out:
 	return ret;
 }
 
-int wl1271_acx_max_tx_retry(struct wl1271 *wl)
+int wl1271_acx_ps_rx_streaming(struct wl1271 *wl, bool enable)
 {
-	struct wl1271_acx_max_tx_retry *acx = NULL;
+	struct wl1271_acx_ps_rx_streaming *rx_streaming;
+	u32 conf_queues, enable_queues;
+	int i, ret = 0;
+
+	wl1271_debug(DEBUG_ACX, "acx ps rx streaming");
+
+	rx_streaming = kzalloc(sizeof(*rx_streaming), GFP_KERNEL);
+	if (!rx_streaming) {
+		ret = -ENOMEM;
+		goto out;
+	}
+
+	conf_queues = wl->conf.rx_streaming.queues;
+	if (enable)
+		enable_queues = conf_queues;
+	else
+		enable_queues = 0;
+
+	for (i = 0; i < 8; i++) {
+		/*
+		 * Skip non-changed queues, to avoid redundant acxs.
+		 * this check assumes conf.rx_streaming.queues can't
+		 * be changed while rx_streaming is enabled.
+		 */
+		if (!(conf_queues & BIT(i)))
+			continue;
+
+		rx_streaming->role_id = wl->role_id;
+		rx_streaming->tid = i;
+		rx_streaming->enable = enable_queues & BIT(i);
+		rx_streaming->period = wl->conf.rx_streaming.interval;
+		rx_streaming->timeout = wl->conf.rx_streaming.interval;
+
+		ret = wl1271_cmd_configure(wl, ACX_PS_RX_STREAMING,
+					   rx_streaming,
+					   sizeof(*rx_streaming));
+		if (ret < 0) {
+			wl1271_warning("acx ps rx streaming failed: %d", ret);
+			goto out;
+		}
+	}
+out:
+	kfree(rx_streaming);
+	return ret;
+}
+
+int wl1271_acx_ap_max_tx_retry(struct wl1271 *wl)
+{
+	struct wl1271_acx_ap_max_tx_retry *acx = NULL;
 	int ret;
 
-	wl1271_debug(DEBUG_ACX, "acx max tx retry");
+	wl1271_debug(DEBUG_ACX, "acx ap max tx retry");
 
 	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
 	if (!acx)
 		return -ENOMEM;
 
 	acx->role_id = wl->role_id;
-	acx->max_tx_retry = cpu_to_le16(wl->conf.tx.ap_max_tx_retries);
+	acx->max_tx_retry = cpu_to_le16(wl->conf.tx.max_tx_retries);
 
-	ret = wl1271_cmd_configure(wl, ACX_MAX_TX_FAILURE, acx,
-				   sizeof(*acx));
+	ret = wl1271_cmd_configure(wl, ACX_MAX_TX_FAILURE, acx, sizeof(*acx));
 	if (ret < 0) {
-		wl1271_warning("acx max tx retry failed: %d", ret);
+		wl1271_warning("acx ap max tx retry failed: %d", ret);
 		goto out;
 	}
 
@@ -1602,6 +1623,46 @@ out:
 	return ret;
 }
 
+int wl1271_acx_fm_coex(struct wl1271 *wl)
+{
+	struct wl1271_acx_fm_coex *acx;
+	int ret;
+
+	wl1271_debug(DEBUG_ACX, "acx fm coex setting");
+
+	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
+	if (!acx) {
+		ret = -ENOMEM;
+		goto out;
+	}
+
+	acx->enable = wl->conf.fm_coex.enable;
+	acx->swallow_period = wl->conf.fm_coex.swallow_period;
+	acx->n_divider_fref_set_1 = wl->conf.fm_coex.n_divider_fref_set_1;
+	acx->n_divider_fref_set_2 = wl->conf.fm_coex.n_divider_fref_set_2;
+	acx->m_divider_fref_set_1 =
+		cpu_to_le16(wl->conf.fm_coex.m_divider_fref_set_1);
+	acx->m_divider_fref_set_2 =
+		cpu_to_le16(wl->conf.fm_coex.m_divider_fref_set_2);
+	acx->coex_pll_stabilization_time =
+		cpu_to_le32(wl->conf.fm_coex.coex_pll_stabilization_time);
+	acx->ldo_stabilization_time =
+		cpu_to_le16(wl->conf.fm_coex.ldo_stabilization_time);
+	acx->fm_disturbed_band_margin =
+		wl->conf.fm_coex.fm_disturbed_band_margin;
+	acx->swallow_clk_diff = wl->conf.fm_coex.swallow_clk_diff;
+
+	ret = wl1271_cmd_configure(wl, ACX_FM_COEX_CFG, acx, sizeof(*acx));
+	if (ret < 0) {
+		wl1271_warning("acx fm coex setting failed: %d", ret);
+		goto out;
+	}
+
+out:
+	kfree(acx);
+	return ret;
+}
+
 int wl1271_acx_set_rate_mgmt_params(struct wl1271 *wl)
 {
 	struct wl1271_acx_set_rate_mgmt_params *acx = NULL;
@@ -1648,4 +1709,44 @@ int wl1271_acx_set_rate_mgmt_params(struct wl1271 *wl)
 out:
 	kfree(acx);
 	return ret;
+}
+
+int wl1271_acx_config_hangover(struct wl1271 *wl)
+{
+	struct wl1271_acx_config_hangover *acx;
+	struct conf_hangover_settings *conf = &wl->conf.hangover;
+	int ret;
+
+	wl1271_debug(DEBUG_ACX, "acx config hangover");
+
+	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
+	if (!acx) {
+		ret = -ENOMEM;
+		goto out;
+	}
+
+	acx->recover_time = cpu_to_le32(conf->recover_time);
+	acx->hangover_period = conf->hangover_period;
+	acx->dynamic_mode = conf->dynamic_mode;
+	acx->early_termination_mode = conf->early_termination_mode;
+	acx->max_period = conf->max_period;
+	acx->min_period = conf->min_period;
+	acx->increase_delta = conf->increase_delta;
+	acx->decrease_delta = conf->decrease_delta;
+	acx->quiet_time = conf->quiet_time;
+	acx->increase_delta= conf->increase_time;
+	acx->window_size = acx->window_size;
+
+	ret = wl1271_cmd_configure(wl, ACX_CONFIG_HANGOVER, acx,
+				   sizeof(*acx));
+
+	if (ret < 0) {
+		wl1271_warning("acx config hangover failed: %d", ret);
+		goto out;
+	}
+
+out:
+	kfree(acx);
+	return ret;
+
 }

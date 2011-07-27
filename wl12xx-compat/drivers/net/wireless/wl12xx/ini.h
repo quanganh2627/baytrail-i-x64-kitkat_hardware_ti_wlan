@@ -24,6 +24,9 @@
 #ifndef __INI_H__
 #define __INI_H__
 
+#define GENERAL_SETTINGS_DRPW_LPD 0xc0
+#define SCRATCH_ENABLE_LPD        BIT(25)
+
 #define WL1271_INI_MAX_SMART_REFLEX_PARAM 16
 
 struct wl1271_ini_general_params {
@@ -174,7 +177,7 @@ struct wl128x_ini_fem_params_5 {
 #define WL1271_INI_LEGACY_NVS_FILE_SIZE              800
 
 struct wl1271_nvs_file {
-	/* NVS section */
+	/* NVS section - must be first! */
 	u8 nvs[WL1271_INI_NVS_SECTION_SIZE];
 
 	/* INI section */
@@ -195,7 +198,7 @@ struct wl1271_nvs_file {
 } __packed;
 
 struct wl128x_nvs_file {
-	/* NVS section */
+	/* NVS section - must be first! */
 	u8 nvs[WL1271_INI_NVS_SECTION_SIZE];
 
 	/* INI section */

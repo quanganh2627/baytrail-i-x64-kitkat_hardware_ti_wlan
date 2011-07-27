@@ -75,16 +75,6 @@ struct wl1271_static_data {
 #define CLK_REQ_OUTN_SEL       0x700
 
 /* PLL configuration algorithm for wl128x */
-#define CLOCK_TCXO_19_2_M      0
-#define CLOCK_TCXO_26_M        1
-#define CLOCK_TCXO_38_4_M      2
-#define CLOCK_TCXO_52_M        3
-#define CLOCK_TCXO_16_368_M    4
-#define CLOCK_TCXO_32_736_M    5
-#define CLOCK_TCXO_16_8_M      6
-#define CLOCK_TCXO_33_6_M      7
-
-
 #define SYS_CLK_CFG_REG              0x2200
 /* Bit[0]   -  0-TCXO,  1-FREF */
 #define MCS_PLL_CLK_SEL_FREF         BIT(0)
@@ -93,7 +83,6 @@ struct wl1271_static_data {
 #define WL_CLK_REQ_TYPE_PG2          (BIT(3) | BIT(2))
 /* Bit[4]   -  0-TCXO,  1-FREF */
 #define PRCM_CM_EN_MUX_WLAN_FREF     BIT(4)
-
 
 #define TCXO_ILOAD_INT_REG           0x2264
 #define TCXO_CLK_DETECT_REG          0x2266
@@ -118,6 +107,7 @@ struct wl1271_static_data {
 #define MCS_SEL_IN_FREQ_MASK         0x0070
 #define MCS_SEL_IN_FREQ_SHIFT        4
 #define MCS_PLL_CONFIG_REG_VAL       0x73
+#define MCS_PLL_ENABLE_HP            (BIT(0) | BIT(1))
 
 #define MCS_PLL_M_REG                0xD94
 #define MCS_PLL_N_REG                0xD96
@@ -125,12 +115,15 @@ struct wl1271_static_data {
 #define MCS_PLL_N_REG_VAL            0x07
 
 #define SDIO_IO_DS                   0xd14
-#define HCI_IO_DS_6MA                2
 
-#define HW_CONFIG_19_2_M             1
-#define HW_CONFIG_26_M               2
-#define HW_CONFIG_38_4_M             3
-#define HW_CONFIG_52_M               4
+/* SDIO/wSPI DS configuration values */
+enum {
+	HCI_IO_DS_8MA = 0,
+	HCI_IO_DS_4MA = 1, /* default */
+	HCI_IO_DS_6MA = 2,
+	HCI_IO_DS_2MA = 3,
+};
+
 /* end PLL configuration algorithm for wl128x */
 
 #endif

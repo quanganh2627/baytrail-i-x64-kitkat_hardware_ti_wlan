@@ -68,14 +68,6 @@
 
 #define WSPI_MAX_NUM_OF_CHUNKS (WL1271_AGGR_BUFFER_SIZE / WSPI_MAX_CHUNK_SIZE)
 
-/* When working with SPI block size not relevent*/
-#define TX_PAD_SDIO_BLK_SIZE                  0
-
-void wl1271_spi_set_block_size(struct wl1271 *wl)
-{
-	wl->block_size = TX_PAD_SDIO_BLK_SIZE;
-}
-
 static inline struct spi_device *wl_to_spi(struct wl1271 *wl)
 {
 	return wl->if_priv;
@@ -364,7 +356,7 @@ static struct wl1271_if_operations spi_ops = {
 	.dev		= wl1271_spi_wl_to_dev,
 	.enable_irq	= wl1271_spi_enable_interrupts,
 	.disable_irq	= wl1271_spi_disable_interrupts,
-	.set_block_size = wl1271_spi_set_block_size,
+	.set_block_size = NULL,
 };
 
 static int __devinit wl1271_probe(struct spi_device *spi)
@@ -372,6 +364,7 @@ static int __devinit wl1271_probe(struct spi_device *spi)
 	struct wl12xx_platform_data *pdata;
 	struct ieee80211_hw *hw;
 	struct wl1271 *wl;
+	unsigned long irqflags;
 	int ret;
 
 	pdata = spi->dev.platform_data;
@@ -410,6 +403,16 @@ static int __devinit wl1271_probe(struct spi_device *spi)
 
 	wl->ref_clock = pdata->board_ref_clock;
 	wl->tcxo_clock = pdata->board_tcxo_clock;
+	wl->platform_quirks = pdata->platform_quirks;
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,32)
+	irqflags = IRQF_TRIGGER_RISING;
+#else
+	if (wl->platform_quirks & WL12XX_PLATFORM_QUIRK_EDGE_IRQ)
+		irqflags = IRQF_TRIGGER_RISING;
+	else
+		irqflags = IRQF_TRIGGER_HIGH | IRQF_ONESHOT;
+#endif
 
 	wl->irq = spi->irq;
 	if (wl->irq < 0) {
@@ -418,9 +421,16 @@ static int __devinit wl1271_probe(struct spi_device *spi)
 		goto out_free;
 	}
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
+	ret = compat_request_threaded_irq(&wl->irq_compat, wl->irq,
+					  wl1271_hardirq, wl1271_irq,
+					  irqflags,
+					  DRIVER_NAME, wl);
+#else
 	ret = request_threaded_irq(wl->irq, wl1271_hardirq, wl1271_irq,
-				   IRQF_TRIGGER_HIGH | IRQF_ONESHOT,
+				   irqflags,
 				   DRIVER_NAME, wl);
+#endif
 	if (ret < 0) {
 		wl1271_error("request_irq() failed: %d", ret);
 		goto out_free;
@@ -436,12 +446,14 @@ static int __devinit wl1271_probe(struct spi_device *spi)
 	if (ret)
 		goto out_irq;
 
-	wl1271_notice("initialized");
-
 	return 0;
 
  out_irq:
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
+	compat_free_threaded_irq(&wl->irq_compat);
+#else
 	free_irq(wl->irq, wl);
+#endif
 
  out_free:
 	wl1271_free_hw(wl);
@@ -454,7 +466,12 @@ static int __devexit wl1271_remove(struct spi_device *spi)
 	struct wl1271 *wl = dev_get_drvdata(&spi->dev);
 
 	wl1271_unregister_hw(wl);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
+	compat_free_threaded_irq(&wl->irq_compat);
+	compat_destroy_threaded_irq(&wl->irq_compat);
+#else
 	free_irq(wl->irq, wl);
+#endif
 	wl1271_free_hw(wl);
 
 	return 0;
@@ -474,30 +491,19 @@ static struct spi_driver wl1271_spi_driver = {
 
 static int __init wl1271_init(void)
 {
-	int ret;
-
-	ret = spi_register_driver(&wl1271_spi_driver);
-	if (ret < 0) {
-		wl1271_error("failed to register spi driver: %d", ret);
-		goto out;
-	}
-
-out:
-	return ret;
+	return spi_register_driver(&wl1271_spi_driver);
 }
 
 static void __exit wl1271_exit(void)
 {
 	spi_unregister_driver(&wl1271_spi_driver);
-
-	wl1271_notice("unloaded");
 }
 
 module_init(wl1271_init);
 module_exit(wl1271_exit);
 
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Luciano Coelho <luciano.coelho@nokia.com>");
+MODULE_AUTHOR("Luciano Coelho <coelho@ti.com>");
 MODULE_AUTHOR("Juuso Oikarinen <juuso.oikarinen@nokia.com>");
 MODULE_FIRMWARE(WL1271_FW_NAME);
 MODULE_FIRMWARE(WL128X_FW_NAME);

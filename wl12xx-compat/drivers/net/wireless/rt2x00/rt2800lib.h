@@ -156,6 +156,7 @@ void rt2800_txdone(struct rt2x00_dev *rt2x00dev);
 void rt2800_txdone_entry(struct queue_entry *entry, u32 status);
 
 void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc);
+void rt2800_clear_beacon(struct queue_entry *entry);
 
 extern const struct rt2x00debug rt2800_rt2x00debug;
 
@@ -180,6 +181,7 @@ void rt2800_link_stats(struct rt2x00_dev *rt2x00dev, struct link_qual *qual);
 void rt2800_reset_tuner(struct rt2x00_dev *rt2x00dev, struct link_qual *qual);
 void rt2800_link_tuner(struct rt2x00_dev *rt2x00dev, struct link_qual *qual,
 		       const u32 count);
+void rt2800_gain_calibration(struct rt2x00_dev *rt2x00dev);
 
 int rt2800_enable_radio(struct rt2x00_dev *rt2x00dev);
 void rt2800_disable_radio(struct rt2x00_dev *rt2x00dev);

@@ -1,14 +1,14 @@
 
 [36mcompat-wireless code metrics[00m
 
-[35m    782984[00m - Total upstream lines of code being pulled
-[01;32m      2103[00m - backport code changes
-[01;32m      1843[00m - backport code additions
-[01;32m       260[00m - backport code deletions
-[01;32m      7279[00m - backport from compat module
-[01;32m      9382[00m - total backport code
-[31m    1.1982[00m - % of code consists of backport work
+[35m    874667[00m - Total upstream lines of code being pulled
+[01;32m      2210[00m - backport code changes
+[01;32m      1932[00m - backport code additions
+[01;32m       278[00m - backport code deletions
+[01;32m      8127[00m - backport from compat module
+[01;32m     10337[00m - total backport code
+[31m    1.1818[00m - % of code consists of backport work
 
-Base tree: [01;32mlinux-next.git[00m
-Base tree version: [35mnext-20110121[00m
-compat-wireless release: [01;33mcompat-wireless-2011-01-06-3-g8db1608[00m
+Base tree: [01;32mwl12xx.git[00m
+Base tree version: [35mv2.6.39-1163-gbce7ee3[00m
+compat-wireless release: [01;33mcompat-wireless-2011-05-19-2-gfd8090a[00m

@@ -384,10 +384,10 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
 	int i;
 	enum nl80211_channel_type orig_ct;
 
+	clear_bit(SDATA_STATE_RUNNING, &sdata->state);
+
 	if (local->scan_sdata == sdata)
 		ieee80211_scan_cancel(local);
-
-	clear_bit(SDATA_STATE_RUNNING, &sdata->state);
 
 	/*
 	 * Stop TX on this interface first.
@@ -454,7 +454,8 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
 	/* APs need special treatment */
 	if (sdata->vif.type == NL80211_IFTYPE_AP) {
 		struct ieee80211_sub_if_data *vlan, *tmpsdata;
-		struct beacon_data *old_beacon = sdata->u.ap.beacon;
+		struct beacon_data *old_beacon =
+			rtnl_dereference(sdata->u.ap.beacon);
 
 		/* sdata_running will return false, so this will disable */
 		ieee80211_bss_info_change_notify(sdata,
@@ -708,7 +709,7 @@ static const struct net_device_ops ieee80211_monitorif_ops = {
 static void ieee80211_if_setup(struct net_device *dev)
 {
 	ether_setup(dev);
-	dev->netdev_ops = &ieee80211_dataif_ops;
+	netdev_attach_ops(dev, &ieee80211_dataif_ops);
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29))
 	/* Do we need this ? */
 	/* we will validate the address ourselves in ->open */
@@ -860,7 +861,7 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
 	/* and set some type-dependent values */
 	sdata->vif.type = type;
 	sdata->vif.p2p = false;
-	sdata->dev->netdev_ops = &ieee80211_dataif_ops;
+	netdev_attach_ops(sdata->dev, &ieee80211_dataif_ops);
 	sdata->wdev.iftype = type;
 
 	sdata->control_port_protocol = cpu_to_be16(ETH_P_PAE);
@@ -899,7 +900,7 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
 		break;
 	case NL80211_IFTYPE_MONITOR:
 		sdata->dev->type = ARPHRD_IEEE80211_RADIOTAP;
-		sdata->dev->netdev_ops = &ieee80211_monitorif_ops;
+		netdev_attach_ops(sdata->dev, &ieee80211_monitorif_ops);
 		sdata->u.mntr_flags = MONITOR_FLAG_CONTROL |
 				      MONITOR_FLAG_OTHER_BSS;
 		break;
