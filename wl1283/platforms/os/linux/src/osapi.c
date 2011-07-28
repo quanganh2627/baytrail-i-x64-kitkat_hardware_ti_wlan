@@ -796,9 +796,10 @@ int os_SignalObjectWait (TI_HANDLE OsContext, void *signalObject)
     }
 	if (!wait_for_completion_timeout((struct completion *)signalObject, msecs_to_jiffies(10000))) 
     {
-		printk("os_SignalObjectWait: 10 sec %s timeout\n", __func__);
-	}
-   return TI_OK;
+	printk("os_SignalObjectWait: 10 sec %s timeout\n", __func__);
+        return TI_NOK;
+    }
+    return TI_OK;
 }
 
 
