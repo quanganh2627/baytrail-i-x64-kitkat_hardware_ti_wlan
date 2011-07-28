@@ -417,12 +417,6 @@ static void wlanDrvIf_DriverTask(struct work_struct *work)
     curr1 = check_stack_start(&base1, local_sp + 4, 0);
     #endif
 
-    /* you shall not pass!
-     * wait here until the work-queue is defrosted :)
-     * (see wlanDrvIf_Resume)
-     */
-    wait_event_interruptible(resume_wait, !atomic_read(&is_suspended));
-
     /* Call the driver main task */
     context_DriverTask (drv->tCommon.hContext);
 
@@ -1233,14 +1227,7 @@ static int wlanDrvIf_Suspend(TI_HANDLE hWlanDrvIf)
 	    	.out_buffer = NULL});
 	}
 
-	if (rc == TI_OK)
-	{
-	  /* freeze the wlan work-queue */
-	  flush_workqueue(pDrvStaticHandle->tiwlan_wq); /* clean up any leftover work */
-	  atomic_set(&is_suspended, 1); /* effectively freeze the work-queue until resumed */
-	}
-	else
-	  {
+	if (rc != TI_OK) {
 	    /*
 	     * if failed to suspend, prevent the kernel from suspending again
 	     * for 1 second, to allow the supplicant to react to any events
@@ -1249,6 +1236,7 @@ static int wlanDrvIf_Suspend(TI_HANDLE hWlanDrvIf)
 		pWlanDrvIf->bSuspendInProgress = TI_FALSE;
 		os_wake_lock_timeout_enable(pWlanDrvIf);
 		os_wake_lock_timeout(pWlanDrvIf);
+		enable_irq(pWlanDrvIf->irq);
 	  }
 
 	/* on error, kernel will retry to suspend until it succeeds */
@@ -1266,13 +1254,6 @@ static int wlanDrvIf_Resume(TI_HANDLE hWlanDrvIf)
 	TI_STATUS      rc         = TI_OK;
 
 	printk(KERN_INFO "TIWLAN: resuming\n");
-
-	/* prepare the sdio before the work-queue is un-freezed and starts sending transactions */
-	sdioAdapt_PrepareResume();
-
-	printk(KERN_DEBUG "TIWLAN: un-freezing work-queue\n");
-	atomic_set(&is_suspended, 0); /* allow the work-queue to.. well, umm.. work */
-	wake_up(&resume_wait); /* and make sure it's up! */
 
 	/* issue resume command */
 	if (pWlanDrvIf->eResumeCmd != LAST_CMD)
@@ -1354,7 +1335,7 @@ TI_BOOL wlanDrvIf_IsCmdEnabled(TI_HANDLE hWlanDrvIf, TI_UINT32 uCmd)
 	switch (pWlanDrvIf->tCommon.eDriverState)
 	{
 	case DRV_STATE_RUNNING:
-		bEnabled = TI_TRUE;
+		bEnabled = (uCmd != DRIVER_START_PARAM); /* reject START when driver is running (accepted when driver is stopped) */
 		break;
 	case DRV_STATE_FAILED:
 	case DRV_STATE_STOPING:
