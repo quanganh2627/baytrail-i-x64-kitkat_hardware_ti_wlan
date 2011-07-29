@@ -12,7 +12,7 @@ TI_HOSTAPD_LIB ?= y
 WILINK_ROOT = ../..
 CUDK_ROOT ?= $(WILINK_ROOT)/CUDK
 CU_ROOT = $(CUDK_ROOT)/configurationutility
-WPA_SUPPL_DIR_INCLUDE = $(TARGET_OUT_HEADERS)/wpa_supplicant_6
+SUPPL_PATH ?= external/wpa_supplicant_6
 
 ifeq ($(DEBUG),y)
  DEBUGFLAGS = -O2 -g -DDEBUG -DTI_DBG -fno-builtin   # "-O" is needed to expand inlines
@@ -67,7 +67,15 @@ LOCAL_C_INCLUDES = \
 	$(LOCAL_PATH)/$(KERNEL_DIR)/include \
 	$(LOCAL_PATH)/$(WILINK_ROOT)/TWD/FW_Transfer/Export_Inc \
 	$(CUDK_ROOT)/$(TI_SUPP_LIB_DIR) \
-        $(WPA_SUPPL_DIR_INCLUDE)
+	$(SUPPL_PATH)/wpa_supplicant/ \
+	$(SUPPL_PATH)/wpa_supplicant/src/ \
+	$(SUPPL_PATH)/wpa_supplicant/src/common \
+	$(SUPPL_PATH)/wpa_supplicant/src/eap_peer \
+	$(SUPPL_PATH)/wpa_supplicant/src/drivers \
+	$(SUPPL_PATH)/wpa_supplicant/src/l2_packet \
+	$(SUPPL_PATH)/wpa_supplicant/src/utils \
+	$(SUPPL_PATH)/wpa_supplicant/src/wps \
+	$(SUPPL_PATH)/wpa_supplicant/src/eap_peer 
 
 LOCAL_SRC_FILES:= \
 	src/console.c \
