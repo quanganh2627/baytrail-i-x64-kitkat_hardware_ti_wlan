@@ -325,13 +325,13 @@ CONTEXT:
 S32 os_sscanf(const PS8 str, const PS8 arg_list, ...)
 {
     va_list ap;
-    S8 msg[MAX_HOST_MESSAGE_SIZE];
+    S32 ret_val;
 
     va_start(ap, arg_list);
-    vsprintf((char*)msg, (char*)arg_list, ap);
+    ret_val = vsscanf((const char *)str, (const char *)arg_list, ap);
     va_end(ap);
 
-    return sscanf((char*)str, (char*)msg);
+    return ret_val;
 }
 
 /************************************************************************
