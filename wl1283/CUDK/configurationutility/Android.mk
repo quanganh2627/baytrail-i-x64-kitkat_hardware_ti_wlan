@@ -3,7 +3,6 @@ include $(CLEAR_VARS)
 
 STATIC_LIB ?= y
 DEBUG ?= y
-BUILD_SUPPL = y
 WPA_ENTERPRISE ?= y
 
 WILINK_ROOT = ../..
@@ -16,17 +15,11 @@ endif
 
 ifeq ($(WPA_SUPPLICANT_VERSION),VER_0_5_X)
 WPA_SUPPL_DIR = external/wpa_supplicant
-else
-WPA_SUPPL_DIR = external/wpa_supplicant_6/wpa_supplicant
-endif
 WPA_SUPPL_DIR_INCLUDE = $(WPA_SUPPL_DIR)
+endif
+
 ifeq ($(WPA_SUPPLICANT_VERSION),VER_0_6_X)
-WPA_SUPPL_DIR_INCLUDE += $(WPA_SUPPL_DIR)/src \
-	$(WPA_SUPPL_DIR)/src/common \
-	$(WPA_SUPPL_DIR)/src/drivers \
-	$(WPA_SUPPL_DIR)/src/l2_packet \
-	$(WPA_SUPPL_DIR)/src/utils \
-	$(WPA_SUPPL_DIR)/src/wps
+WPA_SUPPL_DIR_INCLUDE = $(TARGET_OUT_HEADERS)/wpa_supplicant_6
 endif
 
 ifeq ($(DEBUG),y)
@@ -54,15 +47,6 @@ DK_DEFINES += -D SUPPL_WPS_SUPPORT
 endif
 
 #DK_DEFINES += -D NO_WPA_SUPPL
-
-#Supplicant image building
-ifeq ($(BUILD_SUPPL), y)
-DK_DEFINES += -D WPA_SUPPLICANT -D CONFIG_CTRL_IFACE -D CONFIG_CTRL_IFACE_UNIX
--include $(WPA_SUPPL_DIR)/.config
-ifdef CONFIG_WPS
-	DK_DEFINES += -DCONFIG_WPS
-endif
-endif
 
 ARMFLAGS = -fno-common -g #-fno-builtin -Wall #-pipe
 
@@ -100,10 +84,6 @@ LOCAL_LDLIBS += -lpthread
 LOCAL_STATIC_LIBRARIES = \
 	libtiOsLib
 
-ifeq ($(BUILD_SUPPL), y)
-LOCAL_SHARED_LIBRARIES = \
-	libwpa_client
-endif
 
 LOCAL_MODULE:= wlan_cu
 LOCAL_MODULE_TAGS := optional
