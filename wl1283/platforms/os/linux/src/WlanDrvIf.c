@@ -1077,6 +1077,32 @@ static void wlanDrvIf_Destroy (TWlanDrvIfObj *drv)
 }
 
 
+
+/**
+ * \fn     wlanDrvIf_IsChipPresent
+ * \brief  check if wifi chip is present
+ *
+ * This function check the wifi chip presence
+ *
+ * \note
+ * \param  void
+ * \return Init: 1 - chip present, 0 - chip not pesent.
+ * \sa     wlanDrvIf_IsChipPresent
+ */
+static int  wlanDrvIf_IsChipPresent (void)
+{
+  int rc = 0;
+
+  if(!hPlatform_DevicePowerOn()) {
+    rc = 1;
+    hPlatform_DevicePowerOff();
+  }
+
+  return rc;
+}
+
+
+
 /** 
  * \fn     wlanDrvIf_ModuleInit  &  wlanDrvIf_ModuleExit
  * \brief  Linux Init/Exit functions
@@ -1091,16 +1117,33 @@ static void wlanDrvIf_Destroy (TWlanDrvIfObj *drv)
 
 static int __init wlanDrvIf_ModuleInit (void)
 {
-    printk(KERN_INFO "TIWLAN: driver init\n");
+  int rc = -1;
+
+  printk(KERN_INFO "TIWLAN: driver init\n");
+
 #ifndef SDIO_KERNEL_MODULE
     sdioDrv_init();
 #endif
-    return wlanDrvIf_Create ();
+
+    if(!wlanDrvIf_Create ()) {
+      if(wlanDrvIf_IsChipPresent()) {
+	printk(KERN_INFO "TIWLAN: wifi chip detected\n");
+	rc = 0;
+      }
+      else {
+	printk(KERN_INFO "TIWLAN: wifi chip not detected\n");
+      }
+    }
+
+    if(rc)
+      wlanDrvIf_Destroy (pDrvStaticHandle);
+
+  return rc;
 }
 
 static void __exit wlanDrvIf_ModuleExit (void)
 {
-    wlanDrvIf_Destroy (pDrvStaticHandle);
+  wlanDrvIf_Destroy (pDrvStaticHandle);
 #ifndef SDIO_KERNEL_MODULE
     sdioDrv_exit();
 #endif
@@ -1108,7 +1151,8 @@ static void __exit wlanDrvIf_ModuleExit (void)
 }
 
 
-/** 
+
+/**
  * \fn     wlanDrvIf_StopTx
  * \brief  block Tx thread until wlanDrvIf_ResumeTx called .
  * 
