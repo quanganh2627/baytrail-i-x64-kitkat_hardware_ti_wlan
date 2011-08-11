@@ -33,8 +33,7 @@ const char CU_calibration_cmd[] = \
 		"/ w f 2\n" \
 		"/ w l 2\n" \
 		"/ t r h 0 7\n" \
-		"/ t b b 375 128 0\n" \
-		"/ t b t 1 0 0 0 0 0 0 0\n" \
+		"/ t b t 1 1 1 1 1 1 1 1\n" \
 		"/ q\n";
 
 #define LOG_TAG "wlan_prov"
