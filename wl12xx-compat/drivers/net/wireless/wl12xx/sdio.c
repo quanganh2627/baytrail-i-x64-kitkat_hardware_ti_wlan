@@ -171,14 +171,14 @@ static int wl1271_sdio_power_on(struct wl1271 *wl)
 
 	/* If enabled, tell runtime PM not to power off the card */
 	if (pm_runtime_enabled(&func->dev)) {
-	ret = pm_runtime_get_sync(&func->dev);
+		ret = pm_runtime_get_sync(&func->dev);
 		if (ret)
-		goto out;
+			goto out;
 	} else {
 		/* Runtime PM is disabled: power up the card manually */
-	ret = mmc_power_restore_host(func->card->host);
-	if (ret < 0)
-		goto out;
+		ret = mmc_power_restore_host(func->card->host);
+		if (ret < 0)
+			goto out;
 	}
 
 	sdio_claim_host(func);
@@ -283,14 +283,14 @@ static int __devinit wl1271_probe(struct sdio_func *func,
 	ret = enable_irq_wake(wl->irq);
 	if (!ret) {
 		wl->irq_wake_enabled = true;
-	device_init_wakeup(wl1271_sdio_wl_to_dev(wl), 1);
+		device_init_wakeup(wl1271_sdio_wl_to_dev(wl), 1);
 
-	/* if sdio can keep power while host is suspended, enable wow */
-	mmcflags = sdio_get_host_pm_caps(func);
-	wl1271_debug(DEBUG_SDIO, "sdio PM caps = 0x%x", mmcflags);
+		/* if sdio can keep power while host is suspended, enable wow */
+		mmcflags = sdio_get_host_pm_caps(func);
+		wl1271_debug(DEBUG_SDIO, "sdio PM caps = 0x%x", mmcflags);
 
-	if (mmcflags & MMC_PM_KEEP_POWER)
-		hw->wiphy->wowlan.flags = WIPHY_WOWLAN_ANY;
+		if (mmcflags & MMC_PM_KEEP_POWER)
+			hw->wiphy->wowlan.flags = WIPHY_WOWLAN_ANY;
 	}
 	disable_irq(wl->irq);
 
@@ -327,8 +327,8 @@ static void __devexit wl1271_remove(struct sdio_func *func)
 
 	wl1271_unregister_hw(wl);
 	if (wl->irq_wake_enabled) {
-	device_init_wakeup(wl1271_sdio_wl_to_dev(wl), 0);
-	disable_irq_wake(wl->irq);
+		device_init_wakeup(wl1271_sdio_wl_to_dev(wl), 0);
+		disable_irq_wake(wl->irq);
 	}
 	free_irq(wl->irq, wl);
 	wl1271_free_hw(wl);

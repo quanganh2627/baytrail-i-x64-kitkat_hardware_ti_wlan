@@ -319,6 +319,41 @@ static const struct file_operations start_recovery_ops = {
 	.llseek = default_llseek,
 };
 
+static ssize_t dynamic_ps_timeout_write(struct file *file,
+				    const char __user *user_buf,
+				    size_t count, loff_t *ppos)
+{
+	struct wl1271 *wl = file->private_data;
+	char buf[10];
+	size_t len;
+	unsigned long value;
+	int ret;
+
+	len = min(count, sizeof(buf) - 1);
+	if (copy_from_user(buf, user_buf, len)) {
+		return -EFAULT;
+	}
+	buf[len] = '\0';
+
+	ret = kstrtoul(buf, 0, &value);
+	if (ret < 0) {
+		wl1271_warning("illegal value in dynamic_ps");
+		return -EINVAL;
+	}
+
+	mutex_lock(&wl->mutex);
+	ieee80211_set_dyn_ps_timeout(wl->vif, value);
+	mutex_unlock(&wl->mutex);
+
+	return count;
+}
+
+static const struct file_operations dynamic_ps_timeout_ops = {
+	.write = dynamic_ps_timeout_write,
+	.open = wl1271_open_file_generic,
+	.llseek = default_llseek,
+};
+
 static ssize_t driver_state_read(struct file *file, char __user *user_buf,
 				 size_t count, loff_t *ppos)
 {
@@ -339,6 +374,7 @@ static ssize_t driver_state_read(struct file *file, char __user *user_buf,
 #define DRIVER_STATE_PRINT_HEX(x)  DRIVER_STATE_PRINT(x, "0x%x")
 
 	DRIVER_STATE_PRINT_INT(tx_blocks_available);
+	DRIVER_STATE_PRINT_INT(tx_allocated_blocks);
 	DRIVER_STATE_PRINT_INT(tx_allocated_pkts[0]);
 	DRIVER_STATE_PRINT_INT(tx_allocated_pkts[1]);
 	DRIVER_STATE_PRINT_INT(tx_allocated_pkts[2]);
@@ -657,6 +693,48 @@ static const struct file_operations rx_streaming_always_ops = {
 	.llseek = default_llseek,
 };
 
+static ssize_t beacon_filtering_write(struct file *file,
+				      const char __user *user_buf,
+				      size_t count, loff_t *ppos)
+{
+	struct wl1271 *wl = file->private_data;
+	char buf[10];
+	size_t len;
+	unsigned long value;
+	int ret;
+
+	len = min(count, sizeof(buf) - 1);
+	if (copy_from_user(buf, user_buf, len))
+		return -EFAULT;
+	buf[len] = '\0';
+
+	ret = kstrtoul(buf, 0, &value);
+	if (ret < 0) {
+		wl1271_warning("illegal value for beacon_filtering!");
+		return -EINVAL;
+	}
+
+	mutex_lock(&wl->mutex);
+
+	ret = wl1271_ps_elp_wakeup(wl);
+	if (ret < 0)
+		goto out;
+
+	ret = wl1271_acx_beacon_filter_opt(wl, !!value);
+
+	wl1271_ps_elp_sleep(wl);
+out:
+	mutex_unlock(&wl->mutex);
+	return count;
+}
+
+static const struct file_operations beacon_filtering_ops = {
+	.write = beacon_filtering_write,
+	.open = wl1271_open_file_generic,
+	.llseek = default_llseek,
+};
+
+
 static ssize_t fwlog_enable_read(struct file *file, char __user *user_buf,
 		size_t count, loff_t *ppos)
 {
@@ -827,10 +905,12 @@ static int wl1271_debugfs_add_files(struct wl1271 *wl,
 
 	DEBUGFS_ADD(gpio_power, rootdir);
 	DEBUGFS_ADD(start_recovery, rootdir);
+	DEBUGFS_ADD(dynamic_ps_timeout, rootdir);
 	DEBUGFS_ADD(driver_state, rootdir);
 	DEBUGFS_ADD(dtim_interval, rootdir);
 	DEBUGFS_ADD(beacon_interval, rootdir);
 	DEBUGFS_ADD(fwlog_enable, rootdir);
+	DEBUGFS_ADD(beacon_filtering, rootdir);
 
 	streaming = debugfs_create_dir("rx_streaming", rootdir);
 	if (!streaming || IS_ERR(streaming))

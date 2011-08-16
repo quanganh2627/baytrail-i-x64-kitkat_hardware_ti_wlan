@@ -1106,6 +1106,9 @@ enum ieee80211_tkip_key_type {
  *	stations based on the PM bit of incoming frames.
  *	Use ieee80211_start_ps()/ieee8021_end_ps() to manually configure
  *	the PS mode of connected stations.
+ *
+ * @IEEE80211_HW_TX_AMPDU_IN_HW_ONLY: The device handles TX aggregation
+ *	strictly in HW. Packets should not be aggregated in software.
  */
 enum ieee80211_hw_flags {
 	IEEE80211_HW_HAS_RATE_CONTROL			= 1<<0,
@@ -1131,6 +1134,7 @@ enum ieee80211_hw_flags {
 	IEEE80211_HW_SUPPORTS_CQM_RSSI			= 1<<20,
 	IEEE80211_HW_SUPPORTS_PER_STA_GTK		= 1<<21,
 	IEEE80211_HW_AP_LINK_PS				= 1<<22,
+	IEEE80211_HW_TX_AMPDU_IN_HW_ONLY		= 1<<23,
 };
 
 /**
@@ -2820,6 +2824,14 @@ struct ieee80211_sta *ieee80211_find_sta_by_ifaddr(struct ieee80211_hw *hw,
 					       const u8 *addr,
 					       const u8 *localaddr);
 
+void ieee80211_iterate_sta(
+			   struct ieee80211_vif *vif,
+			   void (*iterator)(struct ieee80211_hw *hw,
+					    struct ieee80211_vif *vif,
+					    struct ieee80211_sta *sta,
+					    void *data),
+			   void *data);
+
 /**
  * ieee80211_sta_block_awake - block station from waking up
  * @hw: the hardware
@@ -2934,6 +2946,9 @@ void ieee80211_enable_dyn_ps(struct ieee80211_vif *vif);
  * monitoring is configured with an rssi threshold, the driver will inform
  * whenever the rssi level reaches the threshold.
  */
+
+void ieee80211_set_dyn_ps_timeout(struct ieee80211_vif *vif, int timeout);
+
 void ieee80211_cqm_rssi_notify(struct ieee80211_vif *vif,
 			       enum nl80211_cqm_rssi_threshold_event rssi_event,
 			       gfp_t gfp);

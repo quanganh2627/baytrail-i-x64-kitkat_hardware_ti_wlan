@@ -1205,7 +1205,7 @@ struct wl1271_acx_config_hangover {
 	u8 increase_time;
 	u8 window_size;
 	u8 padding[2];
-} __packed;
+}__packed;
 
 enum {
 	ACX_WAKE_UP_CONDITIONS      = 0x0002,

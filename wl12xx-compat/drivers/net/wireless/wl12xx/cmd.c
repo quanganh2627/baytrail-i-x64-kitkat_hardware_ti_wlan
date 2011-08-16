@@ -721,8 +721,8 @@ int wl1271_cmd_role_start_ap(struct wl1271 *wl)
 	/* We use a visible SSID if the beacon SSID is non-zero */
 	if (wl->ssid_len > 0) {
 		cmd->ap.ssid_type = WL1271_SSID_TYPE_PUBLIC;
-	cmd->ap.ssid_len = wl->ssid_len;
-	memcpy(cmd->ap.ssid, wl->ssid, wl->ssid_len);
+		cmd->ap.ssid_len = wl->ssid_len;
+		memcpy(cmd->ap.ssid, wl->ssid, wl->ssid_len);
 	} else {
 		cmd->ap.ssid_type = WL1271_SSID_TYPE_HIDDEN;
 		cmd->ap.ssid_len = bss_conf->ssid_len;
@@ -1683,7 +1683,7 @@ int wl1271_croc(struct wl1271 *wl, u8 role_id)
 	__clear_bit(role_id, wl->roc_map);
 	roc_role = find_first_bit(wl->roc_map, WL1271_MAX_ROLES);
 	if (roc_role >= WL1271_MAX_ROLES)
-	clear_bit(WL1271_FLAG_ROC, &wl->flags);
+		clear_bit(WL1271_FLAG_ROC, &wl->flags);
 
 out:
 	return ret;
@@ -1763,6 +1763,64 @@ int wl12xx_cmd_stop_fwlog(struct wl1271 *wl)
 	ret = wl1271_cmd_send(wl, CMD_STOP_FWLOGGER, cmd, sizeof(*cmd), 0);
 	if (ret < 0) {
 		wl1271_error("failed to send stop firmware logger command");
+		goto out_free;
+	}
+
+out_free:
+	kfree(cmd);
+
+out:
+	return ret;
+}
+
+int wl12xx_cmd_channel_switch(struct wl1271 *wl,
+			      struct ieee80211_channel_switch *ch_switch)
+{
+	struct wl12xx_cmd_channel_switch *cmd;
+	int ret;
+
+	wl1271_debug(DEBUG_ACX, "cmd channel switch");
+
+	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
+	if (!cmd) {
+		ret = -ENOMEM;
+		goto out;
+	}
+
+	cmd->channel = ch_switch->channel->hw_value;
+	cmd->switch_time = ch_switch->count;
+	cmd->tx_suspend = ch_switch->block_tx;
+	cmd->flush = 0;
+
+	ret = wl1271_cmd_send(wl, CMD_CHANNEL_SWITCH, cmd, sizeof(*cmd), 0);
+	if (ret < 0) {
+		wl1271_error("failed to send channel switch command");
+		goto out_free;
+	}
+
+out_free:
+	kfree(cmd);
+
+out:
+	return ret;
+}
+
+int wl12xx_cmd_stop_channel_switch(struct wl1271 *wl)
+{
+	struct wl12xx_cmd_stop_channel_switch *cmd;
+	int ret;
+
+	wl1271_debug(DEBUG_ACX, "cmd stop channel switch");
+
+	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
+	if (!cmd) {
+		ret = -ENOMEM;
+		goto out;
+	}
+
+	ret = wl1271_cmd_send(wl, CMD_STOP_CHANNEL_SWICTH, cmd, sizeof(*cmd), 0);
+	if (ret < 0) {
+		wl1271_error("failed to stop channel switch command");
 		goto out_free;
 	}
 

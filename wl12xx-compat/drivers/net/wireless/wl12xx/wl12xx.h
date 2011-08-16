@@ -198,6 +198,12 @@ enum wl1271_state {
 	WL1271_STATE_PLT,
 };
 
+enum wl12xx_fw_type {
+	WL12XX_FW_TYPE_NONE,
+	WL12XX_FW_TYPE_NORMAL,
+	WL12XX_FW_TYPE_PLT,
+};
+
 enum wl1271_partition_type {
 	PART_DOWN,
 	PART_WORK,
@@ -374,6 +380,7 @@ enum wl12xx_flags {
 	WL1271_FLAG_SOFT_GEMINI,
 	WL1271_FLAG_RX_STREAMING_STARTED,
 	WL1271_FLAG_RECOVERY_IN_PROGRESS,
+	WL1271_FLAG_CS_PROGRESS,
 };
 
 struct wl1271_link {
@@ -385,6 +392,9 @@ struct wl1271_link {
 	u8 prev_freed_pkts;
 
 	u8 addr[ETH_ALEN];
+
+	/* bitmap of TIDs where RX BA sessions are active for this link */
+	u8 ba_bitmap;
 };
 
 struct wl1271 {
@@ -403,6 +413,7 @@ struct wl1271 {
 	spinlock_t wl_lock;
 
 	enum wl1271_state state;
+	enum wl12xx_fw_type fw_type;
 	struct mutex mutex;
 
 	unsigned long flags;
@@ -663,9 +674,13 @@ struct wl1271 {
 
 	/* AP-mode - number of currently connected stations */
 	int active_sta_count;
+
+	/* AP-mode - work to add stations back on AP reconfig */
+	struct work_struct ap_start_work;
 };
 
 struct wl1271_station {
+	bool added;
 	u8 hlid;
 };
 

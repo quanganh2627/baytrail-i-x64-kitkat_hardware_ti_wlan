@@ -70,15 +70,13 @@ int wl1271_sta_init_templates_config(struct wl1271 *wl)
 		return ret;
 
 	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_PROBE_RESPONSE, NULL,
-				      sizeof
-				      (struct wl12xx_probe_resp_template),
+				      WL1271_CMD_TEMPL_DFLT_SIZE,
 				      0, WL1271_RATE_AUTOMATIC);
 	if (ret < 0)
 		return ret;
 
 	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_BEACON, NULL,
-				      sizeof
-				      (struct wl12xx_beacon_template),
+				      WL1271_CMD_TEMPL_DFLT_SIZE,
 				      0, WL1271_RATE_AUTOMATIC);
 	if (ret < 0)
 		return ret;
@@ -198,15 +196,13 @@ static int wl1271_ap_init_templates_config(struct wl1271 *wl)
 	 * reserve memory for later.
 	 */
 	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_AP_PROBE_RESPONSE, NULL,
-				      sizeof
-				      (struct wl12xx_probe_resp_template),
+				      WL1271_CMD_TEMPL_MAX_SIZE,
 				      0, WL1271_RATE_AUTOMATIC);
 	if (ret < 0)
 		return ret;
 
 	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_AP_BEACON, NULL,
-				      sizeof
-				      (struct wl12xx_beacon_template),
+				      WL1271_CMD_TEMPL_MAX_SIZE,
 				      0, WL1271_RATE_AUTOMATIC);
 	if (ret < 0)
 		return ret;

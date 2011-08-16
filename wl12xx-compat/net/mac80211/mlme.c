@@ -394,6 +394,9 @@ static void ieee80211_chswitch_work(struct work_struct *work)
 		/* call "hw_config" only if doing sw channel switch */
 		ieee80211_hw_config(sdata->local,
 			IEEE80211_CONF_CHANGE_CHANNEL);
+	} else {
+		/* update the device channel without trigger the driver */
+		sdata->local->hw.conf.channel = sdata->local->oper_channel;
 	}
 
 	/* XXX: shouldn't really modify cfg80211-owned data! */
@@ -559,6 +562,26 @@ void ieee80211_disable_dyn_ps(struct ieee80211_vif *vif)
 			     &local->dynamic_ps_enable_work);
 }
 EXPORT_SYMBOL(ieee80211_disable_dyn_ps);
+
+void ieee80211_set_dyn_ps_timeout(struct ieee80211_vif *vif, int timeout)
+{
+	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+	struct ieee80211_local *local = sdata->local;
+
+	WARN_ON(sdata->vif.type != NL80211_IFTYPE_STATION ||
+		!(local->hw.flags & IEEE80211_HW_SUPPORTS_PS) ||
+		(local->hw.flags & IEEE80211_HW_SUPPORTS_DYNAMIC_PS));
+
+	if (WARN_ON(timeout < 0))
+		return;
+
+	if (!timeout)
+		timeout = 100;
+
+	local->dynamic_ps_user_timeout = timeout;
+	local->hw.conf.dynamic_ps_timeout = timeout;
+}
+EXPORT_SYMBOL(ieee80211_set_dyn_ps_timeout);
 
 /* powersave */
 static void ieee80211_enable_ps(struct ieee80211_local *local,
@@ -912,6 +935,7 @@ static void ieee80211_sta_wmm_params(struct ieee80211_local *local,
 			    params.aifs, params.cw_min, params.cw_max,
 			    params.txop, params.uapsd);
 #endif
+		local->tx_conf[queue] = params;
 		if (drv_conf_tx(local, queue, &params))
 			wiphy_debug(local->hw.wiphy,
 				    "failed to set TX queue parameters for queue %d\n",
@@ -1474,10 +1498,14 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
 
 	ifmgd->aid = aid;
 
-	sta = sta_info_alloc(sdata, cbss->bssid, GFP_KERNEL);
-	if (!sta) {
-		printk(KERN_DEBUG "%s: failed to alloc STA entry for"
-		       " the AP\n", sdata->name);
+	mutex_lock(&sdata->local->sta_mtx);
+	/*
+	 * station info was already allocated and inserted before
+	 * the association and should be available to us
+	 */
+	sta = sta_info_get_rx(sdata, cbss->bssid);
+	if (WARN_ON(!sta)) {
+		mutex_unlock(&sdata->local->sta_mtx);
 		return false;
 	}
 
@@ -1548,8 +1576,10 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
 	if (elems.wmm_param)
 		set_sta_flags(sta, WLAN_STA_WME);
 
-	err = sta_info_insert(sta);
+	err = sta_info_insert_notify(sta);
 	sta = NULL;
+	/* sta_info_insert_notify changed the mutex lock with rcu lock */
+	rcu_read_unlock();
 	if (err) {
 		printk(KERN_DEBUG "%s: failed to insert STA entry for"
 		       " the AP (error %d)\n", sdata->name, err);
@@ -2366,15 +2396,43 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
 	return 0;
 }
 
+/* create and insert a dummy station entry */
+static int ieee80211_pre_assoc(struct ieee80211_sub_if_data *sdata,
+				u8 *bssid) {
+	struct sta_info *sta;
+	int err;
+
+	sta = sta_info_alloc(sdata, bssid, GFP_KERNEL);
+	if (!sta) {
+		printk(KERN_DEBUG "%s: failed to alloc STA entry for"
+			   " the AP\n", sdata->name);
+		return -ENOMEM;
+	}
+
+	sta->dummy = true;
+
+	err = sta_info_insert(sta);
+	sta = NULL;
+	if (err) {
+		printk(KERN_DEBUG "%s: failed to insert Dummy STA entry for"
+		       " the AP (error %d)\n", sdata->name, err);
+		return err;
+	}
+
+	return 0;
+}
+
 static enum work_done_result ieee80211_assoc_done(struct ieee80211_work *wk,
 						  struct sk_buff *skb)
 {
 	struct ieee80211_mgmt *mgmt;
 	struct ieee80211_rx_status *rx_status;
 	struct ieee802_11_elems elems;
+	struct cfg80211_bss *cbss = wk->assoc.bss;
 	u16 status;
 
 	if (!skb) {
+		sta_info_destroy_addr(wk->sdata, cbss->bssid);
 		cfg80211_send_assoc_timeout(wk->sdata->dev, wk->filter_ta);
 		return WORK_DONE_DESTROY;
 	}
@@ -2400,12 +2458,16 @@ static enum work_done_result ieee80211_assoc_done(struct ieee80211_work *wk,
 		if (!ieee80211_assoc_success(wk, mgmt, skb->len)) {
 			mutex_unlock(&wk->sdata->u.mgd.mtx);
 			/* oops -- internal error -- send timeout for now */
+			sta_info_destroy_addr(wk->sdata, cbss->bssid);
 			cfg80211_send_assoc_timeout(wk->sdata->dev,
 						    wk->filter_ta);
 			return WORK_DONE_DESTROY;
 		}
 
 		mutex_unlock(&wk->sdata->u.mgd.mtx);
+	} else {
+		/* assoc failed - destroy the dummy station entry */
+		sta_info_destroy_addr(wk->sdata, cbss->bssid);
 	}
 
 	cfg80211_send_rx_assoc(wk->sdata->dev, skb->data, skb->len);
@@ -2419,7 +2481,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
 	struct ieee80211_bss *bss = (void *)req->bss->priv;
 	struct ieee80211_work *wk;
 	const u8 *ssid;
-	int i;
+	int i, err;
 
 	mutex_lock(&ifmgd->mtx);
 	if (ifmgd->associated) {
@@ -2443,6 +2505,16 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
 	wk = kzalloc(sizeof(*wk) + req->ie_len, GFP_KERNEL);
 	if (!wk)
 		return -ENOMEM;
+
+	/*
+	 * create a dummy station info entry in order
+	 * to start accepting incoming EAPOL packets from the station
+	 */
+	err = ieee80211_pre_assoc(sdata, req->bss->bssid);
+	if (err) {
+		kfree(wk);
+		return err;
+	}
 
 	ifmgd->flags &= ~IEEE80211_STA_DISABLE_11N;
 	ifmgd->flags &= ~IEEE80211_STA_NULLFUNC_ACKED;
@@ -2650,6 +2722,25 @@ int ieee80211_mgd_disassoc(struct ieee80211_sub_if_data *sdata,
 	return 0;
 }
 
+int ieee80211_disassoc_only(struct ieee80211_sub_if_data *sdata)
+{
+	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+
+	mutex_lock(&ifmgd->mtx);
+
+	if (!ifmgd->associated) {
+		mutex_unlock(&ifmgd->mtx);
+		return -ENOLINK;
+	}
+
+	printk(KERN_DEBUG "%s: disassociating from %pM (for roaming)\n",
+	       sdata->name, ifmgd->bssid);
+
+	ieee80211_set_disassoc(sdata, true, false);
+
+	mutex_unlock(&ifmgd->mtx);
+	return 0;
+}
 void ieee80211_cqm_rssi_notify(struct ieee80211_vif *vif,
 			       enum nl80211_cqm_rssi_threshold_event rssi_event,
 			       gfp_t gfp)

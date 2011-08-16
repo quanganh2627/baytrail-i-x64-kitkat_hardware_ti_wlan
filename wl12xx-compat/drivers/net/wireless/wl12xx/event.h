@@ -119,14 +119,15 @@ struct event_mailbox {
 
 	/* role id for which this constraint is set. 0xFF means any role. */
 	u8 role_id;
-	bool rx_ba_allowed;
+	u8 rx_ba_allowed;
 	u8 reserved_6[2];
 
 	u8 ps_poll_delivery_failure_role_ids;
 	u8 stopped_role_ids;
 	u8 started_role_ids;
+	u8 change_auto_mode_timeout;
 
-	u8 reserved_7[13];
+	u8 reserved_7[12];
 } __packed;
 
 int wl1271_event_unmask(struct wl1271 *wl);
