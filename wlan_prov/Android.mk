@@ -23,7 +23,7 @@ LOCAL_SHARED_LIBRARIES := \
 	libc libcutils libhardware_legacy
 
 LOCAL_MODULE:= wlan_prov
-LOCAL_MODULE_TAGS := eng
+LOCAL_MODULE_TAGS := optional
 
 include $(BUILD_EXECUTABLE)
 
