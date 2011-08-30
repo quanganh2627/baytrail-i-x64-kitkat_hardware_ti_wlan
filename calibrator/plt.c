@@ -165,6 +165,8 @@ static int calib_valid_handler(struct nl_msg *msg, void *arg)
 	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
 	struct nlattr *td[WL1271_TM_ATTR_MAX + 1];
 	struct wl1271_cmd_cal_p2g *prms;
+	char *fname = NULL;
+
 #if 0
 	int i; unsigned char *pc;
 #endif
@@ -203,7 +205,17 @@ static int calib_valid_handler(struct nl_msg *msg, void *arg)
 		}
 		printf("++++++++++++++++++++++++\n");
 #endif
-	if (prepare_nvs_file(prms, arg)) {
+	if (arg) {
+		fname = (char *) malloc(1+strlen((char *) arg));
+		if (fname)
+			strcpy(fname, arg);
+		else
+			fprintf(stderr, "Fail to prepare calibrated NVS file\n");
+	}
+
+	if (prepare_nvs_file(prms, fname)) {
+		if (fname)
+			free(fname);
 		fprintf(stderr, "Fail to prepare calibrated NVS file\n");
 		return 2;
 	}
@@ -212,6 +224,8 @@ static int calib_valid_handler(struct nl_msg *msg, void *arg)
 		"reboot the system\n\n",
 		NEW_NVS_NAME, CURRENT_NVS_NAME);
 #endif
+	if (fname)
+		free(fname);
 	return NL_SKIP;
 }
 
@@ -356,13 +370,13 @@ static int plt_tx_bip(struct nl80211_state *state, struct nl_cb *cb,
 		return 2;
 	}
 
-	if (argc > 8)
+	if ((argc > 8) && (argv[8] !=NULL)) {
 		strncpy(nvs_path, argv[8], strlen(argv[8]));
+	}
 	else
 		nvs_path[0] = '\0';
 
 	memset(&prms, 0, sizeof(struct wl1271_cmd_cal_p2g));
-
 	prms.test.id = TEST_CMD_P2G_CAL;
 	for (i = 0; i < 8; i++)
 		prms.sub_band_mask |= (atoi(argv[i]) & 0x1)<<i;
@@ -784,11 +798,21 @@ static int plt_calibrate(struct nl80211_state *state, struct nl_cb *cb,
 {
 	int ret = 0, err;
 	int single_dual = 0;
+	char *fname = NULL;
 
-	if (argc > 2 && (strncmp(argv[2], "dual", 4) ==  0))
-		single_dual = 1;	/* going for dual band calibration */
-	else
-		single_dual = 0;	/* going for single band calibration */
+	if (argc > 2) {
+		if (strncmp(argv[2], "dual", 4) == 0)
+			single_dual = 1;	/* going for dual band calibration */
+		else if (strncmp(argv[2], "single", 4) == 0)
+			single_dual = 0;	/* going for single band calibration */
+		else {
+			fname = argv[2];
+			if (argc > 3 && (strncmp(argv[3], "dual", 4) ==  0))
+				single_dual = 1;	/* going for dual band calibration */
+			else
+				single_dual = 0;	/* going for single band calibration */
+		}
+	}
 
 	/* power mode on */
 	{
@@ -818,18 +842,18 @@ static int plt_calibrate(struct nl80211_state *state, struct nl_cb *cb,
 
 	/* calibrate it */
 	{
-		char *prms[11] = {
+		char *prms[12] = {
 			"wlan0", "plt", "tx_bip", "1", "0", "0", "0",
-			"0", "0", "0", "0"
+			"0", "0", "0", "0", NULL
 		};
-
+		prms[11] = fname;
 		/* set flags in case of dual band */
 		if (single_dual) {
 			prms[4] = prms[5] = prms[6] = prms[7] = prms[8] =
 				prms[9] = prms[10] = "1";
 		}
 
-		err = handle_cmd(state, II_NETDEV, 11, prms);
+		err = handle_cmd(state, II_NETDEV, 12, prms);
 		if (err < 0) {
 			fprintf(stderr, "Fail to calibrate\n");
 			ret = err;
@@ -855,5 +879,5 @@ fail_out_final:
 	return 0;
 }
 
-COMMAND(plt, calibrate, "[<single|dual>]", 0, 0, CIB_NONE,
+COMMAND(plt, calibrate, "[<single|dual>] [<nvs file>]", 0, 0, CIB_NONE,
 	plt_calibrate, "Do calibrate for single or dual band chip\n");

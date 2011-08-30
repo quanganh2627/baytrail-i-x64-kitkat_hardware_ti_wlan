@@ -13,12 +13,14 @@ LOCAL_SRC_FILES := \
 		ini.c
 
 LOCAL_CFLAGS :=
+LOCAL_LDFLAGS := -Wl,--no-gc-sections
+
 LOCAL_C_INCLUDES := \
 	$(LOCAL_PATH) \
 	external/libnl/include
 
 LOCAL_SHARED_LIBRARIES := libnl
-LOCAL_MODULE_TAGS := eng
+LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := calibrator
 
 include $(BUILD_EXECUTABLE)

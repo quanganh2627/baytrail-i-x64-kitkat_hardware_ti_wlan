@@ -210,6 +210,8 @@ COMMAND(set, nvs_mac, "<nvs file> [<mac addr>]", 0, 0, CIB_NONE, set_nvs_mac,
 static int set_ref_nvs(struct nl80211_state *state, struct nl_cb *cb,
 			struct nl_msg *msg, int argc, char **argv)
 {
+	char *fname = NULL;
+
 	struct wl12xx_common cmn = {
 		.arch = UNKNOWN_ARCH,
 		.parse_ops = NULL,
@@ -220,17 +222,21 @@ static int set_ref_nvs(struct nl80211_state *state, struct nl_cb *cb,
 	argc -= 2;
 	argv += 2;
 
-	if (argc != 1)
+	if (!argc  || (argc > 2))
 		return 1;
 
-	if (read_ini(*argv, &cmn)) {
+	if (read_ini(argv[0], &cmn)) {
 		fprintf(stderr, "Fail to read ini file\n");
 		return 1;
 	}
 
 	cfg_nvs_ops(&cmn);
 
-	if (create_nvs_file(&cmn)) {
+	if (argc == 2)
+		fname = *++argv;
+
+
+	if (create_nvs_file(fname, &cmn)) {
 		fprintf(stderr, "Fail to create reference NVS file\n");
 		return 1;
 	}
@@ -242,7 +248,7 @@ static int set_ref_nvs(struct nl80211_state *state, struct nl_cb *cb,
 	return 0;
 }
 
-COMMAND(set, ref_nvs, "<ini file>", 0, 0, CIB_NONE, set_ref_nvs,
+COMMAND(set, ref_nvs, "<ini file> [<new-nvs file path>]", 0, 0, CIB_NONE, set_ref_nvs,
 	"Create reference NVS file");
 
 static int set_ref_nvs2(struct nl80211_state *state, struct nl_cb *cb,
@@ -270,7 +276,7 @@ static int set_ref_nvs2(struct nl80211_state *state, struct nl_cb *cb,
 
 	cfg_nvs_ops(&cmn);
 
-	if (create_nvs_file(&cmn)) {
+	if (create_nvs_file(NULL, &cmn)) {
 		fprintf(stderr, "Fail to create reference NVS file\n");
 		return 1;
 	}

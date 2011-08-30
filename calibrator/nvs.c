@@ -528,10 +528,15 @@ int prepare_nvs_file(void *arg, char *file_name)
 	cfg_nvs_ops(&cmn);
 
 	/* create new NVS file */
-	new_nvs = open(NEW_NVS_NAME,
+	if (!file_name)
+	{
+		file_name = NEW_NVS_NAME;
+	}
+
+	new_nvs = open(file_name,
 		O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
 	if (new_nvs < 0) {
-		fprintf(stderr, "%s> Unable to open new NVS file\n", __func__);
+		fprintf(stderr, "%s> Unable to open new NVS file (%s) err=%d\n", __func__,file_name, errno);
 		return 1;
 	}
 
@@ -621,14 +626,20 @@ int prepare_nvs_file(void *arg, char *file_name)
 	return 0;
 }
 
-int create_nvs_file(struct wl12xx_common *cmn)
+int create_nvs_file(const char *nvs_file, struct wl12xx_common *cmn)
 {
 	int new_nvs, res = 0;
 	char buf[2048];
 
 	/* create new NVS file */
+	if (nvs_file == NULL) {
 	new_nvs = open(NEW_NVS_NAME,
 		O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+	} else {
+	new_nvs = open(nvs_file,
+		O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+	}
+
 	if (new_nvs < 0) {
 		fprintf(stderr, "%s> Unable to open new NVS file\n", __func__);
 		return 1;
@@ -659,6 +670,7 @@ int update_nvs_file(const char *nvs_file, struct wl12xx_common *cmn)
 	int new_nvs, res = 0;
 	char buf[2048];
 
+fprintf(stderr, "read_nvs call 2: %s\n", __func__);
 	res = read_nvs(nvs_file, buf, BUF_SIZE_4_NVS_FILE, NULL);
 	if (res)
 		return 1;
@@ -697,6 +709,7 @@ int dump_nvs_file(const char *nvs_file, struct wl12xx_common *cmn)
 	char buf[2048];
 	unsigned char *p = (unsigned char *)buf;
 
+fprintf(stderr, "read_nvs call 3: %s\n", __func__);
 	if (read_nvs(nvs_file, buf, BUF_SIZE_4_NVS_FILE, &size))
 		return 1;
 
