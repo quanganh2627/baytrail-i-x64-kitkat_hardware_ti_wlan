@@ -344,9 +344,15 @@ static int wifi_calibration(void)
 	}
 
 	/* load driver with new nvs file */
+	err = system("/system/bin/insmod /lib/modules/wl12xx.ko");
+	if (err) {
+		LOGE("Module /lib/modules/wl12xx.ko loading error, err=%d",err);
+		goto end;
+	}
+	/* load driver with new nvs file */
 	err = system("/system/bin/insmod /lib/modules/wl12xx_sdio.ko");
 	if (err) {
-		LOGE("Module loading error, err=%d",err);
+		LOGE("Module /lib/modules/wl12xx_sdio.ko loading error, err=%d",err);
 		goto end;
 	}
 	module_is_loaded = 1;
@@ -370,7 +376,11 @@ end:
 	if  (module_is_loaded) {
 		err_end = system("/system/bin/rmmod wl12xx_sdio.ko");
 		if (err_end)
-			LOGE("Module unloading error");
+			LOGE("Module wl12xx_sdio.ko unloading error");
+
+		err_end = system("/system/bin/rmmod wl12xx.ko");
+		if (err_end)
+			LOGE("Module wl12xx.ko unloading error");
 	}
 	return err;
 }
