@@ -14,23 +14,19 @@
  *  limitations under the License.
 */
 
-#define LOG_TAG "wlan_prov"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <cutils/log.h>
-#include <cutils/misc.h>
 
+#include <android/log.h>
+
+#define  PROGRAM_NAME "wlan_prov"
 
 #ifdef BUILD_WITH_CHAABI_SUPPORT
 #include "umip_access.h"
 #endif
 
-#ifndef NLCP
 const char CU_CMD_file_name[] = "/data/calib_cmd";
 const char CU_calibration_cmd[] = \
 		"/ w p 1\n" \
@@ -39,20 +35,15 @@ const char CU_calibration_cmd[] = \
 		"/ t r h 0 7\n" \
 		"/ t b t 1 1 1 1 1 1 1 1\n" \
 		"/ q\n";
-#endif
+
+#define LOG_TAG "wlan_prov"
 
 #define MAC_ADDRESS_LEN 6
 const unsigned char NullMacAddr[MAC_ADDRESS_LEN] = { 0, 0, 0, 0, 0, 0 };
 
-#ifndef NLCP
 #define WIFI_PATH "/system/etc/wifi"
+
 const char NVS_file_name[] = WIFI_PATH"/nvs_map.bin";
-#else
-#define WIFI_PATH "/data/misc/wifi"
-const char NVS_file_name[] = "/etc/firmware/ti-connectivity/wl1271-nvs.bin";
-const char NVS_saved_file_name[] = WIFI_PATH"/wl1271-nvs.bin.default";
-#define NEW_NVS_FILE_NAME	WIFI_PATH"/new-nvs.bin"
-#endif
 
 /* pattern MAC address in NVS file */
 #define NVS_LENGTH_TO_SET       0x01
@@ -65,7 +56,6 @@ const char NVS_saved_file_name[] = WIFI_PATH"/wl1271-nvs.bin.default";
 static int nvs_read_mac(unsigned char *MacAddr);
 static int nvs_replace_mac(unsigned char *MacAddr);
 static int wifi_calibration(void);
-static long fcopy(const char *dest, const char *source);
 
 int main(int argc, char **argv)
 {
@@ -91,12 +81,9 @@ int main(int argc, char **argv)
 #ifdef BUILD_WITH_CHAABI_SUPPORT
 	}
 #endif
+
 	/* Check if calibration is requested (NVS file don't exist) */
-#ifndef NLCP
 	nvsBinFile = fopen(NVS_file_name, "rb");
-#else
-	nvsBinFile = fopen(NVS_saved_file_name, "rb");
-#endif
 	if (!nvsBinFile) {
 		if (wifi_calibration()) {
 			res =  -2;
@@ -104,6 +91,7 @@ int main(int argc, char **argv)
 		}
 	} else {
 		fclose(nvsBinFile);
+
 		if (memcmp(ChaabiMacAddr, NullMacAddr, MAC_ADDRESS_LEN) == 0) {
 			/* NVS file already exist but chaabi read error */
 			/* exit here to avoid randomize new MAC address */
@@ -145,16 +133,6 @@ int main(int argc, char **argv)
 	}
 
 end:
-#ifdef NLCP
-	if(res) {
-		/* Remove erroneous nvs file and Restore original nvs */
-		unlink(NVS_file_name);
-		if (-1L != fcopy(NVS_file_name, NVS_saved_file_name)) {
-			unlink(NVS_saved_file_name);
-		}
-	}
-#endif
-	unlink(NEW_NVS_FILE_NAME);
 	free(ChaabiMacAddr);
 
 	return res;
@@ -162,7 +140,7 @@ end:
 
 
 
-static int nvs_read_mac(unsigned char *MacAddr)
+int nvs_read_mac(unsigned char *MacAddr)
 {
 	FILE *nvsBinFile;
 	unsigned char *pNvsContent = NULL;
@@ -203,7 +181,7 @@ static int nvs_read_mac(unsigned char *MacAddr)
 	return res;
 }
 
-static int nvs_replace_mac(unsigned char *MacAddr)
+int nvs_replace_mac(unsigned char *MacAddr)
 {
 	int res = 0;
 	FILE *nvsBinFile;
@@ -255,8 +233,7 @@ static int nvs_replace_mac(unsigned char *MacAddr)
 	return res;
 }
 
-#ifndef NLCP
-static int wifi_calibration(void)
+int wifi_calibration(void)
 {
 	FILE *CuCmdFile = NULL;
 	char system_cmd[200];
@@ -280,7 +257,8 @@ static int wifi_calibration(void)
 		/* Loading WLAN FW ... */
 		err = system("/system/bin/wlan_loader -i "WIFI_PATH"/tiwlan.ini -f "WIFI_PATH"/firmware.bin");
 		if (err) {
-			LOGE("WLAN_PROV: can't load TIWLAN firmware (%d)", err);
+			__android_log_print(ANDROID_LOG_ERROR, LOG_TAG,
+			"WLAN_PROV: can't load TIWLAN firmware (%d)", err);
 			goto end;
 		}
 
@@ -288,11 +266,13 @@ static int wifi_calibration(void)
 		sprintf(system_cmd, "/system/bin/wlan_cu -b < %s", CU_CMD_file_name);
 		err = system(system_cmd);
 		if (err) {
-			LOGE("WLAN_PROV: calibration fails (%d)", err);
+			__android_log_print(ANDROID_LOG_ERROR, LOG_TAG,
+				"WLAN_PROV: calibration fails (%d)", err);
 			goto end;
 		}
 	} else {
-		LOGE("WLAN_PROV: can't load tiwlan_drv.ko (%d)", err);
+		__android_log_print(ANDROID_LOG_ERROR, LOG_TAG,
+			"WLAN_PROV: can't load tiwlan_drv.ko (%d)", err);
 	}
 
 end:
@@ -300,7 +280,8 @@ end:
 	if (module_is_loaded) {
 		err_end = system("/system/bin/rmmod tiwlan_drv.ko");
 		if (err_end) {
-			LOGE("WLAN_PROV: tiwlan_drv.ko  module removing error (%d)", err);
+			__android_log_print(ANDROID_LOG_ERROR, LOG_TAG,
+				"WLAN_PROV: tiwlan_drv.ko  module removing error (%d)", err);
 
 			/* return local error if no previous error */
 			err = !err ? err_end : err;
@@ -314,111 +295,4 @@ end:
 
 	return err;
 }
-#else
-static int wifi_calibration(void)
-{
-	FILE *CuCmdFile = NULL;
-	char system_cmd[200];
-	int err, err_end;
-	int module_is_loaded = 0;
 
-	/* save default calibration in order to restore it if an error occurs */
-	/* because wl12xx.ko driver can't start without default calibration */
-	err = fcopy(NVS_saved_file_name, NVS_file_name);
-	if (err == -1L) {
-		LOGE("NVS file archiving error");
-		goto end;
-	}
-	/* Start calibration */
-	err = system("/system/bin/calibrator set ref_nvs /system/etc/wifi/TQS_D_1.7.ini "NEW_NVS_FILE_NAME);
-	if (err) {
-		LOGE("Default nvs creation error %d",err);
-		goto end;
-	}
-
-	/* replace default calibration file by new one */
-	err = fcopy(NVS_file_name, NEW_NVS_FILE_NAME);
-	if (err == -1L) {
-		LOGE("Can't remove previous NVS calibration file");
-		goto end;
-	}
-
-	/* load driver with new nvs file */
-	err = system("/system/bin/insmod /lib/modules/wl12xx_sdio.ko");
-	if (err) {
-		LOGE("Module loading error, err=%d",err);
-		goto end;
-	}
-	module_is_loaded = 1;
-
-	/* start calibration & nvs update */
-	err = system("/system/bin/calibrator plt calibrate "NEW_NVS_FILE_NAME);
-	if (err)
-		LOGE("Calibration error= %d",err);
-
-	/* replace nvs file by updated one after calibration  */
-	err = fcopy(NVS_file_name, NEW_NVS_FILE_NAME);
-	if (err == -1L) {
-		LOGE("Can't remove previous NVS calibration file");
-		goto end;
-	}
-	else
-		err= 0;
-
-end:
-	/* unload WLAN driver module if necessary */
-	if  (module_is_loaded) {
-		err_end = system("/system/bin/rmmod wl12xx_sdio.ko");
-		if (err_end)
-			LOGE("Module unloading error");
-	}
-	return err;
-}
-
-#define BUFFER_SIZE 2048
-
-static long fcopy(const char *dest, const char *source)
-{
-        FILE *d, *s;
-        char *buffer;
-        size_t incount;
-        long totcount = 0L;
-
-        s = fopen(source, "rb");
-        if(s == NULL)
-                return -1L;
-
-        d = fopen(dest, "wb");
-        if(d == NULL)
-        {
-                fclose(s);
-                return -1L;
-        }
-
-        buffer = malloc(BUFFER_SIZE);
-        if(buffer == NULL)
-        {
-                fclose(s);
-                fclose(d);
-                return -1L;
-        }
-
-        incount = fread(buffer, sizeof(char), BUFFER_SIZE, s);
-
-        while(!feof(s))
-        {
-                totcount += (long)incount;
-                fwrite(buffer, sizeof(char), incount, d);
-                incount = fread(buffer, sizeof(char), BUFFER_SIZE, s);
-        }
-
-        totcount += (long)incount;
-        fwrite(buffer, sizeof(char), incount, d);
-
-        free(buffer);
-        fclose(s);
-        fclose(d);
-
-        return totcount;
-}
-#endif
