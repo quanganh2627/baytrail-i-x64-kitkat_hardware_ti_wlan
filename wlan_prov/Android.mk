@@ -1,9 +1,6 @@
 LOCAL_PATH:= $(call my-dir)
 include $(CLEAR_VARS)
 
-CHAABI_ROOT = hardware/intel/PRIVATE/chaabi
-
-
 ifeq ($(BUILD_WITH_CHAABI_SUPPORT),true)
 LOCAL_C_INCLUDES = \
 	$(TARGET_OUT_HEADERS)/chaabi
