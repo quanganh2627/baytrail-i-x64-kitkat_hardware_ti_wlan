@@ -20,7 +20,7 @@ endif
 
 
 LOCAL_SHARED_LIBRARIES := \
-	libc libcutils libhardware_legacy
+	libc libcutils libhardware_legacy libcrypto
 
 LOCAL_MODULE:= wlan_prov
 LOCAL_MODULE_TAGS := optional
