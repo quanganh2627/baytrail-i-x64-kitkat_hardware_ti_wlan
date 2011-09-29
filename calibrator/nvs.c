@@ -278,8 +278,10 @@ static int read_nvs(const char *nvs_file, char *buf,
 
 		strncpy(file2read, CURRENT_NVS_NAME, strlen(CURRENT_NVS_NAME));
 
-	} else
+	} else {
 		strncpy(file2read, nvs_file, strlen(nvs_file));
+		file2read[strlen(nvs_file)] = 0;
+	}
 
 	fl_sz = file_exist(file2read);
 	if (fl_sz < 0) {
@@ -670,7 +672,6 @@ int update_nvs_file(const char *nvs_file, struct wl12xx_common *cmn)
 	int new_nvs, res = 0;
 	char buf[2048];
 
-fprintf(stderr, "read_nvs call 2: %s\n", __func__);
 	res = read_nvs(nvs_file, buf, BUF_SIZE_4_NVS_FILE, NULL);
 	if (res)
 		return 1;

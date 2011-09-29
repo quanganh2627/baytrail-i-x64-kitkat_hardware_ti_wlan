@@ -2,7 +2,7 @@
 #define __PLT_H
 
 #ifdef ANDROID
-#define CURRENT_NVS_NAME	"/system/etc/firmware/ti-connectivity/wl1271-nvs.bin"
+#define CURRENT_NVS_NAME	"/data/misc/firmware/ti-connectivity/wl1271-nvs.bin"
 #else
 #define CURRENT_NVS_NAME	"/lib/firmware/ti-connectivity/wl1271-nvs.bin"
 #endif

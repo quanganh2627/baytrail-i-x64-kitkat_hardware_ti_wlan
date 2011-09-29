@@ -49,7 +49,8 @@ const unsigned char NullMacAddr[MAC_ADDRESS_LEN] = { 0, 0, 0, 0, 0, 0 };
 const char NVS_file_name[] = WIFI_PATH"/nvs_map.bin";
 #else
 #define WIFI_PATH "/data/misc/wifi"
-const char NVS_file_name[] = "/etc/firmware/ti-connectivity/wl1271-nvs.bin";
+const char NVS_file_name[] = "/data/misc/firmware/ti-connectivity/wl1271-nvs.bin";
+const char Default_NVS_file_name[] = "/system/etc/wifi/wl1271-nvs.bin";
 const char NVS_saved_file_name[] = WIFI_PATH"/wl1271-nvs.bin.default";
 #define NEW_NVS_FILE_NAME	WIFI_PATH"/new-nvs.bin"
 #endif
@@ -147,11 +148,10 @@ int main(int argc, char **argv)
 end:
 #ifdef NLCP
 	if(res) {
-		/* Remove erroneous nvs file and Restore original nvs */
+		/* Remove erroneous nvs file and saved file, then restore original nvs */
 		unlink(NVS_file_name);
-		if (-1L != fcopy(NVS_file_name, NVS_saved_file_name)) {
-			unlink(NVS_saved_file_name);
-		}
+		unlink(NVS_saved_file_name);
+		fcopy(NVS_file_name, Default_NVS_file_name);
 	}
 #endif
 	unlink(NEW_NVS_FILE_NAME);
@@ -322,14 +322,15 @@ static int wifi_calibration(void)
 	int err, err_end;
 	int module_is_loaded = 0;
 
-	/* save default calibration in order to restore it if an error occurs */
-	/* because wl12xx.ko driver can't start without default calibration */
-	err = fcopy(NVS_saved_file_name, NVS_file_name);
+	/* No calibration file exist so copy original one  */
+	/* otherwise nl80211 can't start fine and so calibration fails */
+	err = fcopy( NVS_file_name, Default_NVS_file_name);
 	if (err == -1L) {
-		LOGE("NVS file archiving error");
+		LOGE("Original nvs copy error");
 		goto end;
 	}
-	/* Start calibration */
+
+	/* Create default nvs file from .ini */
 	err = system("/system/bin/calibrator set ref_nvs /system/etc/wifi/TQS_D_1.7.ini "NEW_NVS_FILE_NAME);
 	if (err) {
 		LOGE("Default nvs creation error %d",err);
@@ -343,13 +344,13 @@ static int wifi_calibration(void)
 		goto end;
 	}
 
-	/* load driver with new nvs file */
+	/* load wifi driver */
 	err = system("/system/bin/insmod /lib/modules/wl12xx.ko");
 	if (err) {
 		LOGE("Module /lib/modules/wl12xx.ko loading error, err=%d",err);
 		goto end;
 	}
-	/* load driver with new nvs file */
+	/* load sdio driver */
 	err = system("/system/bin/insmod /lib/modules/wl12xx_sdio.ko");
 	if (err) {
 		LOGE("Module /lib/modules/wl12xx_sdio.ko loading error, err=%d",err);
@@ -369,7 +370,12 @@ static int wifi_calibration(void)
 		goto end;
 	}
 	else
+	{
+		/* Save NVS file to notify calibration is ok */
+		fcopy( NVS_saved_file_name, NVS_file_name);
 		err= 0;
+
+	}
 
 end:
 	/* unload WLAN driver module if necessary */

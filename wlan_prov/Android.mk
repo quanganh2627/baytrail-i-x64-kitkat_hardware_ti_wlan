@@ -27,3 +27,16 @@ LOCAL_MODULE_TAGS := optional
 
 include $(BUILD_EXECUTABLE)
 
+NVS_FILE = wl1271-nvs.bin
+
+SYMLINKS := $(addprefix $(PRODUCT_OUT)/system/etc/firmware/ti-connectivity/,$(NVS_FILE))
+$(SYMLINKS): $(LOCAL_INSTALLED_MODULE) $(LOCAL_PATH)/Android.mk
+	@echo "Symlink: $@"
+	@mkdir -p $(dir $@)
+	@rm -rf $@
+	$(hide) ln -sf $(addprefix /data/misc/firmware/ti-connectivity/,$(NVS_FILE)) $@
+
+ALL_DEFAULT_INSTALLED_MODULES += $(SYMLINKS)
+ALL_MODULES.$(LOCAL_MODULE).INSTALLED := \
+	$(ALL_MODULES.$(LOCAL_MODULE).INSTALLED) $(SYMLINKS)
+
