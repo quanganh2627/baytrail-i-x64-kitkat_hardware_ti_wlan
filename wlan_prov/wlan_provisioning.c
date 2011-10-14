@@ -359,7 +359,7 @@ static int wifi_calibration(void)
 	module_is_loaded = 1;
 
 	/* start calibration & nvs update */
-	err = system("/system/bin/calibrator plt calibrate "NEW_NVS_FILE_NAME);
+	err = system("/system/bin/calibrator plt calibrate "NEW_NVS_FILE_NAME" dual");
 	if (err)
 		LOGE("Calibration error= %d",err);
 
