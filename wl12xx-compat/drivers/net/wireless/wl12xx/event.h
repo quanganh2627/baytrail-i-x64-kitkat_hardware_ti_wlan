@@ -130,6 +130,7 @@ struct event_mailbox {
 	u8 reserved_7[12];
 } __packed;
 
+int wl1271_event_toggle_rssi_triggers(struct wl1271 *wl, bool mask);
 int wl1271_event_unmask(struct wl1271 *wl);
 void wl1271_event_mbox_config(struct wl1271 *wl);
 int wl1271_event_handle(struct wl1271 *wl, u8 mbox);

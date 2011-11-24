@@ -172,7 +172,7 @@ static int wl1271_sdio_power_on(struct wl1271 *wl)
 	/* If enabled, tell runtime PM not to power off the card */
 	if (pm_runtime_enabled(&func->dev)) {
 		ret = pm_runtime_get_sync(&func->dev);
-		if (ret)
+		if (ret < 0)
 			goto out;
 	} else {
 		/* Runtime PM is disabled: power up the card manually */
@@ -289,8 +289,14 @@ static int __devinit wl1271_probe(struct sdio_func *func,
 		mmcflags = sdio_get_host_pm_caps(func);
 		wl1271_debug(DEBUG_SDIO, "sdio PM caps = 0x%x", mmcflags);
 
-		if (mmcflags & MMC_PM_KEEP_POWER)
+		if (mmcflags & MMC_PM_KEEP_POWER) {
 			hw->wiphy->wowlan.flags = WIPHY_WOWLAN_ANY;
+			hw->wiphy->wowlan.n_patterns =
+					WL1271_MAX_RX_DATA_FILTERS;
+			hw->wiphy->wowlan.pattern_min_len = 1;
+			hw->wiphy->wowlan.pattern_max_len =
+					WL1271_RX_DATA_FILTER_MAX_PATTERN_SIZE;
+		}
 	}
 	disable_irq(wl->irq);
 

@@ -160,6 +160,7 @@ ieee80211_scan_rx(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
 	__le16 fc;
 	bool presp, beacon = false;
 	struct ieee802_11_elems elems;
+	struct cfg80211_bss *cbss = NULL;
 
 	if (skb->len < 2)
 		return RX_DROP_UNUSABLE;
@@ -210,8 +211,11 @@ ieee80211_scan_rx(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
 	bss = ieee80211_bss_info_update(sdata->local, rx_status,
 					mgmt, skb->len, &elems,
 					channel, beacon);
-	if (bss)
+	if (bss) {
+		cbss = container_of((void *)bss, struct cfg80211_bss, priv);
+		cfg80211_send_intermediate_result(sdata->dev, cbss);
 		ieee80211_rx_bss_put(sdata->local, bss);
+	}
 
 	/* If we are on-operating-channel, and this packet is for the
 	 * current channel, pass the pkt on up the stack so that
@@ -252,8 +256,8 @@ static bool ieee80211_prep_hw_scan(struct ieee80211_local *local)
 	local->hw_scan_req->n_channels = n_chans;
 
 	ielen = ieee80211_build_preq_ies(local, (u8 *)local->hw_scan_req->ie,
-					 req->ie, req->ie_len, band, (u32) -1,
-					 0);
+					 req->ie, req->ie_len, band,
+					 req->rates[band], 0);
 	local->hw_scan_req->ie_len = ielen;
 
 	return true;
@@ -410,11 +414,15 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
 
 		local->hw_scan_req->ssids = req->ssids;
 		local->hw_scan_req->n_ssids = req->n_ssids;
+		local->hw_scan_req->max_dwell = req->max_dwell;
+		local->hw_scan_req->min_dwell = req->min_dwell;
+		local->hw_scan_req->num_probe = req->num_probe;
 		ies = (u8 *)local->hw_scan_req +
 			sizeof(*local->hw_scan_req) +
 			req->n_channels * sizeof(req->channels[0]);
 		local->hw_scan_req->ie = ies;
 
+		local->hw_scan_req->no_cck = req->no_cck;
 		local->hw_scan_band = 0;
 
 		/*
@@ -653,13 +661,16 @@ static void ieee80211_scan_state_send_probe(struct ieee80211_local *local,
 {
 	int i;
 	struct ieee80211_sub_if_data *sdata = local->scan_sdata;
+	enum ieee80211_band band = local->hw.conf.channel->band;
 
 	for (i = 0; i < local->scan_req->n_ssids; i++)
 		ieee80211_send_probe_req(
 			sdata, NULL,
 			local->scan_req->ssids[i].ssid,
 			local->scan_req->ssids[i].ssid_len,
-			local->scan_req->ie, local->scan_req->ie_len);
+			local->scan_req->ie, local->scan_req->ie_len,
+			local->scan_req->rates[band],
+			local->scan_req->no_cck);
 
 	/*
 	 * After sending probe requests, wait for probe responses
@@ -883,7 +894,8 @@ int ieee80211_request_sched_scan_start(struct ieee80211_sub_if_data *sdata,
 	for (i = 0; i < IEEE80211_NUM_BANDS; i++) {
 		local->sched_scan_ies.ie[i] = kzalloc(2 +
 						      IEEE80211_MAX_SSID_LEN +
-						      local->scan_ies_len,
+						      local->scan_ies_len +
+						      req->ie_len,
 						      GFP_KERNEL);
 		if (!local->sched_scan_ies.ie[i]) {
 			ret = -ENOMEM;

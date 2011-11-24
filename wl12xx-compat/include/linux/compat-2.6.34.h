@@ -20,12 +20,11 @@
 
 /* netdev_printk helpers, similar to dev_printk */
 
-static inline const char *netdev_name(const struct net_device *dev)
-{
-	if (dev->reg_state != NETREG_REGISTERED)
-		return "(unregistered net_device)";
-	return dev->name;
-}
+#ifndef netdev_name
+#define netdev_name(__dev) \
+	((__dev->reg_state != NETREG_REGISTERED) ? \
+		"(unregistered net_device)" : __dev->name)
+#endif
 
 #define netdev_printk(level, netdev, format, args...)		\
 	dev_printk(level, (netdev)->dev.parent,			\
@@ -250,6 +249,8 @@ static inline int usb_disable_autosuspend(struct usb_device *udev)
 #define rcu_access_pointer(p)   ACCESS_ONCE(p)
 
 #define rcu_dereference_raw(p)	rcu_dereference(p)
+
+#define KEY_WPS_BUTTON		0x211	/* WiFi Protected Setup key */
 
 #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,34)) */
 
