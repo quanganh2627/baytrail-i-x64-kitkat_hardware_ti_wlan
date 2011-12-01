@@ -1740,8 +1740,10 @@ static int wl1271_configure_suspend_sta(struct wl1271 *wl,
 		wl->ps_compl = &compl;
 		ret = wl1271_ps_set_mode(wl, STATION_POWER_SAVE_MODE,
 				   wl->basic_rate, true);
-		if (ret < 0)
+		if (ret < 0) {
+			wl->ps_compl = NULL;
 			goto out_sleep;
+		}
 
 		/* we must unlock here so we will be able to get events */
 		wl1271_ps_elp_sleep(wl);
@@ -1752,7 +1754,10 @@ static int wl1271_configure_suspend_sta(struct wl1271 *wl,
 		if (ret <= 0) {
 			wl1271_warning("couldn't enter ps mode!");
 			ret = -EBUSY;
-			goto out;
+			mutex_lock(&wl->mutex);
+			if (wl->ps_compl == &compl)
+				wl->ps_compl = NULL;
+			goto out_unlock;
 		}
 
 		/* take mutex again, and wakeup */
@@ -1789,7 +1794,6 @@ out_sleep:
 	wl1271_ps_elp_sleep(wl);
 out_unlock:
 	mutex_unlock(&wl->mutex);
-out:
 	return ret;
 }
 
