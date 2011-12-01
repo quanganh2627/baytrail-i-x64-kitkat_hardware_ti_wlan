@@ -758,9 +758,6 @@ static void cfg80211_process_wdev_events(struct wireless_dev *wdev)
 		case EVENT_IBSS_JOINED:
 			__cfg80211_ibss_joined(wdev->netdev, ev->ij.bssid);
 			break;
-		case EVENT_IM_SCAN_RESULT:
-			__cfg80211_send_intermediate_result(wdev->netdev, ev);
-			break;
 		}
 		wdev_unlock(wdev);
 
@@ -1008,42 +1005,4 @@ int cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
 	}
 
 	return -EBUSY;
-}
-
-int ieee80211_get_ratemask(struct ieee80211_supported_band *sband,
-			   const u8 *rates, unsigned int n_rates,
-			   u32 *mask)
-{
-	int i, j;
-
-	if (!sband)
-		return -EINVAL;
-
-	if (n_rates == 0 || n_rates > NL80211_MAX_SUPP_RATES)
-		return -EINVAL;
-
-	*mask = 0;
-
-	for (i = 0; i < n_rates; i++) {
-		int rate = (rates[i] & 0x7f) * 5;
-		bool found = false;
-
-		for (j = 0; j < sband->n_bitrates; j++) {
-			if (sband->bitrates[j].bitrate == rate) {
-				found = true;
-				*mask |= BIT(j);
-				break;
-			}
-		}
-		if (!found)
-			return -EINVAL;
-	}
-
-	/*
-	 * mask must have at least one bit set here since we
-	 * didn't accept a 0-length rates array nor allowed
-	 * entries in the array that didn't exist
-	 */
-
-	return 0;
 }

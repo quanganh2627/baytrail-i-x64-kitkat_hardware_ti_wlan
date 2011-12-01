@@ -120,12 +120,17 @@ struct wl1271_cmd_trigger_scan_to {
 	__le32 timeout;
 } __packed;
 
-#define MAX_CHANNELS_2GHZ	14
-#define MAX_CHANNELS_5GHZ	23
-#define MAX_CHANNELS_4GHZ	4
-
+#define MAX_CHANNELS_ALL_BANDS 41
 #define SCAN_MAX_CYCLE_INTERVALS 16
 #define SCAN_MAX_BANDS 3
+
+enum {
+	SCAN_CHANNEL_TYPE_2GHZ_PASSIVE,
+	SCAN_CHANNEL_TYPE_2GHZ_ACTIVE,
+	SCAN_CHANNEL_TYPE_5GHZ_PASSIVE,
+	SCAN_CHANNEL_TYPE_5GHZ_ACTIVE,
+	SCAN_CHANNEL_TYPE_5GHZ_DFS,
+};
 
 enum {
 	SCAN_SSID_FILTER_ANY      = 0,
@@ -139,9 +144,6 @@ enum {
 	SCAN_BSS_TYPE_INFRASTRUCTURE,
 	SCAN_BSS_TYPE_ANY,
 };
-
-#define SCAN_CHANNEL_FLAGS_DFS		BIT(0)
-#define SCAN_CHANNEL_FLAGS_DFS_ENABLED	BIT(1)
 
 struct conn_scan_ch_params {
 	__le16 min_duration;
@@ -185,9 +187,7 @@ struct wl1271_cmd_sched_scan_config {
 
 	u8 padding[3];
 
-	struct conn_scan_ch_params channels_2[MAX_CHANNELS_2GHZ];
-	struct conn_scan_ch_params channels_5[MAX_CHANNELS_5GHZ];
-	struct conn_scan_ch_params channels_4[MAX_CHANNELS_4GHZ];
+	struct conn_scan_ch_params channels[MAX_CHANNELS_ALL_BANDS];
 } __packed;
 
 

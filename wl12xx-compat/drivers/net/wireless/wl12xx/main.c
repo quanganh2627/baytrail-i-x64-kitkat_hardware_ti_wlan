@@ -215,8 +215,6 @@ static struct conf_drv_settings default_conf = {
 	.conn = {
 		.wake_up_event               = CONF_WAKE_UP_EVENT_DTIM,
 		.listen_interval             = 1,
-		.suspend_wake_up_event       = CONF_WAKE_UP_EVENT_N_DTIM,
-		.suspend_listen_interval     = 3,
 		.bcn_filt_mode               = CONF_BCN_FILT_MODE_ENABLED,
 		.bcn_filt_ie_count           = 2,
 		.bcn_filt_ie = {
@@ -268,8 +266,8 @@ static struct conf_drv_settings default_conf = {
 	},
 	.sched_scan = {
 		/* sched_scan requires dwell times in TU instead of TU/1000 */
-		.min_dwell_time_active = 30,
-		.max_dwell_time_active = 60,
+		.min_dwell_time_active = 8,
+		.max_dwell_time_active = 30,
 		.dwell_time_passive    = 100,
 		.num_probe_reqs        = 2,
 		.rssi_threshold        = -90,
@@ -368,7 +366,7 @@ static struct conf_drv_settings default_conf = {
 		.mem_blocks                   = 2,
 		.severity                     = 0,
 		.timestamp                    = WL12XX_FWLOG_TIMESTAMP_DISABLED,
-		.output                       = WL12XX_FWLOG_OUTPUT_DBG_PINS,
+		.output                       = WL12XX_FWLOG_OUTPUT_HOST,
 		.threshold                    = 0,
 	},
 };
@@ -1640,87 +1638,7 @@ static struct notifier_block wl1271_dev_notifier = {
 	.notifier_call = wl1271_dev_notify,
 };
 
-/* Count number of 1->0 or 0->1 transitions in a bit mask */
-static int wl1271_count_bit_flips(void *bitmap, int len)
-{
-	int i, flips = 0;
-	int b, bt;
-
-	if (!len)
-		return 0;
-
-	b = test_bit(0, bitmap);
-
-	for (i = 0; i < len; i++) {
-		bt = test_bit(i, bitmap);
-		if (bt != b)
-			flips++;
-		b = bt;
-	}
-
-	return flips;
-}
-
-static int wl1271_configure_wowlan(struct wl1271 *wl,
-				   struct cfg80211_wowlan *wow)
-{
-	int i, ret;
-
-	if (!wow) {
-		wl1271_rx_data_filtering_enable(wl, 0, FILTER_SIGNAL);
-		wl1271_rx_data_filters_clear_all(wl);
-		return 0;
-	}
-
-	WARN_ON(wow->n_patterns > WL1271_MAX_RX_DATA_FILTERS);
-	if (wow->any || !wow->n_patterns)
-		return 0;
-
-
-	/* Translate WoWLAN patterns into filters */
-	for (i = 0; i < wow->n_patterns; i++) {
-		struct cfg80211_wowlan_trig_pkt_pattern *p;
-		struct wl12xx_rx_data_filter *f;
-		int offset, len;
-
-		p = &wow->patterns[i];
-		f = &wl->rx_data_filters[i];
-
-		/* WoWLAN triggers as defined by nl80211 does not match wl12xx's
-		   capabilities 1:1 so it's possible to get a pattern that
-		   FW cannot handle */
-		if (wl1271_count_bit_flips(p->mask, p->pattern_len) > 1) {
-			wl1271_warning("WoWLAN pattern too advanced\n");
-			goto err;
-		}
-		offset = find_first_bit((const unsigned long *) p->mask,
-					p->pattern_len);
-		len = p->pattern_len - offset;
-
-		ret = wl1271_rx_data_filter_set_action(f, FILTER_SIGNAL);
-		if (ret)
-			goto err;
-		ret = wl1271_rx_data_filter_set_offset(f, offset);
-		if (ret)
-			goto err;
-		ret = wl1271_rx_data_filter_set_pattern(f, &p->pattern[offset],
-							len);
-		if (ret)
-			goto err;
-		ret = wl1271_rx_data_filter_enable(wl, f, i, 1);
-		if (ret)
-			goto err;
-	}
-	ret = wl1271_rx_data_filtering_enable(wl, 1, FILTER_DROP);
-	if (ret)
-		goto err;
-	return 0;
-err:
-	return ret;
-}
-
-static int wl1271_configure_suspend_sta(struct wl1271 *wl,
-					struct cfg80211_wowlan *wow)
+static int wl1271_configure_suspend_sta(struct wl1271 *wl)
 {
 	int ret = 0;
 
@@ -1762,35 +1680,13 @@ static int wl1271_configure_suspend_sta(struct wl1271 *wl,
 		if (ret < 0)
 			goto out_unlock;
 	}
-
-	ret = wl1271_configure_wowlan(wl, wow);
-	if (ret < 0)
-		wl1271_error("suspend: Could not configure WoWLAN: %d", ret);
-
-	ret = wl1271_acx_toggle_rx_broadcast_filter(wl, ACX_FILTER_OUT_BROADCAST_IN_FW);
-	if (ret < 0)
-		wl1271_error("suspend: Could not configure broadcast filtering: %d", ret);
-        /*
-        ret = wl1271_event_toggle_rssi_triggers(wl, 1);
-        if (ret < 0)
-		wl1271_error("suspend: Could not configure rssi triggers: %d", ret);
-        */
-
-	/* In any case set wake up conditions to suspend values to conserve
-	 *  more power while willing to lose some broadcast traffic
-	 */
-	ret = wl1271_acx_wake_up_conditions(wl,
-			    wl->conf.conn.suspend_wake_up_event,
-			    wl->conf.conn.suspend_listen_interval);
-	if (ret < 0)
-		wl1271_error("suspend: set wake up conditions failed: %d", ret);
-
 out_sleep:
 	wl1271_ps_elp_sleep(wl);
 out_unlock:
 	mutex_unlock(&wl->mutex);
 out:
 	return ret;
+
 }
 
 static int wl1271_configure_suspend_ap(struct wl1271 *wl)
@@ -1812,13 +1708,13 @@ static int wl1271_configure_suspend_ap(struct wl1271 *wl)
 out_unlock:
 	mutex_unlock(&wl->mutex);
 	return ret;
+
 }
 
-static int wl1271_configure_suspend(struct wl1271 *wl,
-				    struct cfg80211_wowlan *wow)
+static int wl1271_configure_suspend(struct wl1271 *wl)
 {
 	if (wl->bss_type == BSS_TYPE_STA_BSS)
-		return wl1271_configure_suspend_sta(wl, wow);
+		return wl1271_configure_suspend_sta(wl);
 	if (wl->bss_type == BSS_TYPE_AP_BSS)
 		return wl1271_configure_suspend_ap(wl);
 	return 0;
@@ -1843,30 +1739,6 @@ static void wl1271_configure_resume(struct wl1271 *wl)
 		if (!test_bit(WL1271_FLAG_PSM_REQUESTED, &wl->flags))
 			wl1271_ps_set_mode(wl, STATION_ACTIVE_MODE,
 					   wl->basic_rate, true);
-
-		/* Remove WoWLAN filtering */
-		wl1271_configure_wowlan(wl, NULL);
-
-                /* Remove Broadcast filtering */
-                ret = wl1271_acx_toggle_rx_broadcast_filter(wl, ACX_RECEIVE_BROADCASTS_IN_SUSPEND);
-                if (ret < 0)
-                        wl1271_error("resume: Could not disable broadcast filtering: %d", ret);
-                 
-                /* Remove RSSI SNR triggers filtering */
-                /*
-                ret = wl1271_event_toggle_rssi_triggers(wl, 0);
-                if (ret < 0)
-                        wl1271_error("resume: Could not configure rssi triggers: %d", ret);
-                */
-
-		/* switch back to normal wake up conditions */
-		ret = wl1271_acx_wake_up_conditions(wl,
-				    wl->conf.conn.wake_up_event,
-				    wl->conf.conn.listen_interval);
-
-		if (ret < 0)
-			wl1271_error("resume: wake up conditions failed: %d",
-				     ret);
 	} else if (is_ap) {
 		wl1271_acx_beacon_filter_opt(wl, false);
 	}
@@ -1883,10 +1755,10 @@ static int wl1271_op_suspend(struct ieee80211_hw *hw,
 	int ret;
 
 	wl1271_debug(DEBUG_MAC80211, "mac80211 suspend wow=%d", !!wow);
-	WARN_ON(!wow);
+	WARN_ON(!wow || !wow->any);
 
 	wl->wow_enabled = true;
-	ret = wl1271_configure_suspend(wl, wow);
+	ret = wl1271_configure_suspend(wl);
 	if (ret < 0) {
 		wl1271_warning("couldn't prepare device to suspend");
 		return ret;
@@ -2236,11 +2108,8 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl,
 	wl->time_offset = 0;
 	wl->session_counter = 0;
 	wl->rate_set = CONF_TX_RATE_MASK_BASIC;
-	wl->bitrate_masks[IEEE80211_BAND_2GHZ] = wl->conf.tx.basic_rate;
-	wl->bitrate_masks[IEEE80211_BAND_5GHZ] = wl->conf.tx.basic_rate_5;
 	wl->vif = NULL;
 	wl->filters = 0;
-	wl->tx_spare_blocks = TX_HW_BLOCK_SPARE_DEFAULT;
 	wl1271_free_ap_keys(wl);
 	memset(wl->ap_hlid_map, 0, sizeof(wl->ap_hlid_map));
 	wl->ap_fw_ps_map = 0;
@@ -2350,9 +2219,6 @@ static int wl1271_join(struct wl1271 *wl, bool set_assoc)
 	if (test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags))
 		wl1271_info("JOIN while associated.");
 
-	/* clear encryption type */
-	wl->encryption_type = KEY_NONE;
-
 	if (set_assoc)
 		set_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags);
 
@@ -2419,8 +2285,14 @@ out:
 
 static void wl1271_set_band_rate(struct wl1271 *wl)
 {
-	wl->basic_rate_set = wl->bitrate_masks[wl->band];
-	wl->rate_set = wl->basic_rate_set;
+	if (wl->band == IEEE80211_BAND_2GHZ) {
+		wl->basic_rate_set = wl->conf.tx.basic_rate;
+		wl->rate_set = wl->conf.tx.basic_rate;
+	} else {
+		wl->basic_rate_set = wl->conf.tx.basic_rate_5;
+		wl->rate_set = wl->conf.tx.basic_rate_5;
+	}
+
 }
 
 static int wl1271_sta_handle_idle(struct wl1271 *wl, bool idle)
@@ -2437,7 +2309,7 @@ static int wl1271_sta_handle_idle(struct wl1271 *wl, bool idle)
 			if (ret < 0)
 				goto out;
 		}
-		wl->rate_set = wl1271_tx_min_rate_get(wl, wl->basic_rate_set);
+		wl->rate_set = wl1271_tx_min_rate_get(wl);
 		ret = wl1271_acx_sta_rate_policies(wl);
 		if (ret < 0)
 			goto out;
@@ -2534,8 +2406,7 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
 			if (!test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags))
 				wl1271_set_band_rate(wl);
 
-			wl->basic_rate =
-				wl1271_tx_min_rate_get(wl, wl->basic_rate_set);
+			wl->basic_rate = wl1271_tx_min_rate_get(wl);
 			ret = wl1271_acx_sta_rate_policies(wl);
 			if (ret < 0)
 				wl1271_warning("rate policy for channel "
@@ -2903,17 +2774,6 @@ static int wl1271_set_key(struct wl1271 *wl, u16 action, u8 id, u8 key_type,
 			0xff, 0xff, 0xff, 0xff, 0xff, 0xff
 		};
 
-		/*
-		 * A STA set to GEM cipher requires 2 tx spare blocks.
-		 * Return to default value when GEM cipher key is removed
-		 */
-		if (key_type == KEY_GEM) {
-			if (action == KEY_ADD_OR_REPLACE)
-				wl->tx_spare_blocks = 2;
-			else if (action == KEY_REMOVE)
-				wl->tx_spare_blocks = TX_HW_BLOCK_SPARE_DEFAULT;
-		}
-
 		addr = sta ? sta->addr : bcast_addr;
 
 		if (is_zero_ether_addr(addr)) {
@@ -3030,17 +2890,6 @@ static int wl1271_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 		if (ret < 0) {
 			wl1271_error("Could not add or replace key");
 			goto out_sleep;
-		}
-
-		/* reconfiguring arp response (data packet) */
-		if (wl->bss_type == BSS_TYPE_STA_BSS &&
-		    wl->encryption_type != key_type) {
-			wl->encryption_type = key_type;
-			ret = wl1271_cmd_build_arp_rsp(wl, wl->ip_addr);
-			if (ret < 0) {
-				wl1271_warning("build arp rsp failed: %d", ret);
-				goto out_sleep;
-			}
 		}
 		break;
 
@@ -3324,29 +3173,7 @@ static void wl1271_remove_vendor_ie(struct sk_buff *skb,
 	skb_trim(skb, skb->len - len);
 }
 
-static int wl1271_ap_set_probe_resp_tmpl(struct wl1271 *wl, u32 rates)
-{
-	struct sk_buff *skb;
-	int ret;
-
-	skb = ieee80211_proberesp_get(wl->hw, wl->vif);
-	if (!skb)
-		return -EINVAL;
-
-	ret = wl1271_cmd_template_set(wl,
-				      CMD_TEMPL_AP_PROBE_RESPONSE,
-				      skb->data,
-				      skb->len, 0,
-				      rates);
-
-	if (!ret)
-		set_bit(WL1271_FLAG_PROBE_RESP_SET, &wl->flags);
-
-	dev_kfree_skb(skb);
-	return ret;
-}
-
-static int wl1271_ap_set_probe_resp_tmpl_legacy(struct wl1271 *wl,
+static int wl1271_ap_set_probe_resp_tmpl(struct wl1271 *wl,
 					 u8 *probe_rsp_data,
 					 size_t probe_rsp_len,
 					 u32 rates)
@@ -3456,25 +3283,15 @@ static int wl1271_bss_beacon_info_changed(struct wl1271 *wl,
 		wl->beacon_int = bss_conf->beacon_int;
 	}
 
-	if ((changed & BSS_CHANGED_AP_PROBE_RESP) && is_ap) {
-		ret = wl1271_ap_set_probe_resp_tmpl(wl,
-			wl1271_tx_min_rate_get(wl, wl->basic_rate_set));
-		if (ret < 0)
-			goto out;
-	}
-
 	if ((changed & BSS_CHANGED_BEACON)) {
 		struct ieee80211_hdr *hdr;
-		u32 min_rate;
 		int ieoffset = offsetof(struct ieee80211_mgmt,
 					u.beacon.variable);
 		struct sk_buff *beacon = ieee80211_beacon_get(wl->hw, vif);
 		u16 tmpl_id;
 
-		if (!beacon) {
-			ret = -EINVAL;
+		if (!beacon)
 			goto out;
-		}
 
 		wl1271_debug(DEBUG_MASTER, "beacon updated");
 
@@ -3483,24 +3300,16 @@ static int wl1271_bss_beacon_info_changed(struct wl1271 *wl,
 			dev_kfree_skb(beacon);
 			goto out;
 		}
-		min_rate = wl1271_tx_min_rate_get(wl, wl->basic_rate_set);
 		tmpl_id = is_ap ? CMD_TEMPL_AP_BEACON :
 				  CMD_TEMPL_BEACON;
 		ret = wl1271_cmd_template_set(wl, tmpl_id,
 					      beacon->data,
 					      beacon->len, 0,
-					      min_rate);
+					      wl1271_tx_min_rate_get(wl));
 		if (ret < 0) {
 			dev_kfree_skb(beacon);
 			goto out;
 		}
-
-		/*
-		 * In case we already have a probe-resp beacon set explicitly
-		 * by usermode, don't use the beacon data.
-		 */
-		if (test_bit(WL1271_FLAG_PROBE_RESP_SET, &wl->flags))
-			goto end_bcn;
 
 		/* remove TIM ie from probe response */
 		wl1271_remove_ie(beacon, WLAN_EID_TIM, ieoffset);
@@ -3519,25 +3328,22 @@ static int wl1271_bss_beacon_info_changed(struct wl1271 *wl,
 		hdr->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
 						 IEEE80211_STYPE_PROBE_RESP);
 		if (is_ap)
-			ret = wl1271_ap_set_probe_resp_tmpl_legacy(wl,
+			ret = wl1271_ap_set_probe_resp_tmpl(wl,
 						beacon->data,
 						beacon->len,
-						min_rate);
+						wl1271_tx_min_rate_get(wl));
 		else
 			ret = wl1271_cmd_template_set(wl,
 						CMD_TEMPL_PROBE_RESPONSE,
 						beacon->data,
 						beacon->len, 0,
-						min_rate);
-end_bcn:
+						wl1271_tx_min_rate_get(wl));
 		dev_kfree_skb(beacon);
 		if (ret < 0)
 			goto out;
 	}
 
 out:
-	if (ret != 0)
-		wl1271_error("beacon info change failed: %d", ret);
 	return ret;
 }
 
@@ -3635,10 +3441,18 @@ static void wl1271_bss_info_changed_ap(struct wl1271 *wl,
 	if ((changed & BSS_CHANGED_BASIC_RATES)) {
 		u32 rates = bss_conf->basic_rates;
 
-		wl->basic_rate_set = wl1271_tx_enabled_rates_get(wl, rates,
-								 wl->band);
-		wl->basic_rate = wl1271_tx_min_rate_get(wl,
-							wl->basic_rate_set);
+		wl->basic_rate_set = wl1271_tx_enabled_rates_get(wl, rates);
+		/*
+		 * TODO: this is a temporary workaround. we should implement
+		 * some set_bitrate_mask() callback instead.
+		 */
+		if (wl->p2p)
+			wl->basic_rate_set &= ~(CONF_HW_BIT_RATE_1MBPS |
+						CONF_HW_BIT_RATE_2MBPS |
+						CONF_HW_BIT_RATE_5_5MBPS |
+						CONF_HW_BIT_RATE_11MBPS);
+
+		wl->basic_rate = wl1271_tx_min_rate_get(wl);
 
 		ret = wl1271_init_ap_rates(wl);
 		if (ret < 0) {
@@ -3672,8 +3486,6 @@ static void wl1271_bss_info_changed_ap(struct wl1271 *wl,
 					goto out;
 
 				clear_bit(WL1271_FLAG_AP_STARTED, &wl->flags);
-				clear_bit(WL1271_FLAG_PROBE_RESP_SET,
-					    &wl->flags);
 				wl1271_debug(DEBUG_AP, "stopped AP");
 			}
 		}
@@ -3819,15 +3631,12 @@ sta_not_found:
 			 * to use with control frames.
 			 */
 			rates = bss_conf->basic_rates;
-			wl->basic_rate_set =
-				wl1271_tx_enabled_rates_get(wl, rates,
-							    wl->band);
-			wl->basic_rate =
-				wl1271_tx_min_rate_get(wl, wl->basic_rate_set);
+			wl->basic_rate_set = wl1271_tx_enabled_rates_get(wl,
+									 rates);
+			wl->basic_rate = wl1271_tx_min_rate_get(wl);
 			if (sta_rate_set)
 				wl->rate_set = wl1271_tx_enabled_rates_get(wl,
-								sta_rate_set,
-								wl->band);
+								sta_rate_set);
 			ret = wl1271_acx_sta_rate_policies(wl);
 			if (ret < 0)
 				goto out;
@@ -3874,8 +3683,7 @@ sta_not_found:
 
 			/* revert back to minimum rates for the current band */
 			wl1271_set_band_rate(wl);
-			wl->basic_rate =
-				wl1271_tx_min_rate_get(wl, wl->basic_rate_set);
+			wl->basic_rate = wl1271_tx_min_rate_get(wl);
 			ret = wl1271_acx_sta_rate_policies(wl);
 			if (ret < 0)
 				goto out;
@@ -3926,11 +3734,9 @@ sta_not_found:
 
 		if (bss_conf->ibss_joined) {
 			u32 rates = bss_conf->basic_rates;
-			wl->basic_rate_set =
-				wl1271_tx_enabled_rates_get(wl, rates,
-							    wl->band);
-			wl->basic_rate =
-				wl1271_tx_min_rate_get(wl, wl->basic_rate_set);
+			wl->basic_rate_set = wl1271_tx_enabled_rates_get(wl,
+									 rates);
+			wl->basic_rate = wl1271_tx_min_rate_get(wl);
 
 			/* by default, use 11b rates */
 			wl->rate_set = CONF_TX_IBSS_DEFAULT_RATES;
@@ -3948,7 +3754,6 @@ sta_not_found:
 		__be32 addr = bss_conf->arp_addr_list[0];
 		WARN_ON(wl->bss_type != BSS_TYPE_STA_BSS);
 
-		wl1271_debug(DEBUG_ACX, "acx arp changing arp filter addr_cnt: %d, arp enabled: %d", bss_conf->arp_addr_cnt, bss_conf->arp_filter_enabled);
 		if (bss_conf->arp_addr_cnt == 1 &&
 		    bss_conf->arp_filter_enabled) {
 			/*
@@ -3957,7 +3762,6 @@ sta_not_found:
 			 * isn't being set (when sending), so we have to
 			 * reconfigure the template upon every ip change.
 			 */
-			wl->ip_addr = addr;
 			ret = wl1271_cmd_build_arp_rsp(wl, addr);
 			if (ret < 0) {
 				wl1271_warning("build arp rsp failed: %d", ret);
@@ -3965,12 +3769,10 @@ sta_not_found:
 			}
 
 			ret = wl1271_acx_arp_ip_filter(wl,
-				/*ACX_ARP_FILTER_ARP_FILTERING*/  ACX_ARP_FILTER_AUTO_ARP,
+				ACX_ARP_FILTER_ARP_FILTERING,
 				addr);
-		} else {
-			wl->ip_addr = 0;
+		} else
 			ret = wl1271_acx_arp_ip_filter(wl, 0, addr);
-			}
 
 		if (ret < 0)
 			goto out;
@@ -3995,7 +3797,7 @@ sta_not_found:
 		 * stop device role if started (we might already be in
 		 * STA role). TODO: make it better.
 		 */
-		if (wl->dev_hlid != WL1271_INVALID_LINK_ID) {
+		if (wl->dev_role_id != WL1271_INVALID_ROLE_ID) {
 			ret = wl1271_croc(wl, wl->dev_role_id);
 			if (ret < 0)
 				goto out;
@@ -4508,29 +4310,6 @@ out:
 	mutex_unlock(&wl->mutex);
 }
 
-static int wl12xx_set_bitrate_mask(struct ieee80211_hw *hw,
-				   struct ieee80211_vif *vif,
-				   const struct cfg80211_bitrate_mask *mask)
-{
-	struct wl1271 *wl = hw->priv;
-	int i;
-
-	wl1271_debug(DEBUG_MAC80211, "mac80211 set_bitrate_mask 0x%x 0x%x",
-		mask->control[NL80211_BAND_2GHZ].legacy,
-		mask->control[NL80211_BAND_5GHZ].legacy);
-
-	mutex_lock(&wl->mutex);
-
-	for (i = 0; i < IEEE80211_NUM_BANDS; i++)
-		wl->bitrate_masks[i] =
-			wl1271_tx_enabled_rates_get(wl,
-						    mask->control[i].legacy,
-						    i);
-	mutex_unlock(&wl->mutex);
-
-	return 0;
-}
-
 static bool wl1271_tx_frames_pending(struct ieee80211_hw *hw)
 {
 	struct wl1271 *wl = hw->priv;
@@ -4617,7 +4396,6 @@ static struct ieee80211_channel wl1271_channels[] = {
 /* mapping to indexes for wl1271_rates */
 static const u8 wl1271_rate_to_idx_2ghz[] = {
 	/* MCS rates are used only with 11n */
-	7,                            /* CONF_HW_RXTX_RATE_MCS7_SGI */
 	7,                            /* CONF_HW_RXTX_RATE_MCS7 */
 	6,                            /* CONF_HW_RXTX_RATE_MCS6 */
 	5,                            /* CONF_HW_RXTX_RATE_MCS5 */
@@ -4648,6 +4426,7 @@ static const u8 wl1271_rate_to_idx_2ghz[] = {
 /* 11n STA capabilities */
 #define HW_RX_HIGHEST_RATE	72
 
+#ifdef CONFIG_WL12XX_HT
 #define WL12XX_HT_CAP { \
 	.cap = IEEE80211_HT_CAP_GRN_FLD | IEEE80211_HT_CAP_SGI_20 | \
 	       (1 << IEEE80211_HT_CAP_RX_STBC_SHIFT), \
@@ -4660,6 +4439,11 @@ static const u8 wl1271_rate_to_idx_2ghz[] = {
 		.tx_params = IEEE80211_HT_MCS_TX_DEFINED, \
 		}, \
 }
+#else
+#define WL12XX_HT_CAP { \
+	.ht_supported = false, \
+}
+#endif
 
 /* can't be const, mac80211 writes to this */
 static struct ieee80211_supported_band wl1271_band_2ghz = {
@@ -4739,7 +4523,6 @@ static struct ieee80211_channel wl1271_channels_5ghz[] = {
 /* mapping to indexes for wl1271_rates_5ghz */
 static const u8 wl1271_rate_to_idx_5ghz[] = {
 	/* MCS rates are used only with 11n */
-	7,                            /* CONF_HW_RXTX_RATE_MCS7_SGI */
 	7,                            /* CONF_HW_RXTX_RATE_MCS7 */
 	6,                            /* CONF_HW_RXTX_RATE_MCS6 */
 	5,                            /* CONF_HW_RXTX_RATE_MCS5 */
@@ -4807,7 +4590,6 @@ static const struct ieee80211_ops wl1271_ops = {
 	.ampdu_action = wl1271_op_ampdu_action,
 	.tx_frames_pending = wl1271_tx_frames_pending,
 	.channel_switch = wl12xx_op_channel_switch,
-	.set_bitrate_mask = wl12xx_set_bitrate_mask,
 	CFG80211_TESTMODE_CMD(wl1271_tm_cmd)
 };
 
@@ -5043,7 +4825,7 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
 	};
 
 	/* The tx descriptor buffer and the TKIP space. */
-	wl->hw->extra_tx_headroom = WL1271_EXTRA_SPACE_TKIP +
+	wl->hw->extra_tx_headroom = WL1271_TKIP_IV_SPACE +
 		sizeof(struct wl1271_tx_hw_descr);
 
 	/* unit us */
@@ -5071,17 +4853,12 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
 		BIT(NL80211_IFTYPE_ADHOC) | BIT(NL80211_IFTYPE_AP) |
 		BIT(NL80211_IFTYPE_P2P_CLIENT) | BIT(NL80211_IFTYPE_P2P_GO);
 	wl->hw->wiphy->max_scan_ssids = 1;
-	wl->hw->wiphy->max_sched_scan_ssids = 16;
-	wl->hw->wiphy->max_match_sets = 16;
 	/*
 	 * Maximum length of elements in scanning probe request templates
 	 * should be the maximum length possible for a template, without
 	 * the IEEE80211 header of the template
 	 */
 	wl->hw->wiphy->max_scan_ie_len = WL1271_CMD_TEMPL_DFLT_SIZE -
-			sizeof(struct ieee80211_header);
-
-	wl->hw->wiphy->max_sched_scan_ie_len = WL1271_CMD_TEMPL_DFLT_SIZE -
 			sizeof(struct ieee80211_header);
 
 	/* make sure all our channels fit in the scanned_ch bitmask */
@@ -5213,7 +4990,6 @@ struct ieee80211_hw *wl1271_alloc_hw(void)
 	wl->tx_security_seq = 0;
 	wl->tx_security_last_seq_lsb = 0;
 	wl->active_sta_count = 0;
-	wl->tx_spare_blocks = TX_HW_BLOCK_SPARE_DEFAULT;
 
 	setup_timer(&wl->rx_streaming_timer, wl1271_rx_streaming_timer,
 		    (unsigned long) wl);
@@ -5241,8 +5017,6 @@ struct ieee80211_hw *wl1271_alloc_hw(void)
 
 	/* Apply default driver configuration. */
 	wl1271_conf_init(wl);
-	wl->bitrate_masks[IEEE80211_BAND_2GHZ] = wl->conf.tx.basic_rate;
-	wl->bitrate_masks[IEEE80211_BAND_5GHZ] = wl->conf.tx.basic_rate_5;
 
 	order = get_order(WL1271_AGGR_BUFFER_SIZE);
 	wl->aggr_buf = (u8 *)__get_free_pages(GFP_KERNEL, order);
@@ -5370,7 +5144,7 @@ int wl1271_free_hw(struct wl1271 *wl)
 }
 EXPORT_SYMBOL_GPL(wl1271_free_hw);
 
-u32 wl12xx_debug_level = DEBUG_NONE/*DEBUG_MAC80211 | DEBUG_FILTERS | DEBUG_ACX | DEBUG_EVENT*/;
+u32 wl12xx_debug_level = DEBUG_NONE;
 EXPORT_SYMBOL_GPL(wl12xx_debug_level);
 module_param_named(debug_level, wl12xx_debug_level, uint, S_IRUSR | S_IWUSR);
 MODULE_PARM_DESC(debug_level, "wl12xx debugging level");

@@ -1237,8 +1237,7 @@ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
 		ieee80211_send_nullfunc(sdata->local, sdata, 0);
 	} else {
 		ssid = ieee80211_bss_get_ie(ifmgd->associated, WLAN_EID_SSID);
-		ieee80211_send_probe_req(sdata, dst, ssid + 2, ssid[1], NULL, 0,
-					 (u32) -1, false);
+		ieee80211_send_probe_req(sdata, dst, ssid + 2, ssid[1], NULL, 0);
 	}
 
 	ifmgd->probe_send_count++;
@@ -1323,8 +1322,7 @@ struct sk_buff *ieee80211_ap_probereq_get(struct ieee80211_hw *hw,
 
 	ssid = ieee80211_bss_get_ie(ifmgd->associated, WLAN_EID_SSID);
 	skb = ieee80211_build_probe_req(sdata, ifmgd->associated->bssid,
-					(u32) -1, ssid + 2, ssid[1],
-					NULL, 0);
+					ssid + 2, ssid[1], NULL, 0);
 
 	return skb;
 }

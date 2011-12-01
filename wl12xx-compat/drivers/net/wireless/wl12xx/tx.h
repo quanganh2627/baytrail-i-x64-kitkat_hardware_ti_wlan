@@ -25,7 +25,6 @@
 #ifndef __TX_H__
 #define __TX_H__
 
-#define TX_HW_BLOCK_SPARE_DEFAULT        1
 #define TX_HW_BLOCK_SIZE                 252
 
 #define TX_HW_MGMT_PKT_LIFETIME_TU       2000
@@ -51,9 +50,7 @@
 #define TX_HW_RESULT_QUEUE_LEN_MASK      0xf
 
 #define WL1271_TX_ALIGN_TO 4
-#define WL1271_EXTRA_SPACE_TKIP 4
-#define WL1271_EXTRA_SPACE_AES  8
-#define WL1271_EXTRA_SPACE_MAX  8
+#define WL1271_TKIP_IV_SPACE 4
 
 /* Used for management frames and dummy packets */
 #define WL1271_TID_MGMT 7
@@ -211,9 +208,8 @@ void wl1271_tx_complete(struct wl1271 *wl);
 void wl1271_tx_reset(struct wl1271 *wl, bool reset_tx_queues);
 void wl1271_tx_flush(struct wl1271 *wl);
 u8 wl1271_rate_to_idx(int rate, enum ieee80211_band band);
-u32 wl1271_tx_enabled_rates_get(struct wl1271 *wl, u32 rate_set,
-				enum ieee80211_band rate_band);
-u32 wl1271_tx_min_rate_get(struct wl1271 *wl, u32 rate_set);
+u32 wl1271_tx_enabled_rates_get(struct wl1271 *wl, u32 rate_set);
+u32 wl1271_tx_min_rate_get(struct wl1271 *wl);
 u8 wl1271_tx_get_hlid(struct wl1271 *wl, struct sk_buff *skb);
 void wl1271_tx_reset_link_queues(struct wl1271 *wl, u8 hlid);
 void wl1271_handle_tx_low_watermark(struct wl1271 *wl);

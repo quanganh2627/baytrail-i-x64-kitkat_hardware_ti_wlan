@@ -165,7 +165,6 @@ struct ieee80211_low_level_stats {
  *	that it is only ever disabled for station mode.
  * @BSS_CHANGED_IDLE: Idle changed for this BSS/interface.
  * @BSS_CHANGED_SSID: SSID changed for this BSS (AP mode)
- * @BSS_CHANGED_AP_PROBE_RESP: Probe Response changed for this BSS (AP mode)
  */
 enum ieee80211_bss_change {
 	BSS_CHANGED_ASSOC		= 1<<0,
@@ -184,7 +183,6 @@ enum ieee80211_bss_change {
 	BSS_CHANGED_QOS			= 1<<13,
 	BSS_CHANGED_IDLE		= 1<<14,
 	BSS_CHANGED_SSID		= 1<<15,
-	BSS_CHANGED_AP_PROBE_RESP	= 1<<16,
 
 	/* when adding here, make sure to change ieee80211_reconfig */
 };
@@ -352,9 +350,6 @@ struct ieee80211_bss_conf {
  * @IEEE80211_TX_INTFL_TKIP_MIC_FAILURE: Marks this packet to be used for TKIP
  *	testing. It will be sent out with incorrect Michael MIC key to allow
  *	TKIP countermeasures to be tested.
- * @IEEE80211_TX_CTL_NO_CCK_RATE: This frame will be sent at non CCK rate.
- *	This flag is actually used for management frame especially for P2P
- *	frames not being sent at CCK rate in 2GHz band.
  *
  * Note: If you have to add new flags to the enumeration, then don't
  *	 forget to update %IEEE80211_TX_TEMPORARY_FLAGS when necessary.
@@ -385,7 +380,6 @@ enum mac80211_tx_control_flags {
 	IEEE80211_TX_CTL_STBC			= BIT(23) | BIT(24),
 	IEEE80211_TX_CTL_TX_OFFCHAN		= BIT(25),
 	IEEE80211_TX_INTFL_TKIP_MIC_FAILURE	= BIT(26),
-	IEEE80211_TX_CTL_NO_CCK_RATE		= BIT(27),
 };
 
 #define IEEE80211_TX_CTL_STBC_SHIFT		23
@@ -1115,12 +1109,7 @@ enum ieee80211_tkip_key_type {
  *
  * @IEEE80211_HW_TX_AMPDU_IN_HW_ONLY: The device handles TX aggregation
  *	strictly in HW. Packets should not be aggregated in software.
- *
- * @IEEE80211_HW_SUPPORTS_CANCEL_SCAN: Hardware supports cancel scan operation.
- *
- * @IEEE80211_HW_SUPPORTS_IM_SCAN_EVENT: Hardware supports intemediate scan
- *	event.
-*/
+ */
 enum ieee80211_hw_flags {
 	IEEE80211_HW_HAS_RATE_CONTROL			= 1<<0,
 	IEEE80211_HW_RX_INCLUDES_FCS			= 1<<1,
@@ -1146,8 +1135,6 @@ enum ieee80211_hw_flags {
 	IEEE80211_HW_SUPPORTS_PER_STA_GTK		= 1<<21,
 	IEEE80211_HW_AP_LINK_PS				= 1<<22,
 	IEEE80211_HW_TX_AMPDU_IN_HW_ONLY		= 1<<23,
-	IEEE80211_HW_SUPPORTS_CANCEL_SCAN		= 1<<24,
-	IEEE80211_HW_SUPPORTS_IM_SCAN_EVENT		= 1<<25,
 };
 
 /**
@@ -2433,19 +2420,6 @@ static inline struct sk_buff *ieee80211_beacon_get(struct ieee80211_hw *hw,
 {
 	return ieee80211_beacon_get_tim(hw, vif, NULL, NULL);
 }
-
-/**
- * ieee80211_proberesp_get - retrieve a Probe Response template
- * @hw: pointer obtained from ieee80211_alloc_hw().
- * @vif: &struct ieee80211_vif pointer from the add_interface callback.
- *
- * Creates a Probe Response template which can, for example, be uploaded to
- * hardware. The destination address should be set by the caller.
- *
- * Can only be called in AP mode.
- */
-struct sk_buff *ieee80211_proberesp_get(struct ieee80211_hw *hw,
-					struct ieee80211_vif *vif);
 
 /**
  * ieee80211_pspoll_get - retrieve a PS Poll template

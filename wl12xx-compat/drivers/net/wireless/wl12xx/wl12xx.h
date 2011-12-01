@@ -91,7 +91,7 @@ extern u32 wl12xx_debug_level;
 #define wl1271_debug(level, fmt, arg...) \
 	do { \
 		if (level & wl12xx_debug_level) \
-			pr_info(DRIVER_PREFIX fmt "\n", ##arg); \
+			pr_debug(DRIVER_PREFIX fmt "\n", ##arg); \
 	} while (0)
 
 /* TODO: use pr_debug_hex_dump when it will be available */
@@ -381,7 +381,6 @@ enum wl12xx_flags {
 	WL1271_FLAG_RX_STREAMING_STARTED,
 	WL1271_FLAG_RECOVERY_IN_PROGRESS,
 	WL1271_FLAG_CS_PROGRESS,
-	WL1271_FLAG_PROBE_RESP_SET,
 };
 
 struct wl1271_link {
@@ -396,29 +395,6 @@ struct wl1271_link {
 
 	/* bitmap of TIDs where RX BA sessions are active for this link */
 	u8 ba_bitmap;
-};
-
-#define WL1271_MAX_RX_DATA_FILTERS 4
-#define WL1271_MAX_RX_DATA_FILTER_SIZE 98
-#define WL1271_RX_DATA_FILTER_MAX_FIELD_PATTERNS 8
-#define WL1271_RX_DATA_FILTER_MAX_PATTERN_SIZE 64
-#define WL1271_RX_DATA_FILTER_ETH_HEADER_SIZE 14
-
-#define WL1271_RX_DATA_FILTER_FLAG_IP_HEADER           0
-#define WL1271_RX_DATA_FILTER_FLAG_ETHERNET_HEADER     2
-
-enum rx_data_filter_action {
-	FILTER_DROP = 0,
-	FILTER_SIGNAL = 1,
-	FILTER_FW_HANDLE = 2
-};
-
-struct wl12xx_rx_data_filter {
-	bool enabled;
-	enum rx_data_filter_action action;
-	u8 len;
-	u16 offset;
-	u8 pattern[WL1271_MAX_RX_DATA_FILTER_SIZE];
 };
 
 struct wl1271 {
@@ -483,9 +459,6 @@ struct wl1271 {
 	u32 tx_blocks_available;
 	u32 tx_allocated_blocks;
 	u32 tx_results_count;
-
-	/* amount of spare TX blocks to use */
-	u32 tx_spare_blocks;
 
 	/* Accounting for allocated / available Tx packets in HW */
 	u32 tx_pkts_freed[NUM_TX_QUEUES];
@@ -584,7 +557,6 @@ struct wl1271 {
 	u32 basic_rate_set;
 	u32 basic_rate;
 	u32 rate_set;
-	u32 bitrate_masks[IEEE80211_NUM_BANDS];
 
 	/* The current band */
 	enum ieee80211_band band;
@@ -658,10 +630,6 @@ struct wl1271 {
 	/* bands supported by this instance of wl12xx */
 	struct ieee80211_supported_band bands[IEEE80211_NUM_BANDS];
 
-	/* save the current encryption type for auto-arp config*/
-	u8 encryption_type;
-	__be32 ip_addr;
-
 	/* RX BA constraint value */
 	bool ba_support;
 	u8 ba_rx_bitmap;
@@ -709,16 +677,6 @@ struct wl1271 {
 
 	/* AP-mode - work to add stations back on AP reconfig */
 	struct work_struct ap_start_work;
-
-	/* Global on/off switch for rx all rx filters */
-	bool rx_data_filter_enabled;
-
-	/* Default action for packets not matching any rule */
-	enum rx_data_filter_action rx_data_filter_policy;
-
-	/* RX Data filter rule descriptors */
-	struct wl12xx_rx_data_filter
-				rx_data_filters[WL1271_MAX_RX_DATA_FILTERS];
 };
 
 struct wl1271_station {

@@ -379,45 +379,6 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
 	return 0;
 }
 
-
-int wl1271_event_toggle_rssi_triggers(struct wl1271 *wl, bool mask)
-{
-        int ret;
-	
-        wl1271_debug(DEBUG_EVENT, "Before RSSI triggers mask 0x%x", wl->event_mask);
-
-        /* Mask/unmask all RSSI SNR triggers for now */
-        if (mask)
-                wl->event_mask |= /*RSSI_SNR_TRIGGER_0_EVENT_ID |*/ 
-                          RSSI_SNR_TRIGGER_1_EVENT_ID |
-                          RSSI_SNR_TRIGGER_2_EVENT_ID |
-                          RSSI_SNR_TRIGGER_3_EVENT_ID |
-                          RSSI_SNR_TRIGGER_4_EVENT_ID |
-                          RSSI_SNR_TRIGGER_5_EVENT_ID |
-                          RSSI_SNR_TRIGGER_6_EVENT_ID |
-                          RSSI_SNR_TRIGGER_7_EVENT_ID;
-        else
-                wl->event_mask &= ~(/*RSSI_SNR_TRIGGER_0_EVENT_ID |*/ 
-                          RSSI_SNR_TRIGGER_1_EVENT_ID |
-                          RSSI_SNR_TRIGGER_2_EVENT_ID |
-                          RSSI_SNR_TRIGGER_3_EVENT_ID |
-                          RSSI_SNR_TRIGGER_4_EVENT_ID |
-                          RSSI_SNR_TRIGGER_5_EVENT_ID |
-                          RSSI_SNR_TRIGGER_6_EVENT_ID |
-                          RSSI_SNR_TRIGGER_7_EVENT_ID);
-
-	ret = wl1271_acx_event_mbox_mask(wl, wl->event_mask);
-	if (ret < 0) {
-		wl1271_error("EVENT mask setting failed");
-		return ret;
-	}
-        wl1271_debug(DEBUG_EVENT, "After RSSI triggers mask 0x%x", wl->event_mask);
-        wl1271_event_mbox_config(wl);
-        
-        return 0;
-}
-
-
 int wl1271_event_unmask(struct wl1271 *wl)
 {
 	int ret;
