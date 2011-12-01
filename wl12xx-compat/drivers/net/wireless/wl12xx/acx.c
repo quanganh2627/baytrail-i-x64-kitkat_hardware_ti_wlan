@@ -1239,7 +1239,7 @@ int wl1271_acx_keep_alive_config(struct wl1271 *wl, u8 index, u8 tpl_valid)
 	acx->period = cpu_to_le32(wl->conf.conn.keep_alive_interval);
 	acx->index = index;
 	acx->tpl_validation = tpl_valid;
-	acx->trigger = ACX_KEEP_ALIVE_NO_TX;
+	acx->trigger = ACX_KEEP_ALIVE_PERIOD_ONLY;
 
 	ret = wl1271_cmd_configure(wl, ACX_SET_KEEP_ALIVE_CONFIG,
 				   acx, sizeof(*acx));

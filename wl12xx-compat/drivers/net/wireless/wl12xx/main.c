@@ -241,7 +241,7 @@ static struct conf_drv_settings default_conf = {
 		.psm_entry_retries           = 8,
 		.psm_exit_retries            = 16,
 		.psm_entry_nullfunc_retries  = 3,
-		.keep_alive_interval         = 55000,
+		.keep_alive_interval         = 10000,
 		.max_listen_interval         = 20,
 	},
 	.itrim = {
