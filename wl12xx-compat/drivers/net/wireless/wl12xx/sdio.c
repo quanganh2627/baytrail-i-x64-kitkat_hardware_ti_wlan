@@ -272,6 +272,9 @@ static int __devinit wl1271_probe(struct sdio_func *func,
 	else
 		irqflags = IRQF_TRIGGER_HIGH | IRQF_ONESHOT;
 
+	/* The driver handles the interrupt during suspend */
+	irqflags |= IRQF_NO_SUSPEND;
+
 	ret = request_threaded_irq(wl->irq, wl1271_hardirq, wl1271_irq,
 				   irqflags,
 				   DRIVER_NAME, wl);
