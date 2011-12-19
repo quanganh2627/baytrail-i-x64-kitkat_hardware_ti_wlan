@@ -12,14 +12,14 @@ LOCAL_SRC_FILES := \
 		plt.c \
 		ini.c
 
-LOCAL_CFLAGS :=
+LOCAL_CFLAGS := -DCONFIG_LIBNL20
 LOCAL_LDFLAGS := -Wl,--no-gc-sections
 
 LOCAL_C_INCLUDES := \
 	$(LOCAL_PATH) \
-	external/libnl/include
+	external/libnl-headers
 
-LOCAL_SHARED_LIBRARIES := libnl
+LOCAL_STATIC_LIBRARIES := libnl_2
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := calibrator
 
