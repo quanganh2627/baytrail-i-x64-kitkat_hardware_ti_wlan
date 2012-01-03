@@ -316,6 +316,9 @@ static int __devinit wl1271_probe(struct sdio_func *func,
 	/* Tell PM core that we don't need the card to be powered now */
 	pm_runtime_put_noidle(&func->dev);
 
+	/* Avoid manual resume */
+	func->card->host->bus_resume_flags = 0;
+
 	return 0;
 
  out_irq:
@@ -341,6 +344,10 @@ static void __devexit wl1271_remove(struct sdio_func *func)
 	}
 	free_irq(wl->irq, wl);
 	wl1271_free_hw(wl);
+
+	/* Enable manual resume */
+	func->card->host->bus_resume_flags |= MMC_BUSRESUME_MANUAL_RESUME;
+
 }
 
 static int wl1271_suspend(struct device *dev)
