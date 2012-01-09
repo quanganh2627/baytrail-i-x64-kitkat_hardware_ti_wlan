@@ -120,6 +120,7 @@ static void wl1271_sdio_raw_read(struct wl1271 *wl, int addr, void *buf,
 	int ret;
 	struct sdio_func *func = wl_to_func(wl);
 
+	sdio_claim_host(func);
 	if (unlikely(addr == HW_ACCESS_ELP_CTRL_REG_ADDR)) {
 		((u8 *)buf)[0] = sdio_f0_readb(func, addr, &ret);
 		wl1271_debug(DEBUG_SDIO, "sdio read 52 addr 0x%x, byte 0x%02x",
@@ -137,6 +138,8 @@ static void wl1271_sdio_raw_read(struct wl1271 *wl, int addr, void *buf,
 
 	if (ret)
 		wl1271_error("sdio read failed (%d)", ret);
+
+	sdio_release_host(func);
 }
 
 static void wl1271_sdio_raw_write(struct wl1271 *wl, int addr, void *buf,
@@ -145,6 +148,7 @@ static void wl1271_sdio_raw_write(struct wl1271 *wl, int addr, void *buf,
 	int ret;
 	struct sdio_func *func = wl_to_func(wl);
 
+	sdio_claim_host(func);
 	if (unlikely(addr == HW_ACCESS_ELP_CTRL_REG_ADDR)) {
 		sdio_f0_writeb(func, ((u8 *)buf)[0], addr, &ret);
 		wl1271_debug(DEBUG_SDIO, "sdio write 52 addr 0x%x, byte 0x%02x",
@@ -162,6 +166,7 @@ static void wl1271_sdio_raw_write(struct wl1271 *wl, int addr, void *buf,
 
 	if (ret)
 		wl1271_error("sdio write failed (%d)", ret);
+	sdio_release_host(func);
 }
 
 static int wl1271_sdio_power_on(struct wl1271 *wl)
@@ -183,6 +188,7 @@ static int wl1271_sdio_power_on(struct wl1271 *wl)
 
 	sdio_claim_host(func);
 	sdio_enable_func(func);
+	sdio_release_host(func);
 
 out:
 	return ret;
@@ -193,6 +199,7 @@ static int wl1271_sdio_power_off(struct wl1271 *wl)
 	struct sdio_func *func = wl_to_func(wl);
 	int ret;
 
+	sdio_claim_host(func);
 	sdio_disable_func(func);
 	sdio_release_host(func);
 
@@ -379,9 +386,6 @@ static int wl1271_suspend(struct device *dev)
 			wl1271_error("error while trying to keep power");
 			goto out;
 		}
-
-		/* release host */
-		sdio_release_host(func);
 	}
 out:
 	return ret;
@@ -389,14 +393,8 @@ out:
 
 static int wl1271_resume(struct device *dev)
 {
-	struct sdio_func *func = dev_to_sdio_func(dev);
-	struct wl1271 *wl = sdio_get_drvdata(func);
 
 	wl1271_debug(DEBUG_MAC80211, "wl1271 resume");
-	if (wl->wow_enabled) {
-		/* claim back host */
-		sdio_claim_host(func);
-	}
 
 	return 0;
 }
