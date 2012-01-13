@@ -1888,6 +1888,7 @@ static int wl1271_op_suspend(struct ieee80211_hw *hw,
 	wl->wow_enabled = true;
 	ret = wl1271_configure_suspend(wl, wow);
 	if (ret < 0) {
+		wl->wow_enabled = false;
 		wl1271_warning("couldn't prepare device to suspend");
 		return ret;
 	}
