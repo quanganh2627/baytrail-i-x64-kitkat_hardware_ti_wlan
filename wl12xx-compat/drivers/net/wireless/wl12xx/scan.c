@@ -35,7 +35,6 @@ void wl1271_scan_complete_work(struct work_struct *work)
 	struct delayed_work *dwork;
 	struct wl1271 *wl;
 	int ret;
-	bool is_sta, is_ibss;
 
 	dwork = container_of(work, struct delayed_work, work);
 	wl = container_of(dwork, struct wl1271, scan_complete_work);
@@ -63,16 +62,6 @@ void wl1271_scan_complete_work(struct work_struct *work)
 		wl1271_cmd_build_ap_probe_req(wl, wl->probereq);
 	}
 
-	/* TODO: this is really ugly hack. we should avoid find another way */
-	is_sta = (wl->bss_type == BSS_TYPE_STA_BSS);
-	is_ibss = (wl->bss_type == BSS_TYPE_IBSS);
-	if (((is_sta && !test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags)) ||
-	     (is_ibss && !test_bit(WL1271_FLAG_IBSS_JOINED, &wl->flags))) &&
-	    !test_bit(wl->dev_role_id, wl->roc_map)) {
-		/* restore remain on channel */
-		wl1271_cmd_role_start_dev(wl);
-		wl1271_roc(wl, wl->dev_role_id);
-	}
 	wl1271_ps_elp_sleep(wl);
 
 	if (wl->scan.failed) {
@@ -417,15 +406,14 @@ wl1271_scan_get_sched_scan_channels(struct wl1271 *wl,
 
 			if (flags & IEEE80211_CHAN_RADAR)
 				channels[j].flags |= SCAN_CHANNEL_FLAGS_DFS;
-			if (flags & IEEE80211_CHAN_PASSIVE_SCAN) {
-				channels[j].passive_duration =
-					cpu_to_le16(c->dwell_time_passive);
-			} else {
-				channels[j].min_duration =
-					cpu_to_le16(c->min_dwell_time_active);
-				channels[j].max_duration =
-					cpu_to_le16(c->max_dwell_time_active);
-			}
+
+			channels[j].passive_duration =
+				cpu_to_le16(c->dwell_time_passive);
+			channels[j].min_duration =
+				cpu_to_le16(c->min_dwell_time_active);
+			channels[j].max_duration =
+				cpu_to_le16(c->max_dwell_time_active);
+
 			channels[j].tx_power_att = req->channels[i]->max_power;
 			channels[j].channel = req->channels[i]->hw_value;
 
@@ -549,7 +537,10 @@ wl12xx_scan_sched_scan_ssid_list(struct wl1271 *wl,
 			 * so they're used in probe requests.
 			 */
 			for (i = 0; i < req->n_ssids; i++) {
-				for (j = 0; j < cmd->n_ssids; j++)
+				if (!req->ssids[i].ssid_len)
+					continue;
+				
+                                for (j = 0; j < cmd->n_ssids; j++)
 					if (!memcmp(req->ssids[i].ssid,
 						   cmd->ssids[j].ssid,
 						   req->ssids[i].ssid_len)) {
@@ -558,7 +549,7 @@ wl12xx_scan_sched_scan_ssid_list(struct wl1271 *wl,
 						break;
 					}
 				/* Fail if SSID isn't present in the filters */
-				if (j == req->n_ssids) {
+				if (j == cmd->n_ssids) {
 					ret = -EINVAL;
 					goto out_free;
 				}
@@ -629,7 +620,7 @@ int wl1271_scan_sched_scan_config(struct wl1271 *wl,
 		goto out;
 	}
 
-	if (cfg->active[0]) {
+	if (!force_passive && cfg->active[0]) {
 		ret = wl1271_cmd_build_probe_req(wl, req->ssids[0].ssid,
 						 req->ssids[0].ssid_len,
 						 ies->ie[IEEE80211_BAND_2GHZ],
@@ -726,7 +717,6 @@ void wl1271_scan_sched_scan_stop(struct wl1271 *wl)
 		wl1271_error("failed to send sched scan stop command");
 		goto out_free;
 	}
-	wl->sched_scanning = false;
 
 out_free:
 	kfree(stop);
