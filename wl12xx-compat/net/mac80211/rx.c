@@ -1980,7 +1980,14 @@ ieee80211_rx_h_data(struct ieee80211_rx_data *rx)
 	    !is_broadcast_ether_addr(
 		    ((struct ethhdr *)rx->skb->data)->h_dest) &&
 	    (!local->scanning &&
-	     !test_bit(SDATA_STATE_OFFCHANNEL, &sdata->state))) {
+	     !test_bit(SDATA_STATE_OFFCHANNEL, &sdata->state)) &&
+	    /*
+		 Don't wakeup from power save if u-apsd is enabled,
+		 AC_VO queue has u-apsd enabled and packet is in the AC_VO queue.
+	    */
+	     !((sdata->u.mgd.flags & IEEE80211_STA_UAPSD_ENABLED) &&
+	     (local->uapsd_queues & IEEE80211_WMM_IE_STA_QOSINFO_AC_VO) &&
+	     (ieee802_1d_to_ac[rx->queue] == IEEE80211_AC_VO))) {
 		ieee80211_queue_work(&local->hw,
 				     &local->dynamic_ps_disable_work);
 
