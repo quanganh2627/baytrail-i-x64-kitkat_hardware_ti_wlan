@@ -216,7 +216,7 @@ static struct conf_drv_settings default_conf = {
 		.wake_up_event               = CONF_WAKE_UP_EVENT_DTIM,
 		.listen_interval             = 1,
 		.suspend_wake_up_event       = CONF_WAKE_UP_EVENT_N_DTIM,
-		.suspend_listen_interval     = 3,
+		.suspend_listen_interval     = 3,       /* this is now overwritten by dynamic config*/
 		.bcn_filt_mode               = CONF_BCN_FILT_MODE_ENABLED,
 		.bcn_filt_ie_count           = 2,
 		.bcn_filt_ie = {
@@ -3814,7 +3814,6 @@ sta_not_found:
 			set_assoc = true;
 
 			wl->ps_poll_failures = 0;
-
 			/*
 			 * use basic rates from AP, and determine lowest rate
 			 * to use with control frames.
@@ -3978,6 +3977,15 @@ sta_not_found:
 	}
 
 	if (do_join) {
+                /* We only want to wake up on NDTIM if AP configuration is
+                 * beacon interval = ~100ms
+                 * dtim = 1
+                 */
+                wl1271_debug(DEBUG_MAC80211, "AP beacon interval: %d, dtim period: %d",
+                                                 bss_conf->beacon_int, bss_conf->dtim_period);
+                if ((bss_conf->beacon_int/100)*bss_conf->dtim_period<=1)
+                    wl->conf.conn.suspend_listen_interval = 3;
+                else wl->conf.conn.suspend_listen_interval = 1;
 		ret = wl1271_join(wl, set_assoc);
 		if (ret < 0) {
 			wl1271_warning("cmd join failed %d", ret);
@@ -5063,7 +5071,8 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
 		IEEE80211_HW_SPECTRUM_MGMT |
 		IEEE80211_HW_AP_LINK_PS |
 		IEEE80211_HW_AMPDU_AGGREGATION |
-		IEEE80211_HW_TX_AMPDU_IN_HW_ONLY;
+		IEEE80211_HW_TX_AMPDU_IN_HW_ONLY |
+		IEEE80211_HW_NEED_DTIM_PERIOD;
 
 	wl->hw->wiphy->cipher_suites = cipher_suites;
 	wl->hw->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
