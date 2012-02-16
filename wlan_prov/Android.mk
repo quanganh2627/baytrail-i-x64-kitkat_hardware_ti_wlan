@@ -18,6 +18,9 @@ LOCAL_STATIC_LIBRARIES := \
 	CC6_UMIP_ACCESS CC6_ALL_BASIC_LIB
 endif
 
+ifeq ($(TARGET_PRODUCT),mfld_gi)
+LOCAL_CFLAGS += -DSINGLE_BAND
+endif
 
 LOCAL_SHARED_LIBRARIES := \
 	libc libcutils libhardware_legacy libcrypto
