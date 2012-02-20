@@ -24,6 +24,7 @@
 #include <fcntl.h>
 #include <cutils/log.h>
 #include <cutils/misc.h>
+#include <string.h>
 
 
 #ifdef BUILD_WITH_CHAABI_SUPPORT
@@ -52,6 +53,8 @@ const char NVS_file_name[] = WIFI_PATH"/nvs_map.bin";
 const char NVS_file_name[] = "/data/misc/firmware/ti-connectivity/wl1271-nvs.bin";
 const char Default_NVS_file_name[] = "/system/etc/wifi/wl1271-nvs.bin";
 const char NVS_saved_file_name[] = WIFI_PATH"/wl1271-nvs.bin.default";
+const char WLAN_SDIO_BUS_PATH[] = "/sys/bus/sdio/drivers/wl1271_sdio/";
+const char WLAN_SDIO_DRIVER_ID[] = "mmc2:0001:2";
 #define NEW_NVS_FILE_NAME	WIFI_PATH"/new-nvs.bin"
 #endif
 
@@ -67,6 +70,52 @@ static int nvs_read_mac(unsigned char *MacAddr);
 static int nvs_replace_mac(unsigned char *MacAddr);
 static int wifi_calibration(void);
 static long fcopy(const char *dest, const char *source);
+
+static int bind_unbind_driver(const char *driver_path, const char *driver_id,
+							  const char *cmd) {
+	FILE *file = NULL;
+	int n = strlen(driver_path) + strlen(cmd);
+	char *file_path;
+	int ret = EXIT_SUCCESS;
+
+	file_path = (char *) malloc(n+1);
+	if (!file_path) {
+		LOGE("Not enough space\n");
+		ret = -ENOMEM;
+		goto fail;
+	}
+
+	snprintf(file_path, n+1, "%s%s", driver_path, cmd);
+
+	file = fopen(file_path, "w");
+	if (!file) {
+		LOGE("Unable to open file %s in write mode", file_path);
+		ret = -EIO;
+		goto open_fail;
+	}
+
+	fprintf(file,"%s", driver_id);
+
+	if (fclose(file)) {
+		LOGE("Unable to close file");
+		ret = -EIO;
+	}
+
+open_fail:
+	free(file_path);
+fail:
+	return ret;
+}
+
+static inline int bind_wlan_sdio_drv(void) {
+	return bind_unbind_driver(WLAN_SDIO_BUS_PATH, WLAN_SDIO_DRIVER_ID, "bind");
+}
+
+static inline int unbind_wlan_sdio_drv(void) {
+	return bind_unbind_driver(WLAN_SDIO_BUS_PATH, WLAN_SDIO_DRIVER_ID,
+							  "unbind");
+}
+
 
 int main(int argc, char **argv)
 {
@@ -147,6 +196,12 @@ int main(int argc, char **argv)
 
 end:
 #ifdef NLCP
+
+	/* Take into acount the new NVS firmware */
+	sync();
+	unbind_wlan_sdio_drv();
+	bind_wlan_sdio_drv();
+
 	if(res) {
 		/* Remove erroneous nvs file and saved file, then restore original nvs */
 		unlink(NVS_file_name);
@@ -316,19 +371,19 @@ end:
 	return err;
 }
 #else
+
 static int wifi_calibration(void)
 {
 	FILE *CuCmdFile = NULL;
 	char system_cmd[200];
 	int err, err_end;
-	int module_is_loaded = 0;
 
 	/* No calibration file exist so copy original one  */
 	/* otherwise nl80211 can't start fine and so calibration fails */
 	err = fcopy( NVS_file_name, Default_NVS_file_name);
 	if (err == -1L) {
 		LOGE("Original nvs copy error");
-		goto end;
+		goto fail;
 	}
 
 	/* Create default nvs file from .ini */
@@ -339,29 +394,15 @@ static int wifi_calibration(void)
 #endif
 	if (err) {
 		LOGE("Default nvs creation error %d",err);
-		goto end;
+		goto fail;
 	}
 
 	/* replace default calibration file by new one */
 	err = fcopy(NVS_file_name, NEW_NVS_FILE_NAME);
 	if (err == -1L) {
 		LOGE("Can't remove previous NVS calibration file");
-		goto end;
+		goto fail;
 	}
-
-	/* load wifi driver */
-	err = system("/system/bin/insmod /lib/modules/wl12xx.ko");
-	if (err) {
-		LOGE("Module /lib/modules/wl12xx.ko loading error, err=%d",err);
-		goto end;
-	}
-	/* load sdio driver */
-	err = system("/system/bin/insmod /lib/modules/wl12xx_sdio.ko");
-	if (err) {
-		LOGE("Module /lib/modules/wl12xx_sdio.ko loading error, err=%d",err);
-		goto end;
-	}
-	module_is_loaded = 1;
 
 	/* start calibration & nvs update */
 #ifdef SINGLE_BAND
@@ -376,27 +417,16 @@ static int wifi_calibration(void)
 	err = fcopy(NVS_file_name, NEW_NVS_FILE_NAME);
 	if (err == -1L) {
 		LOGE("Can't remove previous NVS calibration file");
-		goto end;
+		goto fail;
 	}
 	else
 	{
 		/* Save NVS file to notify calibration is ok */
 		fcopy( NVS_saved_file_name, NVS_file_name);
 		err= 0;
-
 	}
 
-end:
-	/* unload WLAN driver module if necessary */
-	if  (module_is_loaded) {
-		err_end = system("/system/bin/rmmod wl12xx_sdio.ko");
-		if (err_end)
-			LOGE("Module wl12xx_sdio.ko unloading error");
-
-		err_end = system("/system/bin/rmmod wl12xx.ko");
-		if (err_end)
-			LOGE("Module wl12xx.ko unloading error");
-	}
+fail :
 	return err;
 }
 
