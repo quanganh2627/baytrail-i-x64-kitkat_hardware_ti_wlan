@@ -105,7 +105,7 @@ int main(int argc, char **argv)
 		}
 	} else {
 		fclose(nvsBinFile);
-		if (memcmp(ChaabiMacAddr, NullMacAddr, MAC_ADDRESS_LEN) == 0) {
+		if (ChaabiMacAddr && (memcmp(ChaabiMacAddr, NullMacAddr, MAC_ADDRESS_LEN) == 0)) {
 			/* NVS file already exist but chaabi read error */
 			/* exit here to avoid randomize new MAC address */
 			/* at each boot */
@@ -121,7 +121,7 @@ int main(int argc, char **argv)
 	}
 
 	/* Shall randomize new MAC @ ? */
-	if (memcmp(ChaabiMacAddr, NullMacAddr, MAC_ADDRESS_LEN) == 0) {
+	if (ChaabiMacAddr && (memcmp(ChaabiMacAddr, NullMacAddr, MAC_ADDRESS_LEN) == 0)) {
 		/* Chaabi MAC address is null due to engineering mode or
 		 * chaabi read error so generate new MAC address randomly */
 		struct timeval tv;
