@@ -1258,6 +1258,9 @@ struct conf_fwlog {
 
 	/* Regulates the frequency of log messages */
 	u8 threshold;
+
+	/* Read FW panic log when recovery occurs */
+	u8 read_panic;
 };
 
 struct conf_drv_settings {

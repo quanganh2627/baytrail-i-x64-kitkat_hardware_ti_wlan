@@ -370,6 +370,7 @@ static struct conf_drv_settings default_conf = {
 		.timestamp                    = WL12XX_FWLOG_TIMESTAMP_DISABLED,
 		.output                       = WL12XX_FWLOG_OUTPUT_DBG_PINS,
 		.threshold                    = 0,
+		.read_panic                   = 0,
 	},
 };
 
@@ -1235,7 +1236,8 @@ static void wl12xx_read_fwlog_panic(struct wl1271 *wl)
 	u8 *block;
 
 	if ((wl->conf.fwlog.mode != WL12XX_FWLOG_ON_DEMAND) ||
-	    (wl->conf.fwlog.mem_blocks == 0))
+	    (wl->conf.fwlog.mem_blocks == 0) ||
+	    (wl->conf.fwlog.read_panic == 0))
 		return;
 
 	wl1271_info("Reading FW panic log");
@@ -1294,6 +1296,8 @@ static void wl1271_recovery_work(struct work_struct *work)
 
 	/* Avoid a recursive recovery */
 	set_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS, &wl->flags);
+
+	wl12xx_read_fwlog_panic(wl);
 
 	wl1271_info("Hardware recovery in progress. FW ver: %s pc: 0x%x",
 		    wl->chip.fw_ver_str, wl1271_read32(wl, SCR_PAD4));
