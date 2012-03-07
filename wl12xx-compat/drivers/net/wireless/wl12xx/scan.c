@@ -30,6 +30,8 @@
 #include "ps.h"
 #include "tx.h"
 
+#define SCHED_SCAN_LONG_INTERVAL 300000
+
 void wl1271_scan_complete_work(struct work_struct *work)
 {
 	struct delayed_work *dwork;
@@ -601,11 +603,33 @@ int wl1271_scan_sched_scan_config(struct wl1271 *wl,
 	cfg->tag = WL1271_SCAN_DEFAULT_TAG;
 	/* don't filter on BSS type */
 	cfg->bss_type = SCAN_BSS_TYPE_ANY;
-	/* currently NL80211 supports only a single interval */
-	for (i = 0; i < SCAN_MAX_CYCLE_INTERVALS; i++)
-		cfg->intervals[i] = cpu_to_le32(req->interval);
 
-		cfg->ssid_len = 0;
+	/* support long & short interval(=req->interval) */
+	if (req->interval < SCHED_SCAN_LONG_INTERVAL) {
+	    /*  short interval smaller than long interval so scan */
+		/*  every short interval during the first long interval */
+		int max_id = SCHED_SCAN_LONG_INTERVAL/req->interval + 1;
+				/* +1 because a fist scan is done immediatly */
+
+		/* Reserve the last entry of intervals table to insure the long */
+		/* interval will at least set once. So the long interval is used as */
+		/* ultimate interval when previous ones are elapsed */
+		if (max_id >= SCAN_MAX_CYCLE_INTERVALS) {
+			max_id = SCAN_MAX_CYCLE_INTERVALS-1;
+		}
+
+		for (i = 0; i < max_id; i++)
+			cfg->intervals[i] = cpu_to_le32(req->interval);
+		for (i = max_id; i < SCAN_MAX_CYCLE_INTERVALS; i++)
+			cfg->intervals[i] = cpu_to_le32(SCHED_SCAN_LONG_INTERVAL);
+	} else {
+	    /*  short interval bigger than long interval so scan */
+		/*  every short interval */
+		for (i = 0; i < SCAN_MAX_CYCLE_INTERVALS; i++)
+			cfg->intervals[i] = cpu_to_le32(req->interval);
+	}
+
+	cfg->ssid_len = 0;
 	ret = wl12xx_scan_sched_scan_ssid_list(wl, req);
 	if (ret < 0)
 		goto out;
