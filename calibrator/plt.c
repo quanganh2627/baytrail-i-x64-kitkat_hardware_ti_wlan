@@ -458,36 +458,6 @@ COMMAND(plt, tx_tone, "<tone type 1|2> <power 0 - 10000>",
 	NL80211_CMD_TESTMODE, 0, CIB_NETDEV, plt_tx_tone,
 	"Do command tx_tone to transmit a tone\n");
 
-static int convert_rate_to_num(char *string)
-{
-	int     len    = 0;
-	int     i      = 0;
-	int     j      = 0;
-	int     result = 0;
-	int     cVal   = 0;
-
-	if(string == NULL)
-	{
-		// A default rate willbe set by FW
-		return 0;
-	}
-
-	len = strlen(string);
-
-	for(i = len - 1; i >= 0; i--, j++)
-	{
-		if((string[i] == 'x') || (string[i] == 'X'))
-		{
-			break;
-		}
-
-		cVal = ((int)(string[i]) - (int)('0'));
-
-		result += (cVal << (4 * j));
-	}
-return result;
-}
-
 static int plt_tx_cont(struct nl80211_state *state, struct nl_cb *cb,
 			struct nl_msg *msg, int argc, char **argv)
 {
@@ -513,7 +483,7 @@ static int plt_tx_cont(struct nl80211_state *state, struct nl_cb *cb,
 
 	prms.test.id = TEST_CMD_FCC;
 	prms.delay = atoi(argv[0]);
-	prms.rate = convert_rate_to_num(argv[1]);
+	prms.rate = atoi(argv[1]);
 	prms.size = (unsigned short)atoi(argv[2]);
 	prms.amount = (unsigned short)atoi(argv[3]);
 	prms.power = atoi(argv[4]);
