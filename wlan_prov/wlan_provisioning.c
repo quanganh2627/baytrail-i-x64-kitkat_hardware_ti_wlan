@@ -138,7 +138,7 @@ int main(int argc, char **argv)
 	}
 
 	/* Chaabi MAC @ shall be write in NVS file ? */
-	if (memcmp(ChaabiMacAddr, NvsMacAddr, MAC_ADDRESS_LEN) != 0) {
+	if (ChaabiMacAddr && (memcmp(ChaabiMacAddr, NvsMacAddr, MAC_ADDRESS_LEN) != 0)) {
 		if (nvs_replace_mac(ChaabiMacAddr)) {
 			res =  -4;
 			goto end;
@@ -155,7 +155,8 @@ end:
 	}
 #endif
 	unlink(NEW_NVS_FILE_NAME);
-	free(ChaabiMacAddr);
+	if(ChaabiMacAddr)
+	    free(ChaabiMacAddr);
 
 	return res;
 }
