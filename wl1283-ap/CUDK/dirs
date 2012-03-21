@@ -1,6 +1,0 @@
-DIRS=\
-    os \
-    configurationutility \
-    cu_common \
-    logger
-
