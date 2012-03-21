@@ -2062,10 +2062,14 @@ static int wl1271_op_resume(struct ieee80211_hw *hw)
 	struct wl1271 *wl = hw->priv;
 	unsigned long flags;
 	bool run_irq_work = false;
+	int ret = 0;
 
 	wl1271_debug(DEBUG_MAC80211, "mac80211 resume wow=%d",
 		     wl->wow_enabled);
-	WARN_ON(!wl->wow_enabled);
+
+	/* Request from mac80211 to go through regular reset on wakeup */
+	if (!wl->wow_enabled)
+		ret = 1;
 
 	/*
 	 * re-enable irq_work enqueuing, and call irq_work directly if
@@ -2086,7 +2090,7 @@ static int wl1271_op_resume(struct ieee80211_hw *hw)
 	wl1271_configure_resume(wl);
 	wl->wow_enabled = false;
 
-	return 0;
+	return ret;
 }
 
 static int wl1271_op_start(struct ieee80211_hw *hw)
