@@ -1299,8 +1299,8 @@ static void wl1271_recovery_work(struct work_struct *work)
 
 	wl12xx_read_fwlog_panic(wl);
 
-	wl1271_info("Hardware recovery in progress. FW ver: %s pc: 0x%x",
-		    wl->chip.fw_ver_str, wl1271_read32(wl, SCR_PAD4));
+	wl1271_info("Hardware recovery in progress. FW ver: %s",
+		    wl->chip.fw_ver_str);
 
 	BUG_ON(bug_on_recovery);
 
