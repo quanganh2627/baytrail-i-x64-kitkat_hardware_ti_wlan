@@ -2414,6 +2414,10 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl,
 		wl->tx_allocated_pkts[i] = 0;
 	}
 
+	for (i=0; i < WL1271_MAX_RX_DATA_FILTERS; i++)
+		wl->rx_data_filters_status[i] = 0;
+
+
 	wl1271_debugfs_reset(wl);
 
 	kfree(wl->fw_status);
