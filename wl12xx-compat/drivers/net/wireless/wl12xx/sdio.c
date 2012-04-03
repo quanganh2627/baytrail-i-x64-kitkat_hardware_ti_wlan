@@ -179,12 +179,12 @@ static int wl1271_sdio_power_on(struct wl1271 *wl)
 		ret = pm_runtime_get_sync(&func->dev);
 		if (ret < 0)
 			goto out;
-	} else {
-		/* Runtime PM is disabled: power up the card manually */
-		ret = mmc_power_restore_host(func->card->host);
-		if (ret < 0)
-			goto out;
 	}
+
+	/* Runtime PM is disabled: power up the card manually */
+	ret = mmc_power_restore_host(func->card->host);
+	if (ret < 0)
+		goto out;
 
 	sdio_claim_host(func);
 	sdio_enable_func(func);
