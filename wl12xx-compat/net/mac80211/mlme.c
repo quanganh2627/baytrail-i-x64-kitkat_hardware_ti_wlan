@@ -576,7 +576,7 @@ void ieee80211_set_dyn_ps_timeout(struct ieee80211_vif *vif, int timeout)
 		return;
 
 	if (!timeout)
-		timeout = 100;
+		timeout = 200;
 
 	local->dynamic_ps_user_timeout = timeout;
 	local->hw.conf.dynamic_ps_timeout = timeout;
@@ -715,7 +715,7 @@ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency)
 			    latency != (2000 * USEC_PER_SEC))
 				timeout = 0;
 			else
-				timeout = 100;
+				timeout = 200;
 		}
 		local->dynamic_ps_user_timeout = timeout;
 		if (!local->disable_dynamic_ps)
