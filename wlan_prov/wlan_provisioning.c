@@ -24,8 +24,10 @@
 #include <fcntl.h>
 #include <cutils/log.h>
 #include <cutils/misc.h>
+#include <cutils/android_reboot.h>
 #include <string.h>
-
+#include <sys/types.h>
+#include <dirent.h>
 
 #ifdef BUILD_WITH_CHAABI_SUPPORT
 #include "umip_access.h"
@@ -54,7 +56,8 @@ const char NVS_file_name[] = "/data/misc/firmware/ti-connectivity/wl1271-nvs.bin
 const char Default_NVS_file_name[] = "/system/etc/wifi/wl1271-nvs.bin";
 const char NVS_saved_file_name[] = WIFI_PATH"/wl1271-nvs.bin.default";
 const char WLAN_SDIO_BUS_PATH[] = "/sys/bus/sdio/drivers/wl1271_sdio/";
-const char WLAN_SDIO_DRIVER_ID[] = "mmc2:0001:2";
+#define WLAN_DRV_SDIO_NAME "wl1271_sdio"
+#define SYSFS_SDIO_DEVICES_PATH "/sys/bus/sdio/devices/"
 #define NEW_NVS_FILE_NAME	WIFI_PATH"/new-nvs.bin"
 #endif
 
@@ -70,6 +73,135 @@ static int nvs_read_mac(unsigned char *MacAddr);
 static int nvs_replace_mac(unsigned char *MacAddr);
 static int wifi_calibration(void);
 static long fcopy(const char *dest, const char *source);
+
+#ifdef NLCP
+static char *find_entry_in_folder(char *folder, char *file)
+{
+	DIR *dir;
+	struct dirent *entry;
+	char *str = NULL;
+
+	if (!folder || !file)
+		return NULL;
+
+	dir = opendir(folder);
+	if (!dir)
+		return NULL;
+
+	do {
+		entry = readdir(dir);
+		if (!entry)
+			break;
+		if (!strcmp(entry->d_name, "."))
+			continue;
+		if (!strcmp(entry->d_name, ".."))
+			continue;
+		if (strcmp(entry->d_name, file))
+			continue;
+
+		str = (char *)malloc(strlen(entry->d_name) + 1);
+		strncpy(str, entry->d_name, strlen(entry->d_name));
+		break;
+	} while (entry);
+
+	closedir(dir);
+	return str;
+}
+
+static char *parse_uevent_file(char *path, char *pattern)
+{
+	FILE *file;
+	char line[128];
+	char *result = NULL;
+
+	if (!path || !pattern)
+		goto out;
+
+	file = fopen(path, "r");
+	if (!file) {
+		LOGE("%s: %s file not found\n", __func__, path);
+		goto out;
+	}
+
+	while (fgets(line, sizeof(line), file) != NULL) {
+		if (!strncmp(pattern, line, strlen(pattern))) {
+			/* Pattern found */
+			result = (char *) malloc(strlen(line) -
+						strlen(pattern) + 1);
+			strcpy(result, line + strlen(pattern));
+			goto close;
+		}
+	}
+close:
+	fclose(file);
+
+	return result;
+out:
+	return NULL;
+}
+
+static int sdio_get_pci_id(char *sdio_device_path, char *pci_id)
+{
+	int ret = EXIT_FAILURE;
+	struct dirent *entry;
+	DIR *sdio_path = opendir(sdio_device_path);
+	char *uevent_entry = NULL;
+	char sub_entry[256];
+	if (!sdio_path) {
+		LOGE("Cannot open directory, ret with %d\n", errno);
+		ret = -EINVAL;
+		goto exit;
+	}
+
+	do {
+		entry = readdir(sdio_path);
+		if (!entry)
+			break;
+		if (!strcmp(entry->d_name, "."))
+			continue;
+		if (!strcmp(entry->d_name, ".."))
+			continue;
+
+		/* This folder shall contains only references to folders */
+		strcpy(sub_entry, SYSFS_SDIO_DEVICES_PATH);
+		strcpy(sub_entry + strlen(SYSFS_SDIO_DEVICES_PATH),
+		       entry->d_name);
+		strcpy(sub_entry + strlen(sub_entry), "/");
+		uevent_entry = find_entry_in_folder(sub_entry, "uevent");
+		if (uevent_entry) {
+			/* Read the containt of uevent and check "DRIVER=" */
+			char uevent_path[256];
+			char *result;
+			strcpy(uevent_path, sub_entry);
+			strcpy(uevent_path + strlen(sub_entry), "uevent");
+
+			/* Parse the file and get the value of DRIVER */
+			result = parse_uevent_file(uevent_path, "DRIVER=");
+			if (!result) {
+				free(uevent_entry);
+				continue;
+			}
+
+			if  (!strncmp(result, WLAN_DRV_SDIO_NAME,
+				     strlen(WLAN_DRV_SDIO_NAME))) {
+				strcpy(pci_id, entry->d_name);
+				free(result);
+				free(uevent_entry);
+				ret = EXIT_SUCCESS;
+				goto out;
+			} else {
+				free(uevent_entry);
+				free(result);
+				continue;
+			}
+		}
+	} while (entry);
+
+out:
+	closedir(sdio_path);
+exit:
+	return ret;
+}
 
 static int bind_unbind_driver(const char *driver_path, const char *driver_id,
 							  const char *cmd) {
@@ -107,15 +239,16 @@ fail:
 	return ret;
 }
 
-static inline int bind_wlan_sdio_drv(void) {
-	return bind_unbind_driver(WLAN_SDIO_BUS_PATH, WLAN_SDIO_DRIVER_ID, "bind");
+static inline int bind_wlan_sdio_drv(const char *sdio_bus_path,
+	char *sdio_driver_id) {
+	return bind_unbind_driver(sdio_bus_path, sdio_driver_id, "bind");
 }
 
-static inline int unbind_wlan_sdio_drv(void) {
-	return bind_unbind_driver(WLAN_SDIO_BUS_PATH, WLAN_SDIO_DRIVER_ID,
-							  "unbind");
+static inline int unbind_wlan_sdio_drv(const char *sdio_bus_path,
+	char *sdio_driver_id) {
+	return bind_unbind_driver(sdio_bus_path, sdio_driver_id, "unbind");
 }
-
+#endif
 
 int main(int argc, char **argv)
 {
@@ -123,7 +256,9 @@ int main(int argc, char **argv)
 	unsigned char NvsMacAddr[MAC_ADDRESS_LEN];
 	unsigned char *ChaabiMacAddr = NULL;
 	int res = 0;
-
+#ifdef NLCP
+	char device_id[64];
+#endif
 	/* Check parameters */
 	if (argc != 1) {
 		/* No param expected */
@@ -194,13 +329,31 @@ int main(int argc, char **argv)
 		}
 	}
 
-end:
 #ifdef NLCP
+	/*
+	 * If we are not allowed to bind/unbind the driver, the mac address as
+	 * well as the new configuration firmware (.nvs) will not be taken into
+	 * account. In that case, the reboot is required after flashing for the
+	 * time the board.
+	 */
+	if (!sdio_get_pci_id(SYSFS_SDIO_DEVICES_PATH, device_id)) {
+		unbind_wlan_sdio_drv(WLAN_SDIO_BUS_PATH, device_id);
+		bind_wlan_sdio_drv(WLAN_SDIO_BUS_PATH, device_id);
+	} else {
+		/*
+		 * Rebooting the board: In this level, the NVS was saved. The
+		 * next reboot will be fine since no need to bind/unbind the
+		 * driver.
+		 */
+		goto fatal;
+	}
+#endif
 
+end:
+
+#ifdef NLCP
 	/* Take into acount the new NVS firmware */
 	sync();
-	unbind_wlan_sdio_drv();
-	bind_wlan_sdio_drv();
 
 	if(res) {
 		/* Remove erroneous nvs file and saved file, then restore original nvs */
@@ -214,6 +367,12 @@ end:
 	    free(ChaabiMacAddr);
 
 	return res;
+#ifdef NLCP
+fatal:
+	sync();
+	android_reboot(ANDROID_RB_RESTART, 0, 0);
+	return res;
+#endif
 }
 
 
