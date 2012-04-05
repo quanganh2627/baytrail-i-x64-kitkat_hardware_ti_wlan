@@ -346,11 +346,11 @@ static void __devexit wl1271_remove(struct sdio_func *func)
 	/* Undo decrement done above in wl1271_probe */
 	pm_runtime_get_noresume(&func->dev);
 
-	wl1271_unregister_hw(wl);
 	if (wl->irq_wake_enabled) {
 		device_init_wakeup(wl1271_sdio_wl_to_dev(wl), 0);
 		disable_irq_wake(wl->irq);
 	}
+	wl1271_unregister_hw(wl);
 	free_irq(wl->irq, wl);
 	wl1271_free_hw(wl);
 

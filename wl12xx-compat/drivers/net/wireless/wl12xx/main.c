@@ -5183,9 +5183,11 @@ void wl1271_unregister_hw(struct wl1271 *wl)
 	if (wl->state == WL1271_STATE_PLT)
 		__wl1271_plt_stop(wl);
 
-	unregister_netdevice_notifier(&wl1271_dev_notifier);
-	ieee80211_unregister_hw(wl->hw);
-	wl->mac80211_registered = false;
+	if (wl->mac80211_registered) {
+		unregister_netdevice_notifier(&wl1271_dev_notifier);
+		ieee80211_unregister_hw(wl->hw);
+		wl->mac80211_registered = false;
+	}
 
 }
 EXPORT_SYMBOL_GPL(wl1271_unregister_hw);
