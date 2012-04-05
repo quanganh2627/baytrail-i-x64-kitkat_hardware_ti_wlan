@@ -546,11 +546,7 @@ static int wifi_calibration(void)
 	}
 
 	/* Create default nvs file from .ini */
-#ifdef SINGLE_BAND
-	err = system("/system/bin/calibrator set ref_nvs /system/etc/wifi/TQS_S_2.6.ini "NEW_NVS_FILE_NAME);
-#else
-	err = system("/system/bin/calibrator set ref_nvs /system/etc/wifi/TQS_D_1.7.ini "NEW_NVS_FILE_NAME);
-#endif
+	err = system("/system/bin/calibrator set ref_nvs /system/etc/wifi/TQS.ini "NEW_NVS_FILE_NAME);
 	if (err) {
 		LOGE("Default nvs creation error %d",err);
 		goto fail;
