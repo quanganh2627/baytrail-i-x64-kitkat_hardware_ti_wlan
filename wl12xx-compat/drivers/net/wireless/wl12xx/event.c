@@ -122,8 +122,6 @@ static int wl1271_event_ps_report(struct wl1271 *wl,
 		} else {
 			wl1271_info("No ack to nullfunc from AP. Force Active Mode.");
 			wl->psm_entry_retry = 0;
-			ret = wl1271_ps_set_mode(wl, STATION_ACTIVE_MODE,
-						 wl->basic_rate, true);
 		}
 		break;
 	case EVENT_ENTER_POWER_SAVE_SUCCESS:
