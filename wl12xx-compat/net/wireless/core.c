@@ -959,7 +959,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block * nb,
 		 * of registered interfaces, and only then
 		 * remove and clean it up.
 		 */
-		if (!list_empty(&wdev->list)) {
+		if (!list_empty(&wdev->list) && !list_empty(&rdev->netdev_list)) {
 			sysfs_remove_link(&dev->dev.kobj, "phy80211");
 			list_del_rcu(&wdev->list);
 			rdev->devlist_generation++;
