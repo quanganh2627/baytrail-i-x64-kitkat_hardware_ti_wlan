@@ -260,7 +260,7 @@ static struct conf_drv_settings default_conf = {
 		.avg_weight_snr_data          = 10,
 	},
 	.scan = {
-		.min_dwell_time_active        = 7500,
+		.min_dwell_time_active        = 30000,
 		.max_dwell_time_active        = 30000,
 		.min_dwell_time_passive       = 100000,
 		.max_dwell_time_passive       = 100000,
@@ -1993,7 +1993,7 @@ static void wl1271_configure_resume(struct wl1271 *wl)
                 ret = wl1271_acx_toggle_rx_broadcast_filter(wl, ACX_RECEIVE_BROADCASTS_IN_SUSPEND);
                 if (ret < 0)
                         wl1271_error("resume: Could not disable broadcast filtering: %d", ret);
-                 
+
                 /* Remove RSSI SNR triggers filtering */
                 /*
                 ret = wl1271_event_toggle_rssi_triggers(wl, 0);
@@ -2975,7 +2975,7 @@ static int wl1271_ap_init_hwenc(struct wl1271 *wl)
 		hlid = key->hlid;
 		if (hlid == WL1271_INVALID_LINK_ID)
 			hlid = wl->ap_bcast_hlid;
-			
+
 		ret = wl1271_cmd_set_ap_key(wl, KEY_ADD_OR_REPLACE,
 					    key->id, key->key_type,
 					    key->key_size, key->key,
