@@ -4755,7 +4755,7 @@ static struct ieee80211_rate wl1271_rates[] = {
 };
 
 /* can't be const, mac80211 writes to this */
-static struct ieee80211_channel wl1271_channels[] = {
+static const struct ieee80211_channel wl1271_channels_default[] = {
 	{ .hw_value = 1, .center_freq = 2412, .max_power = 25 },
 	{ .hw_value = 2, .center_freq = 2417, .max_power = 25 },
 	{ .hw_value = 3, .center_freq = 2422, .max_power = 25 },
@@ -4771,6 +4771,9 @@ static struct ieee80211_channel wl1271_channels[] = {
 	{ .hw_value = 13, .center_freq = 2472, .max_power = 25 },
 	{ .hw_value = 14, .center_freq = 2484, .max_power = 25 },
 };
+
+static struct ieee80211_channel
+	wl1271_channels[ARRAY_SIZE (wl1271_channels_default)];
 
 /* mapping to indexes for wl1271_rates */
 static const u8 wl1271_rate_to_idx_2ghz[] = {
@@ -4857,7 +4860,7 @@ static struct ieee80211_rate wl1271_rates_5ghz[] = {
 };
 
 /* 5 GHz band channels for WL1273 */
-static struct ieee80211_channel wl1271_channels_5ghz[] = {
+static const struct ieee80211_channel wl1271_channels_5ghz_default[] = {
 	{ .hw_value = 7, .center_freq = 5035, .max_power = 25 },
 	{ .hw_value = 8, .center_freq = 5040, .max_power = 25 },
 	{ .hw_value = 9, .center_freq = 5045, .max_power = 25 },
@@ -4893,6 +4896,9 @@ static struct ieee80211_channel wl1271_channels_5ghz[] = {
 	{ .hw_value = 161, .center_freq = 5805, .max_power = 25 },
 	{ .hw_value = 165, .center_freq = 5825, .max_power = 25 },
 };
+
+static struct ieee80211_channel
+	wl1271_channels_5ghz[ARRAY_SIZE (wl1271_channels_5ghz_default)];
 
 /* mapping to indexes for wl1271_rates_5ghz */
 static const u8 wl1271_rate_to_idx_5ghz[] = {
@@ -5254,6 +5260,12 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
 	 * We keep local copies of the band structs because we need to
 	 * modify them on a per-device basis.
 	 */
+	memcpy(wl1271_channels, wl1271_channels_default,
+	       sizeof(struct ieee80211_channel) *
+	       ARRAY_SIZE(wl1271_channels_default));
+	memcpy(wl1271_channels_5ghz, wl1271_channels_5ghz_default,
+	       sizeof(struct ieee80211_channel) *
+	       ARRAY_SIZE(wl1271_channels_5ghz_default));
 	memcpy(&wl->bands[IEEE80211_BAND_2GHZ], &wl1271_band_2ghz,
 	       sizeof(wl1271_band_2ghz));
 	memcpy(&wl->bands[IEEE80211_BAND_5GHZ], &wl1271_band_5ghz,
