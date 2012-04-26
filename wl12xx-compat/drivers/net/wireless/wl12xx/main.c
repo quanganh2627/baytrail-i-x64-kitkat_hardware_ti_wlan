@@ -2328,13 +2328,13 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl,
 
 		/* TODO: this obviously shouldn't always be called */
 		wl1271_ps_elp_sleep(wl);
-	} else {
-		/* clear all hlids (except system_hlid) */
-		wl->sta_hlid = WL1271_INVALID_LINK_ID;
-		wl->dev_hlid = WL1271_INVALID_LINK_ID;
-		wl->ap_bcast_hlid = WL1271_INVALID_LINK_ID;
-		wl->ap_global_hlid = WL1271_INVALID_LINK_ID;
 	}
+
+	/* clear all hlids (except system_hlid) */
+	wl->sta_hlid = WL1271_INVALID_LINK_ID;
+	wl->dev_hlid = WL1271_INVALID_LINK_ID;
+	wl->ap_bcast_hlid = WL1271_INVALID_LINK_ID;
+	wl->ap_global_hlid = WL1271_INVALID_LINK_ID;
 
 	/*
 	 * this must be before the cancel_work calls below, so that the work
