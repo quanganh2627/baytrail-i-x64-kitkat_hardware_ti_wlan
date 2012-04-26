@@ -163,10 +163,7 @@ static int sdio_get_pci_id(char *sdio_device_path, char *pci_id)
 			continue;
 
 		/* This folder shall contains only references to folders */
-		strcpy(sub_entry, SYSFS_SDIO_DEVICES_PATH);
-		strcpy(sub_entry + strlen(SYSFS_SDIO_DEVICES_PATH),
-		       entry->d_name);
-		strcpy(sub_entry + strlen(sub_entry), "/");
+		snprintf(sub_entry, sizeof(sub_entry), SYSFS_SDIO_DEVICES_PATH"%s/",entry->d_name);
 		uevent_entry = find_entry_in_folder(sub_entry, "uevent");
 		if (uevent_entry) {
 			/* Read the containt of uevent and check "DRIVER=" */
