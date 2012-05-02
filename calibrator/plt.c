@@ -34,6 +34,50 @@
 
 SECTION(plt);
 
+#define CMDBUF_SIZE 200
+static int insmod(char *filename)
+{
+	int ret;
+	char cmd[CMDBUF_SIZE];
+	snprintf(cmd, CMDBUF_SIZE, "%s %s", INSMOD_PATH, filename);
+	ret = system(cmd);
+	if (ret)
+		fprintf(stderr, "Failed to load kernel module using command %s\n", cmd);
+	return ret;
+}
+
+static int rmmod(char *name)
+{
+	char cmd[CMDBUF_SIZE];
+	char *tmp = strdup(name);
+	int i, ret;
+
+	/* "basename" */
+	tmp = strrchr(name, '/');
+	if (!tmp)
+		tmp = name;
+	else
+		tmp++;
+
+	tmp = strdup(tmp);
+	if (!tmp)
+		return -ENOMEM;
+
+	/* strip trailing .ko if there */
+	i = strlen(tmp);
+	if (i < 4)
+		return -EINVAL;
+	if (!strcmp(tmp + i - 3, ".ko"))
+		tmp[i-3] = 0;
+
+	snprintf(cmd, CMDBUF_SIZE, "%s %s", RMMOD_PATH, tmp);
+	ret = system(cmd);
+	if (ret)
+		fprintf(stderr, "Failed to remove kernel module using command %s\n", cmd);
+	free(tmp);
+	return ret;
+}
+
 static void str2mac(unsigned char *pmac, char *pch)
 {
 	int i;
@@ -165,8 +209,6 @@ static int calib_valid_handler(struct nl_msg *msg, void *arg)
 	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
 	struct nlattr *td[WL1271_TM_ATTR_MAX + 1];
 	struct wl1271_cmd_cal_p2g *prms;
-	char *fname = NULL;
-
 #if 0
 	int i; unsigned char *pc;
 #endif
@@ -205,17 +247,9 @@ static int calib_valid_handler(struct nl_msg *msg, void *arg)
 		}
 		printf("++++++++++++++++++++++++\n");
 #endif
-	if (arg) {
-		fname = (char *) malloc(1+strlen((char *) arg));
-		if (fname)
-			strcpy(fname, arg);
-		else
-			fprintf(stderr, "Fail to prepare calibrated NVS file\n");
-	}
+	printf("Writing calibration data to %s\n", (char*) arg);
 
-	if (prepare_nvs_file(prms, fname)) {
-		if (fname)
-			free(fname);
+	if (prepare_nvs_file(prms, arg)) {
 		fprintf(stderr, "Fail to prepare calibrated NVS file\n");
 		return 2;
 	}
@@ -224,8 +258,6 @@ static int calib_valid_handler(struct nl_msg *msg, void *arg)
 		"reboot the system\n\n",
 		NEW_NVS_NAME, CURRENT_NVS_NAME);
 #endif
-	if (fname)
-		free(fname);
 	return NL_SKIP;
 }
 
@@ -309,30 +341,22 @@ static int get_chip_arch(char *dev_name, enum wl12xx_arch *arch)
 	return 0;
 }
 
-static int plt_nvs_ver(struct nl80211_state *state, struct nl_cb *cb,
-			struct nl_msg *msg, int argc, char **argv)
+static int do_nvs_ver21(struct nl_msg *msg, enum wl12xx_arch arch)
 {
 	struct nlattr *key;
 	struct wl1271_cmd_set_nvs_ver prms;
-	enum wl12xx_arch arch = UNKNOWN_ARCH;
-	int ret;
-
-	if (argc < 1) {
-		fprintf(stderr, "Missing device name\n");
-		return 2;
-	}
-
-	ret = get_chip_arch(argv[0], &arch);
-	if (ret || (arch == UNKNOWN_ARCH)) {
-		fprintf(stderr, "Unknown chip arch\n");
-		return 2;
-	}
 
 	memset(&prms, 0, sizeof(struct wl1271_cmd_set_nvs_ver));
+
 	if (arch == WL1271_ARCH)
 		prms.test.id = TEST_CMD_SET_NVS_VERSION;
-	else
+	else if(arch == WL128X_ARCH)
 		prms.test.id = TEST_CMD_SET_NVS_VERSION - 1;
+	else {
+		fprintf(stderr, "Unkown arch %x\n", arch);
+		return 1;
+	}
+
 	prms.nvs_ver = NVS_VERSION_2_1;
 
 	key = nla_nest_start(msg, NL80211_ATTR_TESTDATA);
@@ -353,8 +377,54 @@ nla_put_failure:
 	return 2;
 }
 
+
+static int plt_nvs_ver(struct nl80211_state *state, struct nl_cb *cb,
+			struct nl_msg *msg, int argc, char **argv)
+{
+	enum wl12xx_arch arch = UNKNOWN_ARCH;
+	int ret;
+
+	if (argc < 1) {
+		fprintf(stderr, "Missing device name\n");
+		return 2;
+	}
+
+	ret = get_chip_arch(argv[0], &arch);
+	if (ret || (arch == UNKNOWN_ARCH)) {
+		fprintf(stderr, "Unknown chip arch\n");
+		return 2;
+	}
+
+	return do_nvs_ver21(msg, arch);
+}
+
 COMMAND(plt, nvs_ver, "<device name>",
 	NL80211_CMD_TESTMODE, 0, CIB_PHY, plt_nvs_ver,
+	"Set NVS version\n");
+
+
+static int plt_nvs_ver2(struct nl80211_state *state, struct nl_cb *cb,
+			struct nl_msg *msg, int argc, char **argv)
+{
+	enum wl12xx_arch arch = UNKNOWN_ARCH;
+	int ret;
+
+	if (argc < 1) {
+		fprintf(stderr, "Missing device name\n");
+		return 2;
+	}
+
+	ret = sscanf(argv[0], "%x", &arch);
+	if(ret != 1) {
+		fprintf(stderr, "Unknown chip arch\n");
+		return 2;
+	}
+
+	return do_nvs_ver21(msg, arch);
+}
+
+COMMAND(plt, nvs_ver, "<arch>",
+	NL80211_CMD_TESTMODE, 0, CIB_NETDEV, plt_nvs_ver2,
 	"Set NVS version\n");
 
 static int plt_tx_bip(struct nl80211_state *state, struct nl_cb *cb,
@@ -363,20 +433,20 @@ static int plt_tx_bip(struct nl80211_state *state, struct nl_cb *cb,
 	struct nlattr *key;
 	struct wl1271_cmd_cal_p2g prms;
 	int i;
-	char nvs_path[PATH_MAX];
+	static char nvs_path[PATH_MAX];
 
 	if (argc < 8) {
 		fprintf(stderr, "%s> Missing arguments\n", __func__);
 		return 2;
 	}
 
-	if ((argc > 8) && (argv[8] !=NULL)) {
+	if (argc > 8)
 		strncpy(nvs_path, argv[8], strlen(argv[8]));
-	}
 	else
 		nvs_path[0] = '\0';
 
 	memset(&prms, 0, sizeof(struct wl1271_cmd_cal_p2g));
+
 	prms.test.id = TEST_CMD_P2G_CAL;
 	for (i = 0; i < 8; i++)
 		prms.sub_band_mask |= (atoi(argv[i]) & 0x1)<<i;
@@ -458,36 +528,6 @@ COMMAND(plt, tx_tone, "<tone type 1|2> <power 0 - 10000>",
 	NL80211_CMD_TESTMODE, 0, CIB_NETDEV, plt_tx_tone,
 	"Do command tx_tone to transmit a tone\n");
 
-static int convert_rate_to_num(char *string)
-{
-	int     len    = 0;
-	int     i      = 0;
-	int     j      = 0;
-	int     result = 0;
-	int     cVal   = 0;
-
-	if(string == NULL)
-	{
-		// A default rate willbe set by FW
-		return 0;
-	}
-
-	len = strlen(string);
-
-	for(i = len - 1; i >= 0; i--, j++)
-	{
-		if((string[i] == 'x') || (string[i] == 'X'))
-		{
-			break;
-		}
-
-		cVal = ((int)(string[i]) - (int)('0'));
-
-		result += (cVal << (4 * j));
-	}
-return result;
-}
-
 static int plt_tx_cont(struct nl80211_state *state, struct nl_cb *cb,
 			struct nl_msg *msg, int argc, char **argv)
 {
@@ -513,7 +553,7 @@ static int plt_tx_cont(struct nl80211_state *state, struct nl_cb *cb,
 
 	prms.test.id = TEST_CMD_FCC;
 	prms.delay = atoi(argv[0]);
-	prms.rate = convert_rate_to_num(argv[1]);
+	prms.rate = strtol(argv[1], NULL, 0);
 	prms.size = (unsigned short)atoi(argv[2]);
 	prms.amount = (unsigned short)atoi(argv[3]);
 	prms.power = atoi(argv[4]);
@@ -823,32 +863,17 @@ fail_out:
 COMMAND(plt, rx_statistics, NULL, 0, 0, CIB_NONE, plt_rx_statistics,
 	"Get Rx statistics\n");
 
-static int plt_calibrate(struct nl80211_state *state, struct nl_cb *cb,
-			struct nl_msg *msg, int argc, char **argv)
+static int plt_do_calibrate(struct nl80211_state *state, struct nl_cb *cb,
+			struct nl_msg *msg, int single_dual, char *nvs_file,
+			char *devname, enum wl12xx_arch arch)
 {
 	int ret = 0, err;
-	int single_dual = 0;
-	char *fname = NULL;
-
-	if (argc > 2) {
-		if (strncmp(argv[2], "dual", 4) == 0)
-			single_dual = 1;	/* going for dual band calibration */
-		else if (strncmp(argv[2], "single", 4) == 0)
-			single_dual = 0;	/* going for single band calibration */
-		else {
-			fname = argv[2];
-			if (argc > 3 && (strncmp(argv[3], "dual", 4) ==  0))
-				single_dual = 1;	/* going for dual band calibration */
-			else
-				single_dual = 0;	/* going for single band calibration */
-		}
-	}
 
 	/* power mode on */
 	{
-		char *pm_on[4] = { "wlan0", "plt", "power_mode", "on" };
+		char *pm_on[4] = { devname, "plt", "power_mode", "on" };
 
-		err = handle_cmd(state, II_NETDEV, 4, pm_on);
+		err = handle_cmd(state, II_NETDEV, ARRAY_SIZE(pm_on), pm_on);
 		if (err < 0) {
 			fprintf(stderr, "Fail to set PLT power mode on\n");
 			ret = err;
@@ -858,11 +883,11 @@ static int plt_calibrate(struct nl80211_state *state, struct nl_cb *cb,
 
 	/* tune channel */
 	{
-		char *pm_on[5] = {
-			"wlan0", "plt", "tune_channel", "0", "7"
+		char *tune[5] = {
+			devname, "plt", "tune_channel", "0", "7"
 		};
 
-		err = handle_cmd(state, II_NETDEV, 5, pm_on);
+		err = handle_cmd(state, II_NETDEV, ARRAY_SIZE(tune), tune);
 		if (err < 0) {
 			fprintf(stderr, "Fail to tune channel\n");
 			ret = err;
@@ -870,22 +895,48 @@ static int plt_calibrate(struct nl80211_state *state, struct nl_cb *cb,
 		}
 	}
 
+	/* Set nvs version 2.1 */
+	if (arch == UNKNOWN_ARCH) {
+		fprintf(stderr, "Unknown arch. Not setting nvs ver 2.1");
+	}
+	else {
+		size_t ret;
+		char archstr[5] = "";
+		char *prms[4] = {
+			"wlan0", "plt", "nvs_ver", archstr
+		};
+
+		ret = snprintf(archstr, sizeof(archstr), "%x", arch);
+		if (ret > sizeof(archstr)) {
+			fprintf(stderr, "Bad arch\n");
+			goto fail_out;
+		}
+
+		printf("Using nvs version 2.1\n");
+		err = handle_cmd(state, II_NETDEV, 4, prms);
+		if (err < 0) {
+			fprintf(stderr, "Fail to set nvs ver 2.1\n");
+			ret = err;
+		}
+	}
+
 	/* calibrate it */
 	{
 		char *prms[12] = {
-			"wlan0", "plt", "tx_bip", "1", "0", "0", "0",
-			"0", "0", "0", "0", NULL
+			devname, "plt", "tx_bip", "1", "0", "0", "0",
+			"0", "0", "0", "0", nvs_file
 		};
-		prms[11] = fname;
+		printf("Calibrate %s\n", nvs_file);
+
 		/* set flags in case of dual band */
 		if (single_dual) {
 			prms[4] = prms[5] = prms[6] = prms[7] = prms[8] =
 				prms[9] = prms[10] = "1";
 		}
 
-		err = handle_cmd(state, II_NETDEV, 12, prms);
+		err = handle_cmd(state, II_NETDEV, ARRAY_SIZE(prms), prms);
 		if (err < 0) {
-			fprintf(stderr, "Fail to calibrate\n");
+			fprintf(stderr, "Failed to calibrate\n");
 			ret = err;
 		}
 	}
@@ -893,11 +944,11 @@ static int plt_calibrate(struct nl80211_state *state, struct nl_cb *cb,
 fail_out:
 	/* power mode off */
 	{
-		char *prms[4] = { "wlan0", "plt", "power_mode", "off"};
+		char *prms[4] = { devname, "plt", "power_mode", "off"};
 
-		err = handle_cmd(state, II_NETDEV, 4, prms);
+		err = handle_cmd(state, II_NETDEV, ARRAY_SIZE(prms), prms);
 		if (err < 0) {
-			fprintf(stderr, "Fail to set PLT power mode on\n");
+			fprintf(stderr, "Failed to set PLT power mode on\n");
 			ret = err;
 		}
 	}
@@ -909,5 +960,155 @@ fail_out_final:
 	return 0;
 }
 
-COMMAND(plt, calibrate, "[<single|dual>] [<nvs file>]", 0, 0, CIB_NONE,
+static int plt_calibrate(struct nl80211_state *state, struct nl_cb *cb,
+			struct nl_msg *msg, int argc, char **argv)
+{
+	int single_dual = 0;
+
+	if (argc > 2 && (strncmp(argv[2], "dual", 4) ==  0))
+		single_dual = 1;	/* going for dual band calibration */
+	else
+		single_dual = 0;	/* going for single band calibration */
+
+	return plt_do_calibrate(state, cb, msg, single_dual, NEW_NVS_NAME,
+	                        "wlan0", UNKNOWN_ARCH);
+}
+
+COMMAND(plt, calibrate, "[<single|dual>]", 0, 0, CIB_NONE,
 	plt_calibrate, "Do calibrate for single or dual band chip\n");
+
+
+static int plt_autocalibrate(struct nl80211_state *state, struct nl_cb *cb,
+			struct nl_msg *msg, int argc, char **argv)
+{
+	struct wl12xx_common cmn = {
+		.auto_fem = 0,
+		.arch = UNKNOWN_ARCH,
+		.parse_ops = NULL,
+	};
+
+	char *devname, *modpath, *inifile1, *macaddr;
+	int single_dual = 0, res, fems_parsed;
+
+	argc -= 2;
+	argv += 2;
+
+	if (argc != 5) {
+		return 1;
+	}
+
+	devname = *argv++;
+	argc--;
+
+	modpath = *argv++;
+	argc--;
+
+	inifile1 = *argv++;
+	argc--;
+
+	cmn.nvs_name = get_opt_nvsoutfile(argc--, argv++);
+	macaddr = *argv++;
+	argc--;
+
+	if (file_exist(cmn.nvs_name) >= 0) {
+		fprintf(stderr, "nvs file %s. File already exists. Won't overwrite.\n", cmn.nvs_name);
+		return 0;
+	}
+
+	/* Create ref nvs */
+	if (read_ini(inifile1, &cmn)) {
+		fprintf(stderr, "Failed to read ini file %s\n", inifile1);
+		goto out_removenvs;
+	}
+
+	fems_parsed = cmn.fem0_bands + cmn.fem1_bands;
+
+	/* Get nr bands from parsed ini */
+	single_dual = ini_get_dual_mode(&cmn);
+
+	if (single_dual == 0) {
+		if (fems_parsed < 1 || fems_parsed > 2) {
+			fprintf(stderr, "Incorrect number of FEM sections %d for single mode\n",
+			        fems_parsed);
+			return 1;
+		}
+	}
+	else if (single_dual == 1) {
+		if (fems_parsed < 2 && fems_parsed > 4) {
+			fprintf(stderr, "Incorrect number of FEM sections %d for dual mode\n",
+			        fems_parsed);
+			return 1;
+		}
+	}
+	else {
+		fprintf(stderr, "Invalid value for TXBiPFEMAutoDetect %d",
+		        single_dual);
+		return 1;
+	}
+
+	/* I suppose you can have one FEM with 2.4 only and one in dual band
+	   but it's more likely a mistake */
+	if ((single_dual + 1) * (cmn.auto_fem + 1) != fems_parsed) {
+		printf("WARNING: %d FEMS for %d bands with autofem %s looks "
+			"like a strange configuration\n",
+			fems_parsed, single_dual + 1,
+			cmn.auto_fem ? "on" : "off");
+	}
+
+	cfg_nvs_ops(&cmn);
+
+	if (create_nvs_file(&cmn)) {
+		fprintf(stderr, "Failed to create reference NVS file\n");
+		return 1;
+	}
+
+#if DYNAMIC_MODULE_LOAD
+	/* Load module */
+	res = insmod(modpath);
+	if (res) {
+		goto out_removenvs;
+	}
+#endif
+
+	res = plt_do_calibrate(state, cb, msg, single_dual,
+	                      cmn.nvs_name, devname, cmn.arch);
+	if (res) {
+		goto out_rmmod;
+	}
+
+	res = nvs_set_mac(cmn.nvs_name, macaddr);
+	if (res) {
+		goto out_rmmod;
+	}
+
+#if DYNAMIC_MODULE_LOAD
+	rmmod(modpath);
+#endif
+
+	printf("Calibration done. ");
+	if (cmn.fem0_bands) {
+		printf("FEM0 has %d bands. ", cmn.fem0_bands);
+	}
+	if (cmn.fem1_bands) {
+		printf("FEM1 has %d bands. ", cmn.fem1_bands);
+	}
+
+	printf("AutoFEM is %s. ", cmn.auto_fem ? "on" : "off");
+
+	printf("Resulting nvs is %s\n",
+	       cmn.nvs_name);
+	return 0;
+
+out_rmmod:
+#if DYNAMIC_MODULE_LOAD
+	rmmod(modpath);
+#endif
+
+out_removenvs:
+	fprintf(stderr, "Calibration not complete. Removing half-baked nvs\n");
+	unlink(cmn.nvs_name);
+	return 0;
+
+}
+COMMAND(plt, autocalibrate, "<dev> <module path> <ini file1> <nvs file> <mac addr> ", 0, 0, CIB_NONE,
+	plt_autocalibrate, "Do automatic calibration\n");
