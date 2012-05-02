@@ -33,33 +33,17 @@
 #include "umip_access.h"
 #endif
 
-#ifndef NLCP
-const char CU_CMD_file_name[] = "/data/calib_cmd";
-const char CU_calibration_cmd[] = \
-		"/ w p 1\n" \
-		"/ w f 2\n" \
-		"/ w l 2\n" \
-		"/ t r h 0 7\n" \
-		"/ t b t 1 1 1 1 1 1 1 1\n" \
-		"/ q\n";
-#endif
-
 #define MAC_ADDRESS_LEN 6
 const unsigned char NullMacAddr[MAC_ADDRESS_LEN] = { 0, 0, 0, 0, 0, 0 };
 
-#ifndef NLCP
-#define WIFI_PATH "/system/etc/wifi"
-const char NVS_file_name[] = WIFI_PATH"/nvs_map.bin";
-#else
 #define WIFI_PATH "/data/misc/wifi"
 const char NVS_file_name[] = "/data/misc/firmware/ti-connectivity/wl1271-nvs.bin";
 const char Default_NVS_file_name[] = "/system/etc/wifi/wl1271-nvs.bin";
-const char NVS_saved_file_name[] = WIFI_PATH"/wl1271-nvs.bin.default";
 const char WLAN_SDIO_BUS_PATH[] = "/sys/bus/sdio/drivers/wl1271_sdio/";
 #define WLAN_DRV_SDIO_NAME "wl1271_sdio"
 #define SYSFS_SDIO_DEVICES_PATH "/sys/bus/sdio/devices/"
-#define NEW_NVS_FILE_NAME	WIFI_PATH"/new-nvs.bin"
-#endif
+#define NEW_NVS_FILE_NAME		WIFI_PATH"/new-nvs.bin"
+#define TQS_FILE				"/etc/wifi/TQS.ini"
 
 /* pattern MAC address in NVS file */
 #define NVS_LENGTH_TO_SET       0x01
@@ -69,12 +53,12 @@ const char WLAN_SDIO_BUS_PATH[] = "/sys/bus/sdio/drivers/wl1271_sdio/";
 #define NVS_HIGHER_MAC_LOWER    0x54
 #define NVS_VALUE_TO_SET        0x00
 
+const int debug = 0;
+
 static int nvs_read_mac(unsigned char *MacAddr);
 static int nvs_replace_mac(unsigned char *MacAddr);
 static int wifi_calibration(void);
-static long fcopy(const char *dest, const char *source);
 
-#ifdef NLCP
 static char *find_entry_in_folder(char *folder, char *file)
 {
 	DIR *dir;
@@ -245,7 +229,6 @@ static inline int unbind_wlan_sdio_drv(const char *sdio_bus_path,
 	char *sdio_driver_id) {
 	return bind_unbind_driver(sdio_bus_path, sdio_driver_id, "unbind");
 }
-#endif
 
 int main(int argc, char **argv)
 {
@@ -253,9 +236,8 @@ int main(int argc, char **argv)
 	unsigned char NvsMacAddr[MAC_ADDRESS_LEN];
 	unsigned char *ChaabiMacAddr = NULL;
 	int res = 0;
-#ifdef NLCP
 	char device_id[64];
-#endif
+
 	/* Check parameters */
 	if (argc != 1) {
 		/* No param expected */
@@ -270,16 +252,16 @@ int main(int argc, char **argv)
 		/* chaabi read error OR no chaabi support */
 		ChaabiMacAddr = (unsigned char *) malloc(MAC_ADDRESS_LEN);
 		memcpy(ChaabiMacAddr, NullMacAddr, MAC_ADDRESS_LEN);
+
+		LOGW("MAC not found");
 #ifdef BUILD_WITH_CHAABI_SUPPORT
 	}
 #endif
 	/* Check if calibration is requested (NVS file don't exist) */
-#ifndef NLCP
 	nvsBinFile = fopen(NVS_file_name, "rb");
-#else
-	nvsBinFile = fopen(NVS_saved_file_name, "rb");
-#endif
+
 	if (!nvsBinFile) {
+		LOGI("run calibration");
 		if (wifi_calibration()) {
 			res =  -2;
 			goto end;
@@ -316,6 +298,7 @@ int main(int argc, char **argv)
 		ChaabiMacAddr[3] = (unsigned char) (rand() & 0xff);
 		ChaabiMacAddr[4] = (unsigned char) (rand() & 0xff);
 		ChaabiMacAddr[5] = (unsigned char) (rand() & 0xff);
+		LOGI("MAC randomized");
 	}
 
 	/* Chaabi MAC @ shall be write in NVS file ? */
@@ -326,7 +309,6 @@ int main(int argc, char **argv)
 		}
 	}
 
-#ifdef NLCP
 	/*
 	 * If we are not allowed to bind/unbind the driver, the mac address as
 	 * well as the new configuration firmware (.nvs) will not be taken into
@@ -344,32 +326,20 @@ int main(int argc, char **argv)
 		 */
 		goto fatal;
 	}
-#endif
 
 end:
 
-#ifdef NLCP
 	/* Take into acount the new NVS firmware */
 	sync();
 
-	if(res) {
-		/* Remove erroneous nvs file and saved file, then restore original nvs */
-		unlink(NVS_file_name);
-		unlink(NVS_saved_file_name);
-		fcopy(NVS_file_name, Default_NVS_file_name);
-	}
-#endif
-	unlink(NEW_NVS_FILE_NAME);
 	if(ChaabiMacAddr)
 	    free(ChaabiMacAddr);
 
 	return res;
-#ifdef NLCP
 fatal:
 	sync();
 	android_reboot(ANDROID_RB_RESTART, 0, 0);
 	return res;
-#endif
 }
 
 
@@ -417,215 +387,47 @@ static int nvs_read_mac(unsigned char *MacAddr)
 
 static int nvs_replace_mac(unsigned char *MacAddr)
 {
-	int res = 0;
-	FILE *nvsBinFile;
-	int fsize;
-	unsigned char *pNvsContent = NULL;
-
-	/* Read whole NVS file before modifying file */
-	nvsBinFile = fopen(NVS_file_name, "r+b");
-	if (nvsBinFile) {
-		fseek(nvsBinFile, 0L, SEEK_END);
-		fsize = ftell(nvsBinFile);
-
-		pNvsContent = (unsigned char *) malloc(fsize);
-		if (pNvsContent) {
-			fseek(nvsBinFile, 0L, SEEK_SET);
-			fread(pNvsContent, sizeof(char), fsize, nvsBinFile);
-
-			/* check MAC @ pattern before updating file */
-			if ((pNvsContent[0] == NVS_LENGTH_TO_SET)
-					 && (pNvsContent[1] == NVS_LOWER_MAC_HIGHER)
-					 && (pNvsContent[2] == NVS_LOWER_MAC_LOWER)
-					 && (pNvsContent[7] == NVS_LENGTH_TO_SET)
-					 && (pNvsContent[8] == NVS_HIGHER_MAC_HIGHER)
-					 && (pNvsContent[9] == NVS_HIGHER_MAC_LOWER)
-					 && (pNvsContent[12] == NVS_VALUE_TO_SET)
-					 && (pNvsContent[13] == NVS_VALUE_TO_SET)) {
-				pNvsContent[3] = MacAddr[5];
-				pNvsContent[4] = MacAddr[4];
-				pNvsContent[5] = MacAddr[3];
-				pNvsContent[6] = MacAddr[2];
-
-				pNvsContent[10] = MacAddr[1];
-				pNvsContent[11] = MacAddr[0];
-
-				fseek(nvsBinFile, 0L, SEEK_SET);
-
-				fwrite((void *)pNvsContent, 1L, fsize, nvsBinFile);
-			} else
-				res = -1;
-
-			free(pNvsContent);
-		} else
-			res = -2;
-
-		fclose(nvsBinFile);
-	} else
-		res = -3;
-
-	return res;
-}
-
-#ifndef NLCP
-static int wifi_calibration(void)
-{
-	FILE *CuCmdFile = NULL;
-	char system_cmd[200];
 	int err = 0;
-	int err_end = 0;
-	int module_is_loaded = 0;
+	char system_cmd[500];
 
-	/* generate wlan_cu command for calibration */
-	CuCmdFile = fopen(CU_CMD_file_name, "w");
-	if (CuCmdFile) {
-		fwrite(CU_calibration_cmd, 1, sizeof(CU_calibration_cmd), CuCmdFile);
-		fclose(CuCmdFile);
-	} else
-		return -1;
+	sprintf(system_cmd, "/system/bin/calibrator set nvs_mac"
+						" %s %02x:%02x:%02x:%02x:%02x:%02x",
+						NVS_file_name,
+						MacAddr[0], MacAddr[1], MacAddr[2],
+						MacAddr[3], MacAddr[4], MacAddr[5]);
+	if (debug)
+		LOGI("cmd: %s",system_cmd);
 
-	/* Loading WLAN driver module */
-	err = system("/system/bin/insmod /lib/modules/tiwlan_drv.ko");
-	if (!err) {
-		module_is_loaded = 1;
+	err = system(system_cmd);
 
-		/* Loading WLAN FW ... */
-		err = system("/system/bin/wlan_loader -i "WIFI_PATH"/tiwlan.ini -f "WIFI_PATH"/firmware.bin");
-		if (err) {
-			LOGE("WLAN_PROV: can't load TIWLAN firmware (%d)", err);
-			goto end;
-		}
-
-		/* Start calibration */
-		sprintf(system_cmd, "/system/bin/wlan_cu -b < %s", CU_CMD_file_name);
-		err = system(system_cmd);
-		if (err) {
-			LOGE("WLAN_PROV: calibration fails (%d)", err);
-			goto end;
-		}
-	} else {
-		LOGE("WLAN_PROV: can't load tiwlan_drv.ko (%d)", err);
-	}
-
-end:
-	/* unload WLAN driver module if necessary */
-	if (module_is_loaded) {
-		err_end = system("/system/bin/rmmod tiwlan_drv.ko");
-		if (err_end) {
-			LOGE("WLAN_PROV: tiwlan_drv.ko  module removing error (%d)", err);
-
-			/* return local error if no previous error */
-			err = !err ? err_end : err;
-		}
-	}
-
-	/* removing temporary file */
-	err_end = unlink(CU_CMD_file_name);
-	/* return local error if no previous error */
-	err = !err ? err_end : err;
+	if (err)
+		LOGE("NVS update with new MAC error= %d",err);
 
 	return err;
 }
-#else
 
 static int wifi_calibration(void)
 {
 	FILE *CuCmdFile = NULL;
-	char system_cmd[200];
-	int err, err_end;
-
-	/* No calibration file exist so copy original one  */
-	/* otherwise nl80211 can't start fine and so calibration fails */
-	err = fcopy( NVS_file_name, Default_NVS_file_name);
-	if (err == -1L) {
-		LOGE("Original nvs copy error");
-		goto fail;
-	}
-
-	/* Create default nvs file from .ini */
-	err = system("/system/bin/calibrator set ref_nvs /system/etc/wifi/TQS.ini "NEW_NVS_FILE_NAME);
-	if (err) {
-		LOGE("Default nvs creation error %d",err);
-		goto fail;
-	}
-
-	/* replace default calibration file by new one */
-	err = fcopy(NVS_file_name, NEW_NVS_FILE_NAME);
-	if (err == -1L) {
-		LOGE("Can't remove previous NVS calibration file");
-		goto fail;
-	}
+	char system_cmd[500];
+	int err = 0;
+	int module_is_loaded = 0;
 
 	/* start calibration & nvs update */
-#ifdef SINGLE_BAND
-	err = system("/system/bin/calibrator plt calibrate "NEW_NVS_FILE_NAME" single");
-#else
-	err = system("/system/bin/calibrator plt calibrate "NEW_NVS_FILE_NAME" dual");
-#endif
+	sprintf(system_cmd, "/system/bin/calibrator plt autocalibrate wlan0"
+							" /lib/modules/wl12xx_sdio.ko %s %s %s",
+							TQS_FILE,
+							NVS_file_name,
+							(unsigned char *)"08:00:28:DE:AD:00");
+	if (debug)
+		LOGI("cmd: %s",system_cmd);
+
+	err = system(system_cmd);
+
 	if (err)
 		LOGE("Calibration error= %d",err);
 
-	/* replace nvs file by updated one after calibration  */
-	err = fcopy(NVS_file_name, NEW_NVS_FILE_NAME);
-	if (err == -1L) {
-		LOGE("Can't remove previous NVS calibration file");
-		goto fail;
-	}
-	else
-	{
-		/* Save NVS file to notify calibration is ok */
-		fcopy( NVS_saved_file_name, NVS_file_name);
-		err= 0;
-	}
-
-fail :
 	return err;
 }
 
-#define BUFFER_SIZE 2048
 
-static long fcopy(const char *dest, const char *source)
-{
-        FILE *d, *s;
-        char *buffer;
-        size_t incount;
-        long totcount = 0L;
-
-        s = fopen(source, "rb");
-        if(s == NULL)
-                return -1L;
-
-        d = fopen(dest, "wb");
-        if(d == NULL)
-        {
-                fclose(s);
-                return -1L;
-        }
-
-        buffer = malloc(BUFFER_SIZE);
-        if(buffer == NULL)
-        {
-                fclose(s);
-                fclose(d);
-                return -1L;
-        }
-
-        incount = fread(buffer, sizeof(char), BUFFER_SIZE, s);
-
-        while(!feof(s))
-        {
-                totcount += (long)incount;
-                fwrite(buffer, sizeof(char), incount, d);
-                incount = fread(buffer, sizeof(char), BUFFER_SIZE, s);
-        }
-
-        totcount += (long)incount;
-        fwrite(buffer, sizeof(char), incount, d);
-
-        free(buffer);
-        fclose(s);
-        fclose(d);
-
-        return totcount;
-}
-#endif
