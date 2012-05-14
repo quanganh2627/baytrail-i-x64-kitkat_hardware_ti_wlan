@@ -390,7 +390,7 @@ static int nvs_replace_mac(unsigned char *MacAddr)
 	int err = 0;
 	char system_cmd[500];
 
-	sprintf(system_cmd, "/system/bin/calibrator set nvs_mac"
+	snprintf(system_cmd, sizeof(system_cmd), "/system/bin/calibrator set nvs_mac"
 						" %s %02x:%02x:%02x:%02x:%02x:%02x",
 						NVS_file_name,
 						MacAddr[0], MacAddr[1], MacAddr[2],
@@ -414,7 +414,7 @@ static int wifi_calibration(void)
 	int module_is_loaded = 0;
 
 	/* start calibration & nvs update */
-	sprintf(system_cmd, "/system/bin/calibrator plt autocalibrate wlan0"
+	snprintf(system_cmd, sizeof(system_cmd), "/system/bin/calibrator plt autocalibrate wlan0"
 							" /lib/modules/wl12xx_sdio.ko %s %s %s",
 							TQS_FILE,
 							NVS_file_name,

@@ -1021,7 +1021,7 @@ static void print_127x_fem_param2(int femnr, struct wl1271_ini_fem_params_2 *p)
 static void print_128x_fem_param2(int femnr, struct wl128x_ini_fem_params_2 *p)
 {
 	char fem[6];
-	sprintf(fem, "FEM%d_", femnr);
+	snprintf(fem, sizeof(fem), "FEM%d_", femnr);
 
 	printf("# SECTION 2.1.1: 2.4G parameters\n");
 
@@ -1049,7 +1049,7 @@ static void print_128x_fem_param2(int femnr, struct wl128x_ini_fem_params_2 *p)
 static void print_127x_fem_param5(int femnr, struct wl1271_ini_fem_params_5 *p)
 {
 	char fem[6];
-	sprintf(fem, "FEM%d_", femnr);
+	snprintf(fem, sizeof(fem), "FEM%d_", femnr);
 
 	printf("# SECTION 2.1.2: 5G parameters\n");
 
@@ -1074,7 +1074,7 @@ static void print_127x_fem_param5(int femnr, struct wl1271_ini_fem_params_5 *p)
 static void print_128x_fem_param5(int femnr, struct wl128x_ini_fem_params_5 *p)
 {
 	char fem[6];
-	sprintf(fem, "FEM%d_", femnr);
+	snprintf(fem, sizeof(fem), "FEM%d_", femnr);
 
 	printf("# SECTION 2.1.2: 5G parameters\n");
 

@@ -34,6 +34,7 @@
 
 SECTION(plt);
 
+#if DYNAMIC_MODULE_LOAD
 #define CMDBUF_SIZE 200
 static int insmod(char *filename)
 {
@@ -77,6 +78,7 @@ static int rmmod(char *name)
 	free(tmp);
 	return ret;
 }
+#endif
 
 static void str2mac(unsigned char *pmac, char *pch)
 {
