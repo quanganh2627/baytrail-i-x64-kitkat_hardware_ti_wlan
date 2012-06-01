@@ -3601,9 +3601,15 @@ static void wl1271_op_cancel_hw_scan(struct ieee80211_hw *hw,
 
 	mutex_lock(&wl->mutex);
 
-	if (wl->state == WL1271_STATE_OFF)
+	if (wl->state == WL1271_STATE_OFF) {
+		/*
+		If we get here, it means we have a FW recovery with a pending scan
+		Alert the mac layer that scan is complete, as required in
+		ieee80211_scan_cancel()
+		*/
+		ieee80211_scan_completed(wl->hw, true);
 		goto out;
-
+	}
 	if (wl->scan.state == WL1271_SCAN_STATE_IDLE)
 		goto out;
 
