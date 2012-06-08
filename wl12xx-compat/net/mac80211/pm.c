@@ -77,6 +77,8 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
 		int err = drv_suspend(local, wowlan);
 		if (err < 0) {
 			local->quiescing = false;
+			ieee80211_wake_queues_by_reason(hw,
+					IEEE80211_QUEUE_STOP_REASON_SUSPEND);
 			return err;
 		} else if (err > 0) {
 			WARN_ON(err != 1);
