@@ -619,7 +619,7 @@ static int ieee80211_config_beacon(struct ieee80211_sub_if_data *sdata,
 
 	RCU_INIT_POINTER(sdata->u.ap.beacon, new);
 
-	synchronize_rcu();
+	synchronize_rcu_expedited();
 
 	kfree(old);
 
