@@ -153,11 +153,7 @@ static const struct ieee80211_regdomain world_regdom = {
 static const struct ieee80211_regdomain *cfg80211_world_regdom =
 	&world_regdom;
 
-#ifdef COMPAT_REGDOM
-static char *ieee80211_regdom = COMPAT_REGDOM;
-#else
 static char *ieee80211_regdom = "00";
-#endif /* COMPAT_REGDOM */
 static char user_alpha2[2];
 
 module_param(ieee80211_regdom, charp, 0444);
