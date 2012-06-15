@@ -1311,6 +1311,7 @@ static void wl1271_recovery_work(struct work_struct *work)
 	return;
 out_unlock:
 	mutex_unlock(&wl->mutex);
+	clear_bit(WL1271_FLAG_RECOVERY_WORK_PENDING, &wl->flags);
 }
 
 static void wl1271_fw_wakeup(struct wl1271 *wl)
@@ -2230,10 +2231,6 @@ static void wl1271_op_stop(struct ieee80211_hw *hw)
 		wl->tx_pkts_freed[i] = 0;
 		wl->tx_allocated_pkts[i] = 0;
 	}
-
-	for (i=0; i < WL1271_MAX_RX_FILTERS; i++)
-		wl->rx_data_filters_status[i] = 0;
-
 
 	wl1271_debugfs_reset(wl);
 
@@ -3698,7 +3695,6 @@ static void wl1271_op_sched_scan_stop(struct ieee80211_hw *hw,
 	wl1271_ps_elp_sleep(wl);
 out:
 	mutex_unlock(&wl->mutex);
-	clear_bit(WL1271_FLAG_RECOVERY_WORK_PENDING, &wl->flags);
 }
 
 static int wl1271_op_set_frag_threshold(struct ieee80211_hw *hw, u32 value)

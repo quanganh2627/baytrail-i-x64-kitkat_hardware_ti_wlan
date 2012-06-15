@@ -26,7 +26,8 @@
 *.bin
 *.gz
 compat_autoconf.h
-
+version.h
+compat_regdom
 #
 # Top-level generic files
 #

@@ -492,12 +492,13 @@ static ssize_t driver_state_read(struct file *file, char __user *user_buf,
 {
 	struct wl1271 *wl = file->private_data;
 	int res = 0;
-	size_t ret;
+	ssize_t ret;
 	char *buf;
 
 #define DRIVER_STATE_BUF_LEN 1024
 
-	if((buf = kmalloc(DRIVER_STATE_BUF_LEN, GFP_KERNEL)) == NULL)
+	buf = kmalloc(DRIVER_STATE_BUF_LEN, GFP_KERNEL);
+	if (!buf)
 		return -ENOMEM;
 
 	mutex_lock(&wl->mutex);
@@ -566,7 +567,6 @@ static ssize_t driver_state_read(struct file *file, char __user *user_buf,
 	mutex_unlock(&wl->mutex);
 
 	ret = simple_read_from_buffer(user_buf, count, ppos, buf, res);
-
 	kfree(buf);
 	return ret;
 }

@@ -1059,8 +1059,6 @@ struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
 	skb = ieee80211_probereq_get(&local->hw, &sdata->vif,
 				     ssid, ssid_len,
 				     buf, buf_len);
-	if (!skb)
-		goto out;
 
 	if (!skb)
 		goto out;
