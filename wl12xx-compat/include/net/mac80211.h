@@ -1832,6 +1832,15 @@ enum ieee80211_frame_release_type {
  *	to also unregister the device. If it returns 1, then mac80211
  *	will also go through the regular complete restart on resume.
  *
+ *
+ * @es_suspend: Called when the screen turns off to configure perform the
+ *	low level settings into the driver. The purpose of those settings
+ *	is to reduce the power consumption. An example of setting done in
+ *	this callback is the filtering configuration on screen OFF.
+ *
+ * @es_resume: Called when the screen turns ON to restore the configuration
+ *	on the driver level.
+ *
  * @add_interface: Called when a netdevice attached to the hardware is
  *	enabled. Because it is not called for monitor mode devices, @start
  *	and @stop must be implemented.
@@ -2144,6 +2153,11 @@ struct ieee80211_ops {
 #ifdef CONFIG_PM
 	int (*suspend)(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan);
 	int (*resume)(struct ieee80211_hw *hw);
+#endif
+#ifdef CONFIG_HAS_EARLYSUSPEND
+	int (*es_suspend)(struct ieee80211_hw *hw,
+			  struct cfg80211_wowlan *wowlan);
+	int (*es_resume)(struct ieee80211_hw *hw);
 #endif
 	int (*add_interface)(struct ieee80211_hw *hw,
 			     struct ieee80211_vif *vif);

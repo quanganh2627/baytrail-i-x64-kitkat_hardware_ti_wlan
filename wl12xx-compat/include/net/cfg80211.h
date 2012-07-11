@@ -1326,6 +1326,12 @@ struct cfg80211_gtk_rekey_data {
  *	configured for the device.
  * @resume: wiphy device needs to be resumed
  *
+ * @es_suspend: when the screen turns OFF, the system may want to set a
+ *	custom configuration in order to reduce the power consumption.
+ *
+ * @es_resume: when the screen turns ON, the system may restore its main
+ *	configuration to bring back the relevant wiphy device fully active.
+ *
  * @add_virtual_intf: create a new virtual interface with the given name,
  *	must set the struct wireless_dev's iftype. Beware: You must create
  *	the new netdev in the wiphy's network namespace! Returns the netdev,
@@ -1499,7 +1505,9 @@ struct cfg80211_gtk_rekey_data {
 struct cfg80211_ops {
 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
 	int	(*resume)(struct wiphy *wiphy);
-
+	int	(*es_suspend)(struct wiphy *wiphy,
+			      struct cfg80211_wowlan *wow);
+	int	(*es_resume)(struct wiphy *wiphy);
 	struct net_device * (*add_virtual_intf)(struct wiphy *wiphy,
 						char *name,
 						enum nl80211_iftype type,
