@@ -36,7 +36,7 @@ $(SYMLINKS): $(LOCAL_INSTALLED_MODULE) $(LOCAL_PATH)/Android.mk
 	@echo "Symlink: $@"
 	@mkdir -p $(dir $@)
 	@rm -rf $@
-	$(hide) ln -sf $(addprefix /factory/wifi/,$(NVS_FILE)) $@
+	$(hide) ln -sf $(addprefix /data/misc/firmware/ti-connectivity/,$(NVS_FILE)) $@
 
 ALL_DEFAULT_INSTALLED_MODULES += $(SYMLINKS)
 ALL_MODULES.$(LOCAL_MODULE).INSTALLED := \
