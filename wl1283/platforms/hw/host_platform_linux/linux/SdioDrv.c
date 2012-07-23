@@ -279,10 +279,16 @@ int sdioDrv_DisableFunction(unsigned int uFunc)
 {
     PDEBUG("%s: func %d\n", __func__, uFunc);
 
+	/* In case this is called "too early" - which is the
+	   case when there is no hardware installed.
+	   The driver design is lacking support for
+	   sudden removals. */
+	if ((uFunc != SDIO_WLAN_FUNC) || (tiwlan_func[uFunc] == NULL))
+		return -1;
+
 	/* currently only wlan sdio function is supported */
 	BUG_ON(uFunc != SDIO_WLAN_FUNC);
 	BUG_ON(tiwlan_func[uFunc] == NULL);
-	
 	return sdio_disable_func(tiwlan_func[uFunc]);
 }
 
@@ -333,7 +339,7 @@ int sdioDrv_SetBlockSize(unsigned int uFunc, unsigned int blksz)
 static int sdioDrv_polling_locked;
 static DECLARE_WAIT_QUEUE_HEAD(sdioDrv_waitunlockpoll);
 
-void sdioDrv_block_polling()
+void sdioDrv_block_polling(void)
 {
 	while (sdioDrv_polling_locked) {
 		DECLARE_WAITQUEUE(wait, current);
@@ -346,12 +352,12 @@ void sdioDrv_block_polling()
 		remove_wait_queue(&sdioDrv_waitunlockpoll, &wait);
 	}
 }
-void sdioDrv_set_polling_lock()
+void sdioDrv_set_polling_lock(void)
 {
 	sdioDrv_polling_locked = 1;
 }
 
-void sdioDrv_set_polling_lock_release()
+void sdioDrv_set_polling_lock_release(void)
 {
 	sdioDrv_polling_locked = 0;
 	wake_up_interruptible(&sdioDrv_waitunlockpoll);
@@ -360,6 +366,13 @@ void sdioDrv_set_polling_lock_release()
 void sdioDrv_ClaimHost(unsigned int uFunc)
 {
 	if (g_drv.sdio_host_claim_ref)
+		return;
+
+	/* In case this is called "too early" - which is the
+	   case when there is no hardware installed.
+	   The driver design is lacking support for
+	   sudden removals. */
+	if ((uFunc != SDIO_WLAN_FUNC) || (tiwlan_func[uFunc] == NULL))
 		return;
 
 	/* currently only wlan sdio function is supported */

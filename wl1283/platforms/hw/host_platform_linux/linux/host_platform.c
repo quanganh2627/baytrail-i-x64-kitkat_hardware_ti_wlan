@@ -220,7 +220,10 @@ int hPlatform_DevicePowerOn (void)
 
 	/* let the mmc core finish enumeration + initialization before we continue */
 	printk(KERN_INFO "%s: waiting for completion\n", __func__);
-	wait_for_completion(&sdio_ready);
+	if (wait_for_completion_timeout(&sdio_ready, msecs_to_jiffies(2000)) == 0) {
+		printk(KERN_ERR "TIWLAN %s: Timeout waiting SDIO, giving up..\n", __func__);
+		return -1;
+	}
 	sdioDrv_ClaimHost(SDIO_WLAN_FUNC);
 
 	return 0;
@@ -314,7 +317,11 @@ int hPlatform_initInterrupt(void *tnet_drv, void* handle_add)
 		return rc;
 	}
 
-	//set_irq_wake(drv->irq, 1);
+	drv->irq_wake = 1;
+	if (set_irq_wake(drv->irq, 1) != 0) {
+		printk(KERN_INFO "TIWLAN: IRQ wake not implemented on platform\n");
+		drv->irq_wake = 0;
+	}
 
 	return rc;
 } /* hPlatform_initInterrupt() */
@@ -325,7 +332,11 @@ void hPlatform_freeInterrupt(void *tnet_drv)
 {
 	TWlanDrvIfObj *drv = tnet_drv;
 
-	//	set_irq_wake(drv->irq, 0);
+	if (drv->irq_wake) {
+		set_irq_wake(drv->irq, 0);
+		drv->irq_wake = 0;
+	}
+
 	free_irq(drv->irq, drv);
 }
 

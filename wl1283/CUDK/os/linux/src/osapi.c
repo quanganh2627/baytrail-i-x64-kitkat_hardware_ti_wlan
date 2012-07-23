@@ -98,12 +98,12 @@ VOID os_error_printf(S32 debug_level, const PS8 arg_list ,...)
     va_end(ap);
 
     /* print the message */
-    fprintf(stderr, (char *)msg);
+    fprintf(stderr, "%s", (char *)msg);
 	
 #ifdef OS_CLI_LOG_TO_FILE
     ftmp = fopen(file_name, "a");
     if (ftmp != NULL) {
-	fprintf(ftmp,(char*)msg);
+	fprintf(ftmp, "%s", (char*)msg);
 	fclose(ftmp);
     }
 #endif
@@ -155,7 +155,7 @@ S32 os_sprintf(PS8 str, const PS8 arg_list, ...)
     vsprintf((char*)msg, (char*)arg_list, ap);
     va_end(ap);
 
-    return sprintf((char*)str, (char*)msg);
+    return sprintf((char*)str, "%s", (char*)msg);
 }
 
 /****************************************************************************************
@@ -169,7 +169,7 @@ RETURN:
 *****************************************************************************************/
 S32 os_Printf(const PS8 buffer)
 {
-    return printf((char*)buffer);
+    return printf("%s", (char*)buffer);
 }
 
 
@@ -328,13 +328,13 @@ CONTEXT:
 S32 os_sscanf(const PS8 str, const PS8 arg_list, ...)
 {
     va_list ap;
-    S8 msg[MAX_HOST_MESSAGE_SIZE];
+    S32 ret_val;
 
     va_start(ap, arg_list);
-    vsprintf((char*)msg, (char*)arg_list, ap);
+    ret_val = vsscanf((const char *)str, (const char *)arg_list, ap);
     va_end(ap);
 
-    return sscanf((char*)str, (char*)msg);
+    return ret_val;
 }
 
 /************************************************************************

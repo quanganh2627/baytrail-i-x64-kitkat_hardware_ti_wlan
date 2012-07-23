@@ -3,7 +3,6 @@ include $(CLEAR_VARS)
 
 STATIC_LIB ?= y
 DEBUG ?= y
-BUILD_SUPPL ?= n
 WPA_ENTERPRISE ?= y
 
 ifeq ($(DEBUG),y)
@@ -14,20 +13,11 @@ endif
 
 WILINK_ROOT = ../../../..
 CUDK_ROOT = $(WILINK_ROOT)/CUDK
-ANDR_TI_SUPP_LIB_DIR = $(WILINK_ROOT)/../../../../external/wpa_supplicant_6
-# TI_SUPP_LIB_DIR = $(WILINK_ROOT)/external_suppl
+WPA_SUPPL_DIR_INCLUDE = $(TARGET_OUT_HEADERS)/wpa_supplicant_6
 
 DK_DEFINES = 
 ifeq ($(WPA_ENTERPRISE), y)
         DK_DEFINES += -D WPA_ENTERPRISE
-endif
-
-ifeq ($(BUILD_SUPPL), y)
-  DK_DEFINES += -D WPA_SUPPLICANT -D CONFIG_CTRL_IFACE -D CONFIG_CTRL_IFACE_UNIX
-  -include external/wpa_supplicant/.config
-  ifeq ($(CONFIG_EAP_WSC), y)
-    DK_DEFINES += -DCONFIG_EAP_WSC
-  endif
 endif
 
 ifeq ("$(HOST_PLATFORM)","zoom2")
@@ -53,12 +43,6 @@ LOCAL_SRC_FILES:= \
         osapi.c
 
 
-ifeq ($(BUILD_SUPPL), y)
-LOCAL_SRC_FILES += \
-	$(ANDR_TI_SUPP_LIB_DIR)/wpa_ctrl.c
-endif
-
-
 LOCAL_C_INCLUDES := \
         $(LOCAL_PATH)/../inc \
         $(LOCAL_PATH)/../../common/inc \
@@ -74,9 +58,8 @@ LOCAL_C_INCLUDES := \
         $(LOCAL_PATH)/$(WILINK_ROOT)/platforms/os/linux/inc \
         $(LOCAL_PATH)/$(WILINK_ROOT)/platforms/os/common/inc \
         $(LOCAL_PATH)/$(WILINK_ROOT)/TWD/FirmwareApi \
-	external/wpa_supplicant_6/wpa_supplicant/src/common \
-        external/wpa_supplicant_6/wpa_supplicant/src/utils \
-        $(LOCAL_PATH)/$(CUDK_ROOT)/configurationutility/inc
+        $(LOCAL_PATH)/$(CUDK_ROOT)/configurationutility/inc \
+	$(WPA_SUPPL_DIR_INCLUDE)
 
 LOCAL_MODULE:=libtiOsLibAP
 LOCAL_MODULE_TAGS := optional

@@ -3,7 +3,6 @@ include $(CLEAR_VARS)
 
 STATIC_LIB ?= y
 DEBUG ?= y
-BUILD_SUPPL = y
 WPA_ENTERPRISE ?= y
 
 ifeq ($(DEBUG),y)
@@ -20,32 +19,17 @@ endif
 
 ifeq ($(WPA_SUPPLICANT_VERSION),VER_0_5_X)
 WPA_SUPPL_DIR = external/wpa_supplicant
-else
-WPA_SUPPL_DIR = external/wpa_supplicant_6/wpa_supplicant
-endif
 WPA_SUPPL_DIR_INCLUDE = $(WPA_SUPPL_DIR)
+endif
+
 ifeq ($(WPA_SUPPLICANT_VERSION),VER_0_6_X)
-WPA_SUPPL_DIR_INCLUDE += $(WPA_SUPPL_DIR)/src \
-	$(WPA_SUPPL_DIR)/src/common \
-	$(WPA_SUPPL_DIR)/src/drivers \
-	$(WPA_SUPPL_DIR)/src/l2_packet \
-	$(WPA_SUPPL_DIR)/src/utils \
-	$(WPA_SUPPL_DIR)/src/wps
+WPA_SUPPL_DIR_INCLUDE = $(TARGET_OUT_HEADERS)/wpa_supplicant_6
 endif
 
 DK_DEFINES = 
 ifeq ($(WPA_ENTERPRISE), y)
         DK_DEFINES += -D WPA_ENTERPRISE
 endif
-
-ifeq ($(BUILD_SUPPL), y)
-DK_DEFINES += -D WPA_SUPPLICANT -D CONFIG_CTRL_IFACE -D CONFIG_CTRL_IFACE_UNIX
--include $(WPA_SUPPL_DIR)/.config
-ifdef CONFIG_WPS
-DK_DEFINES += -DCONFIG_WPS
-endif
-endif
-
 
 
 LOCAL_CFLAGS+= \
