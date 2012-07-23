@@ -90,20 +90,11 @@ enum rx_mgmt_action {
 	/* no action required */
 	RX_MGMT_NONE,
 
-	/* caller must call cfg80211_send_rx_auth() */
-	RX_MGMT_CFG80211_AUTH,
-
-	/* caller must call cfg80211_send_rx_assoc() */
-	RX_MGMT_CFG80211_ASSOC,
-
 	/* caller must call cfg80211_send_deauth() */
 	RX_MGMT_CFG80211_DEAUTH,
 
 	/* caller must call cfg80211_send_disassoc() */
 	RX_MGMT_CFG80211_DISASSOC,
-
-	/* caller must tell cfg80211 about internal error */
-	RX_MGMT_CFG80211_ASSOC_ERROR,
 };
 
 /* utils */
@@ -403,6 +394,9 @@ static void ieee80211_chswitch_work(struct work_struct *work)
 		/* call "hw_config" only if doing sw channel switch */
 		ieee80211_hw_config(sdata->local,
 			IEEE80211_CONF_CHANGE_CHANNEL);
+	} else {
+		/* update the device channel without trigger the driver */
+		sdata->local->hw.conf.channel = sdata->local->oper_channel;
 	}
 
 	/* XXX: shouldn't really modify cfg80211-owned data! */
@@ -569,6 +563,26 @@ void ieee80211_disable_dyn_ps(struct ieee80211_vif *vif)
 }
 EXPORT_SYMBOL(ieee80211_disable_dyn_ps);
 
+void ieee80211_set_dyn_ps_timeout(struct ieee80211_vif *vif, int timeout)
+{
+	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+	struct ieee80211_local *local = sdata->local;
+
+	WARN_ON(sdata->vif.type != NL80211_IFTYPE_STATION ||
+		!(local->hw.flags & IEEE80211_HW_SUPPORTS_PS) ||
+		(local->hw.flags & IEEE80211_HW_SUPPORTS_DYNAMIC_PS));
+
+	if (WARN_ON(timeout < 0))
+		return;
+
+	if (!timeout)
+		timeout = 200;
+
+	local->dynamic_ps_user_timeout = timeout;
+	local->hw.conf.dynamic_ps_timeout = timeout;
+}
+EXPORT_SYMBOL(ieee80211_set_dyn_ps_timeout);
+
 /* powersave */
 static void ieee80211_enable_ps(struct ieee80211_local *local,
 				struct ieee80211_sub_if_data *sdata)
@@ -613,6 +627,37 @@ static void ieee80211_change_ps(struct ieee80211_local *local)
 	}
 }
 
+static bool ieee80211_powersave_allowed(struct ieee80211_sub_if_data *sdata)
+{
+	struct ieee80211_if_managed *mgd = &sdata->u.mgd;
+	struct sta_info *sta = NULL;
+	u32 sta_flags = 0;
+
+	if (!mgd->powersave)
+		return false;
+
+	if (!mgd->associated)
+		return false;
+
+	if (!mgd->associated->beacon_ies)
+		return false;
+
+	if (mgd->flags & (IEEE80211_STA_BEACON_POLL |
+			  IEEE80211_STA_CONNECTION_POLL))
+		return false;
+
+	rcu_read_lock();
+	sta = sta_info_get(sdata, mgd->bssid);
+	if (sta)
+		sta_flags = get_sta_flags(sta);
+	rcu_read_unlock();
+
+	if (!(sta_flags & WLAN_STA_AUTHORIZED))
+		return false;
+
+	return true;
+}
+
 /* need to hold RTNL or interface lock */
 void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency)
 {
@@ -647,11 +692,7 @@ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency)
 		count++;
 	}
 
-	if (count == 1 && found->u.mgd.powersave &&
-	    found->u.mgd.associated &&
-	    found->u.mgd.associated->beacon_ies &&
-	    !(found->u.mgd.flags & (IEEE80211_STA_BEACON_POLL |
-				    IEEE80211_STA_CONNECTION_POLL))) {
+	if (count == 1 && ieee80211_powersave_allowed(found)) {
 		struct ieee80211_conf *conf = &local->hw.conf;
 		s32 beaconint_us;
 
@@ -674,7 +715,7 @@ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency)
 			    latency != (2000 * USEC_PER_SEC))
 				timeout = 0;
 			else
-				timeout = 100;
+				timeout = 200;
 		}
 		local->dynamic_ps_user_timeout = timeout;
 		if (!local->disable_dynamic_ps)
@@ -732,6 +773,8 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
 			     dynamic_ps_enable_work);
 	struct ieee80211_sub_if_data *sdata = local->ps_sdata;
 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+	unsigned long flags;
+	int q;
 
 	/* can only happen when PS was just disabled anyway */
 	if (!sdata)
@@ -740,18 +783,46 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
 	if (local->hw.conf.flags & IEEE80211_CONF_PS)
 		return;
 
+	/* don't enter PS if dynamic PS is enabled and TX frames are pending */
+	if (local->hw.conf.dynamic_ps_timeout > 0 &&
+	    !local->disable_dynamic_ps && drv_tx_frames_pending(local)) {
+		mod_timer(&local->dynamic_ps_timer, jiffies +
+			  msecs_to_jiffies(
+			  local->hw.conf.dynamic_ps_timeout));
+		return;
+	}
+
+	/*
+	 * transmission can be stopped by others which leads to
+	 * dynamic_ps_timer expiry. Postpond the ps timer if it
+	 * is not the actual idle state.
+	 */
+	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
+	for (q = 0; q < local->hw.queues; q++) {
+		if (local->queue_stop_reasons[q]) {
+			spin_unlock_irqrestore(&local->queue_stop_reason_lock,
+					       flags);
+			mod_timer(&local->dynamic_ps_timer, jiffies +
+				  msecs_to_jiffies(
+				  local->hw.conf.dynamic_ps_timeout));
+			return;
+		}
+	}
+	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
+
 	if ((local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) &&
 	    (!(ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED))) {
 		netif_tx_stop_all_queues(sdata->dev);
-		/*
-		 * Flush all the frames queued in the driver before
-		 * going to power save
-		 */
-		drv_flush(local, false);
-		ieee80211_send_nullfunc(local, sdata, 1);
 
-		/* Flush once again to get the tx status of nullfunc frame */
-		drv_flush(local, false);
+		if (drv_tx_frames_pending(local))
+			mod_timer(&local->dynamic_ps_timer, jiffies +
+				  msecs_to_jiffies(
+				  local->hw.conf.dynamic_ps_timeout));
+		else {
+			ieee80211_send_nullfunc(local, sdata, 1);
+			/* Flush to get the tx status of nullfunc frame */
+			drv_flush(local, false);
+		}
 	}
 
 	if (!((local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS) &&
@@ -762,7 +833,7 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
 		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
 	}
 
-	netif_tx_start_all_queues(sdata->dev);
+	netif_tx_wake_all_queues(sdata->dev);
 }
 
 void ieee80211_dynamic_ps_timer(unsigned long data)
@@ -864,6 +935,7 @@ static void ieee80211_sta_wmm_params(struct ieee80211_local *local,
 			    params.aifs, params.cw_min, params.cw_max,
 			    params.txop, params.uapsd);
 #endif
+		local->tx_conf[queue] = params;
 		if (drv_conf_tx(local, queue, &params))
 			wiphy_debug(local->hw.wiphy,
 				    "failed to set TX queue parameters for queue %d\n",
@@ -1050,6 +1122,7 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
 		local->hw.conf.flags &= ~IEEE80211_CONF_PS;
 		config_changed |= IEEE80211_CONF_CHANGE_PS;
 	}
+	local->ps_sdata = NULL;
 
 	ieee80211_hw_config(local, config_changed);
 
@@ -1164,7 +1237,8 @@ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
 		ieee80211_send_nullfunc(sdata->local, sdata, 0);
 	} else {
 		ssid = ieee80211_bss_get_ie(ifmgd->associated, WLAN_EID_SSID);
-		ieee80211_send_probe_req(sdata, dst, ssid + 2, ssid[1], NULL, 0);
+		ieee80211_send_probe_req(sdata, dst, ssid + 2, ssid[1], NULL, 0,
+					 (u32) -1, false);
 	}
 
 	ifmgd->probe_send_count++;
@@ -1249,7 +1323,8 @@ struct sk_buff *ieee80211_ap_probereq_get(struct ieee80211_hw *hw,
 
 	ssid = ieee80211_bss_get_ie(ifmgd->associated, WLAN_EID_SSID);
 	skb = ieee80211_build_probe_req(sdata, ifmgd->associated->bssid,
-					ssid + 2, ssid[1], NULL, 0);
+					(u32) -1, ssid + 2, ssid[1],
+					NULL, 0);
 
 	return skb;
 }
@@ -1425,10 +1500,14 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
 
 	ifmgd->aid = aid;
 
-	sta = sta_info_alloc(sdata, cbss->bssid, GFP_KERNEL);
-	if (!sta) {
-		printk(KERN_DEBUG "%s: failed to alloc STA entry for"
-		       " the AP\n", sdata->name);
+	mutex_lock(&sdata->local->sta_mtx);
+	/*
+	 * station info was already allocated and inserted before
+	 * the association and should be available to us
+	 */
+	sta = sta_info_get_rx(sdata, cbss->bssid);
+	if (WARN_ON(!sta)) {
+		mutex_unlock(&sdata->local->sta_mtx);
 		return false;
 	}
 
@@ -1499,7 +1578,8 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
 	if (elems.wmm_param)
 		set_sta_flags(sta, WLAN_STA_WME);
 
-	err = sta_info_insert(sta);
+	/* sta_info_reinsert will also unlock the mutex lock */
+	err = sta_info_reinsert(sta);
 	sta = NULL;
 	if (err) {
 		printk(KERN_DEBUG "%s: failed to insert STA entry for"
@@ -2117,13 +2197,16 @@ static void ieee80211_sta_monitor_work(struct work_struct *work)
 
 static void ieee80211_restart_sta_timer(struct ieee80211_sub_if_data *sdata)
 {
+	u32 flags;
 	if (sdata->vif.type == NL80211_IFTYPE_STATION) {
 		sdata->u.mgd.flags &= ~(IEEE80211_STA_BEACON_POLL |
 					IEEE80211_STA_CONNECTION_POLL);
 
 		/* let's probe the connection once */
-		ieee80211_queue_work(&sdata->local->hw,
-			   &sdata->u.mgd.monitor_work);
+		flags = sdata->local->hw.flags;
+		if (!(flags & IEEE80211_HW_CONNECTION_MONITOR))
+			ieee80211_queue_work(&sdata->local->hw,
+					     &sdata->u.mgd.monitor_work);
 		/* and do all the other regular work too */
 		ieee80211_queue_work(&sdata->local->hw, &sdata->work);
 	}
@@ -2317,15 +2400,43 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
 	return 0;
 }
 
+/* create and insert a dummy station entry */
+static int ieee80211_pre_assoc(struct ieee80211_sub_if_data *sdata,
+				u8 *bssid) {
+	struct sta_info *sta;
+	int err;
+
+	sta = sta_info_alloc(sdata, bssid, GFP_KERNEL);
+	if (!sta) {
+		printk(KERN_DEBUG "%s: failed to alloc STA entry for"
+			   " the AP\n", sdata->name);
+		return -ENOMEM;
+	}
+
+	sta->dummy = true;
+
+	err = sta_info_insert(sta);
+	sta = NULL;
+	if (err) {
+		printk(KERN_DEBUG "%s: failed to insert Dummy STA entry for"
+		       " the AP (error %d)\n", sdata->name, err);
+		return err;
+	}
+
+	return 0;
+}
+
 static enum work_done_result ieee80211_assoc_done(struct ieee80211_work *wk,
 						  struct sk_buff *skb)
 {
 	struct ieee80211_mgmt *mgmt;
 	struct ieee80211_rx_status *rx_status;
 	struct ieee802_11_elems elems;
+	struct cfg80211_bss *cbss = wk->assoc.bss;
 	u16 status;
 
 	if (!skb) {
+		sta_info_destroy_addr(wk->sdata, cbss->bssid);
 		cfg80211_send_assoc_timeout(wk->sdata->dev, wk->filter_ta);
 		return WORK_DONE_DESTROY;
 	}
@@ -2351,12 +2462,16 @@ static enum work_done_result ieee80211_assoc_done(struct ieee80211_work *wk,
 		if (!ieee80211_assoc_success(wk, mgmt, skb->len)) {
 			mutex_unlock(&wk->sdata->u.mgd.mtx);
 			/* oops -- internal error -- send timeout for now */
+			sta_info_destroy_addr(wk->sdata, cbss->bssid);
 			cfg80211_send_assoc_timeout(wk->sdata->dev,
 						    wk->filter_ta);
 			return WORK_DONE_DESTROY;
 		}
 
 		mutex_unlock(&wk->sdata->u.mgd.mtx);
+	} else {
+		/* assoc failed - destroy the dummy station entry */
+		sta_info_destroy_addr(wk->sdata, cbss->bssid);
 	}
 
 	cfg80211_send_rx_assoc(wk->sdata->dev, skb->data, skb->len);
@@ -2370,7 +2485,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
 	struct ieee80211_bss *bss = (void *)req->bss->priv;
 	struct ieee80211_work *wk;
 	const u8 *ssid;
-	int i;
+	int i, err;
 
 	mutex_lock(&ifmgd->mtx);
 	if (ifmgd->associated) {
@@ -2394,6 +2509,16 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
 	wk = kzalloc(sizeof(*wk) + req->ie_len, GFP_KERNEL);
 	if (!wk)
 		return -ENOMEM;
+
+	/*
+	 * create a dummy station info entry in order
+	 * to start accepting incoming EAPOL packets from the station
+	 */
+	err = ieee80211_pre_assoc(sdata, req->bss->bssid);
+	if (err) {
+		kfree(wk);
+		return err;
+	}
 
 	ifmgd->flags &= ~IEEE80211_STA_DISABLE_11N;
 	ifmgd->flags &= ~IEEE80211_STA_NULLFUNC_ACKED;
@@ -2601,6 +2726,25 @@ int ieee80211_mgd_disassoc(struct ieee80211_sub_if_data *sdata,
 	return 0;
 }
 
+int ieee80211_disassoc_only(struct ieee80211_sub_if_data *sdata)
+{
+	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+
+	mutex_lock(&ifmgd->mtx);
+
+	if (!ifmgd->associated) {
+		mutex_unlock(&ifmgd->mtx);
+		return -ENOLINK;
+	}
+
+	printk(KERN_DEBUG "%s: disassociating from %pM (for roaming)\n",
+	       sdata->name, ifmgd->bssid);
+
+	ieee80211_set_disassoc(sdata, true, false);
+
+	mutex_unlock(&ifmgd->mtx);
+	return 0;
+}
 void ieee80211_cqm_rssi_notify(struct ieee80211_vif *vif,
 			       enum nl80211_cqm_rssi_threshold_event rssi_event,
 			       gfp_t gfp)
@@ -2612,3 +2756,10 @@ void ieee80211_cqm_rssi_notify(struct ieee80211_vif *vif,
 	cfg80211_cqm_rssi_notify(sdata->dev, rssi_event, gfp);
 }
 EXPORT_SYMBOL(ieee80211_cqm_rssi_notify);
+
+unsigned char ieee80211_get_operstate(struct ieee80211_vif *vif)
+{
+	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+	return sdata->dev->operstate;
+}
+EXPORT_SYMBOL(ieee80211_get_operstate);

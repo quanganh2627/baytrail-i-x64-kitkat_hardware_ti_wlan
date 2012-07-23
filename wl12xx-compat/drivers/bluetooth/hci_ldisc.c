@@ -364,6 +364,7 @@ static void hci_uart_tty_wakeup(struct tty_struct *tty)
  */
 static void hci_uart_tty_receive(struct tty_struct *tty, const u8 *data, char *flags, int count)
 {
+	int ret;
 	struct hci_uart *hu = (void *)tty->disc_data;
 
 	if (!hu || tty != hu->tty)
@@ -373,8 +374,9 @@ static void hci_uart_tty_receive(struct tty_struct *tty, const u8 *data, char *f
 		return;
 
 	spin_lock(&hu->rx_lock);
-	hu->proto->recv(hu, (void *) data, count);
-	hu->hdev->stat.byte_rx += count;
+	ret = hu->proto->recv(hu, (void *) data, count);
+	if (ret > 0)
+		hu->hdev->stat.byte_rx += count;
 	spin_unlock(&hu->rx_lock);
 
 	tty_unthrottle(tty);
@@ -403,6 +405,9 @@ static int hci_uart_register_dev(struct hci_uart *hu)
 	hdev->flush = hci_uart_flush;
 	hdev->send  = hci_uart_send_frame;
 	hdev->destruct = hci_uart_destruct;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,37)
+	hdev->parent = hu->tty->dev;
+#endif
 
 	hdev->owner = THIS_MODULE;
 

@@ -1,5 +1,5 @@
 #!/bin/bash
-# 
+#
 # Copyright 2007	Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
 #
 # Use this to parse a small .config equivalent looking file to generate
@@ -38,9 +38,9 @@ KREL=$(cat $KERNEL_RELEASE | tail -1)
 DATE=$(date)
 
 # Defines a CONFIG_ option if not defined yet, this helps respect
-# linux/autoconf.h 
+# linux/autoconf.h
 function define_config {
-	VAR=$1	
+	VAR=$1
 	VALUE=$2
 	case $VALUE in
 	n) # Try to undefine it
@@ -133,7 +133,7 @@ cat <<EOF
 #define COMPAT_AUTOCONF_INCLUDED
 /*
  * Automatically generated C config: don't edit
- * $DATE 
+ * $DATE
  * compat-wireless-2.6: $CREL
  * linux-2.6: $KREL
  */
@@ -184,8 +184,8 @@ done
 # Deal with special cases. CONFIG_MAC80211_QOS is such a case.
 # We handle this specially for different kernels we support.
 if [ -f $KLIB_BUILD/Makefile ]; then
-	SUBLEVEL=$(make -C $KLIB_BUILD kernelversion | sed -n 's/^2\.6\.\([0-9]\+\).*/\1/p')
-	if [ $SUBLEVEL -le 22 ]; then
+	SUBLEVEL=$(make -s -C $KLIB_BUILD kernelversion | sed -n 's/^2\.6\.\([0-9]\+\).*/\1/p')
+	if [ ${SUBLEVEL:=40} -le 22 ]; then
 		define_config CONFIG_MAC80211_QOS y
 	else # kernel >= 2.6.23
 		# CONFIG_MAC80211_QOS on these kernels requires

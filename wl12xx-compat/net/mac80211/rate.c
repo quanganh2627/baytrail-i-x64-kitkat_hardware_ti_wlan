@@ -23,7 +23,7 @@ struct rate_control_alg {
 static LIST_HEAD(rate_ctrl_algs);
 static DEFINE_MUTEX(rate_ctrl_mutex);
 
-static char *ieee80211_default_rc_algo = CONFIG_MAC80211_RC_DEFAULT;
+static char *ieee80211_default_rc_algo = CONFIG_COMPAT_MAC80211_RC_DEFAULT;
 module_param(ieee80211_default_rc_algo, charp, 0644);
 MODULE_PARM_DESC(ieee80211_default_rc_algo,
 		 "Default rate control algorithm for mac80211 to use");
@@ -119,8 +119,8 @@ ieee80211_rate_control_ops_get(const char *name)
 		ops = ieee80211_try_rate_control_ops_get(ieee80211_default_rc_algo);
 
 	/* try built-in one if specific alg requested but not found */
-	if (!ops && strlen(CONFIG_MAC80211_RC_DEFAULT))
-		ops = ieee80211_try_rate_control_ops_get(CONFIG_MAC80211_RC_DEFAULT);
+	if (!ops && strlen(CONFIG_COMPAT_MAC80211_RC_DEFAULT))
+		ops = ieee80211_try_rate_control_ops_get(CONFIG_COMPAT_MAC80211_RC_DEFAULT);
 	kparam_unblock_sysfs_write(ieee80211_default_rc_algo);
 
 	return ops;
@@ -233,6 +233,27 @@ static void rc_send_low_broadcast(s8 *idx, u32 basic_rates,
 	/* could not find a basic rate; use original selection */
 }
 
+static inline s8
+rate_lowest_non_cck_index(struct ieee80211_supported_band *sband,
+			  struct ieee80211_sta *sta)
+{
+	int i;
+
+	for (i = 0; i < sband->n_bitrates; i++) {
+		struct ieee80211_rate *srate = &sband->bitrates[i];
+		if ((srate->bitrate == 10) || (srate->bitrate == 20) ||
+		    (srate->bitrate == 55) || (srate->bitrate == 110))
+			continue;
+
+		if (rate_supported(sta, sband->band, i))
+			return i;
+	}
+
+	/* No matching rate found */
+	return 0;
+}
+
+
 bool rate_control_send_low(struct ieee80211_sta *sta,
 			   void *priv_sta,
 			   struct ieee80211_tx_rate_control *txrc)
@@ -242,7 +263,13 @@ bool rate_control_send_low(struct ieee80211_sta *sta,
 	int mcast_rate;
 
 	if (!sta || !priv_sta || rc_no_data_or_no_ack(txrc)) {
-		info->control.rates[0].idx = rate_lowest_index(txrc->sband, sta);
+		if ((sband->band != IEEE80211_BAND_2GHZ) ||
+		    !(info->flags & IEEE80211_TX_CTL_NO_CCK_RATE))
+			info->control.rates[0].idx =
+				rate_lowest_index(txrc->sband, sta);
+		else
+			info->control.rates[0].idx =
+				rate_lowest_non_cck_index(txrc->sband, sta);
 		info->control.rates[0].count =
 			(info->flags & IEEE80211_TX_CTL_NO_ACK) ?
 			1 : txrc->hw->max_rate_tries;

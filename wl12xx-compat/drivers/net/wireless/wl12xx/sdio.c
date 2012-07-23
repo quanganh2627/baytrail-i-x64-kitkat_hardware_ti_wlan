@@ -23,7 +23,6 @@
 
 #include <linux/irq.h>
 #include <linux/module.h>
-#include <linux/crc7.h>
 #include <linux/vmalloc.h>
 #include <linux/mmc/sdio_func.h>
 #include <linux/mmc/sdio_ids.h>
@@ -45,21 +44,16 @@
 #define SDIO_DEVICE_ID_TI_WL1271	0x4076
 #endif
 
-static const struct sdio_device_id wl1271_devices[] = {
+static const struct sdio_device_id wl1271_devices[] __devinitconst = {
 	{ SDIO_DEVICE(SDIO_VENDOR_ID_TI, SDIO_DEVICE_ID_TI_WL1271) },
 	{}
 };
 MODULE_DEVICE_TABLE(sdio, wl1271_devices);
 
-/* The max SDIO block size is 256 when working with tx padding to SDIO block */
-#define TX_PAD_SDIO_BLK_SIZE                  256
-
-static void wl1271_sdio_set_block_size(struct wl1271 *wl)
+static void wl1271_sdio_set_block_size(struct wl1271 *wl, unsigned int blksz)
 {
-	wl->block_size = TX_PAD_SDIO_BLK_SIZE;
-
 	sdio_claim_host(wl->if_priv);
-	sdio_set_block_size(wl->if_priv, TX_PAD_SDIO_BLK_SIZE);
+	sdio_set_block_size(wl->if_priv, blksz);
 	sdio_release_host(wl->if_priv);
 }
 
@@ -87,6 +81,24 @@ static irqreturn_t wl1271_hardirq(int irq, void *cookie)
 		complete(wl->elp_compl);
 		wl->elp_compl = NULL;
 	}
+
+	if (test_bit(WL1271_FLAG_SUSPENDED, &wl->flags)) {
+		/* don't enqueue a work right now. mark it as pending */
+		set_bit(WL1271_FLAG_PENDING_WORK, &wl->flags);
+		wl1271_debug(DEBUG_IRQ, "should not enqueue work");
+		disable_irq_nosync(wl->irq);
+		pm_wakeup_event(wl1271_sdio_wl_to_dev(wl), 0);
+#ifdef CONFIG_HAS_WAKELOCK
+		if (!test_and_set_bit(WL1271_FLAG_WAKE_LOCK, &wl->flags))
+			wake_lock(&wl->wake_lock);
+#endif
+		spin_unlock_irqrestore(&wl->wl_lock, flags);
+		return IRQ_HANDLED;
+	}
+#ifdef CONFIG_HAS_WAKELOCK
+	if (!test_and_set_bit(WL1271_FLAG_WAKE_LOCK, &wl->flags))
+		wake_lock(&wl->wake_lock);
+#endif
 	spin_unlock_irqrestore(&wl->wl_lock, flags);
 
 	return IRQ_WAKE_THREAD;
@@ -102,20 +114,13 @@ static void wl1271_sdio_enable_interrupts(struct wl1271 *wl)
 	enable_irq(wl->irq);
 }
 
-static void wl1271_sdio_reset(struct wl1271 *wl)
-{
-}
-
-static void wl1271_sdio_init(struct wl1271 *wl)
-{
-}
-
 static void wl1271_sdio_raw_read(struct wl1271 *wl, int addr, void *buf,
 				 size_t len, bool fixed)
 {
 	int ret;
 	struct sdio_func *func = wl_to_func(wl);
 
+	sdio_claim_host(func);
 	if (unlikely(addr == HW_ACCESS_ELP_CTRL_REG_ADDR)) {
 		((u8 *)buf)[0] = sdio_f0_readb(func, addr, &ret);
 		wl1271_debug(DEBUG_SDIO, "sdio read 52 addr 0x%x, byte 0x%02x",
@@ -131,10 +136,10 @@ static void wl1271_sdio_raw_read(struct wl1271 *wl, int addr, void *buf,
 		wl1271_dump_ascii(DEBUG_SDIO, "data: ", buf, len);
 	}
 
-	if (ret) {
+	if (ret)
 		wl1271_error("sdio read failed (%d)", ret);
-		WARN_ON(1);
-	}
+
+	sdio_release_host(func);
 }
 
 static void wl1271_sdio_raw_write(struct wl1271 *wl, int addr, void *buf,
@@ -143,6 +148,7 @@ static void wl1271_sdio_raw_write(struct wl1271 *wl, int addr, void *buf,
 	int ret;
 	struct sdio_func *func = wl_to_func(wl);
 
+	sdio_claim_host(func);
 	if (unlikely(addr == HW_ACCESS_ELP_CTRL_REG_ADDR)) {
 		sdio_f0_writeb(func, ((u8 *)buf)[0], addr, &ret);
 		wl1271_debug(DEBUG_SDIO, "sdio write 52 addr 0x%x, byte 0x%02x",
@@ -158,33 +164,33 @@ static void wl1271_sdio_raw_write(struct wl1271 *wl, int addr, void *buf,
 			ret = sdio_memcpy_toio(func, addr, buf, len);
 	}
 
-	if (ret) {
+	if (ret)
 		wl1271_error("sdio write failed (%d)", ret);
-		WARN_ON(1);
-	}
+	sdio_release_host(func);
 }
 
 static int wl1271_sdio_power_on(struct wl1271 *wl)
 {
 	struct sdio_func *func = wl_to_func(wl);
 	int ret;
+	/* Avoid manual resume */
+	func->card->host->bus_resume_flags = 0;
 
-	/* Make sure the card will not be powered off by runtime PM */
-	ret = pm_runtime_get_sync(&func->dev);
-	if (ret < 0)
-		goto out;
+	/* If enabled, tell runtime PM not to power off the card */
+	if (pm_runtime_enabled(&func->dev)) {
+		ret = pm_runtime_get_sync(&func->dev);
+		if (ret < 0)
+			goto out;
+	}
 
-	/* Runtime PM might be disabled, so power up the card manually */
+	/* Runtime PM is disabled: power up the card manually */
 	ret = mmc_power_restore_host(func->card->host);
 	if (ret < 0)
 		goto out;
 
 	sdio_claim_host(func);
 	sdio_enable_func(func);
-
-	/* In case the block size was modified, return to defaults */
-	wl->block_size = 0;
-	sdio_set_block_size(func, 0);
+	sdio_release_host(func);
 
 out:
 	return ret;
@@ -195,16 +201,23 @@ static int wl1271_sdio_power_off(struct wl1271 *wl)
 	struct sdio_func *func = wl_to_func(wl);
 	int ret;
 
+	sdio_claim_host(func);
 	sdio_disable_func(func);
 	sdio_release_host(func);
 
-	/* Runtime PM might be disabled, so power off the card manually */
+	/* Power off the card manually, even if runtime PM is enabled. */
 	ret = mmc_power_save_host(func->card->host);
 	if (ret < 0)
 		return ret;
 
-	/* Let runtime PM know the card is powered off */
-	return pm_runtime_put_sync(&func->dev);
+	/* If enabled, let runtime PM know the card is powered off */
+	if (pm_runtime_enabled(&func->dev))
+		ret = pm_runtime_put_sync(&func->dev);
+
+	/* Enable manual resume */
+	func->card->host->bus_resume_flags |= MMC_BUSRESUME_MANUAL_RESUME;
+
+	return ret;
 }
 
 static int wl1271_sdio_set_power(struct wl1271 *wl, bool enable)
@@ -218,8 +231,6 @@ static int wl1271_sdio_set_power(struct wl1271 *wl, bool enable)
 static struct wl1271_if_operations sdio_ops = {
 	.read		= wl1271_sdio_raw_read,
 	.write		= wl1271_sdio_raw_write,
-	.reset		= wl1271_sdio_reset,
-	.init		= wl1271_sdio_init,
 	.power		= wl1271_sdio_set_power,
 	.dev		= wl1271_sdio_wl_to_dev,
 	.enable_irq	= wl1271_sdio_enable_interrupts,
@@ -233,6 +244,8 @@ static int __devinit wl1271_probe(struct sdio_func *func,
 	struct ieee80211_hw *hw;
 	const struct wl12xx_platform_data *wlan_data;
 	struct wl1271 *wl;
+	unsigned long irqflags;
+	mmc_pm_flag_t mmcflags;
 	int ret;
 
 	/* We are only able to handle the wlan function */
@@ -251,7 +264,7 @@ static int __devinit wl1271_probe(struct sdio_func *func,
 	/* Grab access to FN0 for ELP reg. */
 	func->card->quirks |= MMC_QUIRK_LENIENT_FN0;
 
-	/* Allow small data quantities to be delivered in block mode */
+	/* Use block mode for transferring over one block size of data */
 	func->card->quirks |= MMC_QUIRK_BLKSZ_FOR_BYTE_MODE;
 
 	wlan_data = wl12xx_get_platform_data();
@@ -262,17 +275,46 @@ static int __devinit wl1271_probe(struct sdio_func *func,
 	}
 
 	wl->irq = wlan_data->irq;
-	wl->ref_clock = wlan_data->board_ref_clock;
-	wl->tcxo_clock = wlan_data->board_tcxo_clock;
+	if (wl->ref_clock < 0)
+		wl->ref_clock = wlan_data->board_ref_clock;
+	if (wl->tcxo_clock < 0)
+		wl->tcxo_clock = wlan_data->board_tcxo_clock;
+	wl->platform_quirks = wlan_data->platform_quirks;
+
+	if (wl->platform_quirks & WL12XX_PLATFORM_QUIRK_EDGE_IRQ)
+		irqflags = IRQF_TRIGGER_RISING;
+	else
+		irqflags = IRQF_TRIGGER_HIGH | IRQF_ONESHOT;
+
+	/* The driver handles the interrupt during suspend */
+	irqflags |= IRQF_NO_SUSPEND;
 
 	ret = request_threaded_irq(wl->irq, wl1271_hardirq, wl1271_irq,
-				   IRQF_TRIGGER_RISING,
+				   irqflags,
 				   DRIVER_NAME, wl);
 	if (ret < 0) {
 		wl1271_error("request_irq() failed: %d", ret);
 		goto out_free;
 	}
 
+	ret = enable_irq_wake(wl->irq);
+	if (!ret) {
+		wl->irq_wake_enabled = true;
+		device_init_wakeup(wl1271_sdio_wl_to_dev(wl), 1);
+
+		/* if sdio can keep power while host is suspended, enable wow */
+		mmcflags = sdio_get_host_pm_caps(func);
+		wl1271_debug(DEBUG_SDIO, "sdio PM caps = 0x%x", mmcflags);
+
+		if (mmcflags & MMC_PM_KEEP_POWER) {
+			hw->wiphy->wowlan.flags = WIPHY_WOWLAN_ANY;
+			hw->wiphy->wowlan.n_patterns =
+					WL1271_MAX_RX_DATA_FILTERS;
+			hw->wiphy->wowlan.pattern_min_len = 1;
+			hw->wiphy->wowlan.pattern_max_len =
+					WL1271_RX_DATA_FILTER_MAX_PATTERN_SIZE;
+		}
+	}
 	disable_irq(wl->irq);
 
 	ret = wl1271_init_ieee80211(wl);
@@ -287,8 +329,6 @@ static int __devinit wl1271_probe(struct sdio_func *func,
 
 	/* Tell PM core that we don't need the card to be powered now */
 	pm_runtime_put_noidle(&func->dev);
-
-	wl1271_notice("initialized");
 
 	return 0;
 
@@ -308,20 +348,56 @@ static void __devexit wl1271_remove(struct sdio_func *func)
 	/* Undo decrement done above in wl1271_probe */
 	pm_runtime_get_noresume(&func->dev);
 
+	if (wl->irq_wake_enabled) {
+		device_init_wakeup(wl1271_sdio_wl_to_dev(wl), 0);
+		disable_irq_wake(wl->irq);
+	}
 	wl1271_unregister_hw(wl);
 	free_irq(wl->irq, wl);
 	wl1271_free_hw(wl);
+
+
 }
 
 static int wl1271_suspend(struct device *dev)
 {
 	/* Tell MMC/SDIO core it's OK to power down the card
 	 * (if it isn't already), but not to remove it completely */
-	return 0;
+	struct sdio_func *func = dev_to_sdio_func(dev);
+	struct wl1271 *wl = sdio_get_drvdata(func);
+	mmc_pm_flag_t sdio_flags;
+	int ret = 0;
+
+	wl1271_debug(DEBUG_MAC80211, "wl1271 suspend. wow_enabled: %d",
+		     wl->wow_enabled);
+
+	/* check whether sdio should keep power */
+	if (wl->wow_enabled) {
+		sdio_flags = sdio_get_host_pm_caps(func);
+
+		if (!(sdio_flags & MMC_PM_KEEP_POWER)) {
+			wl1271_error("can't keep power while host "
+				     "is suspended");
+			ret = -EINVAL;
+			goto out;
+		}
+
+		/* keep power while host suspended */
+		ret = sdio_set_host_pm_flags(func, MMC_PM_KEEP_POWER);
+		if (ret) {
+			wl1271_error("error while trying to keep power");
+			goto out;
+		}
+	}
+out:
+	return ret;
 }
 
 static int wl1271_resume(struct device *dev)
 {
+
+	wl1271_debug(DEBUG_MAC80211, "wl1271 resume");
+
 	return 0;
 }
 
@@ -342,30 +418,19 @@ static struct sdio_driver wl1271_sdio_driver = {
 
 static int __init wl1271_init(void)
 {
-	int ret;
-
-	ret = sdio_register_driver(&wl1271_sdio_driver);
-	if (ret < 0) {
-		wl1271_error("failed to register sdio driver: %d", ret);
-		goto out;
-	}
-
-out:
-	return ret;
+	return sdio_register_driver(&wl1271_sdio_driver);
 }
 
 static void __exit wl1271_exit(void)
 {
 	sdio_unregister_driver(&wl1271_sdio_driver);
-
-	wl1271_notice("unloaded");
 }
 
 module_init(wl1271_init);
 module_exit(wl1271_exit);
 
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Luciano Coelho <luciano.coelho@nokia.com>");
+MODULE_AUTHOR("Luciano Coelho <coelho@ti.com>");
 MODULE_AUTHOR("Juuso Oikarinen <juuso.oikarinen@nokia.com>");
 MODULE_FIRMWARE(WL1271_FW_NAME);
 MODULE_FIRMWARE(WL128X_FW_NAME);

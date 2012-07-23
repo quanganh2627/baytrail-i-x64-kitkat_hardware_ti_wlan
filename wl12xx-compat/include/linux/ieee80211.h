@@ -750,6 +750,12 @@ struct ieee80211_mgmt {
 					u8 action;
 					u8 smps_control;
 				} __attribute__ ((packed)) ht_smps;
+				struct {
+					u8 action;
+					u8 oui[3];
+					u8 variable[0];
+				} __attribute__ ((packed)) public;
+
 			} u;
 		} __attribute__ ((packed)) action;
 	} u;
@@ -766,6 +772,13 @@ struct ieee80211_mmie {
 	__le16 key_id;
 	u8 sequence_number[6];
 	u8 mic[8];
+} __attribute__ ((packed));
+
+struct ieee80211_vendor_ie {
+	u8 element_id;
+	u8 len;
+	u8 oui[3];
+	u8 oui_type;
 } __attribute__ ((packed));
 
 /* Control frames */
@@ -884,6 +897,15 @@ struct ieee80211_ht_cap {
 #define IEEE80211_HT_CAP_40MHZ_INTOLERANT	0x4000
 #define IEEE80211_HT_CAP_LSIG_TXOP_PROT		0x8000
 
+/* 802.11n HT extended capabilities masks (for extended_ht_cap_info) */
+#define IEEE80211_HT_EXT_CAP_PCO		0x0001
+#define IEEE80211_HT_EXT_CAP_PCO_TIME		0x0006
+#define		IEEE80211_HT_EXT_CAP_PCO_TIME_SHIFT	1
+#define IEEE80211_HT_EXT_CAP_MCS_FB		0x0300
+#define		IEEE80211_HT_EXT_CAP_MCS_FB_SHIFT	8
+#define IEEE80211_HT_EXT_CAP_HTC_SUP		0x0400
+#define IEEE80211_HT_EXT_CAP_RD_RESPONDER	0x0800
+
 /* 802.11n HT capability AMPDU settings (for ampdu_params_info) */
 #define IEEE80211_HT_AMPDU_PARM_FACTOR		0x03
 #define IEEE80211_HT_AMPDU_PARM_DENSITY		0x1C
@@ -993,6 +1015,15 @@ struct ieee80211_ht_info {
 
 #define WLAN_CAPABILITY_ESS		(1<<0)
 #define WLAN_CAPABILITY_IBSS		(1<<1)
+
+/*
+ * A mesh STA sets the ESS and IBSS capability bits to zero.
+ * however, this holds true for p2p probe responses (in the p2p_find
+ * phase) as well.
+ */
+#define WLAN_CAPABILITY_IS_STA_BSS(cap)	\
+	(!((cap) & (WLAN_CAPABILITY_ESS | WLAN_CAPABILITY_IBSS)))
+
 #define WLAN_CAPABILITY_CF_POLLABLE	(1<<2)
 #define WLAN_CAPABILITY_CF_POLL_REQUEST	(1<<3)
 #define WLAN_CAPABILITY_PRIVACY		(1<<4)
@@ -1252,9 +1283,8 @@ enum ieee80211_category {
 	WLAN_CATEGORY_MULTIHOP_ACTION = 14,
 	WLAN_CATEGORY_SELF_PROTECTED = 15,
 	WLAN_CATEGORY_WMM = 17,
-	/* TODO: remove MESH_PLINK and MESH_PATH_SEL after */
-	/*       mesh is updated to current 802.11s draft  */
-	WLAN_CATEGORY_MESH_PLINK = 30,
+	/* TODO: remove MESH_PATH_SEL after mesh is updated
+	 * to current 802.11s draft  */
 	WLAN_CATEGORY_MESH_PATH_SEL = 32,
 	WLAN_CATEGORY_VENDOR_SPECIFIC_PROTECTED = 126,
 	WLAN_CATEGORY_VENDOR_SPECIFIC = 127,
@@ -1324,6 +1354,9 @@ enum {
 
 /* Although the spec says 8 I'm seeing 6 in practice */
 #define IEEE80211_COUNTRY_IE_MIN_LEN	6
+
+/* The Country String field of the element shall be 3 octets in length */
+#define IEEE80211_COUNTRY_STRING_LEN	3
 
 /*
  * For regulatory extension stuff see IEEE 802.11-2007
@@ -1425,6 +1458,9 @@ enum ieee80211_sa_query_action {
 
 #define WLAN_PMKID_LEN			16
 
+#define WLAN_OUI_WFA			0x506f9a
+#define WLAN_OUI_TYPE_WFA_P2P		9
+
 /**
  * ieee80211_get_qos_ctl - get pointer to qos control bytes
  * @hdr: the frame
@@ -1504,6 +1540,7 @@ static inline bool ieee80211_is_robust_mgmt_frame(struct ieee80211_hdr *hdr)
 		category = ((u8 *) hdr) + 24;
 		return *category != WLAN_CATEGORY_PUBLIC &&
 			*category != WLAN_CATEGORY_HT &&
+			*category != WLAN_CATEGORY_SELF_PROTECTED &&
 			*category != WLAN_CATEGORY_VENDOR_SPECIFIC;
 	}
 

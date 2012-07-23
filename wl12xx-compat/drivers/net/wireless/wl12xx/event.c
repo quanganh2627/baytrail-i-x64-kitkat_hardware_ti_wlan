@@ -33,6 +33,7 @@ void wl1271_pspoll_work(struct work_struct *work)
 {
 	struct delayed_work *dwork;
 	struct wl1271 *wl;
+	int ret;
 
 	dwork = container_of(work, struct delayed_work, work);
 	wl = container_of(dwork, struct wl1271, pspoll_work);
@@ -55,8 +56,13 @@ void wl1271_pspoll_work(struct work_struct *work)
 	 * delivery failure occurred, and no-one changed state since, so
 	 * we should go back to powersave.
 	 */
+	ret = wl1271_ps_elp_wakeup(wl);
+	if (ret < 0)
+		goto out;
+
 	wl1271_ps_set_mode(wl, STATION_POWER_SAVE_MODE, wl->basic_rate, true);
 
+	wl1271_ps_elp_sleep(wl);
 out:
 	mutex_unlock(&wl->mutex);
 };
@@ -114,9 +120,8 @@ static int wl1271_event_ps_report(struct wl1271 *wl,
 			ret = wl1271_ps_set_mode(wl, STATION_POWER_SAVE_MODE,
 						 wl->basic_rate, true);
 		} else {
-			wl1271_info("No ack to nullfunc from AP.");
+			wl1271_info("No ack to nullfunc from AP. Force Active Mode.");
 			wl->psm_entry_retry = 0;
-			*beacon_loss = true;
 		}
 		break;
 	case EVENT_ENTER_POWER_SAVE_SUCCESS:
@@ -127,13 +132,21 @@ static int wl1271_event_ps_report(struct wl1271 *wl,
 		if (ret < 0)
 			break;
 
-		/* enable beacon early termination */
-		ret = wl1271_acx_bet_enable(wl, true);
-		if (ret < 0)
-			break;
+		/*
+		 * BET has only a minor effect in 5GHz and masks
+		 * channel switch IEs, so we only enable BET on 2.4GHz
+		*/
+		if ((wl->band == IEEE80211_BAND_2GHZ) &&
+			(wl->basic_rate < CONF_HW_BIT_RATE_9MBPS))
+			/* enable beacon early termination */
+			ret = wl1271_acx_bet_enable(wl, true);
+		else
+			wl1271_debug(DEBUG_EVENT, "Disable BET for high rates");
 
-		/* go to extremely low power mode */
-		wl1271_ps_elp_sleep(wl);
+		if (wl->ps_compl) {
+			complete(wl->ps_compl);
+			wl->ps_compl = NULL;
+		}
 		break;
 	default:
 		break;
@@ -160,6 +173,43 @@ static void wl1271_event_rssi_trigger(struct wl1271 *wl,
 	wl->last_rssi_event = event;
 }
 
+static void wl12xx_event_soft_gemini_sense(struct wl1271 *wl,
+					       u8 enable)
+{
+	if (enable) {
+		/* disable dynamic PS when the firmware senses BT*/
+		ieee80211_disable_dyn_ps(wl->vif);
+		set_bit(WL1271_FLAG_SOFT_GEMINI, &wl->flags);
+	} else {
+		ieee80211_enable_dyn_ps(wl->vif);
+		clear_bit(WL1271_FLAG_SOFT_GEMINI, &wl->flags);
+		wl1271_recalc_rx_streaming(wl);
+	}
+
+}
+
+static void wl1271_stop_ba_event(struct wl1271 *wl)
+{
+	if (wl->bss_type != BSS_TYPE_AP_BSS) {
+		if (!wl->ba_rx_bitmap)
+			return;
+		ieee80211_stop_rx_ba_session(wl->vif, wl->ba_rx_bitmap,
+					     wl->bssid);
+	} else {
+		int i;
+		struct wl1271_link *lnk;
+		for (i = WL1271_AP_STA_HLID_START; i < WL1271_MAX_LINKS; i++) {
+			lnk = &wl->links[i];
+			if (!wl1271_is_active_sta(wl, i) || !lnk->ba_bitmap)
+				continue;
+
+			ieee80211_stop_rx_ba_session(wl->vif,
+						     lnk->ba_bitmap,
+						     lnk->addr);
+		}
+	}
+}
+
 static void wl1271_event_mbox_dump(struct event_mailbox *mbox)
 {
 	wl1271_debug(DEBUG_EVENT, "MBOX DUMP:");
@@ -173,6 +223,8 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
 	u32 vector;
 	bool beacon_loss = false;
 	bool is_ap = (wl->bss_type == BSS_TYPE_AP_BSS);
+	bool disconnect_sta = false;
+	unsigned long sta_bitmap = 0;
 
 	wl1271_event_mbox_dump(mbox);
 
@@ -187,15 +239,35 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
 		wl1271_scan_stm(wl);
 	}
 
-	/* disable dynamic PS when requested by the firmware */
-	if (vector & SOFT_GEMINI_SENSE_EVENT_ID &&
-	    wl->bss_type == BSS_TYPE_STA_BSS) {
-		if (mbox->soft_gemini_sense_info)
-			ieee80211_disable_dyn_ps(wl->vif);
-		else
-			ieee80211_enable_dyn_ps(wl->vif);
+	if (vector & PERIODIC_SCAN_REPORT_EVENT_ID) {
+		wl1271_debug(DEBUG_EVENT, "PERIODIC_SCAN_REPORT_EVENT "
+			     "(status 0x%0x)", mbox->scheduled_scan_status);
+
+		wl1271_scan_sched_scan_results(wl);
 	}
 
+	if (vector & PERIODIC_SCAN_COMPLETE_EVENT_ID) {
+		wl1271_debug(DEBUG_EVENT, "PERIODIC_SCAN_COMPLETE_EVENT "
+			     "(status 0x%0x)", mbox->scheduled_scan_status);
+		if (wl->sched_scanning) {
+			ieee80211_sched_scan_stopped(wl->hw);
+			wl->sched_scanning = false;
+		}
+	}
+
+	if (vector & SOFT_GEMINI_SENSE_EVENT_ID &&
+	    wl->bss_type == BSS_TYPE_STA_BSS)
+		wl12xx_event_soft_gemini_sense(wl,
+					       mbox->soft_gemini_sense_info);
+
+	if (vector & CHANGE_AUTO_MODE_TIMEOUT_EVENT_ID &&
+	    wl->bss_type == BSS_TYPE_STA_BSS) {
+		int timeout = 0;
+		if (mbox->change_auto_mode_timeout)
+			timeout = 500;
+		ieee80211_set_dyn_ps_timeout(wl->vif, timeout);
+	}
+	
 	/*
 	 * The BSS_LOSE_EVENT_ID is only needed while psm (and hence beacon
 	 * filtering) is enabled. Without PSM, the stack will receive all
@@ -228,14 +300,79 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
 			wl1271_event_rssi_trigger(wl, mbox);
 	}
 
-	if ((vector & DUMMY_PACKET_EVENT_ID) && !is_ap) {
+	if ((vector & BA_SESSION_RX_CONSTRAINT_EVENT_ID)) {
+		wl1271_debug(DEBUG_EVENT, "BA_SESSION_RX_CONSTRAINT_EVENT_ID. "
+			     "ba_allowed = 0x%x", mbox->rx_ba_allowed);
+
+		wl->ba_allowed = !!mbox->rx_ba_allowed;
+
+		if (wl->vif && !wl->ba_allowed)
+			wl1271_stop_ba_event(wl);
+	}
+
+	if ((vector & CHANNEL_SWITCH_COMPLETE_EVENT_ID) && !is_ap) {
+		wl1271_debug(DEBUG_EVENT, "CHANNEL_SWITCH_COMPLETE_EVENT_ID. "
+					  "channel_switch_status = 0x%x",
+					  mbox->channel_switch_status);
+		/*
+		 * That event uses for two cases:
+		 * 1) channel switch complete with channel_switch_status=0
+		 * 2) fixing beacon actual TSF with channel_switch_status=1
+		 * calling chswitch_done only for the first option
+		 */
+		if (!mbox->channel_switch_status &&
+		    test_and_clear_bit(WL1271_FLAG_CS_PROGRESS, &wl->flags) &&
+		    (wl->vif))
+			ieee80211_chswitch_done(wl->vif, true);
+	}
+
+	if ((vector & DUMMY_PACKET_EVENT_ID)) {
 		wl1271_debug(DEBUG_EVENT, "DUMMY_PACKET_ID_EVENT_ID");
 		if (wl->vif)
 			wl1271_tx_dummy_packet(wl);
 	}
 
-	if (vector & DISCONNECT_EVENT_COMPLETE_ID) {
+	if (vector & DISCONNECT_EVENT_COMPLETE_ID)
 		wl1271_debug(DEBUG_EVENT, "disconnect event");
+
+	/*
+	 * "TX retries exceeded" has a different meaning according to mode.
+	 * In AP mode the offending station is disconnected.
+	 */
+	if ((vector & MAX_TX_RETRY_EVENT_ID) && is_ap) {
+		wl1271_debug(DEBUG_EVENT, "MAX_TX_RETRY_EVENT_ID");
+		sta_bitmap |= le16_to_cpu(mbox->sta_tx_retry_exceeded);
+		disconnect_sta = true;
+	}
+
+	if ((vector & INACTIVE_STA_EVENT_ID) && is_ap) {
+		wl1271_debug(DEBUG_EVENT, "INACTIVE_STA_EVENT_ID");
+		sta_bitmap |= le16_to_cpu(mbox->sta_aging_status);
+		disconnect_sta = true;
+	}
+
+	if (is_ap && disconnect_sta) {
+		u32 num_packets = wl->conf.tx.max_tx_retries;
+		struct ieee80211_sta *sta;
+		const u8 *addr;
+		int h;
+
+		for (h = find_first_bit(&sta_bitmap, AP_MAX_LINKS);
+		     h < AP_MAX_LINKS;
+		     h = find_next_bit(&sta_bitmap, AP_MAX_LINKS, h+1)) {
+			if (!wl1271_is_active_sta(wl, h))
+				continue;
+
+			addr = wl->links[h].addr;
+
+			rcu_read_lock();
+			sta = ieee80211_find_sta(wl->vif, addr);
+			if (sta) {
+				wl1271_debug(DEBUG_EVENT, "remove sta %d", h);
+				ieee80211_report_low_ack(sta, num_packets);
+			}
+			rcu_read_unlock();
+		}
 	}
 
 	if (wl->vif && beacon_loss)
@@ -243,6 +380,45 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
 
 	return 0;
 }
+
+
+int wl1271_event_toggle_rssi_triggers(struct wl1271 *wl, bool mask)
+{
+        int ret;
+	
+        wl1271_debug(DEBUG_EVENT, "Before RSSI triggers mask 0x%x", wl->event_mask);
+
+        /* Mask/unmask all RSSI SNR triggers for now */
+        if (mask)
+                wl->event_mask |= /*RSSI_SNR_TRIGGER_0_EVENT_ID |*/ 
+                          RSSI_SNR_TRIGGER_1_EVENT_ID |
+                          RSSI_SNR_TRIGGER_2_EVENT_ID |
+                          RSSI_SNR_TRIGGER_3_EVENT_ID |
+                          RSSI_SNR_TRIGGER_4_EVENT_ID |
+                          RSSI_SNR_TRIGGER_5_EVENT_ID |
+                          RSSI_SNR_TRIGGER_6_EVENT_ID |
+                          RSSI_SNR_TRIGGER_7_EVENT_ID;
+        else
+                wl->event_mask &= ~(/*RSSI_SNR_TRIGGER_0_EVENT_ID |*/ 
+                          RSSI_SNR_TRIGGER_1_EVENT_ID |
+                          RSSI_SNR_TRIGGER_2_EVENT_ID |
+                          RSSI_SNR_TRIGGER_3_EVENT_ID |
+                          RSSI_SNR_TRIGGER_4_EVENT_ID |
+                          RSSI_SNR_TRIGGER_5_EVENT_ID |
+                          RSSI_SNR_TRIGGER_6_EVENT_ID |
+                          RSSI_SNR_TRIGGER_7_EVENT_ID);
+
+	ret = wl1271_acx_event_mbox_mask(wl, wl->event_mask);
+	if (ret < 0) {
+		wl1271_error("EVENT mask setting failed");
+		return ret;
+	}
+        wl1271_debug(DEBUG_EVENT, "After RSSI triggers mask 0x%x", wl->event_mask);
+        wl1271_event_mbox_config(wl);
+        
+        return 0;
+}
+
 
 int wl1271_event_unmask(struct wl1271 *wl)
 {

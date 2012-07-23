@@ -232,7 +232,7 @@ static int rfkill_connect(struct input_handler *handler, struct input_dev *dev,
 
 	handle->dev = dev;
 	handle->handler = handler;
-	handle->name = "rfkill_backport";
+	handle->name = "rfkill";
 
 	/* causes rfkill_start() to be called */
 	error = input_register_handle(handle);

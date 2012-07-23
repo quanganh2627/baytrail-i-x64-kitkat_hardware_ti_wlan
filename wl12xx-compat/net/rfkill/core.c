@@ -805,7 +805,7 @@ static int rfkill_resume(struct device *dev)
 }
 
 static struct class rfkill_class = {
-	.name		= "rfkill_backport",
+	.name		= "rfkill",
 	.dev_release	= rfkill_release,
 	.dev_attrs	= rfkill_dev_attrs,
 	.dev_uevent	= rfkill_dev_uevent,
@@ -1024,7 +1024,6 @@ static int rfkill_fop_open(struct inode *inode, struct file *file)
 	 * start getting events from elsewhere but hold mtx to get
 	 * startup events added first
 	 */
-	list_add(&data->list, &rfkill_fds);
 
 	list_for_each_entry(rfkill, &rfkill_list, node) {
 		ev = kzalloc(sizeof(*ev), GFP_KERNEL);
@@ -1033,6 +1032,7 @@ static int rfkill_fop_open(struct inode *inode, struct file *file)
 		rfkill_fill_event(&ev->ev, rfkill, RFKILL_OP_ADD);
 		list_add_tail(&ev->list, &data->events);
 	}
+	list_add(&data->list, &rfkill_fds);
 	mutex_unlock(&data->mtx);
 	mutex_unlock(&rfkill_global_mutex);
 

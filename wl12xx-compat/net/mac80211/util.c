@@ -824,6 +824,7 @@ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata)
 
 		qparam.uapsd = false;
 
+		local->tx_conf[queue] = qparam;
 		drv_conf_tx(local, queue, &qparam);
 	}
 
@@ -1041,7 +1042,7 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
 }
 
 struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
-					  u8 *dst,
+					  u8 *dst, u32 ratemask,
 					  const u8 *ssid, size_t ssid_len,
 					  const u8 *ie, size_t ie_len)
 {
@@ -1065,13 +1066,14 @@ struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
 
 	buf_len = ieee80211_build_preq_ies(local, buf, ie, ie_len,
 					   local->hw.conf.channel->band,
-					   sdata->rc_rateidx_mask
-					   [local->hw.conf.channel->band],
-					   chan);
+					   ratemask, chan);
 
 	skb = ieee80211_probereq_get(&local->hw, &sdata->vif,
 				     ssid, ssid_len,
 				     buf, buf_len);
+
+	if (!skb)
+		goto out;
 
 	if (dst) {
 		mgmt = (struct ieee80211_mgmt *) skb->data;
@@ -1080,20 +1082,27 @@ struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
 	}
 
 	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
-	kfree(buf);
 
+out:
+	kfree(buf);
 	return skb;
 }
 
 void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
 			      const u8 *ssid, size_t ssid_len,
-			      const u8 *ie, size_t ie_len)
+			      const u8 *ie, size_t ie_len,
+			      u32 ratemask, bool no_cck)
 {
 	struct sk_buff *skb;
 
-	skb = ieee80211_build_probe_req(sdata, dst, ssid, ssid_len, ie, ie_len);
-	if (skb)
+	skb = ieee80211_build_probe_req(sdata, dst, ratemask, ssid, ssid_len,
+					ie, ie_len);
+	if (skb) {
+		if (no_cck)
+			IEEE80211_SKB_CB(skb)->flags |=
+				IEEE80211_TX_CTL_NO_CCK_RATE;
 		ieee80211_tx_skb(sdata, skb);
+	}
 }
 
 u32 ieee80211_sta_get_rates(struct ieee80211_local *local,
@@ -1148,10 +1157,28 @@ int ieee80211_reconfig(struct ieee80211_local *local)
 	struct ieee80211_hw *hw = &local->hw;
 	struct ieee80211_sub_if_data *sdata;
 	struct sta_info *sta;
-	int res;
+	int res, i;
 
+#ifdef CONFIG_PM
 	if (local->suspended)
 		local->resuming = true;
+
+	if (local->wowlan) {
+		local->wowlan = false;
+		res = drv_resume(local);
+		if (res < 0) {
+			local->resuming = false;
+			return res;
+		}
+		if (res == 0)
+			goto wake_up;
+		WARN_ON(res > 1);
+		/*
+		 * res is 1, which means the driver requested
+		 * to go through a regular reset on wakeup.
+		 */
+	}
+#endif
 
 	/* restart hardware */
 	if (local->open_count) {
@@ -1192,6 +1219,7 @@ int ieee80211_reconfig(struct ieee80211_local *local)
 					     struct ieee80211_sub_if_data,
 					     u.ap);
 
+			memset(&sta->sta.drv_priv, 0, hw->sta_data_size);
 			WARN_ON(drv_sta_add(local, sdata, &sta->sta));
 		}
 	}
@@ -1202,6 +1230,10 @@ int ieee80211_reconfig(struct ieee80211_local *local)
 
 	/* setup RTS threshold */
 	drv_set_rts_threshold(local, hw->wiphy->rts_threshold);
+
+	/* reconfigure tx conf */
+	for (i = 0; i < hw->queues; i++)
+		drv_conf_tx(local, i, &local->tx_conf[i]);
 
 	/* reconfigure hardware */
 	ieee80211_hw_config(local, ~0);
@@ -1228,7 +1260,8 @@ int ieee80211_reconfig(struct ieee80211_local *local)
 
 		switch (sdata->vif.type) {
 		case NL80211_IFTYPE_STATION:
-			changed |= BSS_CHANGED_ASSOC;
+			changed |= BSS_CHANGED_ASSOC |
+				   BSS_CHANGED_ARP_FILTER;
 			mutex_lock(&sdata->u.mgd.mtx);
 			ieee80211_bss_info_change_notify(sdata, changed);
 			mutex_unlock(&sdata->u.mgd.mtx);
@@ -1237,6 +1270,9 @@ int ieee80211_reconfig(struct ieee80211_local *local)
 			changed |= BSS_CHANGED_IBSS;
 			/* fall through */
 		case NL80211_IFTYPE_AP:
+			changed |= BSS_CHANGED_SSID |
+				   BSS_CHANGED_AP_PROBE_RESP;
+			/* fall through */
 		case NL80211_IFTYPE_MESH_POINT:
 			changed |= BSS_CHANGED_BEACON |
 				   BSS_CHANGED_BEACON_ENABLED;
@@ -1257,7 +1293,10 @@ int ieee80211_reconfig(struct ieee80211_local *local)
 		}
 	}
 
-	/*
+	ieee80211_recalc_ps(local, -1);
+
+
+        /*
 	 * Clear the WLAN_STA_BLOCK_BA flag so new aggregation
 	 * sessions can be established after a resume.
 	 *
@@ -1283,6 +1322,7 @@ int ieee80211_reconfig(struct ieee80211_local *local)
 		if (ieee80211_sdata_running(sdata))
 			ieee80211_enable_keys(sdata);
 
+ wake_up:
 	ieee80211_wake_queues_by_reason(hw,
 			IEEE80211_QUEUE_STOP_REASON_SUSPEND);
 
@@ -1315,7 +1355,7 @@ int ieee80211_reconfig(struct ieee80211_local *local)
 		}
 	}
 
-	add_timer(&local->sta_cleanup);
+	mod_timer(&local->sta_cleanup, jiffies + 1);
 
 	mutex_lock(&local->sta_mtx);
 	list_for_each_entry(sta, &local->sta_list, list)

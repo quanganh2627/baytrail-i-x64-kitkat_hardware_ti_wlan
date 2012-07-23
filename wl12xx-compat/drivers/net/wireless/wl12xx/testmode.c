@@ -205,22 +205,17 @@ static int wl1271_tm_cmd_nvs_push(struct wl1271 *wl, struct nlattr *tb[])
 
 	kfree(wl->nvs);
 
-	if (wl->chip.id == CHIP_ID_1283_PG20) {
-		wl->nvs = kzalloc(sizeof(struct wl128x_nvs_file), GFP_KERNEL);
-		if (!wl->nvs) {
-			wl1271_error("could not allocate memory for the nvs "
-				     "file");
-			ret = -ENOMEM;
-			goto out;
-		}
-	} else {
-		wl->nvs = kzalloc(sizeof(struct wl1271_nvs_file), GFP_KERNEL);
-		if (!wl->nvs) {
-			wl1271_error("could not allocate memory for the nvs "
-				     "file");
-			ret = -ENOMEM;
-			goto out;
-		}
+	if ((wl->chip.id == CHIP_ID_1283_PG20) &&
+	    (len != sizeof(struct wl128x_nvs_file)))
+		return -EINVAL;
+	else if (len != sizeof(struct wl1271_nvs_file))
+		return -EINVAL;
+
+	wl->nvs = kzalloc(len, GFP_KERNEL);
+	if (!wl->nvs) {
+		wl1271_error("could not allocate memory for the nvs file");
+		ret = -ENOMEM;
+		goto out;
 	}
 
 	memcpy(wl->nvs, buf, len);
@@ -265,7 +260,7 @@ static int wl1271_tm_cmd_recover(struct wl1271 *wl, struct nlattr *tb[])
 {
 	wl1271_debug(DEBUG_TESTMODE, "testmode cmd recover");
 
-	ieee80211_queue_work(wl->hw, &wl->recovery_work);
+	wl1271_queue_recovery_work(wl);
 
 	return 0;
 }

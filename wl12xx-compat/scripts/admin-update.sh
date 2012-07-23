@@ -217,12 +217,12 @@ fi
 # Drivers that have their own directory
 DRIVERS="drivers/net/wireless/ath"
 DRIVERS="$DRIVERS drivers/net/wireless/ath/carl9170"
-DRIVERS="$DRIVERS drivers/net/wireless/ath/ar9170"
 DRIVERS="$DRIVERS drivers/net/wireless/ath/ath5k"
 DRIVERS="$DRIVERS drivers/net/wireless/ath/ath9k"
 DRIVERS="$DRIVERS drivers/ssb"
 DRIVERS="$DRIVERS drivers/net/wireless/b43"
 DRIVERS="$DRIVERS drivers/net/wireless/b43legacy"
+DRIVERS="$DRIVERS drivers/net/wireless/iwlegacy"
 DRIVERS="$DRIVERS drivers/net/wireless/iwlwifi"
 DRIVERS="$DRIVERS drivers/net/wireless/rt2x00"
 DRIVERS="$DRIVERS drivers/net/wireless/zd1211rw"
@@ -232,13 +232,17 @@ DRIVERS="$DRIVERS drivers/net/wireless/rtl818x"
 DRIVERS="$DRIVERS drivers/net/wireless/rtl818x/rtl8180"
 DRIVERS="$DRIVERS drivers/net/wireless/rtl818x/rtl8187"
 DRIVERS="$DRIVERS drivers/net/wireless/rtlwifi"
+DRIVERS="$DRIVERS drivers/net/wireless/rtlwifi/rtl8192c"
 DRIVERS="$DRIVERS drivers/net/wireless/rtlwifi/rtl8192ce"
+DRIVERS="$DRIVERS drivers/net/wireless/rtlwifi/rtl8192cu"
+DRIVERS="$DRIVERS drivers/net/wireless/rtlwifi/rtl8192se"
 DRIVERS="$DRIVERS drivers/net/wireless/libertas_tf"
 DRIVERS="$DRIVERS drivers/net/wireless/ipw2x00"
 DRIVERS="$DRIVERS drivers/net/wireless/wl12xx"
 DRIVERS="$DRIVERS drivers/net/wireless/wl1251"
 DRIVERS="$DRIVERS drivers/net/wireless/iwmc3200wifi"
 DRIVERS="$DRIVERS drivers/net/wireless/orinoco"
+DRIVERS="$DRIVERS drivers/net/wireless/mwifiex"
 
 # Staging drivers
 STAGING_DRIVERS="drivers/staging/ath6kl"
@@ -457,7 +461,15 @@ if [[ "$GET_STABLE_PENDING" = y ]]; then
 	PENDING_STABLE_DIR="pending-stable/"
 
 	rm -rf $PENDING_STABLE_DIR
+
+	git tag -l | grep $LAST_STABLE_UPDATE 2>&1 > /dev/null
+	if [[ $? -ne 0 ]]; then
+		echo -e "${BLUE}Tag $LAST_STABLE_UPDATE not found on $NEXT_TREE tree: bailing out${NORMAL}"
+		exit 1
+	fi
 	echo -e "${GREEN}Generating stable cherry picks... ${NORMAL}"
+	echo -e "\nUsing command on directory $PWD:"
+	echo -e "\ngit format-patch --grep=\"stable@kernel.org\" -o $PENDING_STABLE_DIR ${LAST_STABLE_UPDATE}.. $WSTABLE"
 	git format-patch --grep="stable@kernel.org" -o $PENDING_STABLE_DIR ${LAST_STABLE_UPDATE}.. $WSTABLE
 	if [ ! -d ${LAST_DIR}/${PENDING_STABLE_DIR} ]; then
 		echo -e "Assumption that ${LAST_DIR}/${PENDING_STABLE_DIR} directory exists failed"
@@ -523,6 +535,10 @@ for dir in $EXTRA_PATCHES; do
 done
 
 for dir in $EXTRA_PATCHES; do
+	if [[ ! -d $dir ]]; then
+		echo -e "${RED}Patches: $dir empty, skipping...${NORMAL}\n"
+		continue
+	fi
 	if [[ $LAST_ELEM = $dir && "$REFRESH" = y ]]; then
 		patchRefresh $dir
 	fi

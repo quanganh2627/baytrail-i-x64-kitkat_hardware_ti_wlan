@@ -31,6 +31,9 @@
 #include <linux/list.h>
 #include <linux/bitops.h>
 #include <net/mac80211.h>
+#ifdef CONFIG_HAS_WAKELOCK
+#include <linux/wakelock.h>
+#endif
 
 #include "conf.h"
 #include "ini.h"
@@ -88,7 +91,7 @@ extern u32 wl12xx_debug_level;
 #define wl1271_debug(level, fmt, arg...) \
 	do { \
 		if (level & wl12xx_debug_level) \
-			pr_debug(DRIVER_PREFIX fmt "\n", ##arg); \
+			pr_info(DRIVER_PREFIX fmt "\n", ##arg); \
 	} while (0)
 
 /* TODO: use pr_debug_hex_dump when it will be available */
@@ -130,12 +133,21 @@ extern u32 wl12xx_debug_level;
 
 
 
-#define WL1271_FW_NAME "wl1271-fw-multirole.bin"
-#define WL128X_FW_NAME "wl128x-fw-multirole.bin"
-#define WL12XX_NVS_NAME "wl1271-nvs.bin"
+#define WL1271_FW_NAME "ti-connectivity/wl1271-fw-multirole-roc.bin"
+#define WL1271_PLT_FW_NAME "ti-connectivity/wl1271-fw-multirole-plt.bin"
+#define WL128X_FW_NAME "ti-connectivity/wl128x-fw-multirole-roc.bin"
+#define WL128X_PLT_FW_NAME "ti-connectivity/wl128x-fw-multirole-plt.bin"
+
+/*
+ * wl127x and wl128x are using the same NVS file name. However, the
+ * ini parameters between them are different.  The driver validates
+ * the correct NVS size in wl1271_boot_upload_nvs().
+ */
+#define WL12XX_NVS_NAME "ti-connectivity/wl1271-nvs.bin"
 
 #define WL1271_TX_SECURITY_LO16(s) ((u16)((s) & 0xffff))
 #define WL1271_TX_SECURITY_HI32(s) ((u32)(((s) >> 16) & 0xffffffff))
+#define WL1271_TX_SQN_POST_RECOVERY_PADDING 0xff
 
 #define WL1271_CIPHER_SUITE_GEM 0x00147201
 
@@ -154,27 +166,29 @@ extern u32 wl12xx_debug_level;
 #define WL1271_INVALID_ROLE_ID     0xff
 #define WL1271_INVALID_LINK_ID     0xff
 
-/* TODO: we can't use constant HLIDs in a real multirole */
-#define WL1271_AP_GLOBAL_HLID      0
-#define WL1271_AP_BROADCAST_HLID   1
-#define WL1271_AP_STA_HLID_START   2
+/* Defined by FW as 0. Will not be freed or allocated. */
+#define WL1271_SYSTEM_HLID         0
 
 /*
- * When in AP-mode, we allow (at least) this number of mem-blocks
+ * TODO: this is a very ugly hack since we don't support multirole. remove
+ * this constant from the code when we do.
+ */
+#define WL1271_AP_STA_HLID_START   3
+
+/*
+ * When in AP-mode, we allow (at least) this number of packets
  * to be transmitted to FW for a STA in PS-mode. Only when packets are
  * present in the FW buffers it will wake the sleeping STA. We want to put
  * enough packets for the driver to transmit all of its buffered data before
- * the STA goes to sleep again. But we don't want to take too much mem-blocks
+ * the STA goes to sleep again. But we don't want to take too much memory
  * as it might hurt the throughput of active STAs.
- * The number of blocks (18) is enough for 2 large packets.
  */
-#define WL1271_PS_STA_MAX_BLOCKS  (2 * 9)
+#define WL1271_PS_STA_MAX_PACKETS  2
 
 #define WL1271_AP_BSS_INDEX        0
-#define WL1271_AP_DEF_INACTIV_SEC  300
 #define WL1271_AP_DEF_BEACON_EXP   20
 
-#define ACX_TX_DESCRIPTORS         32
+#define ACX_TX_DESCRIPTORS         16
 
 #define WL1271_AGGR_BUFFER_SIZE (4 * PAGE_SIZE)
 
@@ -182,6 +196,12 @@ enum wl1271_state {
 	WL1271_STATE_OFF,
 	WL1271_STATE_ON,
 	WL1271_STATE_PLT,
+};
+
+enum wl12xx_fw_type {
+	WL12XX_FW_TYPE_NONE,
+	WL12XX_FW_TYPE_NORMAL,
+	WL12XX_FW_TYPE_PLT,
 };
 
 enum wl1271_partition_type {
@@ -206,13 +226,31 @@ struct wl1271_partition_set {
 
 struct wl1271;
 
-#define WL12XX_NUM_FW_VER 5
+enum {
+	FW_VER_CHIP,
+	FW_VER_IF_TYPE,
+	FW_VER_MAJOR,
+	FW_VER_SUBTYPE,
+	FW_VER_MINOR,
 
-/* FIXME: I'm not sure about this structure name */
+	NUM_FW_VER
+};
+
+#define FW_VER_CHIP_WL127X 6
+#define FW_VER_CHIP_WL128X 7
+
+#define FW_VER_IF_TYPE_STA 1
+#define FW_VER_IF_TYPE_AP  2
+
+#define FW_VER_MINOR_1_SPARE_STA_MIN 58
+#define FW_VER_MINOR_1_SPARE_AP_MIN  47
+
+#define FW_VER_MINOR_FWLOG_STA_MIN 70
+
 struct wl1271_chip {
 	u32 id;
 	char fw_ver_str[ETHTOOL_BUSINFO_LEN];
-	unsigned int fw_ver[WL12XX_NUM_FW_VER];
+	unsigned int fw_ver[NUM_FW_VER];
 };
 
 struct wl1271_stats {
@@ -226,10 +264,14 @@ struct wl1271_stats {
 #define NUM_TX_QUEUES              4
 #define NUM_RX_PKT_DESC            8
 
-#define AP_MAX_STATIONS            5
+#define AP_MAX_STATIONS            8
 
-/* Broadcast and Global links + links to stations */
-#define AP_MAX_LINKS               (AP_MAX_STATIONS + 2)
+/* Broadcast and Global links + system link + links to stations */
+/*
+ * TODO: when WL1271_AP_STA_HLID_START is no longer constant, change all
+ * the places that use this.
+ */
+#define AP_MAX_LINKS               (AP_MAX_STATIONS + WL1271_AP_STA_HLID_START)
 
 /* FW status registers */
 struct wl1271_fw_status {
@@ -252,22 +294,23 @@ struct wl1271_fw_status {
 	 * if the station is in Fast mode
 	 */
 	__le32 link_fast_bitmap;
- 
+
 	/* Cumulative counter of total released mem blocks since FW-reset */
 	__le32 total_released_blks;
 
 	/* Size (in Memory Blocks) of TX pool */
 	__le32 tx_total;
 
-	/* Cumulative counter of released mem-blocks per AC */
-	u8 tx_released_blks[NUM_TX_QUEUES];
+	/* Cumulative counter of released packets per AC */
+	u8 tx_released_pkts[NUM_TX_QUEUES];
 
-	/* Cumulative counter of freed MBs per HLID */
-	u8 tx_lnk_free_blks[WL1271_MAX_LINKS];
+	/* Cumulative counter of freed packets per HLID */
+	u8 tx_lnk_free_pkts[WL1271_MAX_LINKS];
 
 	/* Cumulative counter of released Voice memory blocks */
 	u8 tx_voice_released_blks;
-	u8 padding_1[3];
+	u8 padding_1[7];
+	__le32 log_start_addr;
 } __packed;
 
 struct wl1271_rx_mem_pool_addr {
@@ -275,9 +318,10 @@ struct wl1271_rx_mem_pool_addr {
 	u32 addr_extra;
 };
 
+#define WL1271_MAX_CHANNELS 64
 struct wl1271_scan {
 	struct cfg80211_scan_request *req;
-	bool *scanned_ch;
+	unsigned long scanned_ch[BITS_TO_LONGS(WL1271_MAX_CHANNELS)];
 	bool failed;
 	u8 state;
 	u8 ssid[IW_ESSID_MAX_SIZE+1];
@@ -295,7 +339,7 @@ struct wl1271_if_operations {
 	struct device* (*dev)(struct wl1271 *wl);
 	void (*enable_irq)(struct wl1271 *wl);
 	void (*disable_irq)(struct wl1271 *wl);
-	void (*set_block_size) (struct wl1271 *wl);
+	void (*set_block_size) (struct wl1271 *wl, unsigned int blksz);
 };
 
 #define MAX_NUM_KEYS 14
@@ -313,32 +357,80 @@ struct wl1271_ap_key {
 
 enum wl12xx_flags {
 	WL1271_FLAG_STA_ASSOCIATED,
-	WL1271_FLAG_JOINED,
+	WL1271_FLAG_IBSS_JOINED,
+	WL1271_FLAG_ROC,
 	WL1271_FLAG_GPIO_POWER,
 	WL1271_FLAG_TX_QUEUE_STOPPED,
 	WL1271_FLAG_TX_PENDING,
 	WL1271_FLAG_IN_ELP,
+	WL1271_FLAG_ELP_REQUESTED,
+	WL1271_FLAG_WAKE_LOCK,
 	WL1271_FLAG_PSM,
 	WL1271_FLAG_PSM_REQUESTED,
 	WL1271_FLAG_IRQ_RUNNING,
 	WL1271_FLAG_IDLE,
-	WL1271_FLAG_IDLE_REQUESTED,
 	WL1271_FLAG_PSPOLL_FAILURE,
 	WL1271_FLAG_STA_STATE_SENT,
 	WL1271_FLAG_FW_TX_BUSY,
-	WL1271_FLAG_AP_STARTED
+	WL1271_FLAG_AP_STARTED,
+	WL1271_FLAG_IF_INITIALIZED,
+	WL1271_FLAG_DUMMY_PACKET_PENDING,
+	WL1271_FLAG_SUSPENDED,
+	WL1271_FLAG_PENDING_WORK,
+	WL1271_FLAG_SOFT_GEMINI,
+	WL1271_FLAG_RX_STREAMING_STARTED,
+	WL1271_FLAG_RECOVERY_IN_PROGRESS,
+	WL1271_FLAG_CS_PROGRESS,
+	WL1271_FLAG_PROBE_RESP_SET,
+	WL1271_FLAG_RECOVERY_WORK_PENDING,
 };
 
 struct wl1271_link {
 	/* AP-mode - TX queue per AC in link */
 	struct sk_buff_head tx_queue[NUM_TX_QUEUES];
 
-	/* accounting for allocated / available TX blocks in FW */
-	u8 allocated_blks;
-	u8 prev_freed_blks;
+	/* accounting for allocated / freed packets in FW */
+	u8 allocated_pkts;
+	u8 prev_freed_pkts;
 
 	u8 addr[ETH_ALEN];
+
+	/* bitmap of TIDs where RX BA sessions are active for this link */
+	u8 ba_bitmap;
 };
+
+#define WL1271_MAX_RX_DATA_FILTERS 4
+#define WL1271_RX_DATA_FILTER_MAX_FIELD_PATTERNS 8
+
+/* FW MAX FILTER SIZE is 98 bytes. The MAX_PATTERN_SIZE is imposed
+ * after taking into account the mask bytes and other structs members
+ */
+#define WL1271_RX_DATA_FILTER_MAX_PATTERN_SIZE 43
+#define WL1271_RX_DATA_FILTER_ETH_HEADER_SIZE 14
+
+#define WL1271_RX_DATA_FILTER_FLAG_MASK                BIT(0)
+#define WL1271_RX_DATA_FILTER_FLAG_IP_HEADER           0
+#define WL1271_RX_DATA_FILTER_FLAG_ETHERNET_HEADER     BIT(1)
+
+enum rx_data_filter_action {
+	FILTER_DROP = 0,
+	FILTER_SIGNAL = 1,
+	FILTER_FW_HANDLE = 2
+};
+
+struct wl12xx_rx_data_filter_field {
+	__le16 offset;
+	u8 len;
+	u8 flags;
+	u8 pattern[0];
+} __packed;
+
+struct wl12xx_rx_data_filter {
+	u8 action;
+	int num_fields;
+	int fields_size;
+	struct wl12xx_rx_data_filter_field fields[0];
+} __packed;
 
 struct wl1271 {
 	struct platform_device *plat_dev;
@@ -356,6 +448,7 @@ struct wl1271 {
 	spinlock_t wl_lock;
 
 	enum wl1271_state state;
+	enum wl12xx_fw_type fw_type;
 	struct mutex mutex;
 
 	unsigned long flags;
@@ -383,24 +476,31 @@ struct wl1271 {
 	u8 ssid_len;
 	int channel;
 	u8 role_id;
+	u8 dev_role_id;
 	u8 system_hlid;
 	u8 sta_hlid;
-	u8 p2p_role_id;
-	u8 p2p_hlid;
+	u8 dev_hlid;
+	u8 ap_global_hlid;
+	u8 ap_bcast_hlid;
 
 	unsigned long links_map[BITS_TO_LONGS(WL1271_MAX_LINKS)];
-	unsigned long roles_map[BITS_TO_LONGS(WL1271_MAX_ROLES)];	
+	unsigned long roles_map[BITS_TO_LONGS(WL1271_MAX_ROLES)];
+	unsigned long roc_map[BITS_TO_LONGS(WL1271_MAX_ROLES)];
 
 	struct wl1271_acx_mem_map *target_mem_map;
 
 	/* Accounting for allocated / available TX blocks on HW */
-	//u32 tx_blocks_freed[NUM_TX_QUEUES];
 	u32 tx_blocks_freed;
 	u32 tx_blocks_available;
+	u32 tx_allocated_blocks;
 	u32 tx_results_count;
-	/* Indicates How much Memory blocks should be moved to RX poll */
-	int tx_total_diff;
-	u32 tx_new_total;
+
+	/* amount of spare TX blocks to use */
+	u32 tx_spare_blocks;
+
+	/* Accounting for allocated / available Tx packets in HW */
+	u32 tx_pkts_freed[NUM_TX_QUEUES];
+	u32 tx_allocated_pkts[NUM_TX_QUEUES];
 
 	/* Transmitted TX packets counter for chipset interface */
 	u32 tx_packets_count;
@@ -413,7 +513,8 @@ struct wl1271 {
 
 	/* Frames scheduled for transmission, not handled yet */
 	struct sk_buff_head tx_queue[NUM_TX_QUEUES];
-	int tx_queue_count;
+	int tx_queue_count[NUM_TX_QUEUES];
+	long stopped_queues_map;
 
 	/* Frames received, not handled yet by mac80211 */
 	struct sk_buff_head deferred_rx_queue;
@@ -422,15 +523,23 @@ struct wl1271 {
 	struct sk_buff_head deferred_tx_queue;
 
 	struct work_struct tx_work;
+	struct workqueue_struct *freezable_wq;
 
 	/* Pending TX frames */
 	unsigned long tx_frames_map[BITS_TO_LONGS(ACX_TX_DESCRIPTORS)];
 	struct sk_buff *tx_frames[ACX_TX_DESCRIPTORS];
 	int tx_frames_cnt;
 
-	/* Security sequence number counters */
-	u8 tx_security_last_seq;
-	s64 tx_security_seq;
+	/*
+	 * Security sequence number
+	 *     bits 0-15: lower 16 bits part of sequence number
+	 *     bits 16-47: higher 32 bits part of sequence number
+	 *     bits 48-63: not in use
+	 */
+	u64 tx_security_seq;
+
+	/* 8 bits of the last sequence number in use */
+	u8 tx_security_last_seq_lsb;
 
 	/* FW Rx counter */
 	u32 rx_counter;
@@ -441,8 +550,20 @@ struct wl1271 {
 	/* Intermediate buffer, used for packet aggregation */
 	u8 *aggr_buf;
 
+	/* Reusable dummy packet template */
+	struct sk_buff *dummy_packet;
+
 	/* Network stack work  */
 	struct work_struct netstack_work;
+
+	/* FW log buffer */
+	u8 *fwlog;
+
+	/* Number of valid bytes in the FW log buffer */
+	ssize_t fwlog_size;
+
+	/* Sysfs FW log entry readers wait queue */
+	wait_queue_head_t fwlog_waitq;
 
 	/* Hardware recovery work */
 	struct work_struct recovery_work;
@@ -456,6 +577,8 @@ struct wl1271 {
 	/* Are we currently scanning */
 	struct wl1271_scan scan;
 	struct delayed_work scan_complete_work;
+
+	bool sched_scanning;
 
 	/* probe-req template for the current AP */
 	struct sk_buff *probereq;
@@ -472,6 +595,7 @@ struct wl1271 {
 	u32 basic_rate_set;
 	u32 basic_rate;
 	u32 rate_set;
+	u32 bitrate_masks[IEEE80211_NUM_BANDS];
 
 	/* The current band */
 	enum ieee80211_band band;
@@ -482,11 +606,17 @@ struct wl1271 {
 	/* Default key (for WEP) */
 	u32 default_key;
 
+	/* Rx Streaming */
+	struct work_struct rx_streaming_enable_work;
+	struct work_struct rx_streaming_disable_work;
+	struct timer_list rx_streaming_timer;
+
 	unsigned int filters;
 	unsigned int rx_config;
 	unsigned int rx_filter;
 
 	struct completion *elp_compl;
+	struct completion *ps_compl;
 	struct delayed_work elp_work;
 	struct delayed_work pspoll_work;
 
@@ -495,6 +625,11 @@ struct wl1271 {
 
 	/* retry counter for PSM entries */
 	u8 psm_entry_retry;
+
+#ifdef CONFIG_HAS_WAKELOCK
+	struct wake_lock wake_lock;
+	struct wake_lock rx_wake;
+#endif
 
 	/* in dBm */
 	int power_level;
@@ -534,18 +669,28 @@ struct wl1271 {
 	/* bands supported by this instance of wl12xx */
 	struct ieee80211_supported_band bands[IEEE80211_NUM_BANDS];
 
+	/* save the current encryption type for auto-arp config*/
+	u8 encryption_type;
+	__be32 ip_addr;
+	bool qos;
+
 	/* RX BA constraint value */
 	bool ba_support;
 	u8 ba_rx_bitmap;
+	bool ba_allowed;
 
-	/* wl128x features only */
-	__le32	host_cfg_bitmap;
-	u32	block_size;
-	int     tcxo_clock;
+	int tcxo_clock;
 
 	/*
-	 * AP-mode - counter for number of currently connected stations
-	 * which are not in high-level (mac80211) PS mode
+	 * wowlan trigger was configured during suspend.
+	 * (currently, only "ANY" trigger is supported)
+	 */
+	bool wow_enabled;
+	bool irq_wake_enabled;
+
+	/*
+	 * AP-mode - links indexed by HLID. The global and broadcast links
+	 * are always active.
 	 */
 	struct wl1271_link links[AP_MAX_LINKS];
 
@@ -560,14 +705,39 @@ struct wl1271 {
 
 	/* Quirks of specific hardware revisions */
 	unsigned int quirks;
+
+	/* Platform limitations */
+	unsigned int platform_quirks;
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
+	struct compat_threaded_irq irq_compat;
+#endif
+
+	/* number of currently active RX BA sessions */
+	int ba_rx_session_count;
+
+	/* AP-mode - number of currently connected stations */
+	int active_sta_count;
+
+	/* AP-mode - work to add stations back on AP reconfig */
+	struct work_struct ap_start_work;
+
+	/* RX Data filter rule status - enabled/disabled */
+	bool rx_data_filters_status[WL1271_MAX_RX_DATA_FILTERS];
+
+	bool watchdog_recovery;
 };
 
 struct wl1271_station {
+	bool added;
 	u8 hlid;
 };
 
 int wl1271_plt_start(struct wl1271 *wl);
 int wl1271_plt_stop(struct wl1271 *wl);
+int wl1271_recalc_rx_streaming(struct wl1271 *wl);
+void wl1271_queue_recovery_work(struct wl1271 *wl);
+size_t wl12xx_copy_fwlog(struct wl1271 *wl, u8 *memblock, size_t maxlen);
 
 #define JOIN_TIMEOUT 5000 /* 5000 milliseconds to join */
 
@@ -575,15 +745,15 @@ int wl1271_plt_stop(struct wl1271 *wl);
 
 #define WL1271_DEFAULT_POWER_LEVEL 0
 
-#define WL1271_TX_QUEUE_LOW_WATERMARK  10
-#define WL1271_TX_QUEUE_HIGH_WATERMARK 25
+#define WL1271_TX_QUEUE_LOW_WATERMARK  32
+#define WL1271_TX_QUEUE_HIGH_WATERMARK 256
 
 #define WL1271_DEFERRED_QUEUE_LIMIT    64
 
 /* WL1271 needs a 200ms sleep after power on, and a 20ms sleep before power
    on in case is has been shut down shortly before */
-#define WL1271_PRE_POWER_ON_SLEEP 20 /* in miliseconds */
-#define WL1271_POWER_ON_SLEEP 200 /* in miliseconds */
+#define WL1271_PRE_POWER_ON_SLEEP 20 /* in milliseconds */
+#define WL1271_POWER_ON_SLEEP 200 /* in milliseconds */
 
 /* Macros to handle wl1271.sta_rate_set */
 #define HW_BG_RATES_MASK	0xffff
@@ -592,6 +762,23 @@ int wl1271_plt_stop(struct wl1271 *wl);
 /* Quirks */
 
 /* Each RX/TX transaction requires an end-of-transaction transfer */
-#define WL12XX_QUIRK_END_OF_TRANSACTION	BIT(0)
+#define WL12XX_QUIRK_END_OF_TRANSACTION		BIT(0)
+
+/*
+ * Older firmwares use 2 spare TX blocks
+ * (for STA < 6.1.3.50.58 or for AP < 6.2.0.0.47)
+ */
+#define WL12XX_QUIRK_USE_2_SPARE_BLOCKS		BIT(1)
+
+/* WL128X requires aggregated packets to be aligned to the SDIO block size */
+#define WL12XX_QUIRK_BLOCKSIZE_ALIGNMENT	BIT(2)
+
+/*
+ * WL127X AP mode requires Low Power DRPw (LPD) enable to reduce power
+ * consumption
+ */
+#define WL12XX_QUIRK_LPD_MODE                   BIT(3)
+
+#define WL12XX_HW_BLOCK_SIZE	256
 
 #endif

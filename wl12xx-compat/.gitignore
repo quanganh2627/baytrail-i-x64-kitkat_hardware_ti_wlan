@@ -56,6 +56,7 @@ modules
 #
 include/config
 include/linux/version.h
+include/linux/compat_autoconf.h
 include/generated
 
 # stgit generated dirs
@@ -67,6 +68,9 @@ patches
 # cscope files
 cscope.*
 ncscope.*
+
+# default regulatory domain
+compat_regdom
 
 # gnu global files
 GPATH

@@ -22,6 +22,7 @@
  */
 
 #include <linux/slab.h>
+#include <linux/wl12xx.h>
 
 #include "acx.h"
 #include "reg.h"
@@ -240,11 +241,11 @@ static int wl1271_boot_upload_nvs(struct wl1271 *wl)
 	u32 dest_addr, val;
 	u8 *nvs_ptr, *nvs_aligned;
 
+	if (wl->nvs == NULL)
+		return -ENODEV;
+
 	if (wl->chip.id == CHIP_ID_1283_PG20) {
 		struct wl128x_nvs_file *nvs = (struct wl128x_nvs_file *)wl->nvs;
-
-		if (nvs == NULL)
-			return -ENODEV;
 
 		if (wl->nvs_len == sizeof(struct wl128x_nvs_file)) {
 			if (nvs->general_params.dual_mode_select)
@@ -253,8 +254,8 @@ static int wl1271_boot_upload_nvs(struct wl1271 *wl)
 			wl1271_error("nvs size is not as expected: %zu != %zu",
 				     wl->nvs_len,
 				     sizeof(struct wl128x_nvs_file));
-			kfree(nvs);
-			nvs = NULL;
+			kfree(wl->nvs);
+			wl->nvs = NULL;
 			wl->nvs_len = 0;
 			return -EILSEQ;
 		}
@@ -264,10 +265,8 @@ static int wl1271_boot_upload_nvs(struct wl1271 *wl)
 		nvs_ptr = (u8 *)nvs->nvs;
 
 	} else {
-		struct wl1271_nvs_file *nvs = (struct wl1271_nvs_file *)wl->nvs;
-
-		if (nvs == NULL)
-			return -ENODEV;
+		struct wl1271_nvs_file *nvs =
+			(struct wl1271_nvs_file *)wl->nvs;
 		/*
 		 * FIXME: the LEGACY NVS image support (NVS's missing the 5GHz
 		 * band configurations) can be removed when those NVS files stop
@@ -275,9 +274,7 @@ static int wl1271_boot_upload_nvs(struct wl1271 *wl)
 		 */
 		if (wl->nvs_len == sizeof(struct wl1271_nvs_file) ||
 		    wl->nvs_len == WL1271_INI_LEGACY_NVS_FILE_SIZE) {
-			/* for now 11a is unsupported in AP mode */
-			if (wl->bss_type != BSS_TYPE_AP_BSS &&
-			    nvs->general_params.dual_mode_select)
+			if (nvs->general_params.dual_mode_select)
 				wl->enable_11a = true;
 		}
 
@@ -286,15 +283,15 @@ static int wl1271_boot_upload_nvs(struct wl1271 *wl)
 		     wl->enable_11a)) {
 			wl1271_error("nvs size is not as expected: %zu != %zu",
 				wl->nvs_len, sizeof(struct wl1271_nvs_file));
-			kfree(nvs);
-			nvs = NULL;
+			kfree(wl->nvs);
+			wl->nvs = NULL;
 			wl->nvs_len = 0;
 			return -EILSEQ;
 		}
 
 		/* only the first part of the NVS needs to be uploaded */
 		nvs_len = sizeof(nvs->nvs);
-		nvs_ptr = (u8 *)nvs->nvs;
+		nvs_ptr = (u8 *) nvs->nvs;
 	}
 
 	/* update current MAC address to NVS */
@@ -345,6 +342,9 @@ static int wl1271_boot_upload_nvs(struct wl1271 *wl)
 	/*
 	 * We've reached the first zero length, the first NVS table
 	 * is located at an aligned offset which is at least 7 bytes further.
+	 * NOTE: The wl->nvs->nvs element must be first, in order to
+	 * simplify the casting, we assume it is at the beginning of
+	 * the wl->nvs structure.
 	 */
 	nvs_ptr = (u8 *)wl->nvs +
 			ALIGN(nvs_ptr - (u8 *)wl->nvs + 7, 4);
@@ -478,10 +478,22 @@ static int wl1271_boot_run_firmware(struct wl1271 *wl)
 		RSSI_SNR_TRIGGER_0_EVENT_ID |
 		PSPOLL_DELIVERY_FAILURE_EVENT_ID |
 		SOFT_GEMINI_SENSE_EVENT_ID |
-		DUMMY_PACKET_EVENT_ID;
+		CHANGE_AUTO_MODE_TIMEOUT_EVENT_ID |
+		PERIODIC_SCAN_REPORT_EVENT_ID |
+		PERIODIC_SCAN_COMPLETE_EVENT_ID |
+		DUMMY_PACKET_EVENT_ID |
+		REMAIN_ON_CHANNEL_COMPLETE_EVENT_ID |
+		BA_SESSION_RX_CONSTRAINT_EVENT_ID;
 
 	/* TODO: mode can change dynamically. make it more sane */
 	wl->event_mask |= PEER_REMOVE_COMPLETE_EVENT_ID;
+
+	/* TODO: there's a bug in MAX_TX_RETRY_EVENT_ID in STA mode */
+	if (wl->bss_type == BSS_TYPE_AP_BSS)
+		wl->event_mask |= MAX_TX_RETRY_EVENT_ID |
+				  INACTIVE_STA_EVENT_ID;
+	else
+		wl->event_mask |= CHANNEL_SWITCH_COMPLETE_EVENT_ID;
 
 	ret = wl1271_event_unmask(wl);
 	if (ret < 0) {
@@ -512,13 +524,96 @@ static void wl1271_boot_hw_version(struct wl1271 *wl)
 {
 	u32 fuse;
 
-	fuse = wl1271_top_reg_read(wl, REG_FUSE_DATA_2_1);
+	if (wl->chip.id == CHIP_ID_1283_PG20)
+		fuse = wl1271_top_reg_read(wl, WL128X_REG_FUSE_DATA_2_1);
+	else
+		fuse = wl1271_top_reg_read(wl, WL127X_REG_FUSE_DATA_2_1);
 	fuse = (fuse & PG_VER_MASK) >> PG_VER_OFFSET;
 
 	wl->hw_pg_ver = (s8)fuse;
+}
 
-	if (((wl->hw_pg_ver & PG_MAJOR_VER_MASK) >> PG_MAJOR_VER_OFFSET) < 3)
-		wl->quirks |= WL12XX_QUIRK_END_OF_TRANSACTION;
+static int wl128x_switch_tcxo_to_fref(struct wl1271 *wl)
+{
+	u16 spare_reg;
+
+	/* Mask bits [2] & [8:4] in the sys_clk_cfg register */
+	spare_reg = wl1271_top_reg_read(wl, WL_SPARE_REG);
+	if (spare_reg == 0xFFFF)
+		return -EFAULT;
+	spare_reg |= (BIT(3) | BIT(5) | BIT(6));
+	wl1271_top_reg_write(wl, WL_SPARE_REG, spare_reg);
+
+	/* Enable FREF_CLK_REQ & mux MCS and coex PLLs to FREF */
+	wl1271_top_reg_write(wl, SYS_CLK_CFG_REG,
+			     WL_CLK_REQ_TYPE_PG2 | MCS_PLL_CLK_SEL_FREF);
+
+	/* Delay execution for 15msec, to let the HW settle */
+	mdelay(15);
+
+	return 0;
+}
+
+static bool wl128x_is_tcxo_valid(struct wl1271 *wl)
+{
+	u16 tcxo_detection;
+
+	tcxo_detection = wl1271_top_reg_read(wl, TCXO_CLK_DETECT_REG);
+	if (tcxo_detection & TCXO_DET_FAILED)
+		return false;
+
+	return true;
+}
+
+static bool wl128x_is_fref_valid(struct wl1271 *wl)
+{
+	u16 fref_detection;
+
+	fref_detection = wl1271_top_reg_read(wl, FREF_CLK_DETECT_REG);
+	if (fref_detection & FREF_CLK_DETECT_FAIL)
+		return false;
+
+	return true;
+}
+
+static int wl128x_manually_configure_mcs_pll(struct wl1271 *wl)
+{
+	wl1271_top_reg_write(wl, MCS_PLL_M_REG, MCS_PLL_M_REG_VAL);
+	wl1271_top_reg_write(wl, MCS_PLL_N_REG, MCS_PLL_N_REG_VAL);
+	wl1271_top_reg_write(wl, MCS_PLL_CONFIG_REG, MCS_PLL_CONFIG_REG_VAL);
+
+	return 0;
+}
+
+static int wl128x_configure_mcs_pll(struct wl1271 *wl, int clk)
+{
+	u16 spare_reg;
+	u16 pll_config;
+	u8 input_freq;
+
+	/* Mask bits [3:1] in the sys_clk_cfg register */
+	spare_reg = wl1271_top_reg_read(wl, WL_SPARE_REG);
+	if (spare_reg == 0xFFFF)
+		return -EFAULT;
+	spare_reg |= BIT(2);
+	wl1271_top_reg_write(wl, WL_SPARE_REG, spare_reg);
+
+	/* Handle special cases of the TCXO clock */
+	if (wl->tcxo_clock == WL12XX_TCXOCLOCK_16_8 ||
+	    wl->tcxo_clock == WL12XX_TCXOCLOCK_33_6)
+		return wl128x_manually_configure_mcs_pll(wl);
+
+	/* Set the input frequency according to the selected clock source */
+	input_freq = (clk & 1) + 1;
+
+	pll_config = wl1271_top_reg_read(wl, MCS_PLL_CONFIG_REG);
+	if (pll_config == 0xFFFF)
+		return -EFAULT;
+	pll_config |= (input_freq << MCS_SEL_IN_FREQ_SHIFT);
+	pll_config |= MCS_PLL_ENABLE_HP;
+	wl1271_top_reg_write(wl, MCS_PLL_CONFIG_REG, pll_config);
+
+	return 0;
 }
 
 /*
@@ -528,141 +623,47 @@ static void wl1271_boot_hw_version(struct wl1271 *wl)
  * In cases where TCXO is 32.736MHz or 16.368MHz, the FREF will be used
  * as the WLAN/BT main clock.
  */
-static int wl128x_switch_fref(struct wl1271 *wl, bool *is_ref_clk)
+static int wl128x_boot_clk(struct wl1271 *wl, int *selected_clock)
 {
-	u16 sys_clk_cfg_val;
+	u16 sys_clk_cfg;
 
-	/* if working on XTAL-only mode go directly to TCXO TO FREF SWITCH */
-	if ((wl->ref_clock == CONF_REF_CLK_38_4_M_XTAL) ||
-	    (wl->ref_clock == CONF_REF_CLK_26_M_XTAL)) {
-		wl1271_debug(DEBUG_BOOT, "XTAL-only mode go directly to"
-					 " TCXO TO FREF SWITCH");
-
-		return true;
-	} else {
-		/* Read clock source FREF or TCXO */
-		sys_clk_cfg_val = wl1271_top_reg_read(wl, SYS_CLK_CFG_REG);
-
-		if (sys_clk_cfg_val & PRCM_CM_EN_MUX_WLAN_FREF) {
-			/* if bit 3 is set - working with FREF clock */
-			wl1271_debug(DEBUG_BOOT, "working with FREF clock, skip"
-						 " to FREF");
-
-		*is_ref_clk = true;
-		} else {
-			/* if bit 3 is clear - working with TCXO clock */
-			wl1271_debug(DEBUG_BOOT, "working with TCXO clock");
-
-			/* TCXO to FREF switch, check TXCO clock config */
-			if ((wl->tcxo_clock != CLOCK_TCXO_16_368_M) &&
-			    (wl->tcxo_clock != CLOCK_TCXO_32_736_M)) {
-				/*
-			 * not 16.368Mhz and not 32.736Mhz - skip to
-				 * configure ELP stage
-				 */
-				wl1271_debug(DEBUG_BOOT, "NEW PLL ALGO:"
-					" TcxoRefClk=%d - not 16.368Mhz and not"
-					" 32.736Mhz - skip to configure ELP"
-					" stage", wl->tcxo_clock);
-
-				*is_ref_clk = false;
-			} else {
-				wl1271_debug(DEBUG_BOOT, "NEW PLL ALGO:"
-					"TcxoRefClk=%d - 16.368Mhz or 32.736Mhz"
-					" - TCXO to FREF switch",
-					wl->tcxo_clock);
-
-				return true;
-			}
-		}
+	/* For XTAL-only modes, FREF will be used after switching from TCXO */
+	if (wl->ref_clock == WL12XX_REFCLOCK_26_XTAL ||
+	    wl->ref_clock == WL12XX_REFCLOCK_38_XTAL) {
+		if (!wl128x_switch_tcxo_to_fref(wl))
+			return -EINVAL;
+		goto fref_clk;
 	}
 
-	return false;
-}
+	/* Query the HW, to determine which clock source we should use */
+	sys_clk_cfg = wl1271_top_reg_read(wl, SYS_CLK_CFG_REG);
+	if (sys_clk_cfg == 0xFFFF)
+		return -EINVAL;
+	if (sys_clk_cfg & PRCM_CM_EN_MUX_WLAN_FREF)
+		goto fref_clk;
 
-static int wl128x_boot_clk(struct wl1271 *wl, bool *is_ref_clk)
-{
-
-	if (wl128x_switch_fref(wl, is_ref_clk)) {
-		/* TCXO to FREF switch - for PG2.0 */
-		wl1271_top_reg_write(wl, WL_SPARE_REG,
-				     WL_SPARE_MASK_8526);
-
-		wl1271_top_reg_write(wl, SYS_CLK_CFG_REG,
-			WL_CLK_REQ_TYPE_PG2 | MCS_PLL_CLK_SEL_FREF);
-
-		wl1271_debug(DEBUG_BOOT, "Wait settling time, "
-					 "Read FREF_CLK_DETECT_REG");
-
-		*is_ref_clk = true;
-		/* wait 15ms */
-		mdelay(15);
+	/* If TCXO is either 32.736MHz or 16.368MHz, switch to FREF */
+	if (wl->tcxo_clock == WL12XX_TCXOCLOCK_16_368 ||
+	    wl->tcxo_clock == WL12XX_TCXOCLOCK_32_736) {
+		if (!wl128x_switch_tcxo_to_fref(wl))
+			return -EINVAL;
+		goto fref_clk;
 	}
 
-	wl1271_debug(DEBUG_BOOT, "Setting bit 2 in spare register to avoid "
-				 "illegal access");
-	wl1271_top_reg_write(wl, WL_SPARE_REG, WL_SPARE_VAL);
+	/* TCXO clock is selected */
+	if (!wl128x_is_tcxo_valid(wl))
+		return -EINVAL;
+	*selected_clock = wl->tcxo_clock;
+	goto config_mcs_pll;
 
-	/* working with TCXO clock */
-	if ((*is_ref_clk == false) &&
-	    ((wl->tcxo_clock == CLOCK_TCXO_16_8_M) ||
-	     (wl->tcxo_clock == CLOCK_TCXO_33_6_M))) {
+fref_clk:
+	/* FREF clock is selected */
+	if (!wl128x_is_fref_valid(wl))
+		return -EINVAL;
+	*selected_clock = wl->ref_clock;
 
-		/* Manually Configure MCS PLL settings PG2.0 Only */
-		wl1271_debug(DEBUG_BOOT, "16_8_M or 33_6_M TCXO detected so "
-			"configure the MCS PLL settings manually!!!!");
-
-		wl1271_top_reg_write(wl, MCS_PLL_M_REG, MCS_PLL_M_REG_VAL);
-
-		wl1271_top_reg_write(wl, MCS_PLL_N_REG, MCS_PLL_N_REG_VAL);
-
-		wl1271_top_reg_write(wl, MCS_PLL_CONFIG_REG,
-				     MCS_PLL_CONFIG_REG_VAL);
-	} else {
-		int pll_config;
-		u16 mcs_pll_config_val;
-
-		/*
-		 * Configure MCS PLL settings to FREF Freq
-		 * Set the values that determine the time elapse since the PLL's
-		 * get their enable signal until the lock indication is set
-		 */
-		wl1271_top_reg_write(wl, PLL_LOCK_COUNTERS_REG,
-			PLL_LOCK_COUNTERS_COEX | PLL_LOCK_COUNTERS_MCS);
-
-		mcs_pll_config_val = wl1271_top_reg_read(wl,
-						 MCS_PLL_CONFIG_REG);
-
-		/*
-		 * Set the MCS PLL input frequency value according to the
-		 * reference clock value detected/read
-		 */
-		if (*is_ref_clk == false) {
-			if ((wl->tcxo_clock == CLOCK_TCXO_19_2_M) ||
-			    (wl->tcxo_clock == CLOCK_TCXO_38_4_M))
-				pll_config = 1;
-			else if ((wl->tcxo_clock == CLOCK_TCXO_26_M)
-				 ||
-				 (wl->tcxo_clock == CLOCK_TCXO_52_M))
-				pll_config = 2;
-		} else {
-			if ((wl->ref_clock == CONF_REF_CLK_19_2_E) ||
-			    (wl->ref_clock == CONF_REF_CLK_38_4_E))
-				pll_config = 1;
-			else if ((wl->ref_clock == CONF_REF_CLK_26_E) ||
-				 (wl->ref_clock == CONF_REF_CLK_52_E))
-				pll_config = 2;
-		}
-
-		/* Setting Bits[6:4]  */
-		mcs_pll_config_val |= (pll_config << (MCS_SEL_IN_FREQ_SHIFT)) &
-				      (MCS_SEL_IN_FREQ_MASK);
-
-		wl1271_top_reg_write(wl, MCS_PLL_CONFIG_REG,
-				     mcs_pll_config_val);
-	}
-
-	return 0;
+config_mcs_pll:
+	return wl128x_configure_mcs_pll(wl, *selected_clock);
 }
 
 static int wl127x_boot_clk(struct wl1271 *wl)
@@ -670,7 +671,8 @@ static int wl127x_boot_clk(struct wl1271 *wl)
 	u32 pause;
 	u32 clk;
 
-	wl1271_boot_hw_version(wl);
+	if (((wl->hw_pg_ver & PG_MAJOR_VER_MASK) >> PG_MAJOR_VER_OFFSET) < 3)
+		wl->quirks |= WL12XX_QUIRK_END_OF_TRANSACTION;
 
 	if (wl->ref_clock == CONF_REF_CLK_19_2_E ||
 	    wl->ref_clock == CONF_REF_CLK_38_4_E ||
@@ -684,7 +686,7 @@ static int wl127x_boot_clk(struct wl1271 *wl)
 	else
 		return -EINVAL;
 
-	if (wl->ref_clock != 0) {
+	if (wl->ref_clock != CONF_REF_CLK_19_2_E) {
 		u16 val;
 		/* Set clock type (open drain) */
 		val = wl1271_top_reg_read(wl, OCP_REG_CLK_TYPE);
@@ -722,10 +724,12 @@ int wl1271_load_firmware(struct wl1271 *wl)
 {
 	int ret = 0;
 	u32 tmp, clk;
-	bool is_ref_clk = false;
+	int selected_clock = -1;
+
+	wl1271_boot_hw_version(wl);
 
 	if (wl->chip.id == CHIP_ID_1283_PG20) {
-		ret = wl128x_boot_clk(wl, &is_ref_clk);
+		ret = wl128x_boot_clk(wl, &selected_clock);
 		if (ret < 0)
 			goto out;
 	} else {
@@ -750,12 +754,13 @@ int wl1271_load_firmware(struct wl1271 *wl)
 	wl1271_debug(DEBUG_BOOT, "clk2 0x%x", clk);
 
 	if (wl->chip.id == CHIP_ID_1283_PG20) {
-		if (is_ref_clk == false)
-			clk |= ((wl->tcxo_clock & 0x3) << 1) << 4;
-		else
-			clk |= ((wl->ref_clock & 0x3) << 1) << 4;
-	} else
-		clk |= ((wl->ref_clock & 0x3) << 1) << 4;
+		clk |= ((selected_clock & 0x3) << 1) << 4;
+	} else {
+		clk |= (wl->ref_clock << 1) << 4;
+	}
+
+	if (wl->quirks & WL12XX_QUIRK_LPD_MODE)
+		clk |= SCRATCH_ENABLE_LPD;
 
 	wl1271_write32(wl, DRPW_SCRATCH_START, clk);
 
@@ -789,18 +794,8 @@ int wl1271_load_firmware(struct wl1271 *wl)
 	/* WL1271: The reference driver skips steps 7 to 10 (jumps directly
 	 * to upload_fw) */
 
-	if (wl->chip.id == CHIP_ID_1283_PG20) {
-		/*
-		 * Configure SDIO/wSPI DS according to the following table:
-		 * 00   8mA.
-		 * 01   4mA (default).
-		 * 10   6mA.
-		 * 11   2mA.
-		 * Write bits [1:0] of Register 0xd14
-		 * data is in pWlanParams->PlatformConfiguration bits [2:1]
-		 */
-		wl1271_top_reg_write(wl, SDIO_IO_DS, HCI_IO_DS_6MA);
-	}
+	if (wl->chip.id == CHIP_ID_1283_PG20)
+		wl1271_top_reg_write(wl, SDIO_IO_DS, wl->conf.hci_io_ds);
 
 	ret = wl1271_boot_upload_firmware(wl);
 	if (ret < 0)

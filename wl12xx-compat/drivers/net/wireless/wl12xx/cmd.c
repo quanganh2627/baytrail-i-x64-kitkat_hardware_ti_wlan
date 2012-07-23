@@ -23,7 +23,6 @@
 
 #include <linux/module.h>
 #include <linux/platform_device.h>
-#include <linux/crc7.h>
 #include <linux/spi/spi.h>
 #include <linux/etherdevice.h>
 #include <linux/ieee80211.h>
@@ -76,7 +75,7 @@ int wl1271_cmd_send(struct wl1271 *wl, u16 id, void *buf, size_t len,
 		if (time_after(jiffies, timeout)) {
 			wl1271_error("command complete timeout");
 			ret = -ETIMEDOUT;
-			goto out;
+			goto fail;
 		}
 
 		poll_count++;
@@ -96,14 +95,17 @@ int wl1271_cmd_send(struct wl1271 *wl, u16 id, void *buf, size_t len,
 	status = le16_to_cpu(cmd->status);
 	if (status != CMD_STATUS_SUCCESS) {
 		wl1271_error("command execute failure %d", status);
-		ieee80211_queue_work(wl->hw, &wl->recovery_work);
 		ret = -EIO;
+		goto fail;
 	}
 
 	wl1271_write32(wl, ACX_REG_INTERRUPT_ACK,
 		       WL1271_ACX_INTR_CMD_COMPLETE);
+	return 0;
 
-out:
+fail:
+	WARN_ON(1);
+	wl1271_queue_recovery_work(wl);
 	return ret;
 }
 
@@ -128,6 +130,14 @@ int wl1271_cmd_general_parms(struct wl1271 *wl)
 
 	if (gp->tx_bip_fem_auto_detect)
 		answer = true;
+
+	/* Override the REF CLK from the NVS with the one from platform data */
+	gen_parms->general_params.ref_clock = wl->ref_clock;
+
+	/* LPD mode enable (bits 6-7) in WL1271 AP mode only */
+	if (wl->quirks & WL12XX_QUIRK_LPD_MODE)
+		gen_parms->general_params.general_settings |=
+			GENERAL_SETTINGS_DRPW_LPD;
 
 	ret = wl1271_cmd_test(wl, gen_parms, sizeof(*gen_parms), answer);
 	if (ret < 0) {
@@ -167,6 +177,10 @@ int wl128x_cmd_general_parms(struct wl1271 *wl)
 
 	if (gp->tx_bip_fem_auto_detect)
 		answer = true;
+
+	/* Replace REF and TCXO CLKs with the ones from platform data */
+	gen_parms->general_params.ref_clock = wl->ref_clock;
+	gen_parms->general_params.tcxo_ref_clock = wl->tcxo_clock;
 
 	ret = wl1271_cmd_test(wl, gen_parms, sizeof(*gen_parms), answer);
 	if (ret < 0) {
@@ -342,115 +356,21 @@ static int wl1271_cmd_wait_for_event(struct wl1271 *wl, u32 mask)
 
 	ret = wl1271_cmd_wait_for_event_or_timeout(wl, mask);
 	if (ret != 0) {
-		ieee80211_queue_work(wl->hw, &wl->recovery_work);
+		wl1271_queue_recovery_work(wl);
 		return ret;
 	}
 
 	return 0;
 }
 
-int wl1271_cmd_role_enable(struct wl1271 *wl, u8 bss_type)
+int wl1271_cmd_role_enable(struct wl1271 *wl, u8 role_type, u8 *role_id)
 {
 	struct wl1271_cmd_role_enable *cmd;
 	int ret;
 
 	wl1271_debug(DEBUG_CMD, "cmd role enable");
 
-	if (WARN_ON(wl->role_id != WL1271_INVALID_ROLE_ID))
-		return -EINVAL;
-	
-	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
-	if (!cmd) {
-		ret = -ENOMEM;
-		goto out;
-	}
-
-	/* get role id */
-	cmd->role_id = find_first_zero_bit(wl->roles_map, WL1271_MAX_ROLES);
-	if (cmd->role_id >= WL1271_MAX_ROLES) {
-		ret = -EBUSY;
-		goto out_free;
-	}
-
-	memcpy(cmd->mac_address, wl->mac_addr, ETH_ALEN);
-	switch (bss_type) {
-	case BSS_TYPE_AP_BSS:
-		if (wl->p2p)
-			cmd->role_type = WL1271_ROLE_P2P_GO;
-		else
-			cmd->role_type = WL1271_ROLE_AP;
-		break;
-	case BSS_TYPE_STA_BSS:
-		if (wl->p2p)
-			cmd->role_type = WL1271_ROLE_P2P_CL;
-		else
-			cmd->role_type = WL1271_ROLE_STA;
-		break;
-	default:
-		ret = -EINVAL;
-		goto out_free;
-	}
-
-	wl1271_dump(DEBUG_CMD, "CMD_ROLE_ENABLE: ",
-		&cmd->header + 1, sizeof(*cmd) - sizeof(cmd->header));
-
-	ret = wl1271_cmd_send(wl, CMD_ROLE_ENABLE, cmd, sizeof(*cmd), 0);
-	if (ret < 0) {
-		wl1271_error("failed to initiate cmd role enable");
-		goto out_free;
-	}
-
-	__set_bit(cmd->role_id, wl->roles_map);
-	wl->role_id = cmd->role_id;
-
-out_free:
-	kfree(cmd);
-
-out:
-	return ret;
-}
-
-int wl1271_cmd_role_disable(struct wl1271 *wl)
-{
-	struct wl1271_cmd_role_disable *cmd;
-	int ret;
-
-	wl1271_debug(DEBUG_CMD, "cmd role disable");
-
-	if (WARN_ON(wl->role_id == WL1271_INVALID_ROLE_ID))
-		return -EINVAL;
-	
-	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
-	if (!cmd) {
-		ret = -ENOMEM;
-		goto out;
-	}
-	cmd->role_id = wl->role_id;
-	
-	ret = wl1271_cmd_send(wl, CMD_ROLE_DISABLE, cmd, sizeof(*cmd), 0);
-	if (ret < 0) {
-		wl1271_error("failed to initiate cmd role disable");
-		goto out_free;
-	}
-
-	__clear_bit(wl->role_id, wl->roles_map);
-	wl->role_id = WL1271_INVALID_ROLE_ID;
-
-out_free:
-	kfree(cmd);
-
-out:
-	return ret;
-}
-
-int wl1271_cmd_p2p_role_enable(struct wl1271 *wl)
-{
-	struct wl1271_cmd_role_enable *cmd;
-	int ret;
-
-	wl1271_debug(DEBUG_CMD, "cmd p2p role enable");
-
-	if (WARN_ON(wl->p2p_role_id != WL1271_INVALID_ROLE_ID))
+	if (WARN_ON(*role_id != WL1271_INVALID_ROLE_ID))
 		return -EINVAL;
 
 	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
@@ -466,8 +386,8 @@ int wl1271_cmd_p2p_role_enable(struct wl1271 *wl)
 		goto out_free;
 	}
 
-	cmd->role_type = WL1271_ROLE_P2P_DEVICE;
 	memcpy(cmd->mac_address, wl->mac_addr, ETH_ALEN);
+	cmd->role_type = role_type;
 
 	wl1271_dump(DEBUG_CMD, "CMD_ROLE_ENABLE: ",
 		&cmd->header + 1, sizeof(*cmd) - sizeof(cmd->header));
@@ -479,7 +399,7 @@ int wl1271_cmd_p2p_role_enable(struct wl1271 *wl)
 	}
 
 	__set_bit(cmd->role_id, wl->roles_map);
-	wl->p2p_role_id = cmd->role_id;
+	*role_id = cmd->role_id;
 
 out_free:
 	kfree(cmd);
@@ -488,14 +408,14 @@ out:
 	return ret;
 }
 
-int wl1271_cmd_p2p_role_disable(struct wl1271 *wl)
+int wl1271_cmd_role_disable(struct wl1271 *wl, u8 *role_id)
 {
 	struct wl1271_cmd_role_disable *cmd;
 	int ret;
 
 	wl1271_debug(DEBUG_CMD, "cmd role disable");
 
-	if (WARN_ON(wl->p2p_role_id == WL1271_INVALID_ROLE_ID))
+	if (WARN_ON(*role_id == WL1271_INVALID_ROLE_ID))
 		return -EINVAL;
 
 	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
@@ -503,7 +423,7 @@ int wl1271_cmd_p2p_role_disable(struct wl1271 *wl)
 		ret = -ENOMEM;
 		goto out;
 	}
-	cmd->role_id = wl->p2p_role_id;
+	cmd->role_id = *role_id;
 
 	ret = wl1271_cmd_send(wl, CMD_ROLE_DISABLE, cmd, sizeof(*cmd), 0);
 	if (ret < 0) {
@@ -511,8 +431,8 @@ int wl1271_cmd_p2p_role_disable(struct wl1271 *wl)
 		goto out_free;
 	}
 
-	__clear_bit(wl->p2p_role_id, wl->roles_map);
-	wl->p2p_role_id = WL1271_INVALID_ROLE_ID;
+	__clear_bit(*role_id, wl->roles_map);
+	*role_id = WL1271_INVALID_ROLE_ID;
 
 out_free:
 	kfree(cmd);
@@ -520,7 +440,6 @@ out_free:
 out:
 	return ret;
 }
-
 
 int wl1271_allocate_link(struct wl1271 *wl, u8 *hlid)
 {
@@ -542,6 +461,113 @@ void wl1271_free_link(struct wl1271 *wl, u8 *hlid)
 	*hlid = WL1271_INVALID_LINK_ID;
 }
 
+int wl1271_get_new_session_id(struct wl1271 *wl)
+{
+	if (wl->session_counter >= SESSION_COUNTER_MAX)
+		wl->session_counter = 0;
+
+	wl->session_counter++;
+
+	return wl->session_counter;
+}
+
+int wl1271_cmd_role_start_dev(struct wl1271 *wl)
+{
+	struct wl1271_cmd_role_start *cmd;
+	int ret;
+
+	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
+	if (!cmd) {
+		ret = -ENOMEM;
+		goto out;
+	}
+
+	wl1271_debug(DEBUG_CMD, "cmd role start dev %d", wl->role_id);
+
+	cmd->role_id = wl->dev_role_id;
+	if (wl->band == IEEE80211_BAND_5GHZ)
+		cmd->band |= WL1271_BAND_5GHZ;
+	cmd->channel = wl->channel;
+
+	if (wl->dev_hlid == WL1271_INVALID_LINK_ID) {
+		ret = wl1271_allocate_link(wl, &wl->dev_hlid);
+		if (ret)
+			goto out_free;
+	}
+	cmd->device.hlid = wl->dev_hlid;
+	cmd->device.session = wl->session_counter;
+
+	wl1271_debug(DEBUG_CMD, "role start: roleid=%d, hlid=%d, session=%d",
+		     cmd->role_id, cmd->device.hlid, cmd->device.session);
+
+	wl1271_debug(DEBUG_CMD, "wl->bssid = %pM", wl->bssid);
+
+	wl1271_dump(DEBUG_CMD, "CMD_ROLE_START: ",
+		    &cmd->header + 1, sizeof(*cmd) - sizeof(cmd->header));
+
+	ret = wl1271_cmd_send(wl, CMD_ROLE_START, cmd, sizeof(*cmd), 0);
+	if (ret < 0) {
+		wl1271_error("failed to initiate cmd role enable");
+		goto err_hlid;
+	}
+
+	goto out_free;
+
+err_hlid:
+	/* clear links on error */
+	__clear_bit(wl->dev_hlid, wl->links_map);
+	wl->dev_hlid = WL1271_INVALID_LINK_ID;
+
+
+out_free:
+	kfree(cmd);
+
+out:
+	return ret;
+}
+
+int wl1271_cmd_role_stop_dev(struct wl1271 *wl)
+{
+	struct wl1271_cmd_role_stop *cmd;
+	int ret;
+
+	if (WARN_ON(wl->dev_hlid == WL1271_INVALID_LINK_ID))
+		return -EINVAL;
+
+	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
+	if (!cmd) {
+		ret = -ENOMEM;
+		goto out;
+	}
+
+	wl1271_debug(DEBUG_CMD, "cmd role stop dev");
+
+	cmd->role_id = wl->dev_role_id;
+	cmd->disc_type = WL1271_DISC_IMMEDIATE;
+	cmd->reason = cpu_to_le16(1); /* STATUS_UNSPECIFIED */
+
+	ret = wl1271_cmd_send(wl, CMD_ROLE_STOP, cmd, sizeof(*cmd), 0);
+	if (ret < 0) {
+		wl1271_error("failed to initiate cmd role stop");
+		goto out_free;
+	}
+
+	ret = wl1271_cmd_wait_for_event(wl, DISCONNECT_EVENT_COMPLETE_ID);
+	if (ret < 0) {
+		wl1271_error("cmd role stop dev event completion error");
+		goto out_free;
+	}
+
+	wl1271_free_link(wl, &wl->dev_hlid);
+
+out_free:
+	kfree(cmd);
+
+out:
+	return ret;
+}
+
+
 /* since p2p_dev uses the same params, we use this function as well */
 int wl1271_cmd_role_start_sta(struct wl1271 *wl)
 {
@@ -560,14 +586,18 @@ int wl1271_cmd_role_start_sta(struct wl1271 *wl)
 	if (wl->band == IEEE80211_BAND_5GHZ)
 		cmd->band |= WL1271_BAND_5GHZ;
 	cmd->channel = wl->channel;
-	cmd->dtim_interval = WL1271_DEFAULT_DTIM_PERIOD;
-	cmd->basic_rate_set = cpu_to_le32(wl->basic_rate_set);
-	cmd->beacon_interval = cpu_to_le16(wl->beacon_int);
-	cmd->ssid_type = WL1271_SSID_TYPE_ANY;
-	cmd->ssid_len = wl->ssid_len;
-	memcpy(cmd->ssid, wl->ssid, wl->ssid_len);
+	cmd->sta.basic_rate_set = cpu_to_le32(wl->basic_rate_set);
+	cmd->sta.beacon_interval = cpu_to_le16(wl->beacon_int);
+	cmd->sta.ssid_type = WL1271_SSID_TYPE_ANY;
+	cmd->sta.ssid_len = wl->ssid_len;
+	memcpy(cmd->sta.ssid, wl->ssid, wl->ssid_len);
 	memcpy(cmd->sta.bssid, wl->bssid, ETH_ALEN);
-	cmd->local_rates = cpu_to_le32(0x1eff); /* TEMP */
+
+	/*
+	 * TODO: 11n rates should not be allowed when encryption is WEP
+	 * or TKIP. For now allow all.
+	 */
+	cmd->sta.local_rates = cpu_to_le32(wl->rate_set);
 
 	if (wl->sta_hlid == WL1271_INVALID_LINK_ID) {
 		ret = wl1271_allocate_link(wl, &wl->sta_hlid);
@@ -575,7 +605,7 @@ int wl1271_cmd_role_start_sta(struct wl1271 *wl)
 			goto out_free;
 	}
 	cmd->sta.hlid = wl->sta_hlid;
-	cmd->sta.session = wl->session_counter;
+	cmd->sta.session = wl1271_get_new_session_id(wl);
 	cmd->sta.remote_rates = cpu_to_le32(wl->rate_set);
 
 	wl1271_debug(DEBUG_CMD, "role start: roleid=%d, hlid=%d, session=%d "
@@ -585,9 +615,6 @@ int wl1271_cmd_role_start_sta(struct wl1271 *wl)
 
 	wl1271_debug(DEBUG_CMD, "wl->bssid = %pM", wl->bssid);
 
-	wl1271_dump(DEBUG_CMD, "CMD_ROLE_START: ",
-		    &cmd->header + 1, sizeof(*cmd) - sizeof(cmd->header));
-	
 	ret = wl1271_cmd_send(wl, CMD_ROLE_START, cmd, sizeof(*cmd), 0);
 	if (ret < 0) {
 		wl1271_error("failed to initiate cmd role enable");
@@ -597,11 +624,9 @@ int wl1271_cmd_role_start_sta(struct wl1271 *wl)
 	goto out_free;
 
 err_hlid:
-	/* clear links on error */
-	__clear_bit(wl->sta_hlid, wl->links_map);
-	wl->sta_hlid = WL1271_INVALID_LINK_ID;
+	/* clear links on error. */
+	wl1271_free_link(wl, &wl->sta_hlid);
 
-	
 out_free:
 	kfree(cmd);
 
@@ -614,7 +639,7 @@ int wl1271_cmd_role_stop_sta(struct wl1271 *wl)
 	struct wl1271_cmd_role_stop *cmd;
 	int ret;
 
-	if (WARN_ON(wl->sta_hlid == WL1271_INVALID_ROLE_ID))
+	if (WARN_ON(wl->sta_hlid == WL1271_INVALID_LINK_ID))
 		return -EINVAL;
 
 	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
@@ -628,12 +653,13 @@ int wl1271_cmd_role_stop_sta(struct wl1271 *wl)
 	cmd->role_id = wl->role_id;
 	cmd->disc_type = WL1271_DISC_IMMEDIATE;
 	cmd->reason = cpu_to_le16(1); /* STATUS_UNSPECIFIED */
-	
+
 	ret = wl1271_cmd_send(wl, CMD_ROLE_STOP, cmd, sizeof(*cmd), 0);
 	if (ret < 0) {
 		wl1271_error("failed to initiate cmd role stop");
 		goto out_free;
 	}
+	wl1271_debug(DEBUG_CMD, "skipping disconnect_event");
 
 	ret = wl1271_cmd_wait_for_event(wl, DISCONNECT_EVENT_COMPLETE_ID);
 	if (ret < 0) {
@@ -650,13 +676,21 @@ out:
 	return ret;
 }
 
-int wl1271_cmd_role_start_p2p_dev(struct wl1271 *wl)
+/* since p2p_go uses the same params, we use this function as well */
+int wl1271_cmd_role_start_ap(struct wl1271 *wl)
 {
 	struct wl1271_cmd_role_start *cmd;
+	struct ieee80211_bss_conf *bss_conf = &wl->vif->bss_conf;
 	int ret;
 
-	if (WARN_ON(wl->p2p_role_id == WL1271_INVALID_ROLE_ID))
-		return -EINVAL;
+	wl1271_debug(DEBUG_CMD, "cmd start ap role");
+
+	/* trying to use hidden SSID with an old hostapd version */
+	if (wl->ssid_len == 0 && bss_conf->ssid_len == 0) {
+		wl1271_error("got a null SSID from beacon/bss");
+		ret = -EINVAL;
+		goto out;
+	}
 
 	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
 	if (!cmd) {
@@ -664,28 +698,151 @@ int wl1271_cmd_role_start_p2p_dev(struct wl1271 *wl)
 		goto out;
 	}
 
-	wl1271_debug(DEBUG_CMD, "cmd role start p2p %d", wl->p2p_role_id);
+	ret = wl1271_allocate_link(wl, &wl->ap_global_hlid);
+	if (ret < 0)
+		goto out_free;
 
-	cmd->role_id = wl->p2p_role_id;
-//	if (wl->band == IEEE80211_BAND_5GHZ)
-//		cmd->band |= WL1271_BAND_5GHZ;
+	ret = wl1271_allocate_link(wl, &wl->ap_bcast_hlid);
+	if (ret < 0)
+		goto out_free_global;
+
+	cmd->role_id = wl->role_id;
+
+	cmd->ap.aging_period = cpu_to_le16(wl->conf.tx.ap_aging_period);
+	cmd->ap.bss_index = WL1271_AP_BSS_INDEX;
+	cmd->ap.global_hlid = wl->ap_global_hlid;
+	cmd->ap.broadcast_hlid = wl->ap_bcast_hlid;
+	cmd->ap.basic_rate_set = cpu_to_le32(wl->basic_rate_set);
+	cmd->ap.beacon_interval = cpu_to_le16(wl->beacon_int);
+	cmd->ap.dtim_interval = bss_conf->dtim_period;
+	cmd->ap.beacon_expiry = WL1271_AP_DEF_BEACON_EXP;
 	cmd->channel = wl->channel;
-	cmd->ssid_len = 7;
-	memcpy(cmd->ssid, "DIRECT-", wl->ssid_len);
-	cmd->local_rates = cpu_to_le32(0xffffffff); /* TEMP */
 
-	if (wl->p2p_hlid == WL1271_INVALID_LINK_ID) {
-		ret = wl1271_allocate_link(wl, &wl->p2p_hlid);
+	/* We use a visible SSID if the beacon SSID is non-zero */
+	if (wl->ssid_len > 0) {
+		cmd->ap.ssid_type = WL1271_SSID_TYPE_PUBLIC;
+		cmd->ap.ssid_len = wl->ssid_len;
+		memcpy(cmd->ap.ssid, wl->ssid, wl->ssid_len);
+	} else {
+		cmd->ap.ssid_type = WL1271_SSID_TYPE_HIDDEN;
+		cmd->ap.ssid_len = bss_conf->ssid_len;
+		memcpy(cmd->ap.ssid, bss_conf->ssid, bss_conf->ssid_len);
+	}
+
+	cmd->ap.local_rates = cpu_to_le32(0xffffffff); /* TEMP */
+
+	switch (wl->band) {
+	case IEEE80211_BAND_2GHZ:
+		cmd->band = RADIO_BAND_2_4GHZ;
+		break;
+	case IEEE80211_BAND_5GHZ:
+		cmd->band = RADIO_BAND_5GHZ;
+		break;
+	default:
+		wl1271_warning("ap start - unknown band: %d", (int)wl->band);
+		cmd->band = RADIO_BAND_2_4GHZ;
+		break;
+	}
+
+	ret = wl1271_cmd_send(wl, CMD_ROLE_START, cmd, sizeof(*cmd), 0);
+	if (ret < 0) {
+		wl1271_error("failed to initiate cmd start bss");
+		goto out_free_bcast;
+	}
+
+	goto out_free;
+
+out_free_bcast:
+	wl1271_free_link(wl, &wl->ap_bcast_hlid);
+
+out_free_global:
+	wl1271_free_link(wl, &wl->ap_global_hlid);
+
+out_free:
+	kfree(cmd);
+
+out:
+	return ret;
+}
+
+/* TODO: merge with sta/ibss into 1 role_stop function with a type param */
+int wl1271_cmd_role_stop_ap(struct wl1271 *wl)
+{
+	struct wl1271_cmd_role_stop *cmd;
+	int ret;
+
+	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
+	if (!cmd) {
+		ret = -ENOMEM;
+		goto out;
+	}
+
+	wl1271_debug(DEBUG_CMD, "cmd role ap stop");
+
+	cmd->role_id = wl->role_id;
+
+	ret = wl1271_cmd_send(wl, CMD_ROLE_STOP, cmd, sizeof(*cmd), 0);
+	if (ret < 0) {
+		wl1271_error("failed to initiate cmd role ap stop");
+		goto out_free;
+	}
+
+	wl1271_free_link(wl, &wl->ap_bcast_hlid);
+	wl1271_free_link(wl, &wl->ap_global_hlid);
+
+out_free:
+	kfree(cmd);
+
+out:
+	return ret;
+}
+
+int wl1271_cmd_role_start_ibss(struct wl1271 *wl)
+{
+	struct wl1271_cmd_role_start *cmd;
+	struct ieee80211_bss_conf *bss_conf = &wl->vif->bss_conf;
+	int ret;
+
+	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
+	if (!cmd) {
+		ret = -ENOMEM;
+		goto out;
+	}
+
+	wl1271_debug(DEBUG_CMD, "cmd role start ibss %d", wl->role_id);
+
+	cmd->role_id = wl->role_id;
+	if (wl->band == IEEE80211_BAND_5GHZ)
+		cmd->band |= WL1271_BAND_5GHZ;
+	cmd->channel = wl->channel;
+	cmd->ibss.basic_rate_set = cpu_to_le32(wl->basic_rate_set);
+	cmd->ibss.beacon_interval = cpu_to_le16(wl->beacon_int);
+	cmd->ibss.dtim_interval = bss_conf->dtim_period;
+	cmd->ibss.ssid_type = WL1271_SSID_TYPE_ANY;
+	cmd->ibss.ssid_len = wl->ssid_len;
+	memcpy(cmd->ibss.ssid, wl->ssid, wl->ssid_len);
+	memcpy(cmd->ibss.bssid, wl->bssid, ETH_ALEN);
+
+	/*
+	 * TODO: 11n rates should not be allowed when encryption is WEP
+	 * or TKIP. For now allow all.
+	 */
+	cmd->sta.local_rates = cpu_to_le32(wl->rate_set);
+
+	if (wl->sta_hlid == WL1271_INVALID_LINK_ID) {
+		ret = wl1271_allocate_link(wl, &wl->sta_hlid);
 		if (ret)
 			goto out_free;
 	}
+	cmd->ibss.hlid = wl->sta_hlid;
+	cmd->ibss.remote_rates = cpu_to_le32(wl->rate_set);
 
-	cmd->p2p_dev.global_hlid = wl->p2p_hlid;
-//	wl->session_counter++; /* diff from sta */
-//	cmd->p2p_dev.session = wl->session_counter;
+	wl1271_debug(DEBUG_CMD, "role start: roleid=%d, hlid=%d, session=%d "
+		     "basic_rate_set: 0x%x, remote_rates: 0x%x",
+		     wl->role_id, cmd->sta.hlid, cmd->sta.session,
+		     wl->basic_rate_set, wl->rate_set);
 
-	wl1271_dump(DEBUG_CMD, "CMD_ROLE_START: ",
-		    &cmd->header + 1, sizeof(*cmd) - sizeof(cmd->header));
+	wl1271_debug(DEBUG_CMD, "wl->bssid = %pM", wl->bssid);
 
 	ret = wl1271_cmd_send(wl, CMD_ROLE_START, cmd, sizeof(*cmd), 0);
 	if (ret < 0) {
@@ -696,8 +853,8 @@ int wl1271_cmd_role_start_p2p_dev(struct wl1271 *wl)
 	goto out_free;
 
 err_hlid:
-	/* clear links on error */
-	wl1271_free_link(wl, &wl->p2p_hlid);
+	/* clear links on error. */
+	wl1271_free_link(wl, &wl->sta_hlid);
 
 out_free:
 	kfree(cmd);
@@ -706,86 +863,6 @@ out:
 	return ret;
 }
 
-int wl1271_cmd_role_stop_p2p_dev(struct wl1271 *wl)
-{
-	struct wl1271_cmd_role_stop *cmd;
-	int ret;
-
-	if (WARN_ON(wl->p2p_hlid == WL1271_INVALID_ROLE_ID))
-		return -EINVAL;
-
-	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
-	if (!cmd) {
-		ret = -ENOMEM;
-		goto out;
-	}
-
-	wl1271_debug(DEBUG_CMD, "cmd role stop");
-
-	cmd->role_id = wl->p2p_role_id;
-	cmd->disc_type = WL1271_DISC_IMMEDIATE;
-	cmd->reason = cpu_to_le16(1); /* STATUS_UNSPECIFIED */
-
-	ret = wl1271_cmd_send(wl, CMD_ROLE_STOP, cmd, sizeof(*cmd), 0);
-	if (ret < 0) {
-		wl1271_error("failed to initiate cmd role stop");
-		goto out_free;
-	}
-
-	wl1271_free_link(wl, &wl->p2p_hlid);
-
-out_free:
-	kfree(cmd);
-
-out:
-	return ret;
-}
-
-int wl1271_cmd_p2p_start_discovery(struct wl1271 *wl)
-{
-	struct wl1271_cmd_p2p_start_discovery *cmd;
-	int ret;
-
-	if (WARN_ON(wl->p2p_hlid == WL1271_INVALID_ROLE_ID))
-		return -EINVAL;
-
-	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
-	if (!cmd) {
-		ret = -ENOMEM;
-		goto out;
-	}
-
-	wl1271_debug(DEBUG_CMD, "cmd p2p start discovery");
-
-	cmd->role_id = wl->p2p_role_id;
-	cmd->listen_channel = 11;
-	cmd->min_listen_interval = 1;
-	cmd->min_listen_interval = 3;
-	cmd->search_channel_duration = 30;
-	cmd->search_channel = 0;
-	cmd->probes_num = 3;
-	cmd->probe_rate = 0; /* let fw choose */
-
-	cmd->cycle_count = 1;
-	cmd->cycle_idle = 0;
-	cmd->tag = 7;
-	cmd->filter = 0;
-
-	ret = wl1271_cmd_send(wl, CMD_WFD_START_DISCOVERY, cmd,
-			      sizeof(*cmd), 0);
-	if (ret < 0) {
-		wl1271_error("failed to initiate cmd start discovery");
-		goto out_free;
-	}
-
-	wl1271_free_link(wl, &wl->p2p_hlid);
-
-out_free:
-	kfree(cmd);
-
-out:
-	return ret;
-}
 
 /**
  * send test command to firmware
@@ -821,7 +898,7 @@ int wl1271_cmd_test(struct wl1271 *wl, void *buf, size_t buf_len, u8 answer)
  * @wl: wl struct
  * @id: acx id
  * @buf: buffer for the response, including all headers, must work with dma
- * @len: lenght of buf
+ * @len: length of buf
  */
 int wl1271_cmd_interrogate(struct wl1271 *wl, u16 id, void *buf, size_t len)
 {
@@ -1066,6 +1143,7 @@ int wl1271_cmd_build_probe_req(struct wl1271 *wl,
 {
 	struct sk_buff *skb;
 	int ret;
+	u32 rate;
 
 	skb = ieee80211_probereq_get(wl->hw, wl->vif, ssid, ssid_len,
 				     ie, ie_len);
@@ -1076,14 +1154,13 @@ int wl1271_cmd_build_probe_req(struct wl1271 *wl,
 
 	wl1271_dump(DEBUG_SCAN, "PROBE REQ: ", skb->data, skb->len);
 
+	rate = wl1271_tx_min_rate_get(wl, wl->bitrate_masks[band]);
 	if (band == IEEE80211_BAND_2GHZ)
 		ret = wl1271_cmd_template_set(wl, CMD_TEMPL_CFG_PROBE_REQ_2_4,
-					      skb->data, skb->len, 0,
-					      wl->conf.tx.basic_rate);
+					      skb->data, skb->len, 0, rate);
 	else
 		ret = wl1271_cmd_template_set(wl, CMD_TEMPL_CFG_PROBE_REQ_5,
-					      skb->data, skb->len, 0,
-					      wl->conf.tx.basic_rate_5);
+					      skb->data, skb->len, 0, rate);
 
 out:
 	dev_kfree_skb(skb);
@@ -1094,6 +1171,7 @@ struct sk_buff *wl1271_cmd_build_ap_probe_req(struct wl1271 *wl,
 					      struct sk_buff *skb)
 {
 	int ret;
+	u32 rate;
 
 	if (!skb)
 		skb = ieee80211_ap_probereq_get(wl->hw, wl->vif);
@@ -1102,14 +1180,13 @@ struct sk_buff *wl1271_cmd_build_ap_probe_req(struct wl1271 *wl,
 
 	wl1271_dump(DEBUG_SCAN, "AP PROBE REQ: ", skb->data, skb->len);
 
+	rate = wl1271_tx_min_rate_get(wl, wl->bitrate_masks[wl->band]);
 	if (wl->band == IEEE80211_BAND_2GHZ)
 		ret = wl1271_cmd_template_set(wl, CMD_TEMPL_CFG_PROBE_REQ_2_4,
-					      skb->data, skb->len, 0,
-					      wl->conf.tx.basic_rate);
+					      skb->data, skb->len, 0, rate);
 	else
 		ret = wl1271_cmd_template_set(wl, CMD_TEMPL_CFG_PROBE_REQ_5,
-					      skb->data, skb->len, 0,
-					      wl->conf.tx.basic_rate_5);
+					      skb->data, skb->len, 0, rate);
 
 	if (ret < 0)
 		wl1271_error("Unable to set ap probe request template.");
@@ -1120,28 +1197,31 @@ out:
 
 int wl1271_cmd_build_arp_rsp(struct wl1271 *wl, __be32 ip_addr)
 {
-	int ret;
-	struct wl12xx_arp_rsp_template tmpl;
+	int ret, extra;
+	u16 fc;
+	struct sk_buff *skb;
+	struct wl12xx_arp_rsp_template *tmpl;
 	struct ieee80211_hdr_3addr *hdr;
 	struct arphdr *arp_hdr;
 
-	memset(&tmpl, 0, sizeof(tmpl));
+	skb = dev_alloc_skb(sizeof(*hdr) + sizeof(__le16) + sizeof(*tmpl) +
+			    WL1271_EXTRA_SPACE_MAX);
+	if (!skb) {
+		wl1271_error("failed to allocate buffer for arp rsp template");
+		return -ENOMEM;
+	}
 
-	/* mac80211 header */
-	hdr = &tmpl.hdr;
-	hdr->frame_control = cpu_to_le16(IEEE80211_FTYPE_DATA |
-					 IEEE80211_STYPE_DATA |
-					 IEEE80211_FCTL_TODS);
-	memcpy(hdr->addr1, wl->vif->bss_conf.bssid, ETH_ALEN);
-	memcpy(hdr->addr2, wl->vif->addr, ETH_ALEN);
-	memset(hdr->addr3, 0xff, ETH_ALEN);
+	skb_reserve(skb, sizeof(*hdr) + WL1271_EXTRA_SPACE_MAX);
+
+	tmpl = (struct wl12xx_arp_rsp_template *)skb_put(skb, sizeof(*tmpl));
+	memset(tmpl, 0, sizeof(tmpl));
 
 	/* llc layer */
-	memcpy(tmpl.llc_hdr, rfc1042_header, sizeof(rfc1042_header));
-	tmpl.llc_type = cpu_to_be16(ETH_P_ARP);
+	memcpy(tmpl->llc_hdr, rfc1042_header, sizeof(rfc1042_header));
+	tmpl->llc_type = cpu_to_be16(ETH_P_ARP);
 
 	/* arp header */
-	arp_hdr = &tmpl.arp_hdr;
+	arp_hdr = &tmpl->arp_hdr;
 	arp_hdr->ar_hrd = cpu_to_be16(ARPHRD_ETHER);
 	arp_hdr->ar_pro = cpu_to_be16(ETH_P_IP);
 	arp_hdr->ar_hln = ETH_ALEN;
@@ -1149,13 +1229,59 @@ int wl1271_cmd_build_arp_rsp(struct wl1271 *wl, __be32 ip_addr)
 	arp_hdr->ar_op = cpu_to_be16(ARPOP_REPLY);
 
 	/* arp payload */
-	memcpy(tmpl.sender_hw, wl->vif->addr, ETH_ALEN);
-	tmpl.sender_ip = ip_addr;
+	memcpy(tmpl->sender_hw, wl->vif->addr, ETH_ALEN);
+	tmpl->sender_ip = ip_addr;
+
+	/* encryption space */
+	switch (wl->encryption_type) {
+	case KEY_TKIP:
+		extra = WL1271_EXTRA_SPACE_TKIP;
+		break;
+	case KEY_AES:
+		extra = WL1271_EXTRA_SPACE_AES;
+		break;
+	case KEY_NONE:
+	case KEY_WEP:
+	case KEY_GEM:
+		extra = 0;
+		break;
+	default:
+		wl1271_warning("Unknown encryption type: %d",
+			       wl->encryption_type);
+		ret = -EINVAL;
+		goto out;
+	}
+
+	if (extra) {
+		u8 *space = skb_push(skb, extra);
+		memset(space, 0, extra);
+	}
+
+	/* QoS header - BE */
+	if (wl->qos)
+		memset(skb_push(skb, sizeof(__le16)), 0, sizeof(__le16));
+
+	/* mac80211 header */
+	hdr = (struct ieee80211_hdr_3addr *)skb_push(skb, sizeof(*hdr));
+	memset(hdr, 0, sizeof(hdr));
+	fc = IEEE80211_FTYPE_DATA | IEEE80211_FCTL_TODS;
+	if (wl->qos)
+		fc |= IEEE80211_STYPE_QOS_DATA;
+	else
+		fc |= IEEE80211_STYPE_DATA;
+	if (wl->encryption_type != KEY_NONE)
+		fc |= IEEE80211_FCTL_PROTECTED;
+
+	hdr->frame_control = cpu_to_le16(fc);
+	memcpy(hdr->addr1, wl->vif->bss_conf.bssid, ETH_ALEN);
+	memcpy(hdr->addr2, wl->vif->addr, ETH_ALEN);
+	memset(hdr->addr3, 0xff, ETH_ALEN);
 
 	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_ARP_RSP,
-				      &tmpl, sizeof(tmpl), 0,
+				      skb->data, skb->len, 0,
 				      wl->basic_rate);
-
+out:
+	dev_kfree_skb(skb);
 	return ret;
 }
 
@@ -1194,7 +1320,7 @@ int wl1271_cmd_set_sta_default_wep_key(struct wl1271 *wl, u8 id)
 		goto out;
 	}
 
-	cmd->hlid = WL1271_INVALID_LINK_ID;
+	cmd->hlid = wl->sta_hlid;
 	cmd->lid_key_type = WEP_DEFAULT_LID_TYPE;
 	cmd->id = id;
 	cmd->key_action = cpu_to_le16(KEY_SET_ID);
@@ -1225,7 +1351,7 @@ int wl1271_cmd_set_ap_default_wep_key(struct wl1271 *wl, u8 id)
 		goto out;
 	}
 
-	cmd->hlid = WL1271_AP_BROADCAST_HLID;
+	cmd->hlid = wl->ap_bcast_hlid;
 	cmd->key_id = id;
 	cmd->lid_key_type = WEP_DEFAULT_LID_TYPE;
 	cmd->key_action = cpu_to_le16(KEY_SET_ID);
@@ -1249,6 +1375,10 @@ int wl1271_cmd_set_sta_key(struct wl1271 *wl, u16 action, u8 id, u8 key_type,
 {
 	struct wl1271_cmd_set_sta_keys *cmd;
 	int ret = 0;
+
+	/* hlid might have already been deleted */
+	if (wl->sta_hlid == WL1271_INVALID_LINK_ID)
+		return 0;
 
 	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
 	if (!cmd) {
@@ -1304,7 +1434,10 @@ out:
 	return ret;
 }
 
-/* TODO: merge with sta/ibss into 1 set_key function. note there are slight diffs */
+/*
+ * TODO: merge with sta/ibss into 1 set_key function.
+ * note there are slight diffs
+ */
 int wl1271_cmd_set_ap_key(struct wl1271 *wl, u16 action, u8 id, u8 key_type,
 			u8 key_size, const u8 *key, u8 hlid, u32 tx_seq_32,
 			u16 tx_seq_16)
@@ -1317,7 +1450,7 @@ int wl1271_cmd_set_ap_key(struct wl1271 *wl, u16 action, u8 id, u8 key_type,
 	if (!cmd)
 		return -ENOMEM;
 
-	if (hlid == WL1271_AP_BROADCAST_HLID) {
+	if (hlid == wl->ap_bcast_hlid) {
 		if (key_type == KEY_WEP)
 			lid_type = WEP_DEFAULT_LID_TYPE;
 		else
@@ -1366,12 +1499,12 @@ out:
 	return ret;
 }
 
-int wl1271_cmd_set_peer_state(struct wl1271 *wl)
+int wl1271_cmd_set_peer_state(struct wl1271 *wl, u8 hlid)
 {
 	struct wl1271_cmd_set_peer_state *cmd;
 	int ret = 0;
 
-	wl1271_debug(DEBUG_CMD, "cmd set sta state (hlid=%d)", wl->sta_hlid);
+	wl1271_debug(DEBUG_CMD, "cmd set sta state (hlid=%d)", hlid);
 
 	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
 	if (!cmd) {
@@ -1379,7 +1512,7 @@ int wl1271_cmd_set_peer_state(struct wl1271 *wl)
 		goto out;
 	}
 
-	cmd->hlid = wl->sta_hlid;
+	cmd->hlid = hlid;
 	cmd->state = WL1271_CMD_STA_STATE_CONNECTED;
 
 	ret = wl1271_cmd_send(wl, CMD_SET_PEER_STATE, cmd, sizeof(*cmd), 0);
@@ -1395,104 +1528,11 @@ out:
 	return ret;
 }
 
-/* since p2p_go uses the same params, we use this function as well */
-int wl1271_cmd_role_start_ap(struct wl1271 *wl)
-{
-	struct wl1271_cmd_role_start *cmd;
-	struct ieee80211_bss_conf *bss_conf = &wl->vif->bss_conf;
-	int ret;
-
-	wl1271_debug(DEBUG_CMD, "cmd start ap role");
-
-	/*
-	 * FIXME: We currently do not support hidden SSID. The real SSID
-	 * should be fetched from mac80211 first.
-	 */
-	if (wl->ssid_len == 0) {
-		wl1271_warning("Hidden SSID currently not supported for AP");
-		ret = -EINVAL;
-		goto out;
-	}
-
-	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
-	if (!cmd) {
-		ret = -ENOMEM;
-		goto out;
-	}
-
-	cmd->ap.aging_period = cpu_to_le16(WL1271_AP_DEF_INACTIV_SEC);
-	cmd->ap.bss_index = WL1271_AP_BSS_INDEX;
-	cmd->ap.global_hlid = WL1271_AP_GLOBAL_HLID;
-	cmd->ap.broadcast_hlid = WL1271_AP_BROADCAST_HLID;
-	cmd->basic_rate_set = cpu_to_le32(wl->basic_rate_set);
-	cmd->beacon_interval = cpu_to_le16(wl->beacon_int);
-	cmd->dtim_interval = bss_conf->dtim_period;
-	cmd->ap.beacon_expiry = WL1271_AP_DEF_BEACON_EXP;
-	cmd->channel = wl->channel;
-	cmd->ssid_len = wl->ssid_len;
-	cmd->ssid_type = WL1271_SSID_TYPE_PUBLIC;
-	memcpy(cmd->ssid, wl->ssid, wl->ssid_len);
-	cmd->local_rates = cpu_to_le32(0xffffffff); /* TEMP */
-
-	switch (wl->band) {
-	case IEEE80211_BAND_2GHZ:
-		cmd->band = RADIO_BAND_2_4GHZ;
-		break;
-	case IEEE80211_BAND_5GHZ:
-		cmd->band = RADIO_BAND_5GHZ;
-		break;
-	default:
-		wl1271_warning("ap start - unknown band: %d", (int)wl->band);
-		cmd->band = RADIO_BAND_2_4GHZ;
-		break;
-	}
-
-	ret = wl1271_cmd_send(wl, CMD_ROLE_START, cmd, sizeof(*cmd), 0);
-	if (ret < 0) {
-		wl1271_error("failed to initiate cmd start bss");
-		goto out_free;
-	}
-
-out_free:
-	kfree(cmd);
-
-out:
-	return ret;
-}
-
-/* TODO: merge with sta/ibss into 1 role_stop function with a type param */
-int wl1271_cmd_role_stop_ap(struct wl1271 *wl)
-{
-	struct wl1271_cmd_role_stop *cmd;
-	int ret;
-
-	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
-	if (!cmd) {
-		ret = -ENOMEM;
-		goto out;
-	}
-
-	wl1271_debug(DEBUG_CMD, "cmd role ap stop");
-
-	cmd->role_id = wl->role_id;
-	
-	ret = wl1271_cmd_send(wl, CMD_ROLE_STOP, cmd, sizeof(*cmd), 0);
-	if (ret < 0) {
-		wl1271_error("failed to initiate cmd role ap stop");
-		goto out_free;
-	}
-
-out_free:
-	kfree(cmd);
-
-out:
-	return ret;
-}
-
 int wl1271_cmd_add_peer(struct wl1271 *wl, struct ieee80211_sta *sta, u8 hlid)
 {
 	struct wl1271_cmd_add_peer *cmd;
-	int ret;
+	int i, ret;
+	u32 sta_rates;
 
 	wl1271_debug(DEBUG_CMD, "cmd add sta %d", (int)hlid);
 
@@ -1502,26 +1542,29 @@ int wl1271_cmd_add_peer(struct wl1271 *wl, struct ieee80211_sta *sta, u8 hlid)
 		goto out;
 	}
 
-	/* currently we don't support UAPSD */
-	cmd->sp_len = 0;
-
 	memcpy(cmd->addr, sta->addr, ETH_ALEN);
 	cmd->bss_index = WL1271_AP_BSS_INDEX;
 	cmd->aid = sta->aid;
 	cmd->hlid = hlid;
+	cmd->sp_len = sta->max_sp;
+	cmd->wmm = sta->wme ? 1 : 0;
 
-	/*
-	 * FIXME: Does STA support QOS? We need to propagate this info from
-	 * hostapd. Currently not that important since this is only used for
-	 * sending the correct flavor of null-data packet in response to a
-	 * trigger.
-	 */
-	cmd->wmm = 0;
+	for (i = 0; i < NUM_ACCESS_CATEGORIES_COPY; i++)
+		if (sta->wme && sta->uapsd_queues & BIT(i))
+			cmd->psd_type[i] = WL1271_PSD_UPSD_TRIGGER;
+		else
+			cmd->psd_type[i] = WL1271_PSD_LEGACY;
 
-	cmd->supported_rates = cpu_to_le32(wl1271_tx_enabled_rates_get(wl,
-						sta->supp_rates[wl->band]));
+	sta_rates = sta->supp_rates[wl->band];
+	if (sta->ht_cap.ht_supported)
+		sta_rates |= sta->ht_cap.mcs.rx_mask[0] << HW_HT_RATES_OFFSET;
 
-	wl1271_debug(DEBUG_CMD, "new sta rates: 0x%x", cmd->supported_rates);
+	cmd->supported_rates =
+		cpu_to_le32(wl1271_tx_enabled_rates_get(wl, sta_rates,
+			    wl->band));
+
+	wl1271_debug(DEBUG_CMD, "new sta rates=0x%x queues=0x%x",
+		     cmd->supported_rates, sta->uapsd_queues);
 
 	ret = wl1271_cmd_send(wl, CMD_ADD_PEER, cmd, sizeof(*cmd), 0);
 	if (ret < 0) {
@@ -1566,6 +1609,270 @@ int wl1271_cmd_remove_peer(struct wl1271 *wl, u8 hlid)
 	 */
 	wl1271_cmd_wait_for_event_or_timeout(wl,
 					     PEER_REMOVE_COMPLETE_EVENT_ID);
+
+out_free:
+	kfree(cmd);
+
+out:
+	return ret;
+}
+
+static int wl1271_cmd_roc(struct wl1271 *wl, u8 role_id)
+{
+	struct wl1271_cmd_roc *cmd;
+	int ret = 0;
+
+	wl1271_debug(DEBUG_CMD, "cmd roc %d (%d)", wl->channel, role_id);
+
+	if (WARN_ON(role_id == WL1271_INVALID_ROLE_ID))
+		return -EINVAL;
+
+	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
+	if (!cmd) {
+		ret = -ENOMEM;
+		goto out;
+	}
+
+	cmd->role_id = role_id;
+	cmd->channel = wl->channel;
+	switch (wl->band) {
+	case IEEE80211_BAND_2GHZ:
+		cmd->band = RADIO_BAND_2_4GHZ;
+		break;
+	case IEEE80211_BAND_5GHZ:
+		cmd->band = RADIO_BAND_5GHZ;
+		break;
+	default:
+		wl1271_warning("roc - unknown band: %d", (int)wl->band);
+		cmd->band = RADIO_BAND_2_4GHZ;
+		break;
+	}
+
+
+	ret = wl1271_cmd_send(wl, CMD_REMAIN_ON_CHANNEL, cmd, sizeof(*cmd), 0);
+	if (ret < 0) {
+		wl1271_error("failed to send ROC command");
+		goto out_free;
+	}
+
+out_free:
+	kfree(cmd);
+
+out:
+	return ret;
+}
+
+static int wl1271_cmd_croc(struct wl1271 *wl, u8 role_id)
+{
+	struct wl1271_cmd_croc*cmd;
+	int ret = 0;
+
+	wl1271_debug(DEBUG_CMD, "cmd croc (%d)", role_id);
+
+	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
+	if (!cmd) {
+		ret = -ENOMEM;
+		goto out;
+	}
+	cmd->role_id = role_id;
+
+	ret = wl1271_cmd_send(wl, CMD_CANCEL_REMAIN_ON_CHANNEL, cmd,
+			      sizeof(*cmd), 0);
+	if (ret < 0) {
+		wl1271_error("failed to send ROC command");
+		goto out_free;
+	}
+
+out_free:
+	kfree(cmd);
+
+out:
+	return ret;
+}
+
+int wl1271_roc(struct wl1271 *wl, u8 role_id)
+{
+	int ret = 0;
+
+	if (WARN_ON(test_bit(role_id, wl->roc_map)))
+		return 0;
+
+	ret = wl1271_cmd_roc(wl, role_id);
+	if (ret < 0)
+		goto out;
+
+	ret = wl1271_cmd_wait_for_event(wl,
+					REMAIN_ON_CHANNEL_COMPLETE_EVENT_ID);
+	if (ret < 0) {
+		wl1271_error("cmd roc event completion error");
+		goto out;
+	}
+
+	__set_bit(role_id, wl->roc_map);
+	set_bit(WL1271_FLAG_ROC, &wl->flags);
+
+out:
+	return ret;
+}
+
+int wl1271_croc(struct wl1271 *wl, u8 role_id)
+{
+	int ret = 0;
+	u8 roc_role;
+
+	if (WARN_ON(!test_bit(WL1271_FLAG_ROC, &wl->flags)))
+		return 0;
+
+	if (WARN_ON(!test_bit(role_id, wl->roc_map)))
+		return 0;
+
+	ret = wl1271_cmd_croc(wl, role_id);
+	if (ret < 0)
+		goto out;
+
+	__clear_bit(role_id, wl->roc_map);
+	roc_role = find_first_bit(wl->roc_map, WL1271_MAX_ROLES);
+	if (roc_role >= WL1271_MAX_ROLES)
+		clear_bit(WL1271_FLAG_ROC, &wl->flags);
+
+out:
+	return ret;
+}
+
+int wl12xx_cmd_config_fwlog(struct wl1271 *wl)
+{
+	struct wl12xx_cmd_config_fwlog *cmd;
+	int ret = 0;
+
+	wl1271_debug(DEBUG_CMD, "cmd config firmware logger");
+
+	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
+	if (!cmd) {
+		ret = -ENOMEM;
+		goto out;
+	}
+
+	cmd->logger_mode = wl->conf.fwlog.mode;
+	cmd->log_severity = wl->conf.fwlog.severity;
+	cmd->timestamp = wl->conf.fwlog.timestamp;
+	cmd->output = wl->conf.fwlog.output;
+	cmd->threshold = wl->conf.fwlog.threshold;
+
+	ret = wl1271_cmd_send(wl, CMD_CONFIG_FWLOGGER, cmd, sizeof(*cmd), 0);
+	if (ret < 0) {
+		wl1271_error("failed to send config firmware logger command");
+		goto out_free;
+	}
+
+out_free:
+	kfree(cmd);
+
+out:
+	return ret;
+}
+
+int wl12xx_cmd_start_fwlog(struct wl1271 *wl)
+{
+	struct wl12xx_cmd_start_fwlog *cmd;
+	int ret = 0;
+
+	wl1271_debug(DEBUG_CMD, "cmd start firmware logger");
+
+	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
+	if (!cmd) {
+		ret = -ENOMEM;
+		goto out;
+	}
+
+	ret = wl1271_cmd_send(wl, CMD_START_FWLOGGER, cmd, sizeof(*cmd), 0);
+	if (ret < 0) {
+		wl1271_error("failed to send start firmware logger command");
+		goto out_free;
+	}
+
+out_free:
+	kfree(cmd);
+
+out:
+	return ret;
+}
+
+int wl12xx_cmd_stop_fwlog(struct wl1271 *wl)
+{
+	struct wl12xx_cmd_stop_fwlog *cmd;
+	int ret = 0;
+
+	wl1271_debug(DEBUG_CMD, "cmd stop firmware logger");
+
+	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
+	if (!cmd) {
+		ret = -ENOMEM;
+		goto out;
+	}
+
+	ret = wl1271_cmd_send(wl, CMD_STOP_FWLOGGER, cmd, sizeof(*cmd), 0);
+	if (ret < 0) {
+		wl1271_error("failed to send stop firmware logger command");
+		goto out_free;
+	}
+
+out_free:
+	kfree(cmd);
+
+out:
+	return ret;
+}
+
+int wl12xx_cmd_channel_switch(struct wl1271 *wl,
+			      struct ieee80211_channel_switch *ch_switch)
+{
+	struct wl12xx_cmd_channel_switch *cmd;
+	int ret;
+
+	wl1271_debug(DEBUG_ACX, "cmd channel switch");
+
+	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
+	if (!cmd) {
+		ret = -ENOMEM;
+		goto out;
+	}
+
+	cmd->channel = ch_switch->channel->hw_value;
+	cmd->switch_time = ch_switch->count;
+	cmd->tx_suspend = ch_switch->block_tx;
+	cmd->flush = 0;
+
+	ret = wl1271_cmd_send(wl, CMD_CHANNEL_SWITCH, cmd, sizeof(*cmd), 0);
+	if (ret < 0) {
+		wl1271_error("failed to send channel switch command");
+		goto out_free;
+	}
+
+out_free:
+	kfree(cmd);
+
+out:
+	return ret;
+}
+
+int wl12xx_cmd_stop_channel_switch(struct wl1271 *wl)
+{
+	struct wl12xx_cmd_stop_channel_switch *cmd;
+	int ret;
+
+	wl1271_debug(DEBUG_ACX, "cmd stop channel switch");
+
+	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
+	if (!cmd) {
+		ret = -ENOMEM;
+		goto out;
+	}
+
+	ret = wl1271_cmd_send(wl, CMD_STOP_CHANNEL_SWICTH, cmd, sizeof(*cmd), 0);
+	if (ret < 0) {
+		wl1271_error("failed to stop channel switch command");
+		goto out_free;
+	}
 
 out_free:
 	kfree(cmd);

@@ -169,7 +169,7 @@ static __le16 ieee80211_duration(struct ieee80211_tx_data *tx, int group_addr,
 	return cpu_to_le16(dur);
 }
 
-static int inline is_ieee80211_device(struct ieee80211_local *local,
+static inline int is_ieee80211_device(struct ieee80211_local *local,
 				      struct net_device *dev)
 {
 	return local == wdev_priv(dev->ieee80211_ptr);
@@ -236,6 +236,10 @@ ieee80211_tx_h_dynamic_ps(struct ieee80211_tx_data *tx)
 		ieee80211_queue_work(&local->hw,
 				     &local->dynamic_ps_disable_work);
 	}
+
+	/* Don't restart the timer if we're not disassociated */
+	if (!ifmgd->associated)
+		return TX_CONTINUE;
 
 	mod_timer(&local->dynamic_ps_timer, jiffies +
 		  msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
@@ -1036,13 +1040,10 @@ static bool __ieee80211_parse_tx_radiotap(struct ieee80211_tx_data *tx,
 	struct ieee80211_radiotap_iterator iterator;
 	struct ieee80211_radiotap_header *rthdr =
 		(struct ieee80211_radiotap_header *) skb->data;
-	struct ieee80211_supported_band *sband;
 	bool hw_frag;
 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
 	int ret = ieee80211_radiotap_iterator_init(&iterator, rthdr, skb->len,
 						   NULL);
-
-	sband = tx->local->hw.wiphy->bands[tx->channel->band];
 
 	info->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
 	tx->flags &= ~IEEE80211_TX_FRAGMENTED;
@@ -1150,7 +1151,7 @@ static bool ieee80211_tx_prep_agg(struct ieee80211_tx_data *tx,
 		 *     packet pass through because splicing the frames
 		 *     back is already done.
 		 */
-		tid_tx = tx->sta->ampdu_mlme.tid_tx[tid];
+		tid_tx = rcu_dereference_protected_tid_tx(tx->sta, tid);
 
 		if (!tid_tx) {
 			/* do nothing, let packet pass through */
@@ -1228,7 +1229,8 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
 		tx->sta = sta_info_get(sdata, hdr->addr1);
 
 	if (tx->sta && ieee80211_is_data_qos(hdr->frame_control) &&
-	    (local->hw.flags & IEEE80211_HW_AMPDU_AGGREGATION)) {
+	    (local->hw.flags & IEEE80211_HW_AMPDU_AGGREGATION) &&
+	    !(local->hw.flags & IEEE80211_HW_TX_AMPDU_IN_HW_ONLY)) {
 		struct tid_ampdu_tx *tid_tx;
 
 		qc = ieee80211_get_qos_ctl(hdr);
@@ -1442,10 +1444,7 @@ static bool ieee80211_tx(struct ieee80211_sub_if_data *sdata,
 	struct ieee80211_tx_data tx;
 	ieee80211_tx_result res_prepare;
 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-	u16 queue;
 	bool result = true;
-
-	queue = skb_get_queue_mapping(skb);
 
 	if (unlikely(skb->len < 10)) {
 		dev_kfree_skb(skb);
@@ -1482,12 +1481,7 @@ static int ieee80211_skb_resize(struct ieee80211_local *local,
 {
 	int tail_need = 0;
 
-	/*
-	 * This could be optimised, devices that do full hardware
-	 * crypto (including TKIP MMIC) need no tailroom... But we
-	 * have no drivers for such devices currently.
-	 */
-	if (may_encrypt) {
+	if (may_encrypt && local->crypto_tx_tailroom_needed_cnt) {
 		tail_need = IEEE80211_ENCRYPT_TAILROOM;
 		tail_need -= skb_tailroom(skb);
 		tail_need = max_t(int, tail_need, 0);
@@ -1766,6 +1760,7 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
 			ret = NETDEV_TX_OK;
 			goto fail;
 		}
+		rcu_read_lock();
 		if (!is_multicast_ether_addr(skb->data))
 			mppath = mpp_path_lookup(skb->data, sdata);
 
@@ -1780,13 +1775,13 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
 		    !(mppath && compare_ether_addr(mppath->mpp, skb->data))) {
 			hdrlen = ieee80211_fill_mesh_addresses(&hdr, &fc,
 					skb->data, skb->data + ETH_ALEN);
+			rcu_read_unlock();
 			meshhdrlen = ieee80211_new_mesh_header(&mesh_hdr,
 					sdata, NULL, NULL);
 		} else {
 			int is_mesh_mcast = 1;
 			const u8 *mesh_da;
 
-			rcu_read_lock();
 			if (is_multicast_ether_addr(skb->data))
 				/* DA TA mSA AE:SA */
 				mesh_da = skb->data;
@@ -2273,7 +2268,7 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
 
 		/* headroom, head length, tail length and maximum TIM length */
 		skb = dev_alloc_skb(local->tx_headroom + 400 +
-				sdata->u.mesh.vendor_ie_len);
+				sdata->u.mesh.ie_len);
 		if (!skb)
 			goto out;
 
@@ -2330,6 +2325,37 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
 	return skb;
 }
 EXPORT_SYMBOL(ieee80211_beacon_get_tim);
+
+struct sk_buff *ieee80211_proberesp_get(struct ieee80211_hw *hw,
+					struct ieee80211_vif *vif)
+{
+	struct ieee80211_if_ap *ap = NULL;
+	struct sk_buff *presp = NULL, *skb = NULL;
+	struct ieee80211_hdr *hdr;
+	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+
+	if (sdata->vif.type != NL80211_IFTYPE_AP)
+		return NULL;
+
+	rcu_read_lock();
+
+	ap = &sdata->u.ap;
+	presp = rcu_dereference(ap->probe_resp);
+	if (!presp)
+		goto out;
+
+	skb = skb_copy(presp, GFP_ATOMIC);
+	if (!skb)
+		goto out;
+
+	hdr = (struct ieee80211_hdr *) skb->data;
+	memset(hdr->addr1, 0, sizeof(hdr->addr1));
+
+out:
+	rcu_read_unlock();
+	return skb;
+}
+EXPORT_SYMBOL(ieee80211_proberesp_get);
 
 struct sk_buff *ieee80211_pspoll_get(struct ieee80211_hw *hw,
 				     struct ieee80211_vif *vif)
@@ -2496,7 +2522,6 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw,
 {
 	struct ieee80211_local *local = hw_to_local(hw);
 	struct sk_buff *skb = NULL;
-	struct sta_info *sta;
 	struct ieee80211_tx_data tx;
 	struct ieee80211_sub_if_data *sdata;
 	struct ieee80211_if_ap *bss = NULL;
@@ -2538,7 +2563,6 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw,
 
 	info = IEEE80211_SKB_CB(skb);
 
-	sta = tx.sta;
 	tx.flags |= IEEE80211_TX_PS_BUFFERED;
 	tx.channel = local->hw.conf.channel;
 	info->band = tx.channel->band;
@@ -2558,8 +2582,9 @@ void ieee80211_tx_skb(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
 	skb_set_network_header(skb, 0);
 	skb_set_transport_header(skb, 0);
 
-	/* send all internal mgmt frames on VO */
-	skb_set_queue_mapping(skb, 0);
+	/* Send all internal mgmt frames on VO. Accordingly set TID to 7. */
+	skb_set_queue_mapping(skb, IEEE80211_AC_VO);
+	skb->priority = 7;
 
 	/*
 	 * The other path calling ieee80211_xmit is from the tasklet,
