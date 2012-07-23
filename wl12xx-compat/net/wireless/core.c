@@ -374,6 +374,10 @@ struct wiphy *wiphy_new(const struct cfg80211_ops *ops, int sizeof_priv)
 	INIT_LIST_HEAD(&rdev->bss_list);
 	INIT_WORK(&rdev->scan_done_wk, __cfg80211_scan_done);
 	INIT_WORK(&rdev->sched_scan_results_wk, __cfg80211_sched_scan_results);
+#ifdef CONFIG_CFG80211_WEXT
+	rdev->wiphy.wext = &cfg80211_wext_handler;
+#endif
+
 	device_initialize(&rdev->wiphy.dev);
 	rdev->wiphy.dev.class = &ieee80211_class;
 	rdev->wiphy.dev.platform_data = rdev;
@@ -488,6 +492,14 @@ int wiphy_register(struct wiphy *wiphy)
 	int i;
 	u16 ifmodes = wiphy->interface_modes;
 
+	if (WARN_ON((wiphy->wowlan.flags & WIPHY_WOWLAN_GTK_REKEY_FAILURE) &&
+		    !(wiphy->wowlan.flags & WIPHY_WOWLAN_SUPPORTS_GTK_REKEY)))
+		return -EINVAL;
+
+	if (WARN_ON(wiphy->ap_sme_capa &&
+		    !(wiphy->flags & WIPHY_FLAG_HAVE_AP_SME)))
+		return -EINVAL;
+
 	if (WARN_ON(wiphy->addresses && !wiphy->n_addresses))
 		return -EINVAL;
 
@@ -588,7 +600,7 @@ int wiphy_register(struct wiphy *wiphy)
 	}
 
 	/* set up regulatory info */
-	wiphy_update_regulatory(wiphy, NL80211_REGDOM_SET_BY_CORE);
+	regulatory_update(wiphy, NL80211_REGDOM_SET_BY_CORE);
 
 	list_add_rcu(&rdev->list, &cfg80211_rdev_list);
 	cfg80211_rdev_list_generation++;
@@ -622,6 +634,9 @@ int wiphy_register(struct wiphy *wiphy)
 	if (res)
 		goto out_rm_dev;
 
+	rtnl_lock();
+	rdev->wiphy.registered = true;
+	rtnl_unlock();
 	return 0;
 
 out_rm_dev:
@@ -652,6 +667,10 @@ EXPORT_SYMBOL(wiphy_rfkill_stop_polling);
 void wiphy_unregister(struct wiphy *wiphy)
 {
 	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
+
+	rtnl_lock();
+	rdev->wiphy.registered = false;
+	rtnl_unlock();
 
 	rfkill_unregister(rdev->rfkill);
 
@@ -823,15 +842,6 @@ static int cfg80211_netdev_notifier_call(struct notifier_block * nb,
 		wdev->sme_state = CFG80211_SME_IDLE;
 		mutex_unlock(&rdev->devlist_mtx);
 #ifdef CONFIG_CFG80211_WEXT
-#ifdef CONFIG_WIRELESS_EXT
-		if (!dev->wireless_handlers)
-			dev->wireless_handlers = &cfg80211_wext_handler;
-#else
-		printk_once(KERN_WARNING "cfg80211: wext will not work because "
-			    "kernel was compiled with CONFIG_WIRELESS_EXT=n. "
-			    "Tools using wext interface, like iwconfig will "
-			    "not work.\n");
-#endif
 		wdev->wext.default_key = -1;
 		wdev->wext.default_mgmt_key = -1;
 		wdev->wext.connect.auth_type = NL80211_AUTHTYPE_AUTOMATIC;

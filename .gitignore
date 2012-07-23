@@ -25,6 +25,7 @@
 *.elf
 *.bin
 *.gz
+compat_autoconf.h
 
 #
 # Top-level generic files

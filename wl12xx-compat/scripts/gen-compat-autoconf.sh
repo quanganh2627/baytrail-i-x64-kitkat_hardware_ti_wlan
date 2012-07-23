@@ -1,5 +1,5 @@
 #!/bin/bash
-#
+# 
 # Copyright 2007	Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
 #
 # Use this to parse a small .config equivalent looking file to generate
@@ -38,9 +38,9 @@ KREL=$(cat $KERNEL_RELEASE | tail -1)
 DATE=$(date)
 
 # Defines a CONFIG_ option if not defined yet, this helps respect
-# linux/autoconf.h
+# linux/autoconf.h 
 function define_config {
-	VAR=$1
+	VAR=$1	
 	VALUE=$2
 	case $VALUE in
 	n) # Try to undefine it
@@ -133,7 +133,7 @@ cat <<EOF
 #define COMPAT_AUTOCONF_INCLUDED
 /*
  * Automatically generated C config: don't edit
- * $DATE
+ * $DATE 
  * compat-wireless-2.6: $CREL
  * linux-2.6: $KREL
  */
@@ -148,11 +148,11 @@ kernel_version_req $OLDEST_KERNEL_SUPPORTED
 for i in $(egrep '^CONFIG_|^ifdef CONFIG_|^ifndef CONFIG_|^endif #CONFIG_|^else #CONFIG_' $COMPAT_CONFIG | sed 's/ /+/'); do
 	case $i in
 	'ifdef+CONFIG_'* )
-		echo "#$i" | sed -e 's/+/ /' -e 's/\(ifdef CONFIG_COMPAT_KERNEL_\)\([0-9]*\)/if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,\2))/' -e 's/\(#ifdef \)\(CONFIG_[^:space:]*\)/#if defined(\2) || defined(\2_MODULE)/'
+		echo "#$i" | sed -e 's/+/ /' -e 's/\(ifdef CONFIG_COMPAT_KERNEL_3_\)\([0-9]*\)/if (LINUX_VERSION_CODE < KERNEL_VERSION(3,\2,0))/' -e 's/\(ifdef CONFIG_COMPAT_KERNEL_2_6_\)\([0-9]*\)/if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,\2))/' -e 's/\(ifdef CONFIG_COMPAT_RHEL_\)\([0-9]*\)_\([0-9]*\)/if (defined(RHEL_MAJOR) \&\& RHEL_MAJOR == \2 \&\& RHEL_MINOR >= \3)/' -e 's/\(#ifdef \)\(CONFIG_[^:space:]*\)/#if defined(\2) || defined(\2_MODULE)/'
 		continue
 		;;
 	'ifndef+CONFIG_'* )
-		echo "#$i" | sed -e 's/+/ /' -e 's/\(ifndef CONFIG_COMPAT_KERNEL_\)\([0-9]*\)/if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,\2))/' -e 's/\(#ifndef \)\(CONFIG_[^:space:]*\)/#if !defined(\2) && !defined(\2_MODULE)/'
+		echo "#$i" | sed -e 's/+/ /' -e 's/\(ifndef CONFIG_COMPAT_KERNEL_3_\)\([0-9]*\)/if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,\2,0))/' -e 's/\(ifndef CONFIG_COMPAT_KERNEL_2_6_\)\([0-9]*\)/if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,\2))/' -e 's/\(ifndef CONFIG_COMPAT_RHEL_\)\([0-9]*\)_\([0-9]*\)/if (!defined(RHEL_MAJOR) || RHEL_MAJOR != \2 || RHEL_MINOR < \3)/' -e 's/\(#ifndef \)\(CONFIG_[^:space:]*\)/#if !defined(\2) \&\& !defined(\2_MODULE)/'
 		continue
 		;;
 	'else+#CONFIG_'* | 'endif+#CONFIG_'* )
@@ -184,8 +184,9 @@ done
 # Deal with special cases. CONFIG_MAC80211_QOS is such a case.
 # We handle this specially for different kernels we support.
 if [ -f $KLIB_BUILD/Makefile ]; then
-	SUBLEVEL=$(make -s -C $KLIB_BUILD kernelversion | sed -n 's/^2\.6\.\([0-9]\+\).*/\1/p')
-	if [ ${SUBLEVEL:=40} -le 22 ]; then
+	MAJORLEVEL=$(make -C $KLIB_BUILD kernelversion | sed -n 's/^\([0-9]\)\..*/\1/p')
+	SUBLEVEL=$(make -C $KLIB_BUILD kernelversion | sed -n 's/^\(2\.6\|[3-9]\)\.\([0-9]\+\).*/\2/p')
+	if [ $MAJORLEVEL -eq 2 -a $SUBLEVEL -le 22 ]; then
 		define_config CONFIG_MAC80211_QOS y
 	else # kernel >= 2.6.23
 		# CONFIG_MAC80211_QOS on these kernels requires

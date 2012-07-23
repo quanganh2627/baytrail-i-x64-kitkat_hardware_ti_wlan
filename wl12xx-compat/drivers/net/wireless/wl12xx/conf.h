@@ -140,7 +140,7 @@ enum {
 	CONF_SG_ACL_BT_SLAVE_MAX_EDR,
 
 	/*
-	 * The maximum time WLAN can gain the antenna for
+	 * The maximum time WLAN can gain the antenna
 	 * in WLAN PSM / BT master/slave BR
 	 *
 	 * Range: 0 - 255 (ms)
@@ -149,7 +149,7 @@ enum {
 	CONF_SG_ACL_WLAN_PS_SLAVE_BR,
 
 	/*
-	 * The maximum time WLAN can gain the antenna for
+	 * The maximum time WLAN can gain the antenna
 	 * in WLAN PSM / BT master/slave EDR
 	 *
 	 * Range: 0 - 255 (ms)
@@ -157,7 +157,7 @@ enum {
 	CONF_SG_ACL_WLAN_PS_MASTER_EDR,
 	CONF_SG_ACL_WLAN_PS_SLAVE_EDR,
 
-	/* ??? */
+	/* TODO: explain these values */
 	CONF_SG_ACL_WLAN_ACTIVE_MASTER_MIN_BR,
 	CONF_SG_ACL_WLAN_ACTIVE_MASTER_MAX_BR,
 	CONF_SG_ACL_WLAN_ACTIVE_SLAVE_MIN_BR,
@@ -222,7 +222,7 @@ enum {
 	 */
 	CONF_SG_PASSIVE_SCAN_DURATION_FACTOR_HV3,
 
-	/* ??? */
+	/* TODO: explain these values */
 	CONF_SG_CONSECUTIVE_HV3_IN_PASSIVE_SCAN,
 	CONF_SG_BCN_HV3_COLLISION_THRESH_IN_PASSIVE_SCAN,
 	CONF_SG_TX_RX_PROTECTION_BWIDTH_IN_PASSIVE_SCAN,
@@ -242,7 +242,7 @@ enum {
 	CONF_SG_ANTENNA_CONFIGURATION,
 
 	/*
-	 * The threshold (percent) of max consequtive beacon misses before
+	 * The threshold (percent) of max consecutive beacon misses before
 	 * increasing priority of beacon reception.
 	 *
 	 * Range: 0 - 100 (%)
@@ -281,11 +281,11 @@ enum {
 	 */
 	CONF_SG_ADAPTIVE_RXT_TXT,
 
-	/* ??? */
+	/* TODO: explain this value */
 	CONF_SG_GENERAL_USAGE_BIT_MAP,
 
 	/*
-	 * Number of consequent BT voice frames not interrupted by WLAN
+	 * Number of consecutive BT voice frames not interrupted by WLAN
 	 *
 	 * Range: 0 - 100
 	 */
@@ -316,6 +316,10 @@ enum {
 	CONF_AP_CONNECTION_PROTECTION_TIME,
 	CONF_AP_BT_ACL_VAL_BT_SERVE_TIME,
 	CONF_AP_BT_ACL_VAL_WL_SERVE_TIME,
+
+	/* CTS Diluting params */
+	CONF_SG_CTS_DILUTED_BAD_RX_PACKETS_TH,
+	CONF_SG_CTS_CHOP_IN_DUAL_ANT_SCO_MASTER,
 
 	CONF_SG_TEMP_PARAM_1,
 	CONF_SG_TEMP_PARAM_2,
@@ -428,7 +432,7 @@ struct conf_rx_settings {
 					CONF_HW_BIT_RATE_2MBPS)
 #define CONF_TX_RATE_RETRY_LIMIT       10
 
-/* p2p_go shouldn't use 11b rates */
+/* basic rates for p2p operations (probe req/resp, etc.) */
 #define CONF_TX_RATE_MASK_BASIC_P2P    (CONF_HW_BIT_RATE_6MBPS | \
 	CONF_HW_BIT_RATE_12MBPS | CONF_HW_BIT_RATE_24MBPS)
 
@@ -444,6 +448,10 @@ struct conf_rx_settings {
 	CONF_HW_BIT_RATE_18MBPS | CONF_HW_BIT_RATE_24MBPS |      \
 	CONF_HW_BIT_RATE_36MBPS | CONF_HW_BIT_RATE_48MBPS |      \
 	CONF_HW_BIT_RATE_54MBPS)
+
+#define CONF_TX_CCK_RATES  (CONF_HW_BIT_RATE_1MBPS |		\
+	CONF_HW_BIT_RATE_2MBPS | CONF_HW_BIT_RATE_5_5MBPS |	\
+	CONF_HW_BIT_RATE_11MBPS)
 
 #define CONF_TX_OFDM_RATES (CONF_HW_BIT_RATE_6MBPS |             \
 	CONF_HW_BIT_RATE_12MBPS | CONF_HW_BIT_RATE_24MBPS |      \
@@ -463,12 +471,10 @@ struct conf_rx_settings {
 #define CONF_TX_AP_DEFAULT_MGMT_RATES  (CONF_HW_BIT_RATE_1MBPS | \
 	CONF_HW_BIT_RATE_2MBPS | CONF_HW_BIT_RATE_5_5MBPS)
 
-/*
- * Default rates for working as IBSS. use 11b rates
- */
+/* default rates for working as IBSS (11b and OFDM) */
 #define CONF_TX_IBSS_DEFAULT_RATES  (CONF_HW_BIT_RATE_1MBPS |       \
 		CONF_HW_BIT_RATE_2MBPS | CONF_HW_BIT_RATE_5_5MBPS | \
-		CONF_HW_BIT_RATE_11MBPS);
+		CONF_HW_BIT_RATE_11MBPS | CONF_TX_OFDM_RATES);
 
 struct conf_tx_rate_class {
 
@@ -527,7 +533,7 @@ enum conf_tx_ac {
 	CONF_TX_AC_VI = 2,         /* video */
 	CONF_TX_AC_VO = 3,         /* voice */
 	CONF_TX_AC_CTS2SELF = 4,   /* fictitious AC, follows AC_VO */
-	CONF_TX_AC_ANY_TID = 0x1f
+	CONF_TX_AC_ANY_TID = 0xff
 };
 
 struct conf_tx_ac_category {
@@ -839,7 +845,7 @@ struct conf_conn_settings {
 	struct conf_bcn_filt_rule bcn_filt_ie[CONF_MAX_BCN_FILT_IE_COUNT];
 
 	/*
-	 * The number of consequtive beacons to lose, before the firmware
+	 * The number of consecutive beacons to lose, before the firmware
 	 * becomes out of synch.
 	 *
 	 * Range: u32
@@ -854,6 +860,22 @@ struct conf_conn_settings {
 	 * Range: u32
 	 */
 	u32 bss_lose_timeout;
+
+	/*
+	 * Max time (in msec) between beacon loss events in which they are still
+	 * considered consecutive (and a new message won't be generated)
+	 *
+	 * Range: u32
+	 */
+	 u32 cons_bcn_loss_time;
+
+	/*
+	 * Max handling time (in msec) for beacon loss events, before a connection
+	 * loss event will be sent
+	 *
+	 * Range u32
+	 */
+	 u32 max_bcn_loss_time;
 
 	/*
 	 * Beacon receive timeout.
@@ -877,18 +899,11 @@ struct conf_conn_settings {
 	u8 rx_broadcast_in_ps;
 
 	/*
-	 * Consequtive PS Poll failures before sending event to driver
+	 * Consecutive PS Poll failures before sending event to driver
 	 *
 	 * Range: u8
 	 */
 	u8 ps_poll_threshold;
-
-	/*
-	 * PS Poll failure recovery ACTIVE period length
-	 *
-	 * Range: u32 (ms)
-	 */
-	u32 ps_poll_recovery_period;
 
 	/*
 	 * Configuration of signal average weights.
@@ -936,6 +951,18 @@ struct conf_conn_settings {
 	 * Range 0 - 255
 	 */
 	u8 psm_entry_nullfunc_retries;
+
+	/*
+	 * Specifies the dynamic PS timeout in ms that will be used
+	 * by the FW when in AUTO_PS mode
+	 */
+	u16 dynamic_ps_timeout;
+
+	/*
+	 * Specifies whether dynamic PS should be disabled and PSM forced.
+	 * This is required for certain WiFi certification tests.
+	 */
+	u8 forced_ps;
 
 	/*
 	 *
@@ -1071,17 +1098,44 @@ struct conf_scan_settings {
 	 */
 	u16 num_probe_reqs;
 
+	/*
+	 * Scan trigger (split scan) timeout. The FW will split the scan
+	 * operation into slices of the given time and allow the FW to schedule
+	 * other tasks in between.
+	 *
+	 * Range: u32 Microsecs
+	 */
+	u32 split_scan_timeout;
 };
 
 struct conf_sched_scan_settings {
-	/* minimum time to wait on the channel for active scans (in TUs) */
-	u16 min_dwell_time_active;
+	/*
+	 * The base time to wait on the channel for active scans (in TU/1000).
+	 * The minimum dwell time is calculated according to this:
+	 * min_dwell_time = base + num_of_probes_to_be_sent * delta_per_probe
+	 * The maximum dwell time is calculated according to this:
+	 * max_dwell_time = min_dwell_time + max_dwell_time_delta
+	 */
+	u32 base_dwell_time;
 
-	/* maximum time to wait on the channel for active scans (in TUs) */
-	u16 max_dwell_time_active;
+	/*
+	 * The delta between the min dwell time and max dwell time for
+	 * active scans (in TU/1000s). The max dwell time is used by the FW once
+	 * traffic is detected on the channel.
+	 */
+	u32 max_dwell_time_delta;
 
-	/* time to wait on the channel for passive scans (in TUs) */
+	/* Delta added to min dwell time per each probe in 2.4 GHz (TU/1000) */
+	u32 dwell_time_delta_per_probe;
+
+	/* Delta added to min dwell time per each probe in 5 GHz (TU/1000) */
+	u32 dwell_time_delta_per_probe_5;
+
+	/* time to wait on the channel for passive scans (in TU/1000) */
 	u32 dwell_time_passive;
+
+	/* time to wait on the channel for DFS scans (in TU/1000) */
+	u32 dwell_time_dfs;
 
 	/* number of probe requests to send on each channel in active scans */
 	u8 num_probe_reqs;
@@ -1114,7 +1168,8 @@ struct conf_rf_settings {
 };
 
 struct conf_ht_setting {
-	u16 tx_ba_win_size;
+	u8 rx_ba_win_size;
+	u8 tx_ba_win_size;
 	u16 inactivity_timeout;
 
 	/* bitmap of enabled TIDs for TX BA sessions */
@@ -1203,39 +1258,6 @@ struct conf_rx_streaming_settings {
 	u8 always;
 };
 
-#define CONF_RATE_RETRY_POLICY_LEN 13
-struct conf_rate_policy_settings {
-	u16 rate_retry_score;
-	u16 per_add;
-	u16 per_th1;
-	u16 per_th2;
-	u16 max_per;
-	u8 inverse_curiosity_factor;
-	u8 tx_fail_low_th;
-	u8 tx_fail_high_th;
-	u8 per_alpha_shift;
-	u8 per_add_shift;
-	u8 per_beta1_shift;
-	u8 per_beta2_shift;
-	u8 rate_check_up;
-	u8 rate_check_down;
-	u8 rate_retry_policy[CONF_RATE_RETRY_POLICY_LEN];
-};
-
-struct conf_hangover_settings {
-	u32 recover_time;
-	u8 hangover_period;
-	u8 dynamic_mode;
-	u8 early_termination_mode;
-	u8 max_period;
-	u8 min_period;
-	u8 increase_delta;
-	u8 decrease_delta;
-	u8 quiet_time;
-	u8 increase_time;
-	u8 window_size;
-};
-
 struct conf_fwlog {
 	/* Continuous or on-demand */
 	u8 mode;
@@ -1263,6 +1285,39 @@ struct conf_fwlog {
 	u8 read_panic;
 };
 
+#define ACX_RATE_MGMT_NUM_OF_RATES 13
+struct conf_rate_policy_settings {
+	u16 rate_retry_score;
+	u16 per_add;
+	u16 per_th1;
+	u16 per_th2;
+	u16 max_per;
+	u8 inverse_curiosity_factor;
+	u8 tx_fail_low_th;
+	u8 tx_fail_high_th;
+	u8 per_alpha_shift;
+	u8 per_add_shift;
+	u8 per_beta1_shift;
+	u8 per_beta2_shift;
+	u8 rate_check_up;
+	u8 rate_check_down;
+	u8 rate_retry_policy[ACX_RATE_MGMT_NUM_OF_RATES];
+};
+
+struct conf_hangover_settings {
+	u32 recover_time;
+	u8 hangover_period;
+	u8 dynamic_mode;
+	u8 early_termination_mode;
+	u8 max_period;
+	u8 min_period;
+	u8 increase_delta;
+	u8 decrease_delta;
+	u8 quiet_time;
+	u8 increase_time;
+	u8 window_size;
+};
+
 struct conf_drv_settings {
 	struct conf_sg_settings sg;
 	struct conf_rx_settings rx;
@@ -1280,9 +1335,9 @@ struct conf_drv_settings {
 	struct conf_fm_coex fm_coex;
 	struct conf_rx_streaming_settings rx_streaming;
 	struct conf_fwlog fwlog;
-	u8 hci_io_ds;
 	struct conf_rate_policy_settings rate;
 	struct conf_hangover_settings hangover;
+	u8 hci_io_ds;
 };
 
 #endif

@@ -11,6 +11,7 @@
 #include <linux/kernel.h>
 #include <linux/rtnetlink.h>
 #include <linux/slab.h>
+#include <linux/module.h>
 #include "rate.h"
 #include "ieee80211_i.h"
 #include "debugfs.h"
@@ -23,7 +24,7 @@ struct rate_control_alg {
 static LIST_HEAD(rate_ctrl_algs);
 static DEFINE_MUTEX(rate_ctrl_mutex);
 
-static char *ieee80211_default_rc_algo = CONFIG_COMPAT_MAC80211_RC_DEFAULT;
+static char *ieee80211_default_rc_algo = CONFIG_MAC80211_RC_DEFAULT;
 module_param(ieee80211_default_rc_algo, charp, 0644);
 MODULE_PARM_DESC(ieee80211_default_rc_algo,
 		 "Default rate control algorithm for mac80211 to use");
@@ -119,8 +120,8 @@ ieee80211_rate_control_ops_get(const char *name)
 		ops = ieee80211_try_rate_control_ops_get(ieee80211_default_rc_algo);
 
 	/* try built-in one if specific alg requested but not found */
-	if (!ops && strlen(CONFIG_COMPAT_MAC80211_RC_DEFAULT))
-		ops = ieee80211_try_rate_control_ops_get(CONFIG_COMPAT_MAC80211_RC_DEFAULT);
+	if (!ops && strlen(CONFIG_MAC80211_RC_DEFAULT))
+		ops = ieee80211_try_rate_control_ops_get(CONFIG_MAC80211_RC_DEFAULT);
 	kparam_unblock_sysfs_write(ieee80211_default_rc_algo);
 
 	return ops;
@@ -199,7 +200,7 @@ static void rate_control_release(struct kref *kref)
 	kfree(ctrl_ref);
 }
 
-static bool rc_no_data_or_no_ack(struct ieee80211_tx_rate_control *txrc)
+static bool rc_no_data_or_no_ack_use_min(struct ieee80211_tx_rate_control *txrc)
 {
 	struct sk_buff *skb = txrc->skb;
 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
@@ -208,7 +209,9 @@ static bool rc_no_data_or_no_ack(struct ieee80211_tx_rate_control *txrc)
 
 	fc = hdr->frame_control;
 
-	return (info->flags & IEEE80211_TX_CTL_NO_ACK) || !ieee80211_is_data(fc);
+	return (info->flags & (IEEE80211_TX_CTL_NO_ACK |
+			       IEEE80211_TX_CTL_USE_MINRATE)) ||
+		!ieee80211_is_data(fc);
 }
 
 static void rc_send_low_broadcast(s8 *idx, u32 basic_rates,
@@ -262,7 +265,7 @@ bool rate_control_send_low(struct ieee80211_sta *sta,
 	struct ieee80211_supported_band *sband = txrc->sband;
 	int mcast_rate;
 
-	if (!sta || !priv_sta || rc_no_data_or_no_ack(txrc)) {
+	if (!sta || !priv_sta || rc_no_data_or_no_ack_use_min(txrc)) {
 		if ((sband->band != IEEE80211_BAND_2GHZ) ||
 		    !(info->flags & IEEE80211_TX_CTL_NO_CCK_RATE))
 			info->control.rates[0].idx =

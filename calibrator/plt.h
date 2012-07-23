@@ -2,7 +2,7 @@
 #define __PLT_H
 
 #ifdef ANDROID
-#define CURRENT_NVS_NAME	"/data/misc/firmware/ti-connectivity/wl12xx-nvs.bin"
+#define CURRENT_NVS_NAME	"/data/misc/firmware/ti-connectivity/wl1271-nvs.bin"
 #define INSMOD_PATH		"/system/bin/insmod"
 #define RMMOD_PATH		"/system/bin/rmmod"
 #else
@@ -124,6 +124,9 @@ enum wl1271_tm_commands {
 	WL1271_TM_CMD_CONFIGURE,
 	WL1271_TM_CMD_NVS_PUSH,
 	WL1271_TM_CMD_SET_PLT_MODE,
+	WL1271_TM_CMD_RECOVER,
+	WL1271_TM_CMD_GET_MAC,
+
 	__WL1271_TM_CMD_AFTER_LAST
 };
 
