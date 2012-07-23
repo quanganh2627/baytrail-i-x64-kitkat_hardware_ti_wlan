@@ -1,0 +1,6 @@
+killall -9 udhcpd
+killall -9 hostapd
+ifconfig tiap0 down
+rmmod tiap_drv
+
+

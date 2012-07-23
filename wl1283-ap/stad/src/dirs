@@ -1,0 +1,12 @@
+
+DIRS=\
+Application \
+AirLink_Managment \
+Connection_Managment \
+Ctrl_Interface \
+Data_link \
+RolesAndLinks \
+Sta_Management \
+
+OPTIONAL_DIRS=\
+CCX\

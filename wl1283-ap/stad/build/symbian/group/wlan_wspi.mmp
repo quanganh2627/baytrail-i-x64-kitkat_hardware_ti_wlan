@@ -1,0 +1,675 @@
+// wlan_wspi.mmp
+//
+// Copyright (c) 2000 Symbian Ltd.  All rights reserved.
+
+// using relative paths for sourcepath and user includes
+
+TARGET        wlan_wspi.dll
+TARGETTYPE    dll
+CAPABILITY    ALL -TCB
+UID           0x1000008d 0x10004268
+
+
+macro  BOARD=CRTWIPP PLATFORM=1251 RADIO_WBR=1 
+macro __BYTE_ORDER_LITTLE_ENDIAN INCLUDE_DEFRAGMENTATION CONFIGURE_BSS_TYPE_STA TNETW1150=1 TNETW1251=1
+macro HOST_COMPILE FW_RUNNING_AS_STA
+macro PERIODIC_WAKEUP
+macro TIWLN_MAJOR_VERSION=5 TIWLN_MINOR_VERSION=1
+macro TIWLAN_OMAP1610 NOT_SUPPORT_08_BIT_ACCESS_COMMAND FOUR_ALIGNMENT
+
+#define CCX_MODULE_INCLUDED
+#define DEBUG
+#define INTR
+#define WSPI
+
+#if defined (DEBUG)
+macro TI_DBG_LOG TI_DBG INON_DBG CORE_TEST REPORT_LOG POWER_MGR_DEBUG 
+#else
+macro SUPPRESS_REPORTS
+#endif
+
+
+#if !defined(INTR)
+macro PRIODIC_INTERRUPT
+#endif	 
+
+
+#if defined (WSPI)
+macro HW_ACCESS_WSPI
+#else
+macro HW_ACCESS_SDIO USE_SYNC_API USE_RECOVERY
+#endif
+
+#define CCX_INCLUDED
+//#define CORE_ADAPTCB_INCLUDED
+
+#if (RADIO_TYPE == DCR)
+macro RADIO_DCR=1
+#else
+macro  RADIO_WBR=1
+#endif
+
+
+#if defined (INFO)
+  macro OS_INFO_MESSAGES INIT_MESSAGES
+#endif
+
+
+#if defined (SUPPRESS_REPORTS)
+macro REPORT_LOG
+#endif
+
+
+
+//TNETW_INCS
+
+USERINCLUDE   ..\..\..\..\common\inc
+USERINCLUDE   ..\..\..\..\common\src\inc
+USERINCLUDE   ..\..\..\..\common\src\utils
+USERINCLUDE   ..\..\..\..\common\src\hal\inc
+USERINCLUDE   ..\..\..\..\common\src\hal\TnetwServices
+USERINCLUDE   ..\..\..\..\common\src\TNETW_Driver\Export_Inc
+USERINCLUDE   ..\..\..\..\common\src\TNETW_Driver\Data_Srv\inc
+USERINCLUDE   ..\..\..\..\common\src\TNETW_Driver\FW_Transfer\inc
+USERINCLUDE   ..\..\..\..\common\src\TNETW_Driver\Ctrl\Export_Inc
+USERINCLUDE   ..\..\..\..\common\src\TNETW_Driver\MacServices\inc
+USERINCLUDE   ..\..\..\..\common\src\TNETW_Driver
+USERINCLUDE   ..\..\..\..\common\src\TNETW_Driver\MacServices\Export_Inc
+USERINCLUDE   ..\..\..\..\common\src\TNETW_Driver\MacServices\src\ScanServer
+USERINCLUDE   ..\..\..\..\common\src\TNETW_Driver\MacServices\src\PowerSaveServer
+USERINCLUDE   ..\..\..\..\common\src\TNETW_Driver\MacServices\src\MeasurementSRV
+USERINCLUDE   ..\..\..\..\common\src\TNETW_Driver\TNETWIF\Export_Inc
+USERINCLUDE   ..\..\..\..\common\src\TNETW_Driver\TNETWIF\Inc
+USERINCLUDE   ..\..\..\..\common\src\hal\TnetwServices\TNETW1251
+
+
+USERINCLUDE   ..\..\..\..\common\src\hal\hl_data
+USERINCLUDE   ..\..\..\..\common\src\hal\hl_ctrl
+USERINCLUDE   ..\..\..\..\common\src\hal\hw_ctrl
+USERINCLUDE   ..\..\..\..\common\src\hal\security
+USERINCLUDE   ..\..\..\..\common\src\hal\security\Privacy
+USERINCLUDE   ..\..\..\..\common\src\hal\security\Privacy\ICV
+USERINCLUDE   ..\..\..\..\common\src\hal\security\Privacy\IV
+USERINCLUDE   ..\..\..\..\common\src\hal\security\Privacy\IV\WEP
+USERINCLUDE   ..\..\..\..\common\src\hal\security\Privacy\MIC
+USERINCLUDE   ..\..\..\..\common\src\hal\security\Privacy\MIC\Michael
+USERINCLUDE   ..\..\..\..\common\src\hal\Export_Inc
+USERINCLUDE   ..\..\..\..\common\src\hal\FirmwareApi
+USERINCLUDE   ..\..\..\..\common\src\BusAccess\Shm_Common
+USERINCLUDE   ..\..\..\..\common\src\BusAccess\Export_Inc
+
+
+USERINCLUDE   ..\..\..\..\common\src\hal\security\Privacy\Seq
+USERINCLUDE   ..\..\..\..\common\src\hal\security\Privacy\MIC\MMH
+USERINCLUDE   ..\..\..\..\common\src\hal\security\Privacy\Seq\CCX 
+USERINCLUDE   ..\..\..\..\common\src\hal\security\CCX
+
+
+#if defined (CCX_INCLUDED)
+USERINCLUDE   ..\..\..\..\common\inc\CCX
+#endif
+
+
+//CORE_INCS
+
+USERINCLUDE   ..\..\..\..\common\src\core\inc
+USERINCLUDE   ..\..\..\..\common\src\core\ExpInc  
+USERINCLUDE   ..\..\..\..\common\src\core\data_ctrl\Tx 
+USERINCLUDE   ..\..\..\..\common\src\core\data_ctrl\Ctrl 
+USERINCLUDE   ..\..\..\..\common\src\core\data_ctrl\Ctrl\TrafficMonitor 
+USERINCLUDE   ..\..\..\..\common\src\core\data_ctrl\Ctrl\4X 
+USERINCLUDE   ..\..\..\..\common\src\core\data_ctrl\Rx 
+USERINCLUDE   ..\..\..\..\common\src\core\Core_Adapt\Export_Inc 
+USERINCLUDE   ..\..\..\..\common\src\core\EvHandler 
+USERINCLUDE   ..\..\..\..\common\src\core\sme\Inc 
+USERINCLUDE   ..\..\..\..\common\src\core\sme\smeSm
+USERINCLUDE   ..\..\..\..\common\src\core\sme\siteMgr 
+USERINCLUDE   ..\..\..\..\common\src\core\sme\configMgr 
+USERINCLUDE   ..\..\..\..\common\src\core\sme\conn 
+USERINCLUDE   ..\..\..\..\common\src\core\sme\HealthMonitor 
+USERINCLUDE   ..\..\..\..\common\src\core\srv\inc 
+USERINCLUDE   ..\..\..\..\common\src\core\srv\scr 
+USERINCLUDE   ..\..\..\..\common\src\core\rsn 
+USERINCLUDE   ..\..\..\..\common\src\core\rsn\mainKeysSm 
+USERINCLUDE   ..\..\..\..\common\src\core\rsn\mainKeysSm\keyDerive 
+USERINCLUDE   ..\..\..\..\common\src\core\rsn\mainKeysSm\keyDerive\AES 
+USERINCLUDE   ..\..\..\..\common\src\core\rsn\mainKeysSm\keyDerive\CKIP 
+USERINCLUDE   ..\..\..\..\common\src\core\rsn\mainKeysSm\keyDerive\TKIP 
+USERINCLUDE   ..\..\..\..\common\src\core\rsn\mainKeysSm\keyDerive\WEP 
+USERINCLUDE   ..\..\..\..\common\src\core\rsn\mainKeysSm\keyParser 
+USERINCLUDE   ..\..\..\..\common\src\core\rsn\mainKeysSm\keyParser\External 
+USERINCLUDE   ..\..\..\..\common\src\core\rsn\mainKeysSm\keyParser\Wep 
+USERINCLUDE   ..\..\..\..\common\src\core\rsn\mainKeysSm\keySm 
+USERINCLUDE   ..\..\..\..\common\src\core\rsn\mainKeysSm\keySm\802_1X 
+USERINCLUDE   ..\..\..\..\common\src\core\rsn\mainKeysSm\keySm\None 
+USERINCLUDE   ..\..\..\..\common\src\core\rsn\adm_ctrl\WPA 
+USERINCLUDE   ..\..\..\..\common\src\core\rsn\adm_ctrl\WPA2 
+USERINCLUDE   ..\..\..\..\common\src\core\rsn\adm_ctrl\WEP
+USERINCLUDE   ..\..\..\..\common\src\core\rsn\adm_ctrl\None
+USERINCLUDE   ..\..\..\..\common\src\core\rsn\inc 
+USERINCLUDE   ..\..\..\..\common\src\core\rsn\algorithms 
+USERINCLUDE   ..\..\..\..\common\src\core\rsn\algorithms\aes_alg 
+USERINCLUDE   ..\..\..\..\common\src\core\mlme 
+USERINCLUDE   ..\..\..\..\common\src\core\mlme\Assoc 
+USERINCLUDE   ..\..\..\..\common\src\core\mlme\Auth\open 
+USERINCLUDE   ..\..\..\..\common\src\core\mlme\Auth\shared 
+USERINCLUDE   ..\..\..\..\common\src\Management\QOS\Inc\ 
+USERINCLUDE   ..\..\..\..\common\src\core\NetworkCtrl\inc 
+USERINCLUDE   ..\..\..\..\common\src\Management\AirLink\Measurement 
+USERINCLUDE   ..\..\..\..\common\src\Management\AirLink\Measurement\dot11h 
+USERINCLUDE   ..\..\..\..\common\src\Management\AirLink\inc 
+USERINCLUDE   ..\..\..\..\common\src\Management\scan\inc 
+USERINCLUDE   ..\..\..\..\common\src\Management\SoftGemini\inc 
+USERINCLUDE   ..\..\..\..\common\src\Management\scan\scanCncn 
+USERINCLUDE   ..\..\..\..\common\src\Management\SoftGemini\src 
+USERINCLUDE   ..\..\..\..\common\src\core\NetworkCtrl\RegulatoryDomain 
+USERINCLUDE   ..\..\..\..\common\src\Management\PowerMgr
+USERINCLUDE   ..\..\..\..\common\src\Application\inc 
+USERINCLUDE   ..\..\..\..\common\src\Application\\ExpInc 
+USERINCLUDE   ..\..\..\..\common\src\Application\ScanMngr 
+USERINCLUDE   ..\..\..\..\common\src\Management\apConn 
+USERINCLUDE   ..\..\..\..\common\src\core\currBss 
+USERINCLUDE   ..\..\..\..\common\src\driver_bypass
+USERINCLUDE   ..\..\..\..\pform\linux\debug_module\inc
+
+#if defined (DEBUG)
+USERINCLUDE   ..\..\..\..\Test\SME\Dbg
+USERINCLUDE   ..\..\..\..\Test\MemMngr
+USERINCLUDE   ..\..\..\..\Test\QOS\Dbg
+USERINCLUDE   ..\..\..\..\Test\DataCtrl\Dbg
+USERINCLUDE   ..\..\..\..\Test\RSN\Dbg
+USERINCLUDE   ..\..\..\..\Test\ScanCncn
+USERINCLUDE   ..\..\..\..\Test\PowerMgr
+USERINCLUDE   ..\..\..\..\Test\ScanMngr
+USERINCLUDE   ..\..\..\..\Test\Roaming\Dbg
+USERINCLUDE   ..\..\..\..\Test\SoftGemini
+USERINCLUDE   ..\..\..\..\Test\HealthMonitor
+USERINCLUDE   ..\..\..\..\Test\report
+USERINCLUDE   ..\..\..\..\Test\SCR
+#endif 
+
+// CORE_INCS_CCX
+
+#if defined(CCX_INCLUDED)
+USERINCLUDE   ..\..\..\..\common\src\core\rsn\adm_ctrl\WEP\CCX 
+USERINCLUDE   ..\..\..\..\common\src\Management\CCX\Inc 
+USERINCLUDE   ..\..\..\..\common\src\Management\AirLink\Measurement\CCX 
+USERINCLUDE   ..\..\..\..\common\src\core\NetworkCtrl\RegulatoryDomain\CCX 
+#endif
+
+
+#if defined (CORE_ADAPTCB_INCLUDED)
+USERINCLUDE   ..\..\..\..\common\src\core\sme\configMgr
+USERINCLUDE   ..\..\..\..\common\src\core\Core_Adapt\Export_Inc
+USERINCLUDE   ..\..\..\..\common\src\core\data_ctrl\Tx
+USERINCLUDE   ..\..\..\..\common\src\core\inc
+USERINCLUDE   ..\..\..\..\common\src\core\data_ctrl\Ctrl\TrafficMonitor
+#endif
+
+//OS_INCS
+
+USERINCLUDE   ..\..\..\..\pform\common\inc
+USERINCLUDE   ..\..\..\..\pform\symbian\inc
+USERINCLUDE   ..\..\..\..\Test
+//USERINCLUDE   ..\..\..\..\common\src\core\EvHandler
+
+
+SYSTEMINCLUDE \Epoc32\include \Epoc32\include\libc
+
+
+//UTIL_SRCS 
+
+SOURCEPATH    ..\..\..\..\common\src\utils
+SOURCE        fsm.c nrfsm.c report.c utils.c bufferPool.c
+
+
+//TNETW_SRCS
+
+SOURCEPATH    ..\..\..\..\common\src\hal\security\Privacy\MIC
+SOURCE        mic.c 
+
+SOURCEPATH    ..\..\..\..\common\src\hal\security\Privacy\MIC\Michael
+SOURCE        michael.c 
+
+SOURCEPATH    ..\..\..\..\common\src\hal\security\Privacy\ICV
+SOURCE        icv.c 
+
+SOURCEPATH    ..\..\..\..\common\src\hal\security\Privacy
+SOURCE        privacy.c 
+
+SOURCEPATH    ..\..\..\..\common\src\hal\security\Privacy\IV
+SOURCE        iv.c 
+
+SOURCEPATH    ..\..\..\..\common\src\hal\security\Privacy\IV\WEP
+SOURCE        ivWep.c 
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver\MacServices\src
+SOURCE        MacServices.c 
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver\MacServices\src\ScanServer
+SOURCE        ScanSrv.c ScanSrvSM.c
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver\MacServices\src\PowerSaveServer
+SOURCE        PowerSrv.c PowerSrvSM.c
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver\MacServices\src\MeasurementSRV
+SOURCE        MeasurementSrv.c MeasurementSrvSM.c measurementSrvDbgPrint.c
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver
+SOURCE        TNETW_Driver.c TNETW_Driver_Tx.c
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver\Ctrl\Cmd_Queue
+SOURCE        CmdQueue.c 
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver\Data_Srv\Tx_HW_Queue
+SOURCE        txHwQueue.c txHwQueueCalc.c 
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver\Data_Srv\Tx_Ctrl_Blk
+SOURCE        txCtrlBlk.c 
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver\FW_Transfer\Cmd_MBox
+SOURCE        CmdMBox.c 
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver\FW_Transfer\Tx_Result
+SOURCE        txResult.c 
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver\FW_Transfer\Tx_Xfer\Slave_Dbl_Buf
+SOURCE        txXfer.c 
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver\FW_Transfer\FwEvent
+SOURCE        FwEvent.c 
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver\FW_Transfer\Rx_Xfer
+SOURCE        RxXfer.c 
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver\FW_Transfer\EventMbox
+SOURCE        eventMbox.c 
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver\MacServices\src\PowerAuthorization
+SOURCE        PowerAuthorization.c 
+
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver\TNETWIF
+SOURCE        TNETWIF.c 
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver\TNETWIF\ELP_Controller
+SOURCE        ElpCtrl.c 
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver\TNETWIF\BusTxn
+SOURCE        whalHwAccess.c 
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver\TNETWIF\TNETWArbiter
+SOURCE        TNETWArb.c TNETWArbSM.c TNETWArb_buffer.c
+
+SOURCEPATH    ..\..\..\..\common\src\hal\hl_ctrl
+SOURCE        whalCtrl.c whalParams.c whalRecovery.c whalRadio.c whalDebug.c
+
+SOURCEPATH    ..\..\..\..\common\src\hal\hl_data
+SOURCE        whalDefrag.c
+
+SOURCEPATH    ..\..\..\..\common\src\BusAccess\Shm_Common
+SOURCE        shmBus.c shmFwCtrl.c shmDebug.c shmUtils.c
+
+SOURCEPATH    ..\..\..\..\common\src\hal\hw_ctrl
+SOURCE        whalHwCtrl.c whalHwMboxConfig.c whalHwMboxCmd.c whalHwMboxCmdBit.c  
+
+SOURCEPATH    ..\..\..\..\common\src\BusAccess\Shm_Common
+SOURCE        whalHwEeprom.c 
+
+SOURCEPATH    ..\..\..\..\common\src\hal\security
+SOURCE        whalSecurity.c whalWep.c whalWpa.c
+
+#if defined (WSPI)
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver\TNETWIF\BusTxn
+SOURCE        wspi.c 
+
+#endif
+
+#if defined (DEBUG)
+
+SOURCEPATH    ..\..\..\..\common\src\BusAccess\Shm_Common
+SOURCE        whalTrace.c 
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver/FW_Transfer/DebugTrace_Xfer
+SOURCE        DebugTraceXfer.c 
+
+#endif
+
+
+#if defined(CCX_INCLUDED)
+
+SOURCEPATH    ..\..\..\..\common\src\hal\security\Privacy\Seq
+SOURCE        seq.c 
+
+SOURCEPATH    ..\..\..\..\common\src\hal\security\Privacy\Seq\CCX
+SOURCE        seqCcx.c 
+
+SOURCEPATH    ..\..\..\..\common\src\hal\security\CCX
+SOURCE        whalCcx.c 
+
+SOURCEPATH    ..\..\..\..\common\src\hal\security\Privacy\MIC\MMH
+SOURCE        mmh.c 
+
+#endif
+
+
+//CORE_SRCS
+
+SOURCEPATH    ..\..\..\..\common\src\driver_bypass
+SOURCE        driver_bypass.c 
+SOURCEPATH    ..\..\..\..\common\src\core\data_ctrl\Tx
+SOURCE        tx.c 
+SOURCEPATH    ..\..\..\..\common\src\core\data_ctrl\Ctrl
+SOURCE        Ctrl.c 
+SOURCEPATH    ..\..\..\..\common\src\core\data_ctrl\Ctrl
+SOURCE        Clsfr.c
+SOURCEPATH    ..\..\..\..\common\src\core\data_ctrl\Ctrl\4X
+SOURCE        Concatenator.c 
+SOURCEPATH    ..\..\..\..\common\src\core\data_ctrl\Ctrl\4X
+SOURCE        DeConcatenator.c 
+SOURCEPATH    ..\..\..\..\common\src\core\data_ctrl\Ctrl\4X
+SOURCE        ackEmulDb.c 
+SOURCEPATH    ..\..\..\..\common\src\core\data_ctrl\Ctrl\4X
+SOURCE        ackEmulUtil.c 
+SOURCEPATH    ..\..\..\..\common\src\core\data_ctrl\Ctrl\4X
+SOURCE        fourX.c 
+SOURCEPATH    ..\..\..\..\common\src\core\data_ctrl\Ctrl\4X
+SOURCE        fourXManager.c 
+SOURCEPATH    ..\..\..\..\common\src\Management\PowerMgr
+SOURCE        PowerMgr.c 
+SOURCEPATH    ..\..\..\..\common\src\Management\PowerMgr
+SOURCE        PowerMgrDbgPrint.c
+SOURCEPATH    ..\..\..\..\common\src\core\data_ctrl\Ctrl
+SOURCE        RateAdaptation.c 
+SOURCEPATH    ..\..\..\..\common\src\core\data_ctrl\Ctrl\TrafficMonitor
+SOURCE        GeneralUtil.c 
+SOURCEPATH    ..\..\..\..\common\src\core\data_ctrl\Ctrl\TrafficMonitor
+SOURCE        TrafficMonitor.c 
+SOURCEPATH    ..\..\..\..\common\src\core\data_ctrl\Rx
+SOURCE        rx.c 
+SOURCEPATH    ..\..\..\..\common\src\core\sme\conn
+SOURCE        conn.c 
+SOURCEPATH    ..\..\..\..\common\src\core\sme\conn
+SOURCE        connIbss.c 
+SOURCEPATH    ..\..\..\..\common\src\core\sme\conn
+SOURCE        connInfra.c 
+SOURCEPATH    ..\..\..\..\common\src\core\sme\configMgr
+SOURCE        configMgr.c 
+SOURCEPATH    ..\..\..\..\common\src\core\sme\smeSm
+SOURCE        smeSmApi.c 
+SOURCEPATH    ..\..\..\..\common\src\core\sme\smeSm
+SOURCE        smeSm.c 
+SOURCEPATH    ..\..\..\..\common\src\core\sme\HealthMonitor
+SOURCE        healthMonitor.c 
+SOURCEPATH    ..\..\..\..\common\src\core\sme\siteMgr
+SOURCE        siteMgr.c 
+SOURCEPATH    ..\..\..\..\common\src\core\sme\siteMgr
+SOURCE        siteHash.c 
+SOURCEPATH    ..\..\..\..\common\src\core\sme\siteMgr
+SOURCE        select.c 
+SOURCEPATH    ..\..\..\..\common\src\core\sme\siteMgr
+SOURCE        templates.c 
+SOURCEPATH    ..\..\..\..\common\src\core\mlme
+SOURCE        mlmeBuilder.c 
+SOURCEPATH    ..\..\..\..\common\src\core\mlme
+SOURCE        mlmeParser.c 
+SOURCEPATH    ..\..\..\..\common\src\core\mlme
+SOURCE        mlmeSm.c 
+SOURCEPATH    ..\..\..\..\common\src\core\mlme\Assoc
+SOURCE        assocSM.c 
+SOURCEPATH    ..\..\..\..\common\src\core\mlme\Auth
+SOURCE        authSm.c 
+SOURCEPATH    ..\..\..\..\common\src\core\mlme\Auth\open
+SOURCE        openAuthSm.c 
+SOURCEPATH    ..\..\..\..\common\src\core\mlme\Auth\shared
+SOURCE        sharedKeyAuthSm.c 
+SOURCEPATH    ..\..\..\..\common\src\core\rsn
+SOURCE        rsn.c 
+SOURCEPATH    ..\..\..\..\common\src\core\rsn\mainSecSm
+SOURCE        mainSecSm.c 
+SOURCEPATH    ..\..\..\..\common\src\core\rsn\mainSecSm\null
+SOURCE        mainSecNull.c 
+SOURCEPATH    ..\..\..\..\common\src\core\rsn\mainSecSm\keysOnly
+SOURCE        mainSecKeysOnly.c 
+SOURCEPATH    ..\..\..\..\common\src\core\rsn\adm_ctrl
+SOURCE        admCtrl.c 
+SOURCEPATH    ..\..\..\..\common\src\core\rsn\adm_ctrl\WEP
+SOURCE        admCtrlWep.c 
+SOURCEPATH    ..\..\..\..\common\src\core\rsn\adm_ctrl\None
+SOURCE        admCtrlNone.c 
+SOURCEPATH    ..\..\..\..\common\src\core\rsn\adm_ctrl\WPA
+SOURCE        admCtrlWpa.c 
+SOURCEPATH    ..\..\..\..\common\src\core\rsn\adm_ctrl\WPA2
+SOURCE        admCtrlWpa2.c 
+SOURCEPATH    ..\..\..\..\common\src\core\srv\scr
+SOURCE        scr.c 
+SOURCEPATH    ..\..\..\..\common\src\core\EvHandler
+SOURCE        EvHandler.c 
+SOURCEPATH    ..\..\..\..\common\src\Management\AirLink\SwitchChannel
+SOURCE        SwitchChannel.c 
+SOURCEPATH    ..\..\..\..\common\src\Management\AirLink\Measurement
+SOURCE        measurementMgr.c 
+SOURCEPATH    ..\..\..\..\common\src\Management\AirLink\Measurement
+SOURCE        measurementMgrSM.c 
+SOURCEPATH    ..\..\..\..\common\src\Management\AirLink\Measurement\dot11h
+SOURCE        spectrumMngmntMgr.c 
+SOURCEPATH    ..\..\..\..\common\src\Management\AirLink\Measurement
+SOURCE        requestHandler.c 
+SOURCEPATH    ..\..\..\..\common\src\Management\scan\scanCncn
+SOURCE        ScanCncn.c 
+SOURCEPATH    ..\..\..\..\common\src\Management\scan\scanCncn
+SOURCE        ScanCncnAppSM.c 
+SOURCEPATH    ..\..\..\..\common\src\Management\scan\scanCncn
+SOURCE        ScanCncnDrvSM.c 
+SOURCEPATH    ..\..\..\..\common\src\Management\scan\scanCncn
+SOURCE        ScanCncnRoamingContSM.c 
+SOURCEPATH    ..\..\..\..\common\src\Management\scan\scanCncn
+SOURCE        ScanCncnRoamingImmedSM.c 
+SOURCEPATH    ..\..\..\..\common\src\Management\scan\scanCncn
+SOURCE        ScanCncnAppApi.c 
+SOURCEPATH    ..\..\..\..\common\src\Management\apConn
+SOURCE        apConn.c 
+SOURCEPATH    ..\..\..\..\common\src\Management\SoftGemini\src
+SOURCE        SoftGemini.c 
+SOURCEPATH    ..\..\..\..\common\src\core\NetworkCtrl\RegulatoryDomain
+SOURCE        regulatoryDomain.c 
+SOURCEPATH    ..\..\..\..\common\src\core\rsn\algorithms\rc4
+SOURCE        rc4_enc.c 
+SOURCEPATH    ..\..\..\..\common\src\core\rsn\algorithms\rc4
+SOURCE        rc4_skey.c 
+SOURCEPATH    ..\..\..\..\common\src\core\rsn\mainKeysSm\keyDerive
+SOURCE        keyDerive.c 
+SOURCEPATH    ..\..\..\..\common\src\core\rsn\mainKeysSm\keyDerive\wep
+SOURCE        keyDeriveWep.c 
+SOURCEPATH    ..\..\..\..\common\src\core\rsn\mainKeysSm\keyDerive\TKIP
+SOURCE        keyDeriveTkip.c 
+SOURCEPATH    ..\..\..\..\common\src\core\rsn\mainKeysSm\keyDerive\AES
+SOURCE        keyDeriveAes.c 
+SOURCEPATH    ..\..\..\..\common\src\core\rsn\mainKeysSm\keyParser
+SOURCE        keyParser.c 
+SOURCEPATH    ..\..\..\..\common\src\core\rsn\mainKeysSm\keySm
+SOURCE        broadcastKeySM.c 
+SOURCEPATH    ..\..\..\..\common\src\core\rsn\mainKeysSm\keySm
+SOURCE        unicastKeySM.c 
+SOURCEPATH    ..\..\..\..\common\src\core\rsn\mainKeysSm\keySm\802_1X
+SOURCE        broadcastKey802_1x.c 
+SOURCEPATH    ..\..\..\..\common\src\core\rsn\mainKeysSm\keySm\802_1X
+SOURCE        unicastKey802_1x.c 
+SOURCEPATH    ..\..\..\..\common\src\core\rsn\mainKeysSm\keySm\None
+SOURCE        broadcastKeyNone.c 
+SOURCEPATH    ..\..\..\..\common\src\core\rsn\mainKeysSm\keySm\None
+SOURCE        unicastKeyNone.c 
+SOURCEPATH    ..\..\..\..\common\src\core\rsn\mainKeysSm\keyParser\External
+SOURCE        keyParserExternal.c 
+SOURCEPATH    ..\..\..\..\common\src\core\rsn\mainKeysSm\keyParser\Wep
+SOURCE        keyParserWep.c 
+SOURCEPATH    ..\..\..\..\common\src\core\rsn\mainKeysSm
+SOURCE        mainKeysSm.c 
+SOURCEPATH    ..\..\..\..\common\src\core\currBss
+SOURCE        currBss.c 
+SOURCEPATH    ..\..\..\..\common\src\Application\ScanMngr
+SOURCE        scanMngr.c 
+SOURCEPATH    ..\..\..\..\common\src\Application\Roaming
+SOURCE        roamingMngr.c 
+SOURCEPATH    ..\..\..\..\common\src\core\rsn\algorithms
+SOURCE        algo.c 
+SOURCEPATH    ..\..\..\..\common\src\core\rsn\algorithms\aes
+SOURCE        aes.c 
+SOURCEPATH    ..\..\..\..\common\src\core\Core_Adapt
+SOURCE        Core_AdaptTx.c 
+SOURCEPATH    ..\..\..\..\common\src\Management\QOS
+SOURCE        qosMngr.c 
+SOURCEPATH    ..\..\..\..\common\src\Management\QOS
+SOURCE        trafficAdmControl.c
+
+#if defined (SUPPORT_4X)
+
+SOURCEPATH    ..\..\..\..\common\src\core\data_ctrl\Ctrl\4X
+SOURCE        Concatenator.c 
+SOURCEPATH    ..\..\..\..\common\src\core\data_ctrl\Ctrl\4X
+SOURCE        DeConcatenator.c 
+SOURCEPATH    ..\..\..\..\common\src\core\data_ctrl\Ctrl\4X
+SOURCE        ackEmulDb.c 
+SOURCEPATH    ..\..\..\..\common\src\core\data_ctrl\Ctrl\4X
+SOURCE        ackEmulUtil.c 
+SOURCEPATH    ..\..\..\..\common\src\core\data_ctrl\Ctrl\4X
+SOURCE        fourX.c 
+SOURCEPATH    ..\..\..\..\common\src\core\data_ctrl\Ctrl\4X
+SOURCE        fourXManager.c
+
+#endif
+
+#if defined (DEBUG)
+
+SOURCEPATH    ..\..\..\..\Test\SME\Dbg
+SOURCE        connDebug.c 
+SOURCEPATH    ..\..\..\..\Test\SME\Dbg
+SOURCE        siteMgrDebug.c 
+SOURCEPATH    ..\..\..\..\Test\DataCtrl\Dbg
+SOURCE        ctrlDbg.c 
+SOURCEPATH    ..\..\..\..\Test\DataCtrl\Dbg
+SOURCE        RxDbg.c 
+SOURCEPATH    ..\..\..\..\Test\DataCtrl\Dbg
+SOURCE        TxDbg.c 
+SOURCEPATH    ..\..\..\..\Test
+SOURCE        debug.c 
+SOURCEPATH    ..\..\..\..\Test\PowerMgr
+SOURCE        PowerMgrDebug.c
+SOURCEPATH    ..\..\..\..\Test\RSN\Dbg
+SOURCE        rsnDbg.c 
+SOURCEPATH    ..\..\..\..\Test\Hal
+SOURCE        whalCtrlDebug.c 
+SOURCEPATH    ..\..\..\..\Test\Measurement\Dbg
+SOURCE        measurementDbg.c 
+SOURCEPATH    ..\..\..\..\Test\ScanCncn
+SOURCE        scanCncnDbg.c 
+SOURCEPATH    ..\..\..\..\Test\QOS\Dbg
+SOURCE        qosMngrDbg.c 
+SOURCEPATH    ..\..\..\..\Test\ScanMngr
+SOURCE        ScanMngrDbg.c 
+SOURCEPATH    ..\..\..\..\Test\Roaming\Dbg
+SOURCE        roamingMgrDebug.c 
+SOURCEPATH    ..\..\..\..\Test\SCR
+SOURCE        scrDbg.c 
+SOURCEPATH    ..\..\..\..\Test\report
+SOURCE        reportdbg.c 
+SOURCEPATH    ..\..\..\..\Test\SoftGemini
+SOURCE        SoftGeminiDbg.c 
+SOURCEPATH    ..\..\..\..\Test\HealthMonitor
+SOURCE        HealthMonitorDbg.c 
+SOURCEPATH    ..\..\..\..\Test\SME\Dbg
+SOURCE        smeDebug.c
+
+#endif
+
+#if defined(CCX_INCLUDED)
+
+SOURCEPATH    ..\..\..\..\common\src\core\rsn\mainKeysSm\keyDerive\CKIP
+SOURCE        keyDeriveCkip.c 
+SOURCEPATH    ..\..\..\..\common\src\core\rsn\adm_ctrl\WEP\CCX
+SOURCE        admCtrlCcx.c 
+SOURCEPATH    ..\..\..\..\common\src\Management\AirLink\Measurement\CCX
+SOURCE        ccxRMMngr.c 
+SOURCEPATH    ..\..\..\..\common\src\Management\AirLink\Measurement\CCX
+SOURCE        ccxTSMngr.c 
+SOURCEPATH    ..\..\..\..\common\src\Management\CCX
+SOURCE        ccxMngr.c 
+SOURCEPATH    ..\..\..\..\common\src\Management\CCX\RogueAp
+SOURCE        rogueAp.c 
+SOURCEPATH    ..\..\..\..\common\src\core\NetworkCtrl\RegulatoryDomain\CCX
+SOURCE        TransmitPowerCcx.c 
+
+#endif
+
+
+#if defined (CORE_ADAPTCB_INCLUDED)
+
+SOURCEPATH    ..\..\..\..\common\src\core\Core_Adapt
+SOURCE        Core_AdaptCB.c
+
+#endif
+
+//PForm
+
+SOURCEPATH    ..\..\..\..\pform\common\src
+SOURCE        osCmd.c 
+SOURCEPATH    ..\..\..\..\pform\common\src
+SOURCE        osUtil.c 
+SOURCEPATH    ..\..\..\..\pform\common\src
+SOURCE        osRgstry.c 
+
+//SOURCEPATH    ..\..\..\..\pform\Symbian\src
+//SOURCEPATH    ..\..\..\..\pform\Symbian\src
+//SOURCE            esta_drv.c 
+SOURCEPATH    ..\..\..\..\pform\Symbian\src
+SOURCE            osapi.c 
+SOURCEPATH    ..\..\..\..\pform\Symbian\src
+SOURCE            osmemapi.c 
+
+#if defined (WSPI)
+SOURCEPATH    ..\..\..\..\pform\Symbian\src
+SOURCE            spi.c 
+
+#else
+SOURCEPATH    ..\..\..\..\pform\Symbian\src
+SOURCE            mmc_omap_api.c 
+SOURCEPATH    ..\..\..\..\pform\Symbian\src
+SOURCE            mmc_tnetw1150_api.c 
+
+#endif
+
+
+    
+SOURCEPATH    ..\..\..\..\pform\Symbian\src
+SOURCE            osRgstry_parser.c 
+SOURCEPATH    ..\..\..\..\pform\Symbian\src
+SOURCE            ipc_k.c 
+//SOURCEPATH    ..\..\..\..\pform\Symbian\src
+//SOURCE            proc_stat.c 
+
+#if defined (STACK_PROFILING_ON)
+//SOURCEPATH    ..\..\..\..\pform\Symbian\src
+//SOURCE            stack_profile.c 
+#endif
+
+#if defined (NO_ARCH_STRCMP)
+//SOURCEPATH    ..\..\..\..\pform\Symbian\src
+//SOURCE            string.c 
+#endif
+
+LIBRARY     estlib.lib euser.lib 
+
+#if defined(WINS)
+
+    deffile ..\bwins\wlan_wspi.def
+
+#elif defined(ARMV5)
+
+    deffile ..\eabi\wlan_wspi.def
+
+#endif
+
+EPOCALLOWDLLDATA
+EXPORTUNFROZEN
+

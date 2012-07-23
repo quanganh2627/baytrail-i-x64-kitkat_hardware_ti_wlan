@@ -1,0 +1,30 @@
+!if 0
+**|     Copyright (c)      2005 Texas Instruments Incorporated           |**
+**|                        ALL RIGHTS RESERVED                           |**
+!endif
+
+TARGETNAME=host_platform_zoom2
+TARGETTYPE=LIBRARY
+RELEASETYPE=OAK
+
+DK_ROOT=../../../..
+
+!INCLUDE $(DK_ROOT)\SOURCES.CMN
+
+INCLUDES= \
+	$(_TARGETPLATROOT)\SRC\CSP\INC; \
+	$(_PLATFORMROOT)\COMMON\SRC\INC; \
+	$(_TARGETPLATROOT)\SRC\CSP\OMAP3430\INC; \
+	$(_TARGETPLATROOT)\SRC\CSP\OMAP\INC; \
+	$(_PUBLICROOT)\COMMON\SDK\INC; \
+	$(_PUBLICROOT)\COMMON\DDK\INC; \
+	$(_PUBLICROOT)\COMMON\OAK\INC; \
+	$(_PUBLICROOT)\TI_WLAN\Source\Drivers\TI_WIFI\WiLink\utils; \
+	$(_PUBLICROOT)\TI_WLAN\Source\Drivers\TI_WIFI\WiLink\platforms\os\winmobile\Export_Inc; \
+	$(_PUBLICROOT)\TI_WLAN\Source\Drivers\TI_WIFI\WiLink\Txn; \
+	$(_PUBLICROOT)\TI_WLAN\source\csp\OMAP3430\TI_WLAN_sdio\drv; \
+# Ensure there are no trailing spaces
+
+SOURCES= \
+host_platform.c \
+SdioAdapter.c

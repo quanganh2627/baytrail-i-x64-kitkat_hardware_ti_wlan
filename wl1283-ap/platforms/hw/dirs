@@ -1,0 +1,8 @@
+!if 0
+Copyright (c) Microsoft Corporation.  All rights reserved.
+!endif
+
+OPTIONAL_DIRS=\
+standard_bus \
+host_platform_omap2430 \
+host_platform_zoom2

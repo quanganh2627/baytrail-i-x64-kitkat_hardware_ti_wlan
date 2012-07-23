@@ -1,0 +1,39 @@
+/*
+* ============================================================================
+*  Name        : wlanhpa.mmp
+*  Part of     : WLAN / WLANPDD
+*  Description : Project definition file for project wlanosa
+*  Version     : %version: 1 % << Don't touch! Updated by Synergy at check-out.
+*
+*  Copyright © 2007 Nokia.  All rights reserved.
+*  This material, including documentation and any related computer
+*  programs, is protected by copyright controlled by Nokia.  All
+*  rights are reserved.  Copying, including reproducing, storing,
+*  adapting or translating, any or all of this material requires the
+*  prior written consent of Nokia.  This material also contains
+*  confidential information which may not be disclosed to others
+*  without the prior written consent of Nokia.
+* ============================================================================
+* Template version: 4.0
+*/
+
+#include "kernel/kern_ext.mmh"
+#include <domain\osextensions\platform_paths.hrh>
+
+
+TARGET                  wlanhpa.lib
+TARGETTYPE              klib
+
+MACRO                   ALWAYS_KERNEL
+MACRO			__WAKEUP_2430__
+
+SYSTEMINCLUDE \epoc32\include\assp\omap24xx
+SYSTEMINCLUDE	\epoc32\include\assp\shared
+SYSTEMINCLUDE	\epoc32\include\drivers
+SYSTEMINCLUDE	\epoc32\include\libc
+
+USERINCLUDE			..\src
+SOURCE					..\src\TIWlanHpa.cpp
+
+
+

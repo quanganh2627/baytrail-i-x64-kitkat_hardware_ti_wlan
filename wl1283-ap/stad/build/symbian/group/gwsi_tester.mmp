@@ -1,0 +1,122 @@
+// gwsi_tester.mmp
+//
+// Copyright (c) 2000 Symbian Ltd.  All rights reserved.
+
+// using relative paths for sourcepath and user includes
+
+TARGET        gwsi_tester.exe
+TARGETTYPE    exe
+UID           0 
+
+
+macro  GWSI_SA BOARD=CRTWIPP PLATFORM=1251 STATIC_LIB RADIO_TYPE=DCR TIWLAN_INIT_FILE_SUPPORT GWSI_LIB
+macro __BYTE_ORDER_LITTLE_ENDIAN INCLUDE_DEFRAGMENTATION CONFIGURE_BSS_TYPE_STA TNETW1150=1 TNETW1251=1
+macro HOST_COMPILE FW_RUNNING_AS_STA
+macro PERIODIC_WAKEUP
+macro TIWLN_MAJOR_VERSION=5 TIWLN_MINOR_VERSION=1
+macro TIWLAN_OMAP1610 NOT_SUPPORT_08_BIT_ACCESS_COMMAND FOUR_ALIGNMENT
+
+#define CCX_MODULE_INCLUDED
+#define DEBUG
+#define INTR
+#define WSPI
+
+#if defined (DEBUG)
+macro TI_DBG_LOG TI_DBG INON_DBG CORE_TEST REPORT_LOG  POWER_MGR_DEBUG 
+#else
+macro SUPPRESS_REPORTS
+#endif
+
+
+#if !defined(INTR)
+macro PRIODIC_INTERRUPT
+#endif	 
+
+
+#if defined (WSPI)
+macro HW_ACCESS_WSPI
+#else
+macro HW_ACCESS_SDIO USE_SYNC_API USE_RECOVERY
+#endif
+
+#define CCX_INCLUDED
+//#define CORE_ADAPTCB_INCLUDED
+
+#if (RADIO_TYPE == DCR)
+macro RADIO_DCR=1
+#else
+macro  RADIO_WBR=1
+#endif
+
+
+#if defined (INFO)
+  macro OS_INFO_MESSAGES INIT_MESSAGES
+#endif
+
+
+#if defined (SUPPRESS_REPORTS)
+macro REPORT_LOG
+#endif
+
+
+USERINCLUDE   \examples\Basics\CommonFramework
+
+
+//GWSI_INCS
+
+USERINCLUDE   ..\..\..\..\common\src\gwsi
+USERINCLUDE   ..\..\..\..\common\src\gwsi\Export_Inc
+USERINCLUDE   ..\..\..\..\common\src\gwsi\os_inc
+USERINCLUDE   ..\..\..\..\pform\symbian\inc
+
+//CORE_ADAPTCB_INCLUDED
+USERINCLUDE   ..\..\..\..\common\src\core\sme\configMgr
+USERINCLUDE   ..\..\..\..\common\src\core\Core_Adapt\Export_Inc
+USERINCLUDE   ..\..\..\..\common\src\core\data_ctrl\Tx
+USERINCLUDE   ..\..\..\..\common\src\core\inc
+USERINCLUDE   ..\..\..\..\common\src\core\data_ctrl\Ctrl\TrafficMonitor
+
+
+//GWSI_TESTER INC
+USERINCLUDE   ..\..\..\..\common\src\gwsi_tester
+USERINCLUDE   ..\..\..\..\common\inc
+USERINCLUDE   ..\..\..\..\common\src\TNETW_Driver\Export_Inc
+USERINCLUDE   ..\..\..\..\common\src\hal\Export_Inc
+USERINCLUDE   ..\..\..\..\common\src\hal\FirmwareApi
+USERINCLUDE   ..\..\..\..\common\src\hal\inc
+USERINCLUDE   ..\..\..\..\common\src\BusAccess\Export_Inc
+USERINCLUDE   ..\..\..\..\common\src\TNETW_Driver\MacServices\Export_Inc
+USERINCLUDE   ..\..\..\..\common\src\core\EvHandler
+USERINCLUDE   ..\..\..\..\common\src\utils
+USERINCLUDE   ..\..\..\..\common\src\inc
+USERINCLUDE   ..\..\..\..\common\src\TNETW_Driver\FW_Transfer\inc
+USERINCLUDE   ..\..\..\..\common\src\TNETW_Driver\TNETWIF\BusTxn
+USERINCLUDE   ..\..\..\..\pform\common\inc
+
+SYSTEMINCLUDE \Epoc32\include \Epoc32\include\libc
+
+
+
+//GWSI_TESTER_SRCS
+
+SOURCEPATH    ..\..\..\..\pform\symbian\gwsi\src
+SOURCE        GWSI_RunTest.cpp EvHandler_stub.c esta_gwsi_stub.c
+
+SOURCEPATH    ..\..\..\..\common\src\gwsi_tester
+SOURCE        gwsi_tester_parser.c 
+
+
+SOURCEPATH    ..\..\..\..\common\src\core\Core_Adapt
+SOURCE        Core_AdaptCB.c
+
+SOURCEPATH    ..\..\..\..\pform\symbian\src
+SOURCE        osapi.c osmemapi.c
+
+SOURCEPATH    ..\..\..\..\pform\symbian\wspi\src
+SOURCE        wspi_stub.c
+
+
+LIBRARY          estlib.lib euser.lib 
+STATICLIBRARY    gwsi.lib
+
+

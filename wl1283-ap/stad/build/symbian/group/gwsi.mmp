@@ -1,0 +1,273 @@
+// gwsi.mmp
+//
+// Copyright (c) 2000 Symbian Ltd.  All rights reserved.
+
+// using relative paths for sourcepath and user includes
+
+TARGET        gwsi.lib
+TARGETTYPE    lib
+UID           0 
+
+
+macro  GWSI_SA BOARD=CRTWIPP PLATFORM=1251 STATIC_LIB RADIO_TYPE=DCR TIWLAN_INIT_FILE_SUPPORT GWSI_LIB
+macro __BYTE_ORDER_LITTLE_ENDIAN INCLUDE_DEFRAGMENTATION CONFIGURE_BSS_TYPE_STA TNETW1150=1 TNETW1251=1
+macro HOST_COMPILE FW_RUNNING_AS_STA
+macro PERIODIC_WAKEUP
+macro TIWLN_MAJOR_VERSION=5 TIWLN_MINOR_VERSION=1
+macro TIWLAN_OMAP1610 NOT_SUPPORT_08_BIT_ACCESS_COMMAND FOUR_ALIGNMENT
+
+#define CCX_MODULE_INCLUDED
+#define DEBUG
+#define INTR
+#define WSPI
+
+#if defined (DEBUG)
+macro TI_DBG_LOG TI_DBG INON_DBG CORE_TEST REPORT_LOG  POWER_MGR_DEBUG 
+#else
+macro SUPPRESS_REPORTS
+#endif
+
+
+#if !defined(INTR)
+macro PRIODIC_INTERRUPT
+#endif	 
+
+
+#if defined (WSPI)
+macro HW_ACCESS_WSPI
+#else
+macro HW_ACCESS_SDIO USE_SYNC_API USE_RECOVERY
+#endif
+
+#define CCX_INCLUDED
+//#define CORE_ADAPTCB_INCLUDED
+
+#if (RADIO_TYPE == DCR)
+macro RADIO_DCR=1
+#else
+macro  RADIO_WBR=1
+#endif
+
+
+#if defined (INFO)
+  macro OS_INFO_MESSAGES INIT_MESSAGES
+#endif
+
+
+#if defined (SUPPRESS_REPORTS)
+macro REPORT_LOG
+#endif
+
+
+
+//TNETW_INCS
+
+USERINCLUDE   ..\..\..\..\common\inc
+USERINCLUDE   ..\..\..\..\common\src\inc
+USERINCLUDE   ..\..\..\..\common\src\utils
+USERINCLUDE   ..\..\..\..\common\src\hal\inc
+USERINCLUDE   ..\..\..\..\common\src\hal\TnetwServices
+USERINCLUDE   ..\..\..\..\common\src\TNETW_Driver\Export_Inc
+USERINCLUDE   ..\..\..\..\common\src\TNETW_Driver\Data_Srv\inc
+USERINCLUDE   ..\..\..\..\common\src\TNETW_Driver\FW_Transfer\inc
+USERINCLUDE   ..\..\..\..\common\src\TNETW_Driver\Ctrl\Export_Inc
+USERINCLUDE   ..\..\..\..\common\src\TNETW_Driver\MacServices\inc
+USERINCLUDE   ..\..\..\..\common\src\TNETW_Driver
+USERINCLUDE   ..\..\..\..\common\src\TNETW_Driver\MacServices\Export_Inc
+USERINCLUDE   ..\..\..\..\common\src\TNETW_Driver\MacServices\src\ScanServer
+USERINCLUDE   ..\..\..\..\common\src\TNETW_Driver\MacServices\src\PowerSaveServer
+USERINCLUDE   ..\..\..\..\common\src\TNETW_Driver\MacServices\src\MeasurementSRV
+USERINCLUDE   ..\..\..\..\common\src\TNETW_Driver\TNETWIF\Export_Inc
+USERINCLUDE   ..\..\..\..\common\src\TNETW_Driver\TNETWIF\Inc
+USERINCLUDE   ..\..\..\..\common\src\hal\TnetwServices\TNETW1251
+
+
+USERINCLUDE   ..\..\..\..\common\src\hal\hl_data
+USERINCLUDE   ..\..\..\..\common\src\hal\hl_ctrl
+USERINCLUDE   ..\..\..\..\common\src\hal\hw_ctrl
+USERINCLUDE   ..\..\..\..\common\src\hal\security
+USERINCLUDE   ..\..\..\..\common\src\hal\security\Privacy
+USERINCLUDE   ..\..\..\..\common\src\hal\security\Privacy\ICV
+USERINCLUDE   ..\..\..\..\common\src\hal\security\Privacy\IV
+USERINCLUDE   ..\..\..\..\common\src\hal\security\Privacy\IV\WEP
+USERINCLUDE   ..\..\..\..\common\src\hal\security\Privacy\MIC
+USERINCLUDE   ..\..\..\..\common\src\hal\security\Privacy\MIC\Michael
+USERINCLUDE   ..\..\..\..\common\src\hal\Export_Inc
+USERINCLUDE   ..\..\..\..\common\src\hal\FirmwareApi
+USERINCLUDE   ..\..\..\..\common\src\BusAccess\Shm_Common
+USERINCLUDE   ..\..\..\..\common\src\BusAccess\Export_Inc
+
+
+USERINCLUDE   ..\..\..\..\common\src\hal\security\Privacy\Seq
+USERINCLUDE   ..\..\..\..\common\src\hal\security\Privacy\MIC\MMH
+USERINCLUDE   ..\..\..\..\common\src\hal\security\Privacy\Seq\CCX 
+USERINCLUDE   ..\..\..\..\common\src\hal\security\CCX
+
+
+#if defined (CCX_INCLUDED)
+USERINCLUDE   ..\..\..\..\common\inc\CCX
+#endif
+
+//GWSI_INCS
+
+USERINCLUDE   ..\..\..\..\common\src\gwsi
+USERINCLUDE   ..\..\..\..\common\src\gwsi\Export_Inc
+USERINCLUDE   ..\..\..\..\common\src\gwsi\os_inc
+USERINCLUDE   ..\..\..\..\pform\symbian\inc
+
+#if defined (CORE_ADAPTCB_INCLUDED)
+USERINCLUDE   ..\..\..\..\common\src\core\sme\configMgr
+USERINCLUDE   ..\..\..\..\common\src\core\Core_Adapt\Export_Inc
+USERINCLUDE   ..\..\..\..\common\src\core\data_ctrl\Tx
+USERINCLUDE   ..\..\..\..\common\src\core\inc
+USERINCLUDE   ..\..\..\..\common\src\core\data_ctrl\Ctrl\TrafficMonitor
+#endif
+
+SYSTEMINCLUDE \Epoc32\include \Epoc32\include\libc
+
+//GWSI_SRCS
+
+SOURCEPATH    ..\..\..\..\common\src\gwsi
+SOURCE        GWSI_Startup.c GWSI_AdaptCtrl.c GWSI_AdaptTx.c GWSI_AdaptRx.c GWSI_AdaptCB.c
+
+
+//UTIL_SRCS 
+
+SOURCEPATH    ..\..\..\..\common\src\utils
+SOURCE        fsm.c nrfsm.c report.c utils.c bufferPool.c 
+
+
+//TNETW_SRCS
+
+SOURCEPATH    ..\..\..\..\common\src\hal\security\Privacy\MIC
+SOURCE        mic.c 
+
+SOURCEPATH    ..\..\..\..\common\src\hal\security\Privacy\MIC\Michael
+SOURCE        michael.c 
+
+SOURCEPATH    ..\..\..\..\common\src\hal\security\Privacy\ICV
+SOURCE        icv.c 
+
+SOURCEPATH    ..\..\..\..\common\src\hal\security\Privacy
+SOURCE        privacy.c 
+
+SOURCEPATH    ..\..\..\..\common\src\hal\security\Privacy\IV
+SOURCE        iv.c 
+
+SOURCEPATH    ..\..\..\..\common\src\hal\security\Privacy\IV\WEP
+SOURCE        ivWep.c 
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver\MacServices\src
+SOURCE        MacServices.c 
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver\MacServices\src\ScanServer
+SOURCE        ScanSrv.c ScanSrvSM.c
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver\MacServices\src\PowerSaveServer
+SOURCE        PowerSrv.c PowerSrvSM.c
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver\MacServices\src\MeasurementSRV
+SOURCE        MeasurementSrv.c MeasurementSrvSM.c measurementSrvDbgPrint.c
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver
+SOURCE        TNETW_Driver.c TNETW_Driver_Tx.c
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver\Ctrl\Cmd_Queue
+SOURCE        CmdQueue.c 
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver\Data_Srv\Tx_HW_Queue
+SOURCE        txHwQueue.c txHwQueueCalc.c 
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver\Data_Srv\Tx_Ctrl_Blk
+SOURCE        txCtrlBlk.c 
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver\FW_Transfer\Cmd_MBox
+SOURCE        CmdMBox.c 
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver\FW_Transfer\Tx_Result
+SOURCE        txResult.c 
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver\FW_Transfer\Tx_Xfer\Slave_Dbl_Buf
+SOURCE        txXfer.c 
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver\FW_Transfer\FwEvent
+SOURCE        FwEvent.c 
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver\FW_Transfer\Rx_Xfer
+SOURCE        RxXfer.c 
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver\FW_Transfer\EventMbox
+SOURCE        eventMbox.c 
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver\MacServices\src\PowerAuthorization
+SOURCE        PowerAuthorization.c 
+
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver\TNETWIF
+SOURCE        TNETWIF.c 
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver\TNETWIF\ELP_Controller
+SOURCE        ElpCtrl.c 
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver\TNETWIF\BusTxn
+SOURCE        whalHwAccess.c 
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver\TNETWIF\TNETWArbiter
+SOURCE        TNETWArb.c TNETWArbSM.c TNETWArb_buffer.c
+
+SOURCEPATH    ..\..\..\..\common\src\hal\hl_ctrl
+SOURCE        whalCtrl.c whalParams.c whalRecovery.c whalRadio.c whalDebug.c
+
+SOURCEPATH    ..\..\..\..\common\src\hal\hl_data
+SOURCE        whalDefrag.c
+
+SOURCEPATH    ..\..\..\..\common\src\BusAccess\Shm_Common
+SOURCE        shmBus.c shmFwCtrl.c shmDebug.c shmUtils.c
+
+SOURCEPATH    ..\..\..\..\common\src\hal\hw_ctrl
+SOURCE        whalHwCtrl.c whalHwMboxConfig.c whalHwMboxCmd.c whalHwMboxCmdBit.c  
+
+SOURCEPATH    ..\..\..\..\common\src\BusAccess\Shm_Common
+SOURCE        whalHwEeprom.c 
+
+SOURCEPATH    ..\..\..\..\common\src\hal\security
+SOURCE        whalSecurity.c whalWep.c whalWpa.c
+
+#if defined (DEBUG)
+
+SOURCEPATH    ..\..\..\..\common\src\BusAccess\Shm_Common
+SOURCE        whalTrace.c 
+
+SOURCEPATH    ..\..\..\..\common\src\TNETW_Driver/FW_Transfer/DebugTrace_Xfer
+SOURCE        DebugTraceXfer.c 
+
+#endif
+
+
+#if defined(CCX_INCLUDED)
+
+SOURCEPATH    ..\..\..\..\common\src\hal\security\Privacy\Seq
+SOURCE        seq.c 
+
+SOURCEPATH    ..\..\..\..\common\src\hal\security\Privacy\Seq\CCX
+SOURCE        seqCcx.c 
+
+SOURCEPATH    ..\..\..\..\common\src\hal\security\CCX
+SOURCE        whalCcx.c 
+
+SOURCEPATH    ..\..\..\..\common\src\hal\security\Privacy\MIC\MMH
+SOURCE        mmh.c 
+
+#endif
+
+
+#if defined (CORE_ADAPTCB_INCLUDED)
+
+SOURCEPATH    ..\..\..\..\common\src\core\Core_Adapt
+SOURCE        Core_AdaptCB.c
+
+#endif
+
+LIBRARY     estlib.lib euser.lib 
+
+
