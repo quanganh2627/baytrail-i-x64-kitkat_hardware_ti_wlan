@@ -569,6 +569,69 @@ static int convert_rate_to_num(char *string)
 	return result;
 }
 
+static int display_rssi(struct nl_msg *msg, void *arg)
+{
+	struct nlattr *tb[NL80211_ATTR_MAX + 1];
+	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
+	struct nlattr *td[WL1271_TM_ATTR_MAX + 1];
+	struct wl1271_cmd_rssi_params *prms;
+
+	nla_parse(tb, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0),
+		genlmsg_attrlen(gnlh, 0), NULL);
+
+	if (!tb[NL80211_ATTR_TESTDATA]) {
+		fprintf(stderr, "no data!\n");
+		return NL_SKIP;
+	}
+
+	nla_parse(td, WL1271_TM_ATTR_MAX, nla_data(tb[NL80211_ATTR_TESTDATA]),
+		nla_len(tb[NL80211_ATTR_TESTDATA]), NULL);
+
+	prms = (struct wl1271_cmd_rssi_params *)nla_data(td[WL1271_TM_ATTR_DATA]);
+
+	printf("\n\tRSSI val \t- %d\n",(signed short)prms->rssi_val/8);
+
+	return NL_SKIP;
+}
+
+
+
+static int plt_cw_rssi(struct nl80211_state *state, struct nl_cb *cb,
+			struct nl_msg *msg, int argc, char **argv)
+{
+	struct nlattr *key;
+	struct wl1271_cmd_rssi_params prms;
+
+	memset((void *)&prms, 0, sizeof(struct wl1271_cmd_rssi_params));
+
+	prms.test.id = TEST_CMD_FREE_RUN_RSSI;
+
+	key = nla_nest_start(msg, NL80211_ATTR_TESTDATA);
+	if (!key) {
+		fprintf(stderr, "fail to nla_nest_start()\n");
+		return 1;
+	}
+
+	NLA_PUT_U32(msg, WL1271_TM_ATTR_CMD_ID, WL1271_TM_CMD_TEST);
+	NLA_PUT(msg, WL1271_TM_ATTR_DATA, sizeof(prms), &prms);
+	NLA_PUT_U8(msg, WL1271_TM_ATTR_ANSWER, 1);
+
+	nla_nest_end(msg, key);
+
+	nl_cb_set(cb, NL_CB_VALID, NL_CB_CUSTOM, display_rssi , NULL);
+
+	return 0;
+
+nla_put_failure:
+	fprintf(stderr, "%s> building message failed\n", __func__);
+	return 2;
+}
+
+COMMAND(plt, cw_rssi,NULL,
+	NL80211_CMD_TESTMODE, 0, CIB_NETDEV, plt_cw_rssi,
+	"get free running rssi\n");
+
+
 static int plt_tx_cont(struct nl80211_state *state, struct nl_cb *cb,
 			struct nl_msg *msg, int argc, char **argv)
 {

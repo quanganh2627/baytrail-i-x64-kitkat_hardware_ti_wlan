@@ -262,6 +262,15 @@ struct wl1271_cmd_cal_p2g {
 	unsigned char  padding2;
 } __attribute__((packed));
 
+struct wl1271_cmd_rssi_params {
+	struct wl1271_cmd_header header;
+
+	struct wl1271_cmd_test_header test;
+
+	__le16 rssi_val;
+	__le16 radio_status;
+}__attribute__((packed));
+
 #define MAC_ADDR_LEN  6
 
 struct wl1271_cmd_pkt_params {
