@@ -403,6 +403,7 @@ static bool bug_on_recovery;
 static char *fref_param;
 static char *tcxo_param;
 
+static int wl1271_register_hw(struct wl1271 *wl);
 static void __wl1271_op_remove_interface(struct wl1271 *wl,
 					 struct ieee80211_vif *vif,
 					 bool reset_tx_queues);
@@ -1153,6 +1154,43 @@ static int wl1271_fetch_nvs(struct wl1271 *wl)
 
 out:
 	release_firmware(fw);
+
+	return ret;
+}
+
+static void wl1271_nvs_complete(const struct firmware *fw, void *context)
+{
+	int ret;
+	struct wl1271 *wl = (struct wl1271 *)context;
+
+	if (fw && fw->size) {
+		wl->nvs = kmemdup(fw->data, fw->size, GFP_KERNEL);
+
+		if (!wl->nvs) {
+			wl1271_error("could not allocate memory for the nvs");
+			wl->nvs_len = 0;
+		} else
+			wl->nvs_len = fw->size;
+
+		release_firmware(fw);
+	} else
+		wl1271_error("could not open nvs file  %s", WL12XX_NVS_NAME);
+
+	ret = wl1271_register_hw(wl);
+	if (ret)
+		wl1271_error("%s returns %d", __func__, ret);
+}
+
+static int wl1271_fetch_nvs_nowait(struct wl1271 *wl)
+{
+	int ret;
+
+	ret = request_firmware_nowait(THIS_MODULE, FW_ACTION_HOTPLUG,
+				      WL12XX_NVS_NAME, wl->dev, GFP_KERNEL,
+				      wl, wl1271_nvs_complete);
+	if (ret < 0)
+		wl1271_error("could not get nvs file %s: %d", WL12XX_NVS_NAME,
+			     ret);
 
 	return ret;
 }
@@ -5674,8 +5712,7 @@ static int wl1271_register_hw(struct wl1271 *wl)
 		goto out;
 	}
 
-	ret = wl1271_fetch_nvs(wl);
-	if (ret == 0) {
+	if (wl->nvs && (wl->nvs_len > 11)) {
 		/* NOTE: The wl->nvs->nvs element must be first, in
 		 * order to simplify the casting, we assume it is at
 		 * the beginning of the wl->nvs structure.
@@ -6096,7 +6133,7 @@ static int __devinit wl12xx_probe(struct platform_device *pdev)
 	if (ret)
 		goto out_irq;
 
-	ret = wl1271_register_hw(wl);
+	ret = wl1271_fetch_nvs_nowait(wl);
 	if (ret)
 		goto out_irq;
 
