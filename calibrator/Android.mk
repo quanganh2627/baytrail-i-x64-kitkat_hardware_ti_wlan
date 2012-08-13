@@ -23,4 +23,6 @@ LOCAL_STATIC_LIBRARIES := libnl_2
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := calibrator
 
+LOCAL_SHARED_LIBRARIES:= libcutils
+
 include $(BUILD_EXECUTABLE)

@@ -1,3 +1,4 @@
+#define LOG_TAG "Calibrator"
 #include <stdbool.h>
 #include <errno.h>
 #include <net/if.h>
@@ -7,10 +8,13 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/mman.h>
+#include <cutils/log.h>
 #include "calibrator.h"
 #include "plt.h"
 #include "ini.h"
 #include "nvs.h"
+
+#define fprintf(out,...) LOGE(__VA_ARGS__)
 
 SECTION(get);
 SECTION(set);

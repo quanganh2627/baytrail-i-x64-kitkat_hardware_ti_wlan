@@ -3,6 +3,7 @@
  *
  * See README and COPYING for more details.
  */
+#define LOG_TAG "Calibrator"
 
 #include <sys/ioctl.h>
 #include <errno.h>
@@ -15,6 +16,7 @@
 #include <stdbool.h>
 #include <netinet/in.h>
 #include <time.h>
+#include <cutils/log.h>
 
 #include <netlink/netlink.h>
 #include <netlink/msg.h>
@@ -25,6 +27,9 @@
 #include "calibrator.h"
 #include "plt.h"
 #include "ini.h"
+
+#define fprintf(out,...) LOGE(__VA_ARGS__)
+
 /* 2048 - it should be enough for any chip, until... 22dec2010 */
 #define BUF_SIZE_4_NVS_FILE	2048
 

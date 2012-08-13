@@ -3,6 +3,7 @@
  *
  * See README and COPYING for more details.
  */
+#define LOG_TAG "Calibrator"
 
 #include <sys/ioctl.h>
 #include <errno.h>
@@ -13,6 +14,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdbool.h>
+#include <cutils/log.h>
 
 #include <netlink/genl/genl.h>
 #include <netlink/genl/family.h>
@@ -29,6 +31,8 @@
 #include "nvs.h"
 
 #define ZERO_MAC	"00:00:00:00:00:00"
+
+#define fprintf(out,...) LOGE(__VA_ARGS__)
 
 #ifndef SIOCETHTOOL
 #define SIOCETHTOOL     0x8946

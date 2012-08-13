@@ -3,6 +3,7 @@
  *
  * See README and COPYING for more details.
  */
+#define LOG_TAG "Calibrator"
 
 #include <errno.h>
 #include <stdio.h>
@@ -13,6 +14,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdbool.h>
+#include <cutils/log.h>
 
 #include <netlink/genl/genl.h>
 #include <netlink/genl/family.h>
@@ -24,6 +26,8 @@
 #include "calibrator.h"
 #include "plt.h"
 #include "ini.h"
+
+#define fprintf(out,...) LOGE(__VA_ARGS__)
 
 char calibrator_version[] = "0.73";
 #ifndef CONFIG_LIBNL20

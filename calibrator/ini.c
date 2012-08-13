@@ -5,6 +5,7 @@
  *
  * See README and COPYING for more details.
  */
+#define LOG_TAG "Calibrator"
 
 #include <sys/ioctl.h>
 #include <errno.h>
@@ -16,6 +17,7 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include <limits.h>
+#include <cutils/log.h>
 
 #include <netlink/genl/genl.h>
 #include <netlink/genl/family.h>
@@ -29,6 +31,8 @@
 #include "plt.h"
 #include "ini.h"
 #include "nvs.h"
+
+#define fprintf(out,...) LOGE(__VA_ARGS__)
 
 static char *ini_get_line(char *s, int size, FILE *stream, int *line,
 				  char **_pos)
