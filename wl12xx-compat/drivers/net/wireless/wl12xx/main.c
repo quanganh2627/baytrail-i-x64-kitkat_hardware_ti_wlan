@@ -2493,8 +2493,14 @@ static void wl1271_op_stop_locked(struct wl1271 *wl)
 	 * this is performed after the cancel_work calls and the associated
 	 * mutex_lock, so that wl1271_op_add_interface does not accidentally
 	 * get executed before all these vars have been reset.
+	 * don't erase WL1271_FLAG_SUSPENDED bit to avoid unconsistent value
+	 * while the interface is being removed.
 	 */
-	wl->flags = 0;
+	wl->flags &= WL1271_FLAG_SUSPENDED;
+
+	/* warn when removing the interface while the suspended */
+	if (test_bit(WL1271_FLAG_SUSPENDED, &wl->flags))
+		WARN(1, "Removing the interface during suspend\n");
 
 	wl->tx_blocks_freed = 0;
 
