@@ -2730,6 +2730,12 @@ deinit:
 	cancel_work_sync(&wlvif->rx_streaming_disable_work);
 
 	mutex_lock(&wl->mutex);
+
+#ifdef CONFIG_HAS_WAKELOCK
+	if (test_and_clear_bit(WL1271_FLAG_WAKE_LOCK, &wl->flags))
+			wake_unlock(&wl->wake_lock);
+#endif
+
 }
 
 static void wl1271_op_remove_interface(struct ieee80211_hw *hw,
