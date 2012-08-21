@@ -237,7 +237,6 @@ int main(int argc, char **argv)
 	unsigned char *ChaabiMacAddr = NULL;
 	int res = 0;
 	char device_id[64];
-	int unbind_bind_request = 0;
 
 	/* Check parameters */
 	if (argc != 1) {
@@ -263,7 +262,6 @@ int main(int argc, char **argv)
 
 	if (!nvsBinFile) {
 		LOGI("run calibration");
-		unbind_bind_request = 1;
 		if (wifi_calibration()) {
 			res =  -2;
 			goto end;
@@ -309,8 +307,6 @@ int main(int argc, char **argv)
 			res =  -4;
 			goto end;
 		}
-		LOGI("MAC updated");
-		unbind_bind_request = 1;
 	}
 
 	/*
@@ -332,26 +328,6 @@ int main(int argc, char **argv)
 	}
 
 end:
-
-	if (unbind_bind_request) {
-		LOGI("unbind/bind the driver");
-		/*
-		* If we are not allowed to bind/unbind the driver, the mac address as
-		* well as the new configuration firmware (.nvs) will not be taken into
-		* account. In that case, the reboot is required after flashing for the
-		* time the board.
-		*/
-		if (sdio_get_pci_id(SYSFS_SDIO_DEVICES_PATH, device_id)
-			|| unbind_wlan_sdio_drv(WLAN_SDIO_BUS_PATH, device_id)
-			|| bind_wlan_sdio_drv(WLAN_SDIO_BUS_PATH, device_id)) {
-			/*
-			* Rebooting the board: In this level, the NVS was saved. The
-			* next reboot will be fine since no need to bind/unbind the
-			* driver.
-			*/
-			goto fatal;
-		}
-	}
 
 	/* Take into acount the new NVS firmware */
 	sync();
