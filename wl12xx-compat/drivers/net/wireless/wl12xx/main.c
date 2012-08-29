@@ -4286,6 +4286,10 @@ static int wl1271_bss_beacon_info_changed(struct wl1271 *wl,
 			bss_conf->beacon_int);
 
 		wlvif->beacon_int = bss_conf->beacon_int;
+		if (!wlvif->beacon_int) {
+			WARN(1, "wl->beacon_int is 0\n");
+			wlvif->beacon_int = WL1271_DEFAULT_BEACON_INT;
+		}
 	}
 
 	if ((changed & BSS_CHANGED_AP_PROBE_RESP) && is_ap) {
@@ -4577,6 +4581,10 @@ sta_not_found:
 			int ieoffset;
 			wlvif->aid = bss_conf->aid;
 			wlvif->beacon_int = bss_conf->beacon_int;
+			if (!wlvif->beacon_int) {
+				WARN(1, "wl->beacon_int is 0\n");
+				wlvif->beacon_int = WL1271_DEFAULT_BEACON_INT;
+			}
 			set_assoc = true;
 
 			/*
