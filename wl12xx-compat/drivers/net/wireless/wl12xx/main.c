@@ -2342,6 +2342,9 @@ static int wl1271_op_resume(struct ieee80211_hw *hw)
 
 		/* don't talk to the HW if recovery is pending */
 		if (!pending_recovery) {
+			if (DEBUG_WAKE & wl12xx_debug_level) {
+				wl->log_wake_pkts = 2; /* Log 2 packets after wake, typically ARP + IP */
+			}
 			ret = wl12xx_irq_locked(wl);
 			if (ret)
 				wl12xx_queue_recovery_work(wl);

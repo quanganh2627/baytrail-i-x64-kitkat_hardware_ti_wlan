@@ -552,6 +552,9 @@ struct wl1271 {
 	/* RX Data filter rule status - enabled/disabled */
 	bool rx_data_filters_status[WL1271_MAX_RX_FILTERS];
 
+	/* Number of packets to log after WiFi wake */
+	int log_wake_pkts;
+
 	/* AP's peers */
 	struct list_head peers_list;
 
