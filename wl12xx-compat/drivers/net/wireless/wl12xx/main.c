@@ -289,7 +289,7 @@ static struct conf_drv_settings default_conf = {
 		.base_dwell_time              = 7500,
 		.max_dwell_time_delta         = 22500,
 		/* based on 250bits per probe @1Mbps */
-		.dwell_time_delta_per_probe   = 2000,
+		.dwell_time_delta_per_probe   = 1500,
 		/* based on 250bits per probe @6Mbps (plus a bit more) */
 		.dwell_time_delta_per_probe_5 = 350,
 		.dwell_time_passive           = 100000,
