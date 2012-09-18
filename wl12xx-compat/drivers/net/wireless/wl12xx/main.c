@@ -2306,6 +2306,24 @@ static int wl1271_op_suspend(struct ieee80211_hw *hw,
 	return 0;
 }
 
+static int wl1271_op_quiesce(struct ieee80211_hw *hw)
+{
+	struct wl1271 *wl = hw->priv;
+
+	flush_delayed_work_sync(&wl->scan_complete_work);
+	flush_work_sync(&wl->tx_work);
+	struct wl12xx_vif *wlvif;
+	wl12xx_for_each_wlvif(wl, wlvif) {
+		del_timer_sync(&wlvif->rx_streaming_timer);
+		flush_work_sync(&wlvif->rx_streaming_enable_work);
+		flush_work_sync(&wlvif->rx_streaming_disable_work);
+	}
+
+	flush_delayed_work_sync(&wl->elp_work);
+
+	return 0;
+}
+
 static int wl1271_op_resume(struct ieee80211_hw *hw)
 {
 	struct wl1271 *wl = hw->priv;
@@ -5720,6 +5738,7 @@ static const struct ieee80211_ops wl1271_ops = {
 #ifdef CONFIG_PM
 	.suspend = wl1271_op_suspend,
 	.resume = wl1271_op_resume,
+	.quiesce = wl1271_op_quiesce,
 #endif
 	.config = wl1271_op_config,
 	.prepare_multicast = wl1271_op_prepare_multicast,

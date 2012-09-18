@@ -148,6 +148,9 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
 	/* need suspended to be visible before quiescing is false */
 	barrier();
 	local->quiescing = false;
+	if (local->ops->quiesce)
+		local->ops->quiesce(&local->hw);
+	flush_workqueue(local->workqueue);
 
 	return 0;
 }
