@@ -245,11 +245,6 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
-       if (sdio_get_pci_id(SYSFS_SDIO_DEVICES_PATH, device_id)) {
-		LOGE("no wlan device detected, exit...");
-		return -1;
-       }
-
 #ifdef BUILD_WITH_CHAABI_SUPPORT
 	/* Read MAC address from Chaabi */
 	if (get_customer_data(ACD_WLAN_MAC_ADDR_FIELD_INDEX,
@@ -328,7 +323,8 @@ end:
 		* account. In that case, the reboot is required after flashing for the
 		* time the board.
 		*/
-		if (unbind_wlan_sdio_drv(WLAN_SDIO_BUS_PATH, device_id)
+		if (sdio_get_pci_id(SYSFS_SDIO_DEVICES_PATH, device_id)
+			|| unbind_wlan_sdio_drv(WLAN_SDIO_BUS_PATH, device_id)
 			|| bind_wlan_sdio_drv(WLAN_SDIO_BUS_PATH, device_id)) {
 			/*
 			* Rebooting the board: In this level, the NVS was saved. The
