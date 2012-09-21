@@ -3878,12 +3878,23 @@ static int wl1271_op_hw_scan(struct ieee80211_hw *hw,
 
 	mutex_lock(&wl->mutex);
 
-	if (!test_bit(WLVIF_FLAG_INITIALIZED, &wlvif->flags)) {
+	if (!test_bit(WLVIF_FLAG_INITIALIZED, &wlvif->flags) ||
+		test_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS, &wl->flags)) {
+
 		/*
+		 * When fw recovery is in progress, before recovery work
+		 * call wl1271_op_stop() to set wl->state to WL1271_STATE_OFF,
+		 * wl1271_op_hw_scan() may be scheduled, it will set scan state
+		 * not idle. Then ieee80211_restart_hw() will cancel scan, but
+		 * wl->state has changed to WL1271_STATE_OFF, cancel work will
+		 * directly return. Because scan state is not idle, new scan
+		 * request will always return failed.
+		 * We check recovery flag to prevent scan and recovery competition.
 		 * We cannot return -EBUSY here because cfg80211 will expect
 		 * a call to ieee80211_scan_completed if we do - in this case
 		 * there won't be any call.
 		 */
+		wl1271_warning("rejecting hw scan while state is off\n");
 		ret = -EAGAIN;
 		goto out;
 	}
@@ -3934,12 +3945,17 @@ static void wl1271_op_cancel_hw_scan(struct ieee80211_hw *hw,
 	if (wl->state == WL1271_STATE_OFF) {
 		/*
 		If we get here, it means we have a FW recovery with a pending scan
-		Alert the mac layer that scan is complete, as required in
-		ieee80211_scan_cancel()
+		Clean internal scan states and alert the mac layer that scan is complete,
+		as required in ieee80211_scan_cancel()
 		*/
+		wl1271_warning("Scan issued while recovery, aborting it");
+		wl->scan.state = WL1271_SCAN_STATE_IDLE;
+		memset(wl->scan.scanned_ch, 0, sizeof(wl->scan.scanned_ch));
+		wl->scan.req = NULL;
 		ieee80211_scan_completed(wl->hw, true);
 		goto out;
 	}
+
 	if (wl->scan.state == WL1271_SCAN_STATE_IDLE)
 		goto out;
 
