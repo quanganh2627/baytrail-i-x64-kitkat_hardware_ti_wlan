@@ -1352,23 +1352,6 @@ static inline int __ieee80211_resume(struct ieee80211_hw *hw)
 }
 #endif
 
-#ifdef CONFIG_HAS_EARLYSUSPEND
-int __ieee80211_es_suspend(struct ieee80211_hw *hw,
-		       struct cfg80211_wowlan *wowlan);
-int __ieee80211_es_resume(struct ieee80211_hw *hw);
-#else
-static inline int __ieee80211_es_suspend(struct ieee80211_hw *hw,
-		       struct cfg80211_wowlan *wowlan)
-{
-       return 0;
-}
-
-static inline int __ieee80211_es_resume(struct ieee80211_hw *hw)
-{
-       return 0;
-}
-#endif
-
 /* utility functions/constants */
 extern void *mac80211_wiphy_privid; /* for wiphy privid */
 u8 *ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len,

@@ -91,33 +91,6 @@ static inline int drv_resume(struct ieee80211_local *local)
 }
 #endif
 
-#ifdef CONFIG_HAS_EARLYSUSPEND
-static inline int drv_es_suspend(struct ieee80211_local *local,
-				 struct cfg80211_wowlan *wowlan)
-{
-	int ret;
-
-	might_sleep();
-
-	trace_drv_es_suspend(local);
-	ret = local->ops->es_suspend(&local->hw, wowlan);
-	trace_drv_return_int(local, ret);
-	return ret;
-}
-
-static inline int drv_es_resume(struct ieee80211_local *local)
-{
-	int ret;
-
-	might_sleep();
-
-	trace_drv_es_resume(local);
-	ret = local->ops->es_resume(&local->hw);
-	trace_drv_return_int(local, ret);
-	return ret;
-}
-#endif
-
 static inline int drv_add_interface(struct ieee80211_local *local,
 				    struct ieee80211_sub_if_data *sdata)
 {

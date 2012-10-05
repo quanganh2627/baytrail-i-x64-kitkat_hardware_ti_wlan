@@ -13,18 +13,9 @@
 #include <linux/debugfs.h>
 #include <linux/rfkill.h>
 #include <linux/workqueue.h>
-#include <linux/earlysuspend.h>
 #include <net/genetlink.h>
 #include <net/cfg80211.h>
 #include "reg.h"
-
-#ifdef CONFIG_HAS_EARLYSUSPEND
-void cfg80211_register_earlysuspend(void);
-void cfg80211_unregister_earlysuspend(void);
-#else
-#define cfg80211_register_earlysuspend() do { } while (0)
-#define cfg80211_unregister_earlysuspend() do { } while (0)
-#endif
 
 struct cfg80211_registered_device {
 	const struct cfg80211_ops *ops;

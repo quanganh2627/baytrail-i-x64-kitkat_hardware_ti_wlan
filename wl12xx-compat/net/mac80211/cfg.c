@@ -1548,22 +1548,6 @@ static int ieee80211_resume(struct wiphy *wiphy)
 #define ieee80211_resume NULL
 #endif
 
-#ifdef CONFIG_HAS_EARLYSUSPEND
-static int ieee80211_es_suspend(struct wiphy *wiphy,
-				struct cfg80211_wowlan *wowlan)
-{
-	return __ieee80211_es_suspend(wiphy_priv(wiphy), wowlan);
-}
-
-static int ieee80211_es_resume(struct wiphy *wiphy)
-{
-	return __ieee80211_es_resume(wiphy_priv(wiphy));
-}
-#else
-#define ieee80211_es_suspend NULL
-#define ieee80211_es_resume NULL
-#endif
-
 static int ieee80211_scan(struct wiphy *wiphy,
 			  struct net_device *dev,
 			  struct cfg80211_scan_request *req)
@@ -2769,8 +2753,6 @@ struct cfg80211_ops mac80211_config_ops = {
 	.set_channel = ieee80211_set_channel,
 	.suspend = ieee80211_suspend,
 	.resume = ieee80211_resume,
-	.es_suspend = ieee80211_es_suspend,
-	.es_resume = ieee80211_es_resume,
 	.scan = ieee80211_scan,
 	.scan_cancel = ieee80211_scan_cancel_req,
 	.sched_scan_start = ieee80211_sched_scan_start,

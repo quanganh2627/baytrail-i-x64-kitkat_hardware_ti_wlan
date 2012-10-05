@@ -51,61 +51,6 @@ module_param(cfg80211_disable_40mhz_24ghz, bool, 0644);
 MODULE_PARM_DESC(cfg80211_disable_40mhz_24ghz,
 		 "Disable 40MHz support in the 2.4GHz band");
 
-#ifdef CONFIG_HAS_EARLYSUSPEND
-
-static void cfg80211_es_suspend(struct early_suspend *h)
-{
-	struct cfg80211_registered_device *rdev;
-	int ret;
-
-	assert_cfg80211_lock();
-
-	list_for_each_entry(rdev, &cfg80211_rdev_list, list) {
-		if (!rdev->ops || !rdev->ops->es_suspend)
-			continue;
-
-		ret = rdev->ops->es_suspend(&rdev->wiphy, rdev->wowlan);
-		if (ret)
-			pr_err("early suspend of wiphy idx %d failed\n",
-			       rdev->wiphy_idx);
-	}
-}
-
-static void cfg80211_es_resume(struct early_suspend *h)
-{
-	struct cfg80211_registered_device *rdev;
-	int ret;
-
-	assert_cfg80211_lock();
-
-	list_for_each_entry(rdev, &cfg80211_rdev_list, list) {
-		if (!rdev->ops || !rdev->ops->es_resume)
-			continue;
-
-		ret = rdev->ops->es_resume(&rdev->wiphy);
-		if (ret)
-			pr_err("early resume of wiphy idx %d failed\n",
-			       rdev->wiphy_idx);
-	}
-}
-
-static struct early_suspend cfg80211_early_suspend_desc = {
-	 .suspend = cfg80211_es_suspend,
-	 .resume = cfg80211_es_resume,
-	 .level = EARLY_SUSPEND_LEVEL_DISABLE_FB,
-};
-
-void cfg80211_register_earlysuspend(void)
-{
-	register_early_suspend(&cfg80211_early_suspend_desc);
-}
-
-void cfg80211_unregister_earlysuspend(void)
-{
-	unregister_early_suspend(&cfg80211_early_suspend_desc);
-}
-#endif
-
 /* requires cfg80211_mutex to be held! */
 struct cfg80211_registered_device *cfg80211_rdev_by_wiphy_idx(int wiphy_idx)
 {
@@ -1119,8 +1064,6 @@ static int __init cfg80211_init(void)
 	if (!cfg80211_wq)
 		goto out_fail_wq;
 
-	cfg80211_register_earlysuspend();
-
 	return 0;
 
 out_fail_wq:
@@ -1142,7 +1085,6 @@ subsys_initcall(cfg80211_init);
 
 static void __exit cfg80211_exit(void)
 {
-	cfg80211_unregister_earlysuspend();
 	debugfs_remove(ieee80211_debugfs_dir);
 	nl80211_exit();
 	unregister_netdevice_notifier(&cfg80211_netdev_notifier);

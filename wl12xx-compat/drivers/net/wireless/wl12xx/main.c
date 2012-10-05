@@ -2267,10 +2267,9 @@ static int wl1271_op_suspend(struct ieee80211_hw *hw,
 	}
 
 	wl1271_tx_flush(wl);
-	wl->wow_enabled = true;
 
-#ifndef CONFIG_HAS_EARLYSUSPEND
 	mutex_lock(&wl->mutex);
+	wl->wow_enabled = true;
 	wl12xx_for_each_wlvif(wl, wlvif) {
 		ret = wl1271_configure_suspend(wl, wlvif, wow);
 		if (ret < 0) {
@@ -2281,8 +2280,6 @@ static int wl1271_op_suspend(struct ieee80211_hw *hw,
 		}
 	}
 	mutex_unlock(&wl->mutex);
-#endif
-
 	/* flush any remaining work */
 	wl1271_debug(DEBUG_MAC80211, "flushing remaining works");
 
@@ -2358,54 +2355,18 @@ static int wl1271_op_resume(struct ieee80211_hw *hw)
 		ieee80211_queue_work(wl->hw, &wl->recovery_work);
 		goto out;
 	}
-#ifndef CONFIG_HAS_EARLYSUSPEND
+
 	wl12xx_for_each_wlvif(wl, wlvif) {
 		wl1271_configure_resume(wl, wlvif);
 	}
-#endif
+
 out:
 	wl->wow_enabled = false;
 	mutex_unlock(&wl->mutex);
+
 	return ret;
 }
 #endif /* CONFIG_PM */
-
-#ifdef CONFIG_HAS_EARLYSUSPEND
-static int wl1271_op_es_suspend(struct ieee80211_hw *hw,
-				struct cfg80211_wowlan *wow)
-{
-	struct wl1271 *wl = hw->priv;
-	struct wl12xx_vif *wlvif;
-	int ret;
-
-	mutex_lock(&wl->mutex);
-	wl12xx_for_each_wlvif(wl, wlvif) {
-		ret = wl1271_configure_suspend(wl, wlvif, wow);
-		if (ret < 0) {
-			wl->wow_enabled = false;
-			wl1271_warning("early suspend failed");
-			return ret;
-		}
-	}
-	mutex_unlock(&wl->mutex);
-
-	return 0;
-}
-
-static int wl1271_op_es_resume(struct ieee80211_hw *hw)
-{
-	struct wl1271 *wl = hw->priv;
-	struct wl12xx_vif *wlvif;
-
-	mutex_lock(&wl->mutex);
-	wl12xx_for_each_wlvif(wl, wlvif) {
-		wl1271_configure_resume(wl, wlvif);
-	}
-	mutex_unlock(&wl->mutex);
-
-	return 0;
-}
-#endif
 
 static int wl1271_op_start(struct ieee80211_hw *hw)
 {
@@ -5736,10 +5697,6 @@ static const struct ieee80211_ops wl1271_ops = {
 #ifdef CONFIG_PM
 	.suspend = wl1271_op_suspend,
 	.resume = wl1271_op_resume,
-#endif
-#ifdef CONFIG_HAS_EARLYSUSPEND
-	.es_suspend = wl1271_op_es_suspend,
-	.es_resume = wl1271_op_es_resume,
 #endif
 	.config = wl1271_op_config,
 	.prepare_multicast = wl1271_op_prepare_multicast,
