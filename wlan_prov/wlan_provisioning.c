@@ -44,6 +44,7 @@ const char WLAN_SDIO_BUS_PATH[] = "/sys/bus/sdio/drivers/wl1271_sdio/";
 #define SYSFS_SDIO_DEVICES_PATH "/sys/bus/sdio/devices/"
 #define NEW_NVS_FILE_NAME		WIFI_PATH"/new-nvs.bin"
 #define TQS_FILE				"/etc/wifi/TQS.ini"
+#define MAX_CALIBRATION_TRIES	3
 
 /* pattern MAC address in NVS file */
 #define NVS_LENGTH_TO_SET       0x01
@@ -267,11 +268,25 @@ int main(int argc, char **argv)
 	nvsBinFile = fopen(NVS_file_name, "rb");
 
 	if (!nvsBinFile) {
-		LOGI("run calibration");
+		int nbCalibrationTries = 1;
+		LOGI("running calibration, try: %d",nbCalibrationTries);
 		unbind_bind_request = 1;
-		if (wifi_calibration()) {
-			res =  -2;
-			goto end;
+		while (wifi_calibration()) {
+			nbCalibrationTries++;
+			if(nbCalibrationTries >= MAX_CALIBRATION_TRIES) {
+				LOGI("Rebooting after %d calibration tries", MAX_CALIBRATION_TRIES);
+				goto fatal; //Reboot after 3 failed calibrations.
+			}
+			if (unbind_wlan_sdio_drv(WLAN_SDIO_BUS_PATH, device_id)
+						|| bind_wlan_sdio_drv(WLAN_SDIO_BUS_PATH, device_id))
+					{
+						/*
+						*Rebooting:  calibration failed, unbind/bind failed
+						*/
+						LOGI("Rebooting: unbind/bind failed");
+						goto fatal;
+					}
+			LOGI("running calibration, try: %d",nbCalibrationTries);
 		}
 	} else {
 		fclose(nvsBinFile);

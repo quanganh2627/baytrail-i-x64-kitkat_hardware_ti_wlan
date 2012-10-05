@@ -1296,7 +1296,7 @@ out_rmmod:
 out_removenvs:
 	fprintf(stderr, "Calibration not complete. Removing half-baked nvs\n");
 	unlink(cmn.nvs_name);
-	return 0;
+	return res;
 
 }
 COMMAND(plt, autocalibrate, "<dev> <module path> <ini file1> <nvs file> "
