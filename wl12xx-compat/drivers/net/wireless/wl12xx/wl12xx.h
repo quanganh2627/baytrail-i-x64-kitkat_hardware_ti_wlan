@@ -477,6 +477,8 @@ struct wl1271 {
 	struct completion *elp_compl;
 	struct delayed_work elp_work;
 
+	struct completion fw_compl;
+
 	/* in dBm */
 	int power_level;
 

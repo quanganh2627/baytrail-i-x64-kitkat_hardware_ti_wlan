@@ -1299,6 +1299,8 @@ static void wl1271_nvs_complete(const struct firmware *fw, void *context)
 	ret = wl1271_register_hw(wl);
 	if (ret)
 		wl1271_error("%s returns %d", __func__, ret);
+
+	complete(&wl->fw_compl);
 }
 
 static int wl1271_fetch_nvs_nowait(struct wl1271 *wl)
@@ -6252,6 +6254,8 @@ static struct ieee80211_hw *wl1271_alloc_hw(void)
 	INIT_DELAYED_WORK(&wl->scan_complete_work, wl1271_scan_complete_work);
 	INIT_DELAYED_WORK(&wl->tx_watchdog_work, wl12xx_tx_watchdog_work);
 
+	init_completion(&wl->fw_compl);
+
 	wl->freezable_wq = create_freezable_workqueue("wl12xx_wq");
 	if (!wl->freezable_wq) {
 		ret = -ENOMEM;
@@ -6523,6 +6527,8 @@ out:
 static int __devexit wl12xx_remove(struct platform_device *pdev)
 {
 	struct wl1271 *wl = platform_get_drvdata(pdev);
+
+	wait_for_completion(&wl->fw_compl);
 
 	if (wl->irq_wake_enabled) {
 		device_init_wakeup(wl->dev, 0);
