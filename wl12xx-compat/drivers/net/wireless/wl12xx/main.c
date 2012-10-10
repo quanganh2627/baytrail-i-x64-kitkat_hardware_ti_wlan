@@ -4929,6 +4929,7 @@ static int wl1271_op_conf_tx(struct ieee80211_hw *hw,
 		ps_scheme = CONF_PS_SCHEME_UPSD_TRIGGER;
 	else
 		ps_scheme = CONF_PS_SCHEME_LEGACY;
+	wl->conf.tx.tid_conf[wl1271_tx_get_queue(queue)].ps_scheme = ps_scheme;
 
 	if (!test_bit(WLVIF_FLAG_INITIALIZED, &wlvif->flags))
 		goto out;

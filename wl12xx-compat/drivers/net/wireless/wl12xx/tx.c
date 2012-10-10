@@ -696,6 +696,28 @@ void wl12xx_rearm_rx_streaming(struct wl1271 *wl, unsigned long *active_hlids)
 	}
 }
 
+static void wl1271_adjust_ps_mode(struct wl1271 *wl, struct wl12xx_vif *wlvif, struct sk_buff *skb)
+{
+	int q = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
+
+	if (wl->conf.tx.tid_conf[q].ps_scheme == CONF_PS_SCHEME_UPSD_TRIGGER) {
+		if (q == CONF_TX_AC_VO) {
+			/* Force power save mode if number of AC_VO tagged packets exceeds threshold  */
+			if (!wl->conf.conn.forced_ps && (++wlvif->force_ps == FORCE_PS_TRESHOLD)) {
+				wl1271_ps_set_mode(wl, wlvif, STATION_POWER_SAVE_MODE);
+				wl->conf.conn.forced_ps = true;
+			}
+		} else {
+			/* "Normal" packet, reset power save */
+			wlvif->force_ps = 0;
+			if (wl->conf.conn.forced_ps) {
+				wl1271_ps_set_mode(wl, wlvif, STATION_AUTO_PS_MODE);
+				wl->conf.conn.forced_ps = false;
+			}
+		}
+	}
+}
+
 /*
  * Returns failure values only in case of failed bus ops within this function.
  * wl1271_prepare_tx_frame retvals won't be returned in order to avoid
@@ -729,6 +751,9 @@ int wl1271_tx_work_locked(struct wl1271 *wl)
 			wlvif = wl12xx_vif_to_data(info->control.vif);
 
 		has_data = wlvif && wl1271_tx_is_data_present(skb);
+		if (has_data && (wlvif->bss_type != BSS_TYPE_AP_BSS)) {
+			wl1271_adjust_ps_mode(wl, wlvif, skb);
+		}
 		ret = wl1271_prepare_tx_frame(wl, wlvif, skb, buf_offset);
 		if (ret == -EAGAIN) {
 			/*

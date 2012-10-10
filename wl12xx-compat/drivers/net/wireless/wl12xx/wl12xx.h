@@ -678,6 +678,11 @@ struct wl12xx_vif {
 	struct work_struct rx_streaming_disable_work;
 	struct timer_list rx_streaming_timer;
 
+	/* Force power save if number of AC_VO tagged packets
+	exceeds treshold (normally 200ms for RTP traffic) */
+#define FORCE_PS_TRESHOLD 10
+	int force_ps;
+
 	/*
 	 * This struct must be last!
 	 * data that has to be saved acrossed reconfigs (e.g. recovery)
