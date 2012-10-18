@@ -180,7 +180,8 @@ static int wl1271_rx_handle_data(struct wl1271 *wl, u8 *data, u32 length,
 	skb_trim(skb, skb->len - desc->pad_len);
 
 	if (!beacon && (wl->log_wake_pkts > 0)) {
-		wl1271_dump_ascii(DEBUG_WAKE, "wake: ", skb->data, min(skb->len, 128));
+		print_hex_dump(KERN_INFO, DRIVER_PREFIX "wake: ", DUMP_PREFIX_OFFSET,
+					   16, 1, skb->data, min_t(size_t, skb->len, 96), true);
 		--wl->log_wake_pkts;
 	}
 
