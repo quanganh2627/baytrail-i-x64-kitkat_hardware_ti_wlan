@@ -1426,11 +1426,13 @@ static void wl12xx_print_recovery(struct wl1271 *wl)
 	wl1271_info("Hardware recovery in progress. FW ver: %s",
 		    wl->chip.fw_ver_str);
 
-	ret = wl1271_read32(wl, SCR_PAD4, &pc);
-	if (ret < 0)
-		return;
+	if (wl->conf.fwlog.read_panic) {
+		ret = wl1271_read32(wl, SCR_PAD4, &pc);
+		if (ret < 0)
+			return;
 
-	wl1271_info("pc: 0x%x", pc);
+		wl1271_info("pc: 0x%x", pc);
+	}
 }
 
 static void wl1271_recovery_work(struct work_struct *work)
