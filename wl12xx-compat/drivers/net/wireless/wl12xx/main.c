@@ -2404,7 +2404,16 @@ static void wl1271_op_stop_locked(struct wl1271 *wl)
 		if (test_and_clear_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS,
 				       &wl->flags))
 			wl1271_enable_interrupts(wl);
-
+		else {
+                       /*
+                       * Delete wl from global wl_list since it has been
+                       * added in op_start, even if add interface failed
+                       */
+                       wl1271_debug(DEBUG_MAC80211, "mac80211 stop locked in state off");
+                       mutex_lock(&wl_list_mutex);
+                       list_del(&wl->list);
+                       mutex_unlock(&wl_list_mutex);
+		}
 		return;
 	}
 
