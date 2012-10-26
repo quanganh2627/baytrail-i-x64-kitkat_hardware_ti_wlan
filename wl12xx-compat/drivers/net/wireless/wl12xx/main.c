@@ -2374,6 +2374,11 @@ static int wl1271_op_start(struct ieee80211_hw *hw)
 
 	wl1271_debug(DEBUG_MAC80211, "mac80211 start");
 
+	if (wl->state == WL1271_STATE_PLT) {
+		wl1271_warning("start not possible while calibrating");
+		return -EBUSY;
+	}
+
 	/*
 	 * We have to delay the booting of the hardware because
 	 * we need to know the local MAC address before downloading and
