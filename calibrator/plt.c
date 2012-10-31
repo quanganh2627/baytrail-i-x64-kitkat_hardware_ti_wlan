@@ -23,6 +23,12 @@
 #include <netlink/attr.h>
 #include <linux/wireless.h>
 #include <linux/ethtool.h>
+
+#include <net/if.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/ioctl.h>
+
 #include "nl80211.h"
 
 #include "calibrator.h"
@@ -97,6 +103,43 @@ static void str2mac(unsigned char *pmac, char *pch)
 		pmac[i] = (unsigned char)strtoul(pch, &pch, 16);
 		pch++;
 	}
+}
+
+static int isiffup(const char *vname)
+{
+	int ret=0;
+	int skfd = socket (AF_INET, SOCK_DGRAM, 0);
+
+	if (skfd) {
+		struct ifreq ifr;
+		strncpy (ifr.ifr_name, vname, sizeof ifr.ifr_name);
+		if (!ioctl (skfd, SIOCGIFFLAGS, &ifr)) {
+		   const short int flags = ifr.ifr_flags;
+		   if (flags & IFF_UP) ret=1;
+		}
+	close (skfd);
+	}
+	return ret;
+}
+
+static int setiffdown(const char *vname)
+{
+	int ret=0;
+	int skfd = socket (AF_INET, SOCK_DGRAM, 0);
+
+	if (skfd) {
+		struct ifreq ifreq;
+		strncpy(ifreq.ifr_name, vname, sizeof(ifreq.ifr_name));
+		if (!ioctl (skfd, SIOCGIFFLAGS, &ifreq)) {
+			short int flags = ifreq.ifr_flags;
+			flags &= ~IFF_UP;
+			ifreq.ifr_flags = flags;
+			if (ioctl (skfd, SIOCSIFFLAGS, &ifreq) == -1)
+				ret=1;
+		} else ret=1;
+	close (skfd);
+	}
+	return ret;
 }
 
 static int plt_power_mode(struct nl80211_state *state, struct nl_cb *cb,
@@ -1242,6 +1285,15 @@ static int plt_autocalibrate(struct nl80211_state *state, struct nl_cb *cb,
 		goto out_removenvs;
 	}
 #endif
+	res = isiffup(devname);
+	if (res) {
+		fprintf(stderr, "%s interface was already up "
+			", trying to bring it down", devname);
+		if (setiffdown(devname)) {
+			fprintf(stderr, "failed to bring down %s", devname);
+			goto out_removenvs;
+		}
+	}
 
 	res = plt_do_power_on(state, devname);
 	if (res < 0)
