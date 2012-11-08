@@ -3420,6 +3420,7 @@ static u64 wl1271_op_prepare_multicast(struct ieee80211_hw *hw, int mc_count,
 		fp->enabled = false;
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
 	} else {
+		wl1271_notice("Allowed multicast addresses:");
 		fp->enabled = true;
 		netdev_hw_addr_list_for_each(ha, mc_list) {
 #else
@@ -3435,6 +3436,11 @@ static u64 wl1271_op_prepare_multicast(struct ieee80211_hw *hw, int mc_count,
 #else
 			       mc_list->da_addr, ETH_ALEN);
 #endif
+			wl1271_notice("[%02x:%02x:%02x:%02x:%02x:%02x]", fp->mc_list[fp->mc_list_length][0],
+				fp->mc_list[fp->mc_list_length][1], fp->mc_list[fp->mc_list_length][2],
+				fp->mc_list[fp->mc_list_length][3], fp->mc_list[fp->mc_list_length][4],
+				fp->mc_list[fp->mc_list_length][5]);
+
 			fp->mc_list_length++;
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
 		}
