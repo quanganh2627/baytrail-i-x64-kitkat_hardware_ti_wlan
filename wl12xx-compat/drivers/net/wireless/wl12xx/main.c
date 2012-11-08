@@ -2301,6 +2301,7 @@ static int wl1271_op_suspend(struct ieee80211_hw *hw,
 
 	wl1271_enable_interrupts(wl);
 	flush_work(&wl->tx_work);
+	synchronize_irq(wl->irq);
 	flush_delayed_work(&wl->elp_work);
 
 	return 0;
