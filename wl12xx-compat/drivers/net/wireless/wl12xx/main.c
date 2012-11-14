@@ -6318,6 +6318,7 @@ static struct ieee80211_hw *wl1271_alloc_hw(void)
 	wl->system_hlid = WL12XX_SYSTEM_HLID;
 	wl->active_sta_count = 0;
 	wl->fwlog_size = 0;
+	wl->target_mem_map = NULL;
 	init_waitqueue_head(&wl->fwlog_waitq);
 
 	/* The system link is always allocated */

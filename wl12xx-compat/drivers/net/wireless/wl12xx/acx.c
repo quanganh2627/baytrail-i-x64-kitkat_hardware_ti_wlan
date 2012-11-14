@@ -1028,8 +1028,11 @@ int wl1271_acx_init_mem_config(struct wl1271 *wl)
 {
 	int ret;
 
-	wl->target_mem_map = kzalloc(sizeof(struct wl1271_acx_mem_map),
-				     GFP_KERNEL);
+	if (wl->target_mem_map)
+		memset(wl->target_mem_map, 0, sizeof(struct wl1271_acx_mem_map));
+	else
+		wl->target_mem_map = kzalloc(sizeof(struct wl1271_acx_mem_map),
+					     GFP_KERNEL);
 	if (!wl->target_mem_map) {
 		wl1271_error("couldn't allocate target memory map");
 		return -ENOMEM;
