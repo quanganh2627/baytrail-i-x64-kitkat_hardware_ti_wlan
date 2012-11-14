@@ -45,9 +45,11 @@
 #define SDIO_DEVICE_ID_TI_WL1271	0x4076
 #endif
 
+
 struct wl12xx_sdio_glue {
 	struct device *dev;
 	struct platform_device *core;
+	unsigned int suspended;
 };
 
 static const struct sdio_device_id wl1271_devices[] __devinitconst = {
@@ -73,6 +75,11 @@ static int __must_check wl12xx_sdio_raw_read(struct device *child, int addr,
 	int ret;
 	struct wl12xx_sdio_glue *glue = dev_get_drvdata(child->parent);
 	struct sdio_func *func = dev_to_sdio_func(glue->dev);
+
+	if (unlikely(glue->suspended)) {
+		dev_err(child->parent, "prevent sdio read while suspended\n");
+		return -1;
+	}
 
 	sdio_claim_host(func);
 
@@ -104,6 +111,11 @@ static int __must_check wl12xx_sdio_raw_write(struct device *child, int addr,
 	int ret;
 	struct wl12xx_sdio_glue *glue = dev_get_drvdata(child->parent);
 	struct sdio_func *func = dev_to_sdio_func(glue->dev);
+
+	if (unlikely(glue->suspended)) {
+		dev_err(child->parent, "prevent sdio write while suspended\n");
+		return -1;
+	}
 
 	sdio_claim_host(func);
 
@@ -222,7 +234,7 @@ static int __devinit wl1271_probe(struct sdio_func *func,
 	}
 
 	glue->dev = &func->dev;
-
+	glue->suspended = 0;
 	/* Grab access to FN0 for ELP reg. */
 	func->card->quirks |= MMC_QUIRK_LENIENT_FN0;
 
@@ -319,7 +331,7 @@ static int wl1271_suspend(struct device *dev)
 	mmc_pm_flag_t sdio_flags;
 	int ret = 0;
 
-	dev_dbg(dev, "wl1271 suspend. wow_enabled: %d\n",
+	dev_info(dev, "wl1271 sdio suspend. wow_enabled: %d\n",
 		wl->wow_enabled);
 
 	/* check whether sdio should keep power */
@@ -339,6 +351,7 @@ static int wl1271_suspend(struct device *dev)
 			dev_err(dev, "error while trying to keep power\n");
 			goto out;
 		}
+		glue->suspended = 1;
 	}
 out:
 	return ret;
@@ -346,8 +359,10 @@ out:
 
 static int wl1271_resume(struct device *dev)
 {
-	dev_dbg(dev, "wl1271 resume\n");
-
+	struct sdio_func *func = dev_to_sdio_func(dev);
+	struct wl12xx_sdio_glue *glue = sdio_get_drvdata(func);
+	dev_info(dev, "wl1271 sdio resume\n");
+	glue->suspended = 0;
 	return 0;
 }
 
