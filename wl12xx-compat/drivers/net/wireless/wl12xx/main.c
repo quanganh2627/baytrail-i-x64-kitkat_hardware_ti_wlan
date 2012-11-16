@@ -1168,10 +1168,6 @@ static irqreturn_t wl12xx_irq(int irq, void *cookie)
 	    wl1271_tx_total_queue_count(wl) > 0)
 		ieee80211_queue_work(wl->hw, &wl->tx_work);
 
-#ifdef CONFIG_HAS_WAKELOCK
-	if (test_and_clear_bit(WL1271_FLAG_WAKE_LOCK, &wl->flags))
-		wake_unlock(&wl->wake_lock);
-#endif
 	spin_unlock_irqrestore(&wl->wl_lock, flags);
 
 	mutex_unlock(&wl->mutex);
@@ -2990,12 +2986,6 @@ unlock:
 	cancel_work_sync(&wlvif->rx_streaming_disable_work);
 
 	mutex_lock(&wl->mutex);
-
-#ifdef CONFIG_HAS_WAKELOCK
-	if (test_and_clear_bit(WL1271_FLAG_WAKE_LOCK, &wl->flags))
-			wake_unlock(&wl->wake_lock);
-#endif
-
 }
 
 static void wl1271_op_remove_interface(struct ieee80211_hw *hw,
@@ -6306,7 +6296,6 @@ static struct ieee80211_hw *wl1271_alloc_hw(void)
 
 	spin_lock_init(&wl->wl_lock);
 #ifdef CONFIG_HAS_WAKELOCK
-	wake_lock_init(&wl->wake_lock, WAKE_LOCK_SUSPEND, "wl1271_wake");
 	wake_lock_init(&wl->rx_wake, WAKE_LOCK_SUSPEND, "rx_wake");
 	wake_lock_init(&wl->recovery_wake, WAKE_LOCK_SUSPEND, "recovery_wake");
 #endif
@@ -6390,7 +6379,6 @@ err_hw_alloc:
 static int wl1271_free_hw(struct wl1271 *wl)
 {
 #ifdef CONFIG_HAS_WAKELOCK
-	wake_lock_destroy(&wl->wake_lock);
 	wake_lock_destroy(&wl->rx_wake);
 	wake_lock_destroy(&wl->recovery_wake);
 #endif
@@ -6451,17 +6439,9 @@ static irqreturn_t wl12xx_hardirq(int irq, void *cookie)
 		wl1271_debug(DEBUG_IRQ, "should not enqueue work");
 		disable_irq_nosync(wl->irq);
 		pm_wakeup_event(wl->dev, 0);
-#ifdef CONFIG_HAS_WAKELOCK
-		if (!test_and_set_bit(WL1271_FLAG_WAKE_LOCK, &wl->flags))
-			wake_lock(&wl->wake_lock);
-#endif
 		spin_unlock_irqrestore(&wl->wl_lock, flags);
 		return IRQ_HANDLED;
 	}
-#ifdef CONFIG_HAS_WAKELOCK
-	if (!test_and_set_bit(WL1271_FLAG_WAKE_LOCK, &wl->flags))
-		wake_lock(&wl->wake_lock);
-#endif
 	spin_unlock_irqrestore(&wl->wl_lock, flags);
 
 	return IRQ_WAKE_THREAD;
