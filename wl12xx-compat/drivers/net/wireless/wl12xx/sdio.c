@@ -78,6 +78,7 @@ static int __must_check wl12xx_sdio_raw_read(struct device *child, int addr,
 
 	if (unlikely(glue->suspended)) {
 		dev_err(child->parent, "prevent sdio read while suspended\n");
+		dump_stack();
 		return -1;
 	}
 
@@ -114,6 +115,7 @@ static int __must_check wl12xx_sdio_raw_write(struct device *child, int addr,
 
 	if (unlikely(glue->suspended)) {
 		dev_err(child->parent, "prevent sdio write while suspended\n");
+		dump_stack();
 		return -1;
 	}
 
@@ -147,6 +149,7 @@ static int wl12xx_sdio_power_on(struct wl12xx_sdio_glue *glue)
 	struct sdio_func *func = dev_to_sdio_func(glue->dev);
 	struct mmc_card *card = func->card;
 
+	glue->suspended = 0;
 	/* Avoid manual resume */
 	func->card->host->bus_resume_flags = 0;
 
