@@ -112,7 +112,7 @@ static int isiffup(const char *vname)
 
 	if (skfd) {
 		struct ifreq ifr;
-		strncpy (ifr.ifr_name, vname, sizeof ifr.ifr_name);
+		strncpy (ifr.ifr_name, vname, sizeof(ifr.ifr_name)-1);
 		ifr.ifr_name[sizeof(ifr.ifr_name)-1]='\0';
 		if (!ioctl (skfd, SIOCGIFFLAGS, &ifr)) {
 		   const short int flags = ifr.ifr_flags;
@@ -130,7 +130,7 @@ static int setiffdown(const char *vname)
 
 	if (skfd) {
 		struct ifreq ifreq;
-		strncpy(ifreq.ifr_name, vname, sizeof(ifreq.ifr_name));
+		strncpy(ifreq.ifr_name, vname, sizeof(ifreq.ifr_name)-1);
 		ifreq.ifr_name[sizeof(ifreq.ifr_name)-1]='\0';
 		if (!ioctl (skfd, SIOCGIFFLAGS, &ifreq)) {
 			short int flags = ifreq.ifr_flags;
