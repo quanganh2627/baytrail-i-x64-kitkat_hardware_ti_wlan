@@ -34,7 +34,6 @@ endif
 endif
 
 else
-
 export PWD :=	$(shell pwd)
 CFLAGS += \
         -DCOMPAT_BASE_TREE="\"$(shell cat compat_base_tree)\"" \
