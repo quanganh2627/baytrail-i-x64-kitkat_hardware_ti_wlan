@@ -98,6 +98,47 @@ static void wl1271_event_mbox_dump(struct event_mailbox *mbox)
 	wl1271_debug(DEBUG_EVENT, "\tmask: 0x%x", mbox->events_mask);
 }
 
+static void wl1271_event_dump(u32 vector)
+{
+#define EVENT_DUMP(vector, event) \
+	if (vector & event) wl1271_info("wake: "#event)
+
+	EVENT_DUMP(vector, RSSI_SNR_TRIGGER_0_EVENT_ID);
+	EVENT_DUMP(vector, RSSI_SNR_TRIGGER_1_EVENT_ID);
+	EVENT_DUMP(vector, RSSI_SNR_TRIGGER_2_EVENT_ID);
+	EVENT_DUMP(vector, RSSI_SNR_TRIGGER_3_EVENT_ID);
+	EVENT_DUMP(vector, RSSI_SNR_TRIGGER_4_EVENT_ID);
+	EVENT_DUMP(vector, RSSI_SNR_TRIGGER_5_EVENT_ID);
+	EVENT_DUMP(vector, RSSI_SNR_TRIGGER_6_EVENT_ID);
+	EVENT_DUMP(vector, RSSI_SNR_TRIGGER_7_EVENT_ID);
+	EVENT_DUMP(vector, MEASUREMENT_START_EVENT_ID);
+	EVENT_DUMP(vector, MEASUREMENT_COMPLETE_EVENT_ID);
+	EVENT_DUMP(vector, SCAN_COMPLETE_EVENT_ID);
+	EVENT_DUMP(vector, WFD_DISCOVERY_COMPLETE_EVENT_ID);
+	EVENT_DUMP(vector, AP_DISCOVERY_COMPLETE_EVENT_ID);
+	EVENT_DUMP(vector, RESERVED1);
+	EVENT_DUMP(vector, PSPOLL_DELIVERY_FAILURE_EVENT_ID);
+	EVENT_DUMP(vector, ROLE_STOP_COMPLETE_EVENT_ID);
+	EVENT_DUMP(vector, RADAR_DETECTED_EVENT_ID);
+	EVENT_DUMP(vector, CHANNEL_SWITCH_COMPLETE_EVENT_ID);
+	EVENT_DUMP(vector, BSS_LOSE_EVENT_ID);
+	EVENT_DUMP(vector, REGAINED_BSS_EVENT_ID);
+	EVENT_DUMP(vector, MAX_TX_RETRY_EVENT_ID);
+	EVENT_DUMP(vector, DUMMY_PACKET_EVENT_ID);
+	EVENT_DUMP(vector, SOFT_GEMINI_SENSE_EVENT_ID);
+	EVENT_DUMP(vector, CHANGE_AUTO_MODE_TIMEOUT_EVENT_ID);
+	EVENT_DUMP(vector, SOFT_GEMINI_AVALANCHE_EVENT_ID);
+	EVENT_DUMP(vector, PLT_RX_CALIBRATION_COMPLETE_EVENT_ID);
+	EVENT_DUMP(vector, INACTIVE_STA_EVENT_ID);
+	EVENT_DUMP(vector, PEER_REMOVE_COMPLETE_EVENT_ID);
+	EVENT_DUMP(vector, PERIODIC_SCAN_COMPLETE_EVENT_ID);
+	EVENT_DUMP(vector, PERIODIC_SCAN_REPORT_EVENT_ID);
+	EVENT_DUMP(vector, BA_SESSION_RX_CONSTRAINT_EVENT_ID);
+	EVENT_DUMP(vector, REMAIN_ON_CHANNEL_COMPLETE_EVENT_ID);
+
+#undef EVENT_DUMP
+}
+
 static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
 {
 	struct ieee80211_vif *vif;
@@ -112,6 +153,11 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
 	vector = le32_to_cpu(mbox->events_vector);
 	vector &= ~(le32_to_cpu(mbox->events_mask));
 	wl1271_debug(DEBUG_EVENT, "vector: 0x%x", vector);
+
+	if (wl->log_wakes > 0) {
+		wl1271_event_dump(vector);
+		--wl->log_wakes;
+	}
 
 	if (vector & SCAN_COMPLETE_EVENT_ID) {
 		wl1271_debug(DEBUG_EVENT, "status: 0x%x",
