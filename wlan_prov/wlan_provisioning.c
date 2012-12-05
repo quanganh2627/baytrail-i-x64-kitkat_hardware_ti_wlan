@@ -37,7 +37,7 @@
 const unsigned char NullMacAddr[MAC_ADDRESS_LEN] = { 0, 0, 0, 0, 0, 0 };
 
 #define WIFI_PATH "/data/misc/wifi"
-const char NVS_file_name[] = "/factory/wifi/wl1271-nvs.bin";
+const char NVS_file_name[] = "/data/misc/wifi/wl1271-nvs.bin";
 const char Default_NVS_file_name[] = "/system/etc/wifi/wl1271-nvs.bin";
 const char WLAN_SDIO_BUS_PATH[] = "/sys/bus/sdio/drivers/wl1271_sdio/";
 #define WLAN_DRV_SDIO_NAME "wl1271_sdio"
