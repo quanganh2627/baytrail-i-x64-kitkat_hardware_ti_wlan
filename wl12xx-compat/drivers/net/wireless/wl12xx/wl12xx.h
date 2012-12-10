@@ -235,6 +235,8 @@ struct wl1271_if_operations {
 	void (*init)(struct device *child);
 	int (*power)(struct device *child, bool enable);
 	void (*set_block_size) (struct device *child, unsigned int blksz);
+	int (*request_irq)(struct wl1271 *wl);
+	void (*free_irq)(struct wl1271 *wl);
 };
 
 #define MAX_NUM_KEYS 14
@@ -350,6 +352,7 @@ struct wl1271 {
 
 	void (*set_power)(bool enable);
 	int irq;
+	unsigned long irqflags;
 	int ref_clock;
 
 	spinlock_t wl_lock;
@@ -750,6 +753,8 @@ void wl12xx_update_sta_state(struct wl1271 *wl,
 			     struct ieee80211_sta *sta,
 			     enum ieee80211_sta_state state);
 int wl12xx_init_pll_clock(struct wl1271 *wl, int *selected_clock);
+int wl12xx_request_irq(struct wl1271 *wl);
+void wl12xx_free_irq(struct wl1271 *wl);
 
 #define JOIN_TIMEOUT 5000 /* 5000 milliseconds to join */
 

@@ -52,6 +52,8 @@ struct wl12xx_sdio_glue {
 	unsigned int suspended;
 };
 
+static struct wl1271_if_operations sdio_ops;
+
 static const struct sdio_device_id wl1271_devices[] __devinitconst = {
 	{ SDIO_DEVICE(SDIO_VENDOR_ID_TI, SDIO_DEVICE_ID_TI_WL1271) },
 	{}
@@ -148,6 +150,13 @@ static int wl12xx_sdio_power_on(struct wl12xx_sdio_glue *glue)
 	int ret;
 	struct sdio_func *func = dev_to_sdio_func(glue->dev);
 	struct mmc_card *card = func->card;
+	struct wl1271 *wl = (struct wl1271 *)platform_get_drvdata(glue->core);
+
+	/* Request interrupt before enabling the device */
+	BUG_ON(!wl);
+	ret = sdio_ops.request_irq(wl);
+	if (ret)
+		goto out;
 
 	glue->suspended = 0;
 	/* Avoid manual resume */
@@ -180,6 +189,10 @@ static int wl12xx_sdio_power_off(struct wl12xx_sdio_glue *glue)
 	int ret;
 	struct sdio_func *func = dev_to_sdio_func(glue->dev);
 	struct mmc_card *card = func->card;
+	struct wl1271 *wl = (struct wl1271 *)platform_get_drvdata(glue->core);
+
+	/* Paranoia check */
+	BUG_ON(!wl);
 
 	sdio_claim_host(func);
 	sdio_disable_func(func);
@@ -195,6 +208,9 @@ static int wl12xx_sdio_power_off(struct wl12xx_sdio_glue *glue)
 
 	/* Enable manual resume */
 	func->card->host->bus_resume_flags |= MMC_BUSRESUME_MANUAL_RESUME;
+
+	/* Free irq */
+	sdio_ops.free_irq(wl);
 
 out:
 	return ret;

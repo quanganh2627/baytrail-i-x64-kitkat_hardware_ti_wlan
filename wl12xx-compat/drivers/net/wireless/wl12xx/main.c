@@ -6491,12 +6491,57 @@ static irqreturn_t wl12xx_hardirq(int irq, void *cookie)
 	return IRQ_WAKE_THREAD;
 }
 
+int wl12xx_request_irq(struct wl1271 *wl)
+{
+	int ret;
+	struct device *dev = wl->dev;
+	struct wl12xx_platform_data *pdata = dev->platform_data;
+	struct ieee80211_hw *hw = wl->hw;
+	struct platform_device *pdev = container_of(dev,
+						    struct platform_device,
+						    dev);
+
+	ret = request_threaded_irq(wl->irq, wl12xx_hardirq, wl12xx_irq,
+				   wl->irqflags,
+				   pdev->name, wl);
+	if (ret < 0) {
+		wl1271_error("request_irq() failed: %d", ret);
+		goto out;
+	}
+
+	ret = enable_irq_wake(wl->irq);
+	if (!ret) {
+		wl->irq_wake_enabled = true;
+		device_init_wakeup(wl->dev, 1);
+		if (pdata->pwr_in_suspend) {
+			hw->wiphy->wowlan.flags = WIPHY_WOWLAN_ANY;
+			hw->wiphy->wowlan.n_patterns = WL1271_MAX_RX_FILTERS;
+			hw->wiphy->wowlan.pattern_min_len = 1;
+			hw->wiphy->wowlan.pattern_max_len =
+				WL1271_RX_FILTER_MAX_PATTERN_SIZE;
+		}
+
+	}
+	disable_irq(wl->irq);
+out:
+	return ret;
+}
+
+void wl12xx_free_irq(struct wl1271 *wl)
+{
+	if (wl->irq_wake_enabled) {
+		device_init_wakeup(wl->dev, 0);
+		disable_irq_wake(wl->irq);
+	}
+
+	free_irq(wl->irq, wl);
+}
+
 static int __devinit wl12xx_probe(struct platform_device *pdev)
 {
 	struct wl12xx_platform_data *pdata = pdev->dev.platform_data;
 	struct ieee80211_hw *hw;
 	struct wl1271 *wl;
-	unsigned long irqflags;
 	int ret = -ENODEV;
 
 	hw = wl1271_alloc_hw();
@@ -6516,53 +6561,32 @@ static int __devinit wl12xx_probe(struct platform_device *pdev)
 	wl->set_power = pdata->set_power;
 	wl->dev = &pdev->dev;
 	wl->if_ops = pdata->ops;
+	wl->if_ops->request_irq = wl12xx_request_irq;
+	wl->if_ops->free_irq = wl12xx_free_irq;
 
 	platform_set_drvdata(pdev, wl);
 
 	if (wl->platform_quirks & WL12XX_PLATFORM_QUIRK_EDGE_IRQ)
-		irqflags = IRQF_TRIGGER_RISING;
+		wl->irqflags = IRQF_TRIGGER_RISING;
 	else
-		irqflags = IRQF_TRIGGER_HIGH | IRQF_ONESHOT;
+		wl->irqflags = IRQF_TRIGGER_HIGH | IRQF_ONESHOT;
 
 	/* The driver handles the interrupt during suspend */
-	irqflags |= IRQF_NO_SUSPEND;
-
-	ret = request_threaded_irq(wl->irq, wl12xx_hardirq, wl12xx_irq,
-				   irqflags,
-				   pdev->name, wl);
-	if (ret < 0) {
-		wl1271_error("request_irq() failed: %d", ret);
-		goto out_free_hw;
-	}
-
-	ret = enable_irq_wake(wl->irq);
-	if (!ret) {
-		wl->irq_wake_enabled = true;
-		device_init_wakeup(wl->dev, 1);
-		if (pdata->pwr_in_suspend) {
-			hw->wiphy->wowlan.flags = WIPHY_WOWLAN_ANY;
-			hw->wiphy->wowlan.n_patterns = WL1271_MAX_RX_FILTERS;
-			hw->wiphy->wowlan.pattern_min_len = 1;
-			hw->wiphy->wowlan.pattern_max_len =
-				WL1271_RX_FILTER_MAX_PATTERN_SIZE;
-		}
-
-	}
-	disable_irq(wl->irq);
+	wl->irqflags |= IRQF_NO_SUSPEND;
 
 	ret = wl1271_init_ieee80211(wl);
 	if (ret)
-		goto out_irq;
+		goto out_free_hw;
 
 	ret = wl1271_fetch_nvs_nowait(wl);
 	if (ret)
-		goto out_irq;
+		goto out_free_hw;
 
 	/* Create sysfs file to control bt coex state */
 	ret = device_create_file(wl->dev, &dev_attr_bt_coex_state);
 	if (ret < 0) {
 		wl1271_error("failed to create sysfs file bt_coex_state");
-		goto out_irq;
+		goto out_free_hw;
 	}
 
 	/* Create sysfs file to get HW PG version */
@@ -6587,9 +6611,6 @@ out_hw_pg_ver:
 out_bt_coex_state:
 	device_remove_file(wl->dev, &dev_attr_bt_coex_state);
 
-out_irq:
-	free_irq(wl->irq, wl);
-
 out_free_hw:
 	wl1271_free_hw(wl);
 
@@ -6602,11 +6623,6 @@ static int __devexit wl12xx_remove(struct platform_device *pdev)
 	struct wl1271 *wl = platform_get_drvdata(pdev);
 
 	wait_for_completion(&wl->fw_compl);
-
-	if (wl->irq_wake_enabled) {
-		device_init_wakeup(wl->dev, 0);
-		disable_irq_wake(wl->irq);
-	}
 	wl1271_unregister_hw(wl);
 	free_irq(wl->irq, wl);
 	wl1271_free_hw(wl);
