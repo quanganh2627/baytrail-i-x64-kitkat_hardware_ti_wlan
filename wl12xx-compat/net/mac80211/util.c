@@ -1325,6 +1325,9 @@ int ieee80211_reconfig(struct ieee80211_local *local)
 			ieee80211_enable_keys(sdata);
 
  wake_up:
+	local->in_reconfig = false;
+	barrier();
+
     /* wifi mac80211: fix ADDBA declined after suspend with wowlan
 	 * Clear the WLAN_STA_BLOCK_BA flag so new aggregation
 	 * sessions can be established after a resume.
