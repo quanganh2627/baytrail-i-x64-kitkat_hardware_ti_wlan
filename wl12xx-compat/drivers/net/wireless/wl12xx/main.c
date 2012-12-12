@@ -1470,11 +1470,6 @@ static void wl1271_recovery_work(struct work_struct *work)
 	/* Prevent spurious TX during FW restart */
 	ieee80211_stop_queues(wl->hw);
 
-	if (wl->sched_scanning) {
-		ieee80211_sched_scan_stopped(wl->hw);
-		wl->sched_scanning = false;
-	}
-
 	/* reboot the chipset */
 	while (!list_empty(&wl->wlvif_list)) {
 		wlvif = list_first_entry(&wl->wlvif_list,
@@ -2494,7 +2489,6 @@ static void wl1271_op_stop_locked(struct wl1271 *wl)
 	wl->time_offset = 0;
 	wl->ap_fw_ps_map = 0;
 	wl->ap_ps_map = 0;
-	wl->sched_scanning = false;
 	memset(wl->roles_map, 0, sizeof(wl->roles_map));
 	memset(wl->links_map, 0, sizeof(wl->links_map));
 	memset(wl->roc_map, 0, sizeof(wl->roc_map));
@@ -2925,6 +2919,11 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl,
 		ieee80211_scan_completed(wl->hw, true);
 	}
 
+	if (wl->sched_vif == wlvif) {
+		ieee80211_sched_scan_stopped(wl->hw);
+		wl->sched_vif = NULL;
+	}
+
 	if (!test_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS, &wl->flags)) {
 		/* disable active roles and clear RX filters */
 		ret = wl1271_ps_elp_wakeup(wl);
@@ -3199,10 +3198,8 @@ static int wl1271_sta_handle_idle(struct wl1271 *wl, struct wl12xx_vif *wlvif,
 		clear_bit(WLVIF_FLAG_IN_USE, &wlvif->flags);
 	} else {
 		/* The current firmware only supports sched_scan in idle */
-		if (wl->sched_scanning) {
+		if (wl->sched_vif == wlvif)
 			wl1271_scan_sched_scan_stop(wl, wlvif);
-			ieee80211_sched_scan_stopped(wl->hw);
-		}
 
 		ret = wl12xx_start_dev(wl, wlvif);
 		if (ret < 0)
@@ -4021,7 +4018,7 @@ static int wl1271_op_sched_scan_start(struct ieee80211_hw *hw,
 	if (ret < 0)
 		goto out_sleep;
 
-	wl->sched_scanning = true;
+	wl->sched_vif = wlvif;
 
 out_sleep:
 	wl1271_ps_elp_sleep(wl);
@@ -6314,7 +6311,6 @@ static struct ieee80211_hw *wl1271_alloc_hw(void)
 	wl->ap_fw_ps_map = 0;
 	wl->quirks = 0;
 	wl->platform_quirks = 0;
-	wl->sched_scanning = false;
 	wl->system_hlid = WL12XX_SYSTEM_HLID;
 	wl->active_sta_count = 0;
 	wl->fwlog_size = 0;
