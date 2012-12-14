@@ -267,6 +267,12 @@ static int __devinit wl1271_probe(struct sdio_func *func,
 		goto out_free_glue;
 	}
 
+	if (wlan_data->hw_init) {
+		ret = wlan_data->hw_init(wlan_data);
+		if (ret)
+			goto out_free_glue;
+	}
+
 	/* if sdio can keep power while host is suspended, enable wow */
 	mmcflags = sdio_get_host_pm_caps(func);
 	dev_dbg(glue->dev, "sdio PM caps = 0x%x\n", mmcflags);
@@ -329,12 +335,19 @@ out:
 static void __devexit wl1271_remove(struct sdio_func *func)
 {
 	struct wl12xx_sdio_glue *glue = sdio_get_drvdata(func);
+	struct wl12xx_platform_data *wlan_data;
 
+	wlan_data = wl12xx_get_platform_data();
+	BUG_ON(!wlan_data);
 	/* Undo decrement done above in wl1271_probe */
 	pm_runtime_get_noresume(&func->dev);
 
 	platform_device_del(glue->core);
 	platform_device_put(glue->core);
+	/* Free platform resources */
+	if (wlan_data->hw_deinit)
+		wlan_data->hw_deinit(wlan_data);
+
 	kfree(glue);
 
 }
