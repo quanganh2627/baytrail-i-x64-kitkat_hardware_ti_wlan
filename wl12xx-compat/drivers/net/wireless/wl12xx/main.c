@@ -6620,7 +6620,6 @@ static int __devexit wl12xx_remove(struct platform_device *pdev)
 
 	wait_for_completion(&wl->fw_compl);
 	wl1271_unregister_hw(wl);
-	free_irq(wl->irq, wl);
 	wl1271_free_hw(wl);
 
 	return 0;
