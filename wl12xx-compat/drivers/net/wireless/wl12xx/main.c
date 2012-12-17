@@ -1486,14 +1486,12 @@ static void wl1271_recovery_work(struct work_struct *work)
 	 * to restart the HW.
 	 */
 	ieee80211_wake_queues(wl->hw);
-	clear_bit(WL1271_FLAG_RECOVERY_WORK_PENDING, &wl->flags);
 out_unlock:
 	wl->watchdog_recovery = false;
 	if (test_and_clear_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS,
 			       &wl->flags))
 		wl1271_enable_interrupts(wl);
 	mutex_unlock(&wl->mutex);
-	clear_bit(WL1271_FLAG_RECOVERY_WORK_PENDING, &wl->flags);
 }
 
 static int wl1271_fw_wakeup(struct wl1271 *wl)
@@ -2248,12 +2246,6 @@ static int wl1271_op_suspend(struct ieee80211_hw *hw,
 
 	wl1271_debug(DEBUG_MAC80211, "mac80211 suspend wow=%d", !!wow);
 	WARN_ON(!wow);
-
-	/* Do not suspend when a fw recovery is in progress */
-	if (test_bit(WL1271_FLAG_RECOVERY_WORK_PENDING, &wl->flags)) {
-		wake_lock_timeout(&wl->wake_lock, 5*HZ);
-		return -EBUSY;
-	}
 
 	/* we want to perform the recovery before suspending */
 	if (test_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS, &wl->flags)) {
