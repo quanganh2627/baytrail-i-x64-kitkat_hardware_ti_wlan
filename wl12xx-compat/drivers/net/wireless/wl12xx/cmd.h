@@ -194,7 +194,7 @@ enum cmd_templ {
 };
 
 /* unit ms */
-#define WL1271_COMMAND_TIMEOUT     2000
+#define WL1271_COMMAND_TIMEOUT     250
 #define WL1271_CMD_TEMPL_DFLT_SIZE 252
 #define WL1271_CMD_TEMPL_MAX_SIZE  512
 #define WL1271_EVENT_TIMEOUT       1500
