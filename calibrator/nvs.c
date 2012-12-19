@@ -705,7 +705,8 @@ int create_nvs_file(struct wl12xx_common *cmn)
 	new_nvs = open(cmn->nvs_name,
 		O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
 	if (new_nvs < 0) {
-		fprintf(stderr, "%s> Unable to open new NVS file\n", __func__);
+		fprintf(stderr, "%s> Unable to open new NVS file"
+					"(%s)\n", __func__, strerror(errno));
 		return 1;
 	}
 
