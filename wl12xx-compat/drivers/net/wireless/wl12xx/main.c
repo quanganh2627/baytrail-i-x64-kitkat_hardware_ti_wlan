@@ -217,7 +217,7 @@ static struct conf_drv_settings default_conf = {
 		.basic_rate_5                = CONF_HW_BIT_RATE_6MBPS,
 		.tmpl_short_retry_limit      = 10,
 		.tmpl_long_retry_limit       = 10,
-		.tx_watchdog_timeout         = 5000,
+		.tx_watchdog_timeout         = 2000,
 	},
 	.conn = {
 		.wake_up_event               = CONF_WAKE_UP_EVENT_DTIM,
