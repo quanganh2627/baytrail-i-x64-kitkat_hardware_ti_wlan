@@ -114,7 +114,11 @@ static char *parse_uevent_file(char *path, char *pattern)
 			/* Pattern found */
 			result = (char *) malloc(strlen(line) -
 						strlen(pattern) + 1);
-			strlcpy(result, line + strlen(pattern), strlen(line) - strlen(pattern) + 1);
+			if (result) {
+				strlcpy(result, line + strlen(pattern), strlen(line) - strlen(pattern) + 1);
+			} else {
+				LOGE("%s: memory allocation failed\n", __func__);
+			}
 			goto close;
 		}
 	}
@@ -364,7 +368,8 @@ int main(int argc, char **argv)
 #endif
 		/* chaabi read error OR no chaabi support */
 		ChaabiMacAddr = (unsigned char *) malloc(MAC_ADDRESS_LEN);
-		memcpy(ChaabiMacAddr, NullMacAddr, MAC_ADDRESS_LEN);
+		if (ChaabiMacAddr)
+			memcpy(ChaabiMacAddr, NullMacAddr, MAC_ADDRESS_LEN);
 
 		LOGW("MAC not found");
 #ifdef BUILD_WITH_CHAABI_SUPPORT
