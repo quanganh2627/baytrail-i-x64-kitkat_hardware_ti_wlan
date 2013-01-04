@@ -1,3 +1,5 @@
+ifeq ($(strip $(BOARD_WLAN_DEVICE)),wl12xx-compat)
+
 LOCAL_PATH:= $(call my-dir)
 include $(CLEAR_VARS)
 
@@ -24,7 +26,8 @@ endif
 LOCAL_SHARED_LIBRARIES := \
 	libc libcutils libhardware_legacy libcrypto
 
-LOCAL_MODULE:= wlan_prov
+LOCAL_MODULE:= wlan_prov.ti
+LOCAL_MODULE_STEM := wlan_prov
 LOCAL_MODULE_TAGS := optional
 
 include $(BUILD_EXECUTABLE)
@@ -42,3 +45,4 @@ ALL_DEFAULT_INSTALLED_MODULES += $(SYMLINKS)
 ALL_MODULES.$(LOCAL_MODULE).INSTALLED := \
 	$(ALL_MODULES.$(LOCAL_MODULE).INSTALLED) $(SYMLINKS)
 
+endif
