@@ -2315,9 +2315,10 @@ static int wl1271_op_quiesce(struct ieee80211_hw *hw)
 static int wl1271_op_resume(struct ieee80211_hw *hw)
 {
 	struct wl1271 *wl = hw->priv;
-	struct wl12xx_vif *wlvif;
-	bool run_irq_work = false, pending_recovery;
+	struct wl12xx_vif *wlvif = NULL;
 	int ret = 0;
+
+	mutex_lock(&wl->mutex);
 
 	wl1271_debug(DEBUG_MAC80211, "mac80211 resume wow=%d",
 		     wl->wow_enabled);
@@ -2326,34 +2327,23 @@ static int wl1271_op_resume(struct ieee80211_hw *hw)
 	WARN_ON(!wl->wow_enabled);
 
 	clear_bit(WL1271_FLAG_SUSPENDED, &wl->flags);
-	if (test_and_clear_bit(WL1271_FLAG_PENDING_WORK, &wl->flags))
-		run_irq_work = true;
 
-	mutex_lock(&wl->mutex);
+	/* Deal with the pending work now (work that woke us up, or there was a
+	   pending work when we suspended) */
+	if (test_and_clear_bit(WL1271_FLAG_PENDING_WORK, &wl->flags)) {
+		wl1271_debug(DEBUG_MAC80211, "run postponed irq_work directly");
 
-	/* test the recovery flag before calling any SDIO functions */
-	pending_recovery = test_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS,
-				    &wl->flags);
+		/* Log 2 packets after wake, typically ARP + IP */
+		wl->log_wake_pkts = 2;
 
-	if (run_irq_work) {
-		wl1271_debug(DEBUG_MAC80211,
-			     "run postponed irq_work directly");
-
-		/* don't talk to the HW if recovery is pending */
-		if (!pending_recovery) {
-			wl->log_wake_pkts = 2; /* Log 2 packets after wake, typically ARP + IP */
-			ret = wl12xx_irq_locked(wl);
-			if (ret)
-				wl12xx_queue_recovery_work(wl);
+		if ((ret = wl12xx_irq_locked(wl))) {
+			wl1271_warning("Recovery in resume path "
+				       "while dealing with pending work");
+			wl12xx_queue_recovery_work(wl);
+			goto out;
 		}
 
 		wl1271_enable_interrupts(wl);
-	}
-
-	if (pending_recovery) {
-		wl1271_warning("queuing forgotten recovery on resume");
-		ieee80211_queue_work(wl->hw, &wl->recovery_work);
-		goto out;
 	}
 
 	wl12xx_for_each_wlvif(wl, wlvif) {
