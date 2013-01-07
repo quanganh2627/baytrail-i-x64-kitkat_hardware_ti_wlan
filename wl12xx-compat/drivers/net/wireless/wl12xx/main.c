@@ -2316,26 +2316,18 @@ static int wl1271_op_resume(struct ieee80211_hw *hw)
 {
 	struct wl1271 *wl = hw->priv;
 	struct wl12xx_vif *wlvif;
-	unsigned long flags;
 	bool run_irq_work = false, pending_recovery;
 	int ret = 0;
 
 	wl1271_debug(DEBUG_MAC80211, "mac80211 resume wow=%d",
 		     wl->wow_enabled);
 
-	/* Request from mac80211 to go through regular reset on wakeup */
-	if (!wl->wow_enabled)
-		ret = 1;
+	/* This should not be possible as it is set by wl1271_op_suspend() */
+	WARN_ON(!wl->wow_enabled);
 
-	/*
-	 * re-enable irq_work enqueuing, and call irq_work directly if
-	 * there is a pending work.
-	 */
-	spin_lock_irqsave(&wl->wl_lock, flags);
 	clear_bit(WL1271_FLAG_SUSPENDED, &wl->flags);
 	if (test_and_clear_bit(WL1271_FLAG_PENDING_WORK, &wl->flags))
 		run_irq_work = true;
-	spin_unlock_irqrestore(&wl->wl_lock, flags);
 
 	mutex_lock(&wl->mutex);
 
