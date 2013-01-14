@@ -569,6 +569,8 @@ struct wl1271 {
 
 	/* work to fire when Tx is stuck */
 	struct delayed_work tx_watchdog_work;
+
+	struct timeval start_recovery_time;
 };
 
 struct wl1271_station {

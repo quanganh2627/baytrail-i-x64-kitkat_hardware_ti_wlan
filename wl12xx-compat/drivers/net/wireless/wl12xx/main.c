@@ -1433,6 +1433,36 @@ static void wl12xx_print_recovery(struct wl1271 *wl)
 	}
 }
 
+static unsigned long timevaldiff(struct timeval *starttime, struct timeval *finishtime)
+{
+	unsigned long msec;
+	msec=(finishtime->tv_sec-starttime->tv_sec)*1000;
+	msec+=(finishtime->tv_usec-starttime->tv_usec)/1000;
+	return msec;
+}
+
+static void log_firmware_recovery_time(struct wl1271 *wl)
+{
+	struct timeval stop_recovery_time;
+	struct ct_event *ev = NULL;
+	unsigned long msec_to_recover = 0;
+	char msec_c[32];
+
+	do_gettimeofday(&stop_recovery_time);
+	ev = kct_alloc_event("cws_wifi", "fw_recover_time",
+			     CT_EV_STAT, GFP_KERNEL);
+	if (ev) {
+		msec_to_recover = timevaldiff(&wl->start_recovery_time,
+					      &stop_recovery_time);
+		snprintf(msec_c, sizeof(msec_c), "%lu", msec_to_recover);
+
+		kct_add_attchmt(&ev, CT_ATTCHMT_DATA0, strlen(msec_c) + 1,
+				msec_c, GFP_KERNEL);
+		if(kct_log_event(ev, GFP_KERNEL))
+			kct_free_event(ev);
+	}
+}
+
 static void wl1271_recovery_work(struct work_struct *work)
 {
 	struct wl1271 *wl =
@@ -1441,6 +1471,8 @@ static void wl1271_recovery_work(struct work_struct *work)
 	struct ieee80211_vif *vif;
 
 	mutex_lock(&wl->mutex);
+
+	do_gettimeofday(&wl->start_recovery_time);
 
 	if (wl->state != WL1271_STATE_ON)
 		goto out_unlock;
@@ -1485,6 +1517,7 @@ static void wl1271_recovery_work(struct work_struct *work)
 	 */
 	ieee80211_wake_queues(wl->hw);
 out_unlock:
+	log_firmware_recovery_time(wl);
 	wl->watchdog_recovery = false;
 	if (test_and_clear_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS,
 			       &wl->flags))
