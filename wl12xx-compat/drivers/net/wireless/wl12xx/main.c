@@ -2907,6 +2907,9 @@ out:
 out_unlock:
 	mutex_unlock(&wl->mutex);
 
+	if (!ret && kct_log_stat)
+		kct_log_stat("cws_wifi", "driver_on", GFP_KERNEL);
+
 	return ret;
 }
 
@@ -2927,6 +2930,8 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl,
 		return;
 
 	wl1271_info("down");
+	if (kct_log_stat)
+		kct_log_stat("cws_wifi", "driver_off", GFP_KERNEL);
 
 	if (wl->scan.state != WL1271_SCAN_STATE_IDLE &&
 	    wl->scan_vif == vif) {
