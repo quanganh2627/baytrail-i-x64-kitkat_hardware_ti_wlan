@@ -34,6 +34,8 @@
 #include <linux/sched.h>
 #include <linux/interrupt.h>
 
+#include <linux/kct.h>
+
 #include "wl12xx.h"
 #include "debug.h"
 #include "wl12xx_80211.h"
@@ -2634,6 +2636,7 @@ static int wl12xx_init_vif_data(struct wl1271 *wl, struct ieee80211_vif *vif)
 
 static bool wl12xx_init_fw(struct wl1271 *wl)
 {
+	struct ct_event *ev = NULL;
 	int retries = WL1271_BOOT_RETRIES;
 	bool booted = false;
 	struct wiphy *wiphy = wl->hw->wiphy;
@@ -2680,6 +2683,18 @@ power_off:
 	}
 
 	wl1271_info("firmware booted (%s)", wl->chip.fw_ver_str);
+
+	/* Report FW version to crashtool */
+	if (kct_alloc_event) {
+		ev = kct_alloc_event("cws_wifi", "fw_version", CT_EV_INFO, GFP_KERNEL);
+		if (ev && kct_add_attchmt(&ev, CT_ATTCHMT_DATA0,
+					  strlen(wl->chip.fw_ver_str) + 1,
+					  wl->chip.fw_ver_str,
+					  GFP_KERNEL) == 0) {
+			if (kct_log_event(ev, GFP_KERNEL))
+				kct_free_event(ev);
+		}
+	}
 
 	/* update hw/fw version info in wiphy struct */
 	wiphy->hw_version = wl->chip.id;
