@@ -6478,12 +6478,7 @@ int wl12xx_request_irq(struct wl1271 *wl)
 		}
 
 	}
-	/*
-	 * If we get an interrupt here, we will deadlock.
-	 * Use the nosync variant to disable interrupts, so the mutex could be
-	 * held without deadlocking.
-	 */
-	disable_irq_nosync(wl->irq);
+	disable_irq(wl->irq);
 out:
 	return ret;
 }
