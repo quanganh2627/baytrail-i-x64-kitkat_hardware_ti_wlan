@@ -1448,6 +1448,9 @@ static void log_firmware_recovery_time(struct wl1271 *wl)
 	unsigned long msec_to_recover = 0;
 	char msec_c[32];
 
+	if (!kct_alloc_event)
+		return;
+
 	do_gettimeofday(&stop_recovery_time);
 	ev = kct_alloc_event("cws_wifi", "fw_recover_time",
 			     CT_EV_STAT, GFP_KERNEL);
