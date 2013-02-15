@@ -34,6 +34,8 @@
 #include <linux/sched.h>
 #include <linux/interrupt.h>
 
+#include <linux/kct.h>
+
 #include "wl12xx.h"
 #include "debug.h"
 #include "wl12xx_80211.h"
@@ -1431,6 +1433,39 @@ static void wl12xx_print_recovery(struct wl1271 *wl)
 	}
 }
 
+static unsigned long timevaldiff(struct timeval *starttime, struct timeval *finishtime)
+{
+	unsigned long msec;
+	msec=(finishtime->tv_sec-starttime->tv_sec)*1000;
+	msec+=(finishtime->tv_usec-starttime->tv_usec)/1000;
+	return msec;
+}
+
+static void log_firmware_recovery_time(struct wl1271 *wl)
+{
+	struct timeval stop_recovery_time;
+	struct ct_event *ev = NULL;
+	unsigned long msec_to_recover = 0;
+	char msec_c[32];
+
+	if (!kct_alloc_event)
+		return;
+
+	do_gettimeofday(&stop_recovery_time);
+	ev = kct_alloc_event("cws_wifi", "fw_recover_time",
+			     CT_EV_STAT, GFP_KERNEL);
+	if (ev) {
+		msec_to_recover = timevaldiff(&wl->start_recovery_time,
+					      &stop_recovery_time);
+		snprintf(msec_c, sizeof(msec_c), "%lu", msec_to_recover);
+
+		kct_add_attchmt(&ev, CT_ATTCHMT_DATA0, strlen(msec_c) + 1,
+				msec_c, GFP_KERNEL);
+		if(kct_log_event(ev, GFP_KERNEL))
+			kct_free_event(ev);
+	}
+}
+
 static void wl1271_recovery_work(struct work_struct *work)
 {
 	struct wl1271 *wl =
@@ -1439,6 +1474,8 @@ static void wl1271_recovery_work(struct work_struct *work)
 	struct ieee80211_vif *vif;
 
 	mutex_lock(&wl->mutex);
+
+	do_gettimeofday(&wl->start_recovery_time);
 
 	if (wl->state != WL1271_STATE_ON)
 		goto out_unlock;
@@ -1483,6 +1520,7 @@ static void wl1271_recovery_work(struct work_struct *work)
 	 */
 	ieee80211_wake_queues(wl->hw);
 out_unlock:
+	log_firmware_recovery_time(wl);
 	wl->watchdog_recovery = false;
 	if (test_and_clear_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS,
 			       &wl->flags))
@@ -2634,6 +2672,7 @@ static int wl12xx_init_vif_data(struct wl1271 *wl, struct ieee80211_vif *vif)
 
 static bool wl12xx_init_fw(struct wl1271 *wl)
 {
+	struct ct_event *ev = NULL;
 	int retries = WL1271_BOOT_RETRIES;
 	bool booted = false;
 	struct wiphy *wiphy = wl->hw->wiphy;
@@ -2680,6 +2719,18 @@ power_off:
 	}
 
 	wl1271_info("firmware booted (%s)", wl->chip.fw_ver_str);
+
+	/* Report FW version to crashtool */
+	if (kct_alloc_event) {
+		ev = kct_alloc_event("cws_wifi", "fw_version", CT_EV_INFO, GFP_KERNEL);
+		if (ev && kct_add_attchmt(&ev, CT_ATTCHMT_DATA0,
+					  strlen(wl->chip.fw_ver_str) + 1,
+					  wl->chip.fw_ver_str,
+					  GFP_KERNEL) == 0) {
+			if (kct_log_event(ev, GFP_KERNEL))
+				kct_free_event(ev);
+		}
+	}
 
 	/* update hw/fw version info in wiphy struct */
 	wiphy->hw_version = wl->chip.id;
@@ -2859,6 +2910,9 @@ out:
 out_unlock:
 	mutex_unlock(&wl->mutex);
 
+	if (!ret && kct_log_stat)
+		kct_log_stat("cws_wifi", "driver_on", GFP_KERNEL);
+
 	return ret;
 }
 
@@ -2879,6 +2933,8 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl,
 		return;
 
 	wl1271_info("down");
+	if (kct_log_stat)
+		kct_log_stat("cws_wifi", "driver_off", GFP_KERNEL);
 
 	if (wl->scan.state != WL1271_SCAN_STATE_IDLE &&
 	    wl->scan_vif == vif) {

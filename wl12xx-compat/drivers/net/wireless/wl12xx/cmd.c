@@ -61,9 +61,8 @@ int wl1271_cmd_send(struct wl1271 *wl, u16 id, void *buf, size_t len,
 	cmd = buf;
 	cmd->id = cpu_to_le16(id);
 	cmd->status = 0;
-
-	WARN_ON(len % 4 != 0);
-	WARN_ON(test_bit(WL1271_FLAG_IN_ELP, &wl->flags));
+	WARN_ON_ONCE(len % 4 != 0);
+	WARN_ON_ONCE(test_bit(WL1271_FLAG_IN_ELP, &wl->flags));
 
 	ret = wl1271_write(wl, wl->cmd_box_addr, buf, len, false);
 	if (ret < 0)
