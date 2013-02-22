@@ -179,10 +179,10 @@ static int wl1271_rx_handle_data(struct wl1271 *wl, u8 *data, u32 length,
 
 	skb_trim(skb, skb->len - desc->pad_len);
 
-	if (!beacon && (wl->log_wake_pkts > 0)) {
+	if (wl->log_wakes > 0) {
 		print_hex_dump(KERN_INFO, DRIVER_PREFIX "wake: ", DUMP_PREFIX_OFFSET,
 					   16, 1, skb->data, min_t(size_t, skb->len, 96), true);
-		--wl->log_wake_pkts;
+		--wl->log_wakes;
 	}
 
 	skb_queue_tail(&wl->deferred_rx_queue, skb);

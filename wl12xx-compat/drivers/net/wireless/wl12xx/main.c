@@ -2319,6 +2319,7 @@ static int wl1271_op_suspend(struct ieee80211_hw *hw,
 	 * work. no need for spinlock as interrupts are disabled.
 	 */
 	set_bit(WL1271_FLAG_SUSPENDED, &wl->flags);
+	wl->log_wakes = 0;
 
 	wl1271_enable_interrupts(wl);
 	flush_work(&wl->tx_work);
@@ -2367,8 +2368,8 @@ static int wl1271_op_resume(struct ieee80211_hw *hw)
 	if (test_and_clear_bit(WL1271_FLAG_PENDING_WORK, &wl->flags)) {
 		wl1271_debug(DEBUG_MAC80211, "run postponed irq_work directly");
 
-		/* Log 2 packets after wake, typically ARP + IP */
-		wl->log_wake_pkts = 2;
+		/* Log at least 2 packets after wake, typically ARP + IP  and some events */
+		wl->log_wakes = 4;
 
 		if ((ret = wl12xx_irq_locked(wl))) {
 			wl1271_warning("Recovery in resume path "
@@ -4991,7 +4992,6 @@ static int wl1271_op_conf_tx(struct ieee80211_hw *hw,
 		ps_scheme = CONF_PS_SCHEME_UPSD_TRIGGER;
 	else
 		ps_scheme = CONF_PS_SCHEME_LEGACY;
-	wl->conf.tx.tid_conf[wl1271_tx_get_queue(queue)].ps_scheme = ps_scheme;
 
 	if (!test_bit(WLVIF_FLAG_INITIALIZED, &wlvif->flags))
 		goto out;

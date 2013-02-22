@@ -559,8 +559,8 @@ struct wl1271 {
 	/* RX Data filter rule status - enabled/disabled */
 	bool rx_data_filters_status[WL1271_MAX_RX_FILTERS];
 
-	/* Number of packets to log after WiFi wake */
-	int log_wake_pkts;
+	/* Number of packets and events to log after WiFi wake */
+	int log_wakes;
 
 	/* AP's peers */
 	struct list_head peers_list;
@@ -681,11 +681,6 @@ struct wl12xx_vif {
 	struct work_struct rx_streaming_enable_work;
 	struct work_struct rx_streaming_disable_work;
 	struct timer_list rx_streaming_timer;
-
-	/* Force power save if number of AC_VO tagged packets
-	exceeds treshold (normally 200ms for RTP traffic) */
-#define FORCE_PS_TRESHOLD 10
-	int force_ps;
 
 	/*
 	 * This struct must be last!
