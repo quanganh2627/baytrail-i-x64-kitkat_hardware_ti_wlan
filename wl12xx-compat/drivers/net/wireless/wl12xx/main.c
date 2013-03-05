@@ -1326,7 +1326,8 @@ void wl12xx_queue_recovery_work(struct wl1271 *wl)
 		/* give us a grace period for recovery */
 		wake_lock_timeout(&wl->recovery_wake, 5 * HZ);
 #endif
-		ieee80211_queue_work(wl->hw, &wl->recovery_work);
+		/* Serializes suspend path and recovery work */
+		queue_work(wl->freezable_wq, &wl->recovery_work);
 	}
 }
 
