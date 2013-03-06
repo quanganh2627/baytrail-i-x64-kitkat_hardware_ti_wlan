@@ -19,4 +19,4 @@ obj-$(CONFIG_COMPAT_WL12XX_SDIO)	+= wl12xx_sdio.o
 obj-$(CONFIG_WL12XX_PLATFORM_DATA)	+= wl12xx_platform_data.o
 
 # Add extra CFLAG so we can call crashtool API
-CFLAGS_main.o				+= -I$(ANDROID_BUILD_TOP)/hardware/intel/PRIVATE/monitor/inc/
+CFLAGS_main.o				+= -I$(ANDROID_BUILD_TOP)/vendor/intel/hardware/PRIVATE/monitor/inc/
