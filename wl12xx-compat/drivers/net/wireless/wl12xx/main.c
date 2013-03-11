@@ -176,7 +176,7 @@ static struct conf_drv_settings default_conf = {
 			},
 		},
 		.max_tx_retries = 100,
-		.ap_aging_period = 300,
+		.ap_aging_period = 10,
 		.tid_conf_count = 4,
 		.tid_conf = {
 			[CONF_TX_AC_BE] = {
