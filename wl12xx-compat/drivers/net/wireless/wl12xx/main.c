@@ -1215,7 +1215,7 @@ static int wl12xx_fetch_firmware(struct wl1271 *wl, bool plt)
 
 	ret = request_firmware(&fw, fw_name, wl->dev);
 
-	if (ret < 0) {
+	if (ret < 0 || !fw) {
 		wl1271_error("could not get firmware %s: %d", fw_name, ret);
 		return ret;
 	}
@@ -1254,7 +1254,7 @@ static int wl1271_fetch_nvs(struct wl1271 *wl)
 
 	ret = request_firmware(&fw, WL12XX_NVS_NAME, wl->dev);
 
-	if (ret < 0) {
+	if (ret < 0 || !fw) {
 		wl1271_error("could not get nvs file %s: %d", WL12XX_NVS_NAME,
 			     ret);
 		return ret;
@@ -1326,7 +1326,8 @@ void wl12xx_queue_recovery_work(struct wl1271 *wl)
 		/* give us a grace period for recovery */
 		wake_lock_timeout(&wl->recovery_wake, 5 * HZ);
 #endif
-		ieee80211_queue_work(wl->hw, &wl->recovery_work);
+		/* Serializes suspend path and recovery work */
+		queue_work(wl->freezable_wq, &wl->recovery_work);
 	}
 }
 
@@ -5160,6 +5161,10 @@ int wl1271_op_sta_add_locked(struct ieee80211_hw *hw,
 
 	if (!test_bit(WLVIF_FLAG_AP_STARTED, &wlvif->flags)) {
 		new_peer = kzalloc(sizeof(struct ap_peers), GFP_KERNEL);
+		if (!new_peer) {
+			ret = -ENOMEM;
+			goto out;
+		}
 		memcpy(&new_peer->sta, sta, sizeof(struct ieee80211_sta));
 		new_peer->hw = hw;
 		new_peer->vif = vif;
