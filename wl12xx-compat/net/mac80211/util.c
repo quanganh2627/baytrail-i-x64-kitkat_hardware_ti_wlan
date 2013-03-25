@@ -953,7 +953,8 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
 
 	*pos++ = WLAN_EID_SUPP_RATES;
 	*pos++ = supp_rates_len;
-	memcpy(pos, rates, supp_rates_len);
+	if (supp_rates_len > 0)
+		memcpy(pos, rates, supp_rates_len);
 	pos += supp_rates_len;
 
 	/* insert "request information" if in custom IEs */

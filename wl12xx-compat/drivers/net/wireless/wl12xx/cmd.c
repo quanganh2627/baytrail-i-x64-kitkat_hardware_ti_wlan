@@ -1462,8 +1462,12 @@ int wl1271_cmd_set_sta_key(struct wl1271 *wl, struct wl12xx_vif *wlvif,
 		memcpy(cmd->key + 16, key + 24, 8);
 		memcpy(cmd->key + 24, key + 16, 8);
 
-	} else {
+	} else if (key_size <= MAX_KEY_SIZE) {
 		memcpy(cmd->key, key, key_size);
+	} else {
+		wl1271_warning("Key size is greater than MAX_KEY_SIZE");
+		ret = -1;
+		goto out;
 	}
 
 	wl1271_dump(DEBUG_CRYPT, "TARGET KEY: ", cmd, sizeof(*cmd));
@@ -1471,7 +1475,7 @@ int wl1271_cmd_set_sta_key(struct wl1271 *wl, struct wl12xx_vif *wlvif,
 	ret = wl1271_cmd_send(wl, CMD_SET_KEYS, cmd, sizeof(*cmd), 0);
 	if (ret < 0) {
 		wl1271_warning("could not set keys");
-	goto out;
+		goto out;
 	}
 
 out:
@@ -1529,8 +1533,12 @@ int wl1271_cmd_set_ap_key(struct wl1271 *wl, struct wl12xx_vif *wlvif,
 		memcpy(cmd->key, key, 16);
 		memcpy(cmd->key + 16, key + 24, 8);
 		memcpy(cmd->key + 24, key + 16, 8);
-	} else {
+	}  else if (key_size <= MAX_KEY_SIZE) {
 		memcpy(cmd->key, key, key_size);
+	} else {
+		wl1271_warning("Key size is greater than MAX_KEY_SIZE");
+		ret = -1;
+		goto out;
 	}
 
 	wl1271_dump(DEBUG_CRYPT, "TARGET AP KEY: ", cmd, sizeof(*cmd));

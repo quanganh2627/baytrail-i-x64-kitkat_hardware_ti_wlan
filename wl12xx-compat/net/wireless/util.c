@@ -442,6 +442,8 @@ int ieee80211_data_from_8023(struct sk_buff *skb, const u8 *addr,
 	ethertype = (skb->data[12] << 8) | skb->data[13];
 	fc = cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_STYPE_DATA);
 
+	memset(hdr.addr4, 0, ETH_ALEN);
+
 	switch (iftype) {
 	case NL80211_IFTYPE_AP:
 	case NL80211_IFTYPE_AP_VLAN:

@@ -234,7 +234,12 @@ int wl1271_acx_group_address_tbl(struct wl1271 *wl, struct wl12xx_vif *wlvif,
 	/* MAC filtering */
 	acx->role_id = wlvif->role_id;
 	acx->enabled = enable;
+	if (mc_list_len > ACX_MC_ADDRESS_GROUP_MAX) {
+                wl1271_warning("MAC list too large for group addr table");
+                mc_list_len = ACX_MC_ADDRESS_GROUP_MAX;
+        }
 	acx->num_groups = mc_list_len;
+
 	memcpy(acx->mac_table, mc_list, mc_list_len * ETH_ALEN);
 
 	ret = wl1271_cmd_configure(wl, DOT11_GROUP_ADDRESS_TBL,
