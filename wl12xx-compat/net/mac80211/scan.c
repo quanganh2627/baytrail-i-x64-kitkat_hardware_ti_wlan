@@ -128,7 +128,7 @@ ieee80211_bss_info_update(struct ieee80211_local *local,
 		memcpy(bss->supp_rates, elems->supp_rates, clen);
 		srlen += clen;
 	}
-	if (elems->ext_supp_rates) {
+	if (elems->ext_supp_rates && srlen < IEEE80211_MAX_SUPP_RATES) {
 		clen = IEEE80211_MAX_SUPP_RATES - srlen;
 		if (clen > elems->ext_supp_rates_len)
 			clen = elems->ext_supp_rates_len;

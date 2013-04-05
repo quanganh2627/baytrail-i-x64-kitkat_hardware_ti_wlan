@@ -1685,6 +1685,8 @@ static int nl80211_set_interface(struct sk_buff *skb, struct genl_info *info)
 			     IEEE80211_MAX_MESH_ID_LEN);
 		wdev->mesh_id_up_len =
 			nla_len(info->attrs[NL80211_ATTR_MESH_ID]);
+		if (wdev->mesh_id_up_len > IEEE80211_MAX_SSID_LEN)
+			wdev->mesh_id_up_len = IEEE80211_MAX_SSID_LEN;
 		memcpy(wdev->ssid, nla_data(info->attrs[NL80211_ATTR_MESH_ID]),
 		       wdev->mesh_id_up_len);
 		wdev_unlock(wdev);
@@ -1772,6 +1774,8 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
 			     IEEE80211_MAX_MESH_ID_LEN);
 		wdev->mesh_id_up_len =
 			nla_len(info->attrs[NL80211_ATTR_MESH_ID]);
+		if (wdev->mesh_id_up_len > IEEE80211_MAX_SSID_LEN)
+			wdev->mesh_id_up_len = IEEE80211_MAX_SSID_LEN;
 		memcpy(wdev->ssid, nla_data(info->attrs[NL80211_ATTR_MESH_ID]),
 		       wdev->mesh_id_up_len);
 		wdev_unlock(wdev);
@@ -3774,7 +3778,7 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
 	i = 0;
 	if (info->attrs[NL80211_ATTR_SCAN_SSIDS]) {
 		nla_for_each_nested(attr, info->attrs[NL80211_ATTR_SCAN_SSIDS], tmp) {
-			if (nla_len(attr) > IEEE80211_MAX_SSID_LEN) {
+			if (nla_len(attr) > IEEE80211_MAX_SSID_LEN || nla_len(attr) < 0) {
 				err = -EINVAL;
 				goto out_free;
 			}
@@ -4064,7 +4068,8 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
 				  nl80211_match_policy);
 			ssid = tb[NL80211_ATTR_SCHED_SCAN_MATCH_SSID];
 			if (ssid) {
-				if (nla_len(ssid) > IEEE80211_MAX_SSID_LEN) {
+				if (nla_len(ssid) > IEEE80211_MAX_SSID_LEN
+					|| nla_len(ssid) < 0) {
 					err = -EINVAL;
 					goto out_free;
 				}
@@ -4077,7 +4082,7 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
 		}
 	}
 
-	if (info->attrs[NL80211_ATTR_IE]) {
+	if (info->attrs[NL80211_ATTR_IE] && request->ie) {
 		request->ie_len = nla_len(info->attrs[NL80211_ATTR_IE]);
 		memcpy((void *)request->ie,
 		       nla_data(info->attrs[NL80211_ATTR_IE]),
@@ -4501,7 +4506,7 @@ static int nl80211_crypto_settings(struct cfg80211_registered_device *rdev,
 		len = nla_len(info->attrs[NL80211_ATTR_CIPHER_SUITES_PAIRWISE]);
 		settings->n_ciphers_pairwise = len / sizeof(u32);
 
-		if (len % sizeof(u32))
+		if (len % sizeof(u32) || len < 0)
 			return -EINVAL;
 
 		if (settings->n_ciphers_pairwise > cipher_limit)
@@ -4539,7 +4544,7 @@ static int nl80211_crypto_settings(struct cfg80211_registered_device *rdev,
 		len = nla_len(info->attrs[NL80211_ATTR_AKM_SUITES]);
 		settings->n_akm_suites = len / sizeof(u32);
 
-		if (len % sizeof(u32))
+		if (len % sizeof(u32) || len < 0)
 			return -EINVAL;
 
 		if (settings->n_akm_suites > NL80211_MAX_NR_AKM_SUITES)
@@ -5132,6 +5137,10 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
 		connect.bssid = nla_data(info->attrs[NL80211_ATTR_MAC]);
 	connect.ssid = nla_data(info->attrs[NL80211_ATTR_SSID]);
 	connect.ssid_len = nla_len(info->attrs[NL80211_ATTR_SSID]);
+
+	if (connect.ssid_len > IEEE80211_MAX_SSID_LEN) {
+		return -EINVAL;
+	}
 
 	if (info->attrs[NL80211_ATTR_IE]) {
 		connect.ie = nla_data(info->attrs[NL80211_ATTR_IE]);

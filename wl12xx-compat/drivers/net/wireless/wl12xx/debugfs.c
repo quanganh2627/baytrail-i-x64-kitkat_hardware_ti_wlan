@@ -687,7 +687,8 @@ static ssize_t vifs_state_read(struct file *file, char __user *user_buf,
 		}
 		VIF_STATE_PRINT_INT(last_tx_hlid);
 		VIF_STATE_PRINT_LHEX(links_map[0]);
-		VIF_STATE_PRINT_NSTR(ssid, wlvif->ssid_len);
+		if (wlvif->ssid_len <= IEEE80211_MAX_SSID_LEN + 1)
+			VIF_STATE_PRINT_NSTR(ssid, wlvif->ssid_len);
 		VIF_STATE_PRINT_INT(band);
 		VIF_STATE_PRINT_INT(channel);
 		VIF_STATE_PRINT_HEX(bitrate_masks[0]);

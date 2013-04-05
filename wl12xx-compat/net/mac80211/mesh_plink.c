@@ -521,6 +521,8 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
 	if (ftype == WLAN_SP_MESH_PEERING_CONFIRM ||
 	    (ftype == WLAN_SP_MESH_PEERING_CLOSE && ie_len == 8))
 		memcpy(&llid, PLINK_GET_PLID(elems.peering), 2);
+	else
+		memset(&llid, 0, 2);
 
 	rcu_read_lock();
 
