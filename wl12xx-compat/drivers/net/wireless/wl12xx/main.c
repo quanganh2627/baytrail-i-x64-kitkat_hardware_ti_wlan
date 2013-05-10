@@ -1445,26 +1445,13 @@ static unsigned long timevaldiff(struct timeval *starttime, struct timeval *fini
 static void log_firmware_recovery_time(struct wl1271 *wl)
 {
 	struct timeval stop_recovery_time;
-	struct ct_event *ev = NULL;
 	unsigned long msec_to_recover = 0;
 	char msec_c[32];
 
-	if (!kct_alloc_event)
-		return;
-
 	do_gettimeofday(&stop_recovery_time);
-	ev = kct_alloc_event("cws_wifi", "fw_recover_time",
-			     CT_EV_STAT, GFP_KERNEL);
-	if (ev) {
-		msec_to_recover = timevaldiff(&wl->start_recovery_time,
-					      &stop_recovery_time);
-		snprintf(msec_c, sizeof(msec_c), "%lu", msec_to_recover);
-
-		kct_add_attchmt(&ev, CT_ATTCHMT_DATA0, strlen(msec_c) + 1,
-				msec_c, GFP_KERNEL);
-		if(kct_log_event(ev, GFP_KERNEL))
-			kct_free_event(ev);
-	}
+	msec_to_recover = timevaldiff(&wl->start_recovery_time, &stop_recovery_time);
+	snprintf(msec_c, sizeof(msec_c), "%lu", msec_to_recover);
+	kct_log(CT_EV_STAT, "cws.wifi", "fw_recover_time", EV_FLAGS_PRIORITY_LOW, msec_c);
 }
 
 static void wl1271_recovery_work(struct work_struct *work)
@@ -2722,17 +2709,7 @@ power_off:
 
 	wl1271_info("firmware booted (%s)", wl->chip.fw_ver_str);
 
-	/* Report FW version to crashtool */
-	if (kct_alloc_event) {
-		ev = kct_alloc_event("cws_wifi", "fw_version", CT_EV_INFO, GFP_KERNEL);
-		if (ev && kct_add_attchmt(&ev, CT_ATTCHMT_DATA0,
-					  strlen(wl->chip.fw_ver_str) + 1,
-					  wl->chip.fw_ver_str,
-					  GFP_KERNEL) == 0) {
-			if (kct_log_event(ev, GFP_KERNEL))
-				kct_free_event(ev);
-		}
-	}
+	kct_log(CT_EV_INFO, "cws.wifi", "fw_version", EV_FLAGS_PRIORITY_LOW, wl->chip.fw_ver_str);
 
 	/* update hw/fw version info in wiphy struct */
 	wiphy->hw_version = wl->chip.id;
@@ -2912,8 +2889,8 @@ out:
 out_unlock:
 	mutex_unlock(&wl->mutex);
 
-	if (!ret && kct_log_stat)
-		kct_log_stat("cws_wifi", "driver_on", GFP_KERNEL);
+	if (!ret)
+		kct_log(CT_EV_STAT, "cws.wifi", "driver_on", 0);
 
 	return ret;
 }
@@ -2935,8 +2912,7 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl,
 		return;
 
 	wl1271_info("down");
-	if (kct_log_stat)
-		kct_log_stat("cws_wifi", "driver_off", GFP_KERNEL);
+	kct_log(CT_EV_STAT, "cws.wifi", "driver_off", 0);
 
 	if (wl->scan.state != WL1271_SCAN_STATE_IDLE &&
 	    wl->scan_vif == vif) {
