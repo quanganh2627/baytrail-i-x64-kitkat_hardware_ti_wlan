@@ -1,7 +1,19 @@
+KERNEL_VERSION=$(shell $(MAKE) -C $(KLIB_BUILD) kernelversion | sed -n 's/^\([0-9]\)\..*/\1/p')
+KERNEL_SUBLEVEL := $(shell $(MAKE) -C $(KLIB_BUILD) kernelversion | sed -n 's/^3\.\([0-9]\+\).*/\1/p')
+
 export KMODDIR?=       updates
 KMODDIR_ARG:=   "INSTALL_MOD_DIR=$(KMODDIR)"
 ifneq ($(origin KLIB), undefined)
+
+#kernel > 3.4 needs modules in the STRIPPED directory.
+ifeq ($(shell test $(KERNEL_VERSION) -eq 3 -a $(KERNEL_SUBLEVEL) -gt 4 && echo yes),yes)
+KERNEL_MODULES_STRIPED := kernel_modules
+KMODPATH_ARG:=  "INSTALL_MOD_PATH=$(KLIB_BUILD)/$(KERNEL_MODULES_STRIPED)"
+STRIP_ARG:= "INSTALL_MOD_STRIP=1"
+else
 KMODPATH_ARG:=  "INSTALL_MOD_PATH=$(KLIB)"
+endif
+
 else
 export KLIB:=          /lib/modules/$(shell uname -r)
 endif
@@ -12,7 +24,6 @@ MADWIFI=$(shell $(MODPROBE) -l ath_pci)
 OLD_IWL=$(shell $(MODPROBE) -l iwl4965)
 
 DESTDIR?=
-
 ifneq ($(KERNELRELEASE),)
 
 NOSTDINC_FLAGS := -I$(M)/include/ \
@@ -150,7 +161,7 @@ btclean:
 install: uninstall install-modules install-scripts
 
 install-modules: modules
-	$(MAKE) -C $(KLIB_BUILD) M=$(PWD) $(KMODDIR_ARG) $(KMODPATH_ARG) \
+	$(MAKE) -C $(KLIB_BUILD) M=$(PWD) $(KMODDIR_ARG) $(KMODPATH_ARG) $(STRIP_ARG)\
 		modules_install
 
 install-scripts:

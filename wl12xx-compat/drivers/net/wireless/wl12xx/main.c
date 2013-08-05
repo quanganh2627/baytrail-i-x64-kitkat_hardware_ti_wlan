@@ -55,6 +55,10 @@
 
 #define WL1271_BOOT_RETRIES 3
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 9, 0))
+#define K39_BRINGUP_HACKS
+#endif
+
 static struct conf_drv_settings default_conf = {
 	.sg = {
 		.params = {
@@ -1451,7 +1455,10 @@ static void log_firmware_recovery_time(struct wl1271 *wl)
 	do_gettimeofday(&stop_recovery_time);
 	msec_to_recover = timevaldiff(&wl->start_recovery_time, &stop_recovery_time);
 	snprintf(msec_c, sizeof(msec_c), "%lu", msec_to_recover);
+
+#ifndef K39_BRINGUP_HACKS
 	kct_log(CT_EV_STAT, "cws.wifi", "fw_recover_time", EV_FLAGS_PRIORITY_LOW, msec_c);
+#endif
 }
 
 static void wl1271_recovery_work(struct work_struct *work)
@@ -2320,10 +2327,10 @@ static int wl1271_op_suspend(struct ieee80211_hw *hw,
 static int wl1271_op_quiesce(struct ieee80211_hw *hw)
 {
 	struct wl1271 *wl = hw->priv;
+	struct wl12xx_vif *wlvif;
 
 	flush_delayed_work_sync(&wl->scan_complete_work);
 	flush_work_sync(&wl->tx_work);
-	struct wl12xx_vif *wlvif;
 	wl12xx_for_each_wlvif(wl, wlvif) {
 		del_timer_sync(&wlvif->rx_streaming_timer);
 		flush_work_sync(&wlvif->rx_streaming_enable_work);
@@ -2661,7 +2668,6 @@ static int wl12xx_init_vif_data(struct wl1271 *wl, struct ieee80211_vif *vif)
 
 static bool wl12xx_init_fw(struct wl1271 *wl)
 {
-	struct ct_event *ev = NULL;
 	int retries = WL1271_BOOT_RETRIES;
 	bool booted = false;
 	struct wiphy *wiphy = wl->hw->wiphy;
@@ -2709,8 +2715,9 @@ power_off:
 
 	wl1271_info("firmware booted (%s)", wl->chip.fw_ver_str);
 
+#ifndef K39_BRINGUP_HACKS
 	kct_log(CT_EV_INFO, "cws.wifi", "fw_version", EV_FLAGS_PRIORITY_LOW, wl->chip.fw_ver_str);
-
+#endif
 	/* update hw/fw version info in wiphy struct */
 	wiphy->hw_version = wl->chip.id;
 	strncpy(wiphy->fw_version, wl->chip.fw_ver_str,
@@ -2889,8 +2896,10 @@ out:
 out_unlock:
 	mutex_unlock(&wl->mutex);
 
+#ifndef K39_BRINGUP_HACKS
 	if (!ret)
 		kct_log(CT_EV_STAT, "cws.wifi", "driver_on", 0);
+#endif
 
 	return ret;
 }
@@ -2912,7 +2921,10 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl,
 		return;
 
 	wl1271_info("down");
+
+#ifndef K39_BRINGUP_HACKS
 	kct_log(CT_EV_STAT, "cws.wifi", "driver_off", 0);
+#endif
 
 	if (wl->scan.state != WL1271_SCAN_STATE_IDLE &&
 	    wl->scan_vif == vif) {
@@ -4893,39 +4905,6 @@ out:
 	mutex_unlock(&wl->mutex);
 }
 
-static void wl1271_op_get_current_rssi(struct ieee80211_hw *hw,
-				       struct ieee80211_vif *vif,
-				       struct station_info *sinfo)
-{
-	struct wl1271 *wl = hw->priv;
-	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
-	int rssi = 0;
-	int ret;
-
-	wl1271_debug(DEBUG_MAC80211, "mac80211 get current rssi");
-
-	mutex_lock(&wl->mutex);
-
-	if (unlikely(wl->state == WL1271_STATE_OFF))
-		goto out;
-
-	ret = wl1271_ps_elp_wakeup(wl);
-	if (ret < 0)
-		goto out;
-
-	ret = wl12xx_acx_sta_get_rssi(wl, wlvif, &rssi);
-	if (ret < 0)
-		goto out_sleep;
-
-	sinfo->signal = (s8)rssi;
-
-out_sleep:
-	wl1271_ps_elp_sleep(wl);
-
-out:
-	mutex_unlock(&wl->mutex);
-}
-
 static int wl12xx_op_set_rx_filters(struct ieee80211_hw *hw,
 				    struct cfg80211_wowlan *wowlan)
 {
@@ -6535,7 +6514,7 @@ void wl12xx_free_irq(struct wl1271 *wl)
 	free_irq(wl->irq, wl);
 }
 
-static int __devinit wl12xx_probe(struct platform_device *pdev)
+static int wl12xx_probe(struct platform_device *pdev)
 {
 	struct wl12xx_platform_data *pdata = pdev->dev.platform_data;
 	struct ieee80211_hw *hw;
@@ -6616,7 +6595,7 @@ out:
 	return ret;
 }
 
-static int __devexit wl12xx_remove(struct platform_device *pdev)
+static int wl12xx_remove(struct platform_device *pdev)
 {
 	struct wl1271 *wl = platform_get_drvdata(pdev);
 
@@ -6627,7 +6606,7 @@ static int __devexit wl12xx_remove(struct platform_device *pdev)
 	return 0;
 }
 
-static const struct platform_device_id wl12xx_id_table[] __devinitconst = {
+static const struct platform_device_id wl12xx_id_table[] = {
 	{ "wl12xx", 0 },
 	{  } /* Terminating Entry */
 };
@@ -6635,7 +6614,7 @@ MODULE_DEVICE_TABLE(platform, wl12xx_id_table);
 
 static struct platform_driver wl12xx_driver = {
 	.probe		= wl12xx_probe,
-	.remove		= __devexit_p(wl12xx_remove),
+	.remove		= wl12xx_remove,
 	.id_table	= wl12xx_id_table,
 	.driver = {
 		.name	= "wl12xx_driver",
