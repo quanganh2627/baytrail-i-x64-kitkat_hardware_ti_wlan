@@ -194,7 +194,19 @@ enum cmd_templ {
 };
 
 /* unit ms */
+
+/* On kenrel 3.10 sometimes there is cmd timeout when doing calibration
+ * that causes calibration to fail, increasing the timeout until we figure
+ * out what is the difference with kernel 3.4
+ *
+ */
+
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 9, 0))
+#define WL1271_COMMAND_TIMEOUT     500
+#else
 #define WL1271_COMMAND_TIMEOUT     250
+#endif
+
 #define WL1271_CMD_TEMPL_DFLT_SIZE 252
 #define WL1271_CMD_TEMPL_MAX_SIZE  512
 #define WL1271_EVENT_TIMEOUT       1500
