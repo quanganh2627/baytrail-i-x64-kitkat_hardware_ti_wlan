@@ -1954,7 +1954,11 @@ static int ieee80211_remain_on_channel_hw(struct ieee80211_local *local,
 	if (local->hw_roc_cookie)
 		return -EBUSY;
 	/* must be nonzero */
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 9, 0))
+	random_cookie = prandom_u32() | 1;
+#else
 	random_cookie = random32() | 1;
+#endif
 
 	*cookie = random_cookie;
 	local->hw_roc_dev = dev;

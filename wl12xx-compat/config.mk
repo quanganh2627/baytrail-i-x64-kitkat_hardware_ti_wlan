@@ -49,6 +49,10 @@ ifeq ($(CONFIG_CFG80211),y)
 $(error "ERROR: your kernel has CONFIG_CFG80211=y, you should have it CONFIG_CFG80211=m if you want to use this thing.")
 endif
 
+# for kernel 3.9 compatibility
+ifeq ($(CONFIG_WILINK_PLATFORM_DATA),y)
+CONFIG_WL12XX_PLATFORM_DATA=y
+endif
 
 # 2.6.27 has FTRACE_DYNAMIC borked, so we will complain if
 # you have it enabled, otherwise you will very likely run into
