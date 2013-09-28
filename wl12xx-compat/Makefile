@@ -6,19 +6,19 @@ KMODDIR_ARG:=   "INSTALL_MOD_DIR=$(KMODDIR)"
 ifneq ($(origin KLIB), undefined)
 
 #kernel > 3.4 needs modules in the STRIPPED directory.
-ifeq ($(shell test $(KERNEL_VERSION) -eq 3 -a $(KERNEL_SUBLEVEL) -gt 4 && echo yes),yes)
+#ifeq ($(shell test $(KERNEL_VERSION) -eq 3 -a $(KERNEL_SUBLEVEL) -gt 4 && echo yes),yes)
 
-KERNEL_MODULES_STRIPED := kernel_modules
-KMODPATH_ARG:=  "INSTALL_MOD_PATH=$(KLIB_BUILD)/$(KERNEL_MODULES_STRIPED)"
-STRIP_ARG:= "INSTALL_MOD_STRIP=1"
-export KMODDIR:=       kernel
-KMODDIR_ARG:=   "INSTALL_MOD_DIR=$(KMODDIR)"
+#KERNEL_MODULES_STRIPED := kernel_modules
+#KMODPATH_ARG:=  "INSTALL_MOD_PATH=$(KLIB_BUILD)/$(KERNEL_MODULES_STRIPED)"
+#STRIP_ARG:= "INSTALL_MOD_STRIP=1"
+#export KMODDIR:=       kernel
+#KMODDIR_ARG:=   "INSTALL_MOD_DIR=$(KMODDIR)"
 
-else
+#else
 
 KMODPATH_ARG:=  "INSTALL_MOD_PATH=$(KLIB)"
 
-endif #if kernel > 3.4
+#endif #if kernel > 3.4
 
 else
 export KLIB:=          /lib/modules/$(shell uname -r)
