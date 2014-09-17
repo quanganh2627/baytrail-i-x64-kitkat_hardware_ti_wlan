@@ -105,7 +105,7 @@ static char *parse_uevent_file(char *path, char *pattern)
 
 	file = fopen(path, "r");
 	if (!file) {
-		LOGE("%s: %s file not found\n", __func__, path);
+		ALOGE("%s: %s file not found\n", __func__, path);
 		goto out;
 	}
 
@@ -117,7 +117,7 @@ static char *parse_uevent_file(char *path, char *pattern)
 			if (result) {
 				strlcpy(result, line + strlen(pattern), strlen(line) - strlen(pattern) + 1);
 			} else {
-				LOGE("%s: memory allocation failed\n", __func__);
+				ALOGE("%s: memory allocation failed\n", __func__);
 			}
 			goto close;
 		}
@@ -140,7 +140,7 @@ static int parse_type_file(char *path, char *pattern)
 
 	file = fopen(path, "r");
 	if (!file) {
-		LOGE("%s: %s file not found\n", __func__, path);
+		ALOGE("%s: %s file not found\n", __func__, path);
 		goto out_error;
 	}
 
@@ -167,7 +167,7 @@ static int get_wlan_rfkill_path(char *path, char* result_path, int sizeof_res)
 	char *type_entry = NULL;
 	char sub_entry[256];
 	if (!rfkill_path) {
-		LOGE("Cannot open directory, ret with %d\n", errno);
+		ALOGE("Cannot open directory, ret with %d\n", errno);
 		ret = -EINVAL;
 		goto exit;
 	}
@@ -218,7 +218,7 @@ static int toggle_wlan_radio(const char *rfkill_state_path, int enable) {
 
 	file = fopen(rfkill_state_path, "w");
 	if (!file) {
-		LOGE("Unable to open rfkill file %s in write mode", rfkill_state_path);
+		ALOGE("Unable to open rfkill file %s in write mode", rfkill_state_path);
 		ret = -EIO;
 		goto out;
 	}
@@ -226,10 +226,10 @@ static int toggle_wlan_radio(const char *rfkill_state_path, int enable) {
 	fprintf(file,"%d", enable);
 
 	if (fclose(file)) {
-		LOGE("Unable to close file");
+		ALOGE("Unable to close file");
 		ret = -EIO;
 	}
-	LOGI("toggle_wlan_radio :%s %d", rfkill_state_path, enable);
+	ALOGI("toggle_wlan_radio :%s %d", rfkill_state_path, enable);
 out:
 	return ret;
 }
@@ -243,7 +243,7 @@ static int sdio_get_pci_id(char *sdio_device_path, char *pci_id, int sizeof_dev)
 	char *uevent_entry = NULL;
 	char sub_entry[256];
 	if (!sdio_path) {
-		LOGE("Cannot open directory, ret with %d\n", errno);
+		ALOGE("Cannot open directory, ret with %d\n", errno);
 		ret = -EINVAL;
 		goto exit;
 	}
@@ -303,7 +303,7 @@ static int bind_unbind_driver(const char *driver_path, const char *driver_id,
 
 	file_path = (char *) malloc(n+1);
 	if (!file_path) {
-		LOGE("Not enough space\n");
+		ALOGE("Not enough space\n");
 		ret = -ENOMEM;
 		goto fail;
 	}
@@ -312,7 +312,7 @@ static int bind_unbind_driver(const char *driver_path, const char *driver_id,
 
 	file = fopen(file_path, "w");
 	if (!file) {
-		LOGE("Unable to open file %s in write mode", file_path);
+		ALOGE("Unable to open file %s in write mode", file_path);
 		ret = -EIO;
 		goto open_fail;
 	}
@@ -320,7 +320,7 @@ static int bind_unbind_driver(const char *driver_path, const char *driver_id,
 	fprintf(file,"%s", driver_id);
 
 	if (fclose(file)) {
-		LOGE("Unable to close file");
+		ALOGE("Unable to close file");
 		ret = -EIO;
 	}
 
@@ -357,7 +357,7 @@ int main(int argc, char **argv)
 	}
 
        if (sdio_get_pci_id(SYSFS_SDIO_DEVICES_PATH, device_id, sizeof(device_id))) {
-		LOGE("no wlan device detected, exit...");
+		ALOGE("no wlan device detected, exit...");
 		return -1;
        }
 
@@ -371,7 +371,7 @@ int main(int argc, char **argv)
 		if (ChaabiMacAddr)
 			memcpy(ChaabiMacAddr, NullMacAddr, MAC_ADDRESS_LEN);
 
-		LOGW("MAC not found");
+		ALOGW("MAC not found");
 #ifdef BUILD_WITH_CHAABI_SUPPORT
 	}
 #endif
@@ -380,7 +380,7 @@ int main(int argc, char **argv)
 
 	if (!nvsBinFile) {
 		int nbCalibrationTries = 1;
-		LOGI("running calibration, try: %d",nbCalibrationTries);
+		ALOGI("running calibration, try: %d",nbCalibrationTries);
 		unbind_bind_request = 1;
 		if (!get_wlan_rfkill_path(RFKILL_SYSFS_DEVICES_PATH, lrfkill_path, sizeof(lrfkill_path)))
 			toggle_wlan_radio(lrfkill_path, 0);
@@ -388,7 +388,7 @@ int main(int argc, char **argv)
 		while (wifi_calibration()) {
 			nbCalibrationTries++;
 			if(nbCalibrationTries >= MAX_CALIBRATION_TRIES) {
-				LOGI("Rebooting after %d calibration tries", MAX_CALIBRATION_TRIES);
+				ALOGI("Rebooting after %d calibration tries", MAX_CALIBRATION_TRIES);
 				goto fatal; //Reboot after 3 failed calibrations.
 			}
 			if (unbind_wlan_sdio_drv(WLAN_SDIO_BUS_PATH, device_id)
@@ -397,10 +397,10 @@ int main(int argc, char **argv)
 						/*
 						*Rebooting:  calibration failed, unbind/bind failed
 						*/
-						LOGI("Rebooting: unbind/bind failed");
+						ALOGI("Rebooting: unbind/bind failed");
 						goto fatal;
 					}
-			LOGI("running calibration, try: %d",nbCalibrationTries);
+			ALOGI("running calibration, try: %d",nbCalibrationTries);
 		}
 	} else {
 		fclose(nvsBinFile);
@@ -434,7 +434,7 @@ int main(int argc, char **argv)
 		ChaabiMacAddr[3] = (unsigned char) (rand() & 0xff);
 		ChaabiMacAddr[4] = (unsigned char) (rand() & 0xff);
 		ChaabiMacAddr[5] = (unsigned char) (rand() & 0xff);
-		LOGI("MAC randomized");
+		ALOGI("MAC randomized");
 	}
 
 	/* Chaabi MAC @ shall be write in NVS file ? */
@@ -443,7 +443,7 @@ int main(int argc, char **argv)
 			res =  -4;
 			goto end;
 		}
-		LOGI("MAC updated");
+		ALOGI("MAC updated");
 		unbind_bind_request = 1;
 	}
 
@@ -452,7 +452,7 @@ end:
 	sync();
 
 	if (unbind_bind_request) {
-		LOGI("unbind/bind the driver");
+		ALOGI("unbind/bind the driver");
 		/*
 		* If we are not allowed to bind/unbind the driver, the mac address as
 		* well as the new configuration firmware (.nvs) will not be taken into
@@ -534,12 +534,12 @@ static int nvs_replace_mac(unsigned char *MacAddr)
 						MacAddr[0], MacAddr[1], MacAddr[2],
 						MacAddr[3], MacAddr[4], MacAddr[5]);
 	if (debug)
-		LOGI("cmd: %s",system_cmd);
+		ALOGI("cmd: %s",system_cmd);
 
 	err = system(system_cmd);
 
 	if (err)
-		LOGE("NVS update with new MAC error= %d",err);
+		ALOGE("NVS update with new MAC error= %d",err);
 
 	return err;
 }
@@ -558,12 +558,12 @@ static int wifi_calibration(void)
 							NVS_file_name,
 							(unsigned char *)"08:00:28:DE:AD:00");
 	if (debug)
-		LOGI("cmd: %s",system_cmd);
+		ALOGI("cmd: %s",system_cmd);
 
 	err = system(system_cmd);
 
 	if (err)
-		LOGE("Calibration error= %d",err);
+		ALOGE("Calibration error= %d",err);
 
 	return err;
 }
